@@ -121,12 +121,10 @@ export function ChatView() {
     setMessages((prev) => [...prev, assistantMessage]);
   
     try {
-      const wikiContext = wikiArticles.map(article => `Title: ${article.title}\nContent: ${article.content}\nTables: ${JSON.stringify(article.tables)}`).join('\n\n---\n\n');
       const historyForAI = currentMessages.slice(0, -1).map(({ id, ...rest }) => rest);
   
       generateSolutionStream({
         problemDescription: values.prompt,
-        wikiContext,
         history: historyForAI,
       }).then(async (stream) => {
         if (!stream) {

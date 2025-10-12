@@ -9,8 +9,9 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import {z} from 'zod';
 import { getGameData } from '@/firebase/firestore/data';
+import { KNOWLEDGE_BASE_CONTEXT } from '@/lib/knowledge-base';
 
 
 const getGameDataTool = ai.defineTool(
@@ -36,7 +37,6 @@ const MessageSchema = z.object({
 
 const GenerateSolutionInputSchema = z.object({
   problemDescription: z.string().describe('A description of the player is encountering in Anime Eternal.'),
-  wikiContext: z.string().describe('The entire content of the game wiki to be used as a knowledge base.'),
   history: z.array(MessageSchema).optional().describe('The previous messages in the conversation.'),
 });
 export type GenerateSolutionInput = z.infer<typeof GenerateSolutionInputSchema>;
@@ -90,8 +90,8 @@ const prompt = ai.definePrompt({
   prompt: `Você é um assistente especialista no jogo Anime Eternal e também uma calculadora estratégica. Sua resposta DEVE ser em Português-BR.
 
 Sua principal estratégia é:
-1.  **Primeiro, analise o CONTEÚDO DO WIKI abaixo para entender profundamente a pergunta do usuário.** Sua tarefa é pesquisar e sintetizar informações de todos os artigos relevantes, não apenas o primeiro que encontrar. Use os resumos (summary) e o conteúdo para fazer conexões entre os termos do usuário e os nomes oficiais no jogo (ex: "Raid Green" é a "Green Planet Raid", "mundo de nanatsu" é o Mundo 13). Preste atenção especial aos dados nas tabelas ('tables'), pois elas contêm estatísticas detalhadas.
-2.  **Após ter uma compreensão completa do tópico com base na Wiki, use a ferramenta 'getGameData' para buscar estatísticas detalhadas e atualizadas, se necessário.** Não confie na wiki para estatísticas de itens (como multiplicadores), pois a ferramenta terá os dados mais precisos. Use os nomes oficiais que você identificou na Wiki ao chamar a ferramenta. Não peça permissão ao usuário para usar o nome, apenas use-o.
+1.  **Primeiro, analise a BASE DE CONHECIMENTO abaixo para entender profundamente a pergunta do usuário.** Sua tarefa é pesquisar e sintetizar informações de todos os artigos e dados relevantes. Use os resumos (summary) e o conteúdo para fazer conexões entre os termos do usuário e os nomes oficiais no jogo (ex: "Raid Green" é a "Green Planet Raid", "mundo de nanatsu" é o Mundo 13). Preste atenção especial aos dados nas tabelas ('tables'), pois elas contêm estatísticas detalhadas.
+2.  **Após ter uma compreensão completa do tópico com base na BASE DE CONHECIMENTO, use a ferramenta 'getGameData' para buscar estatísticas detalhadas e atualizadas do Firestore, se necessário.** Não confie na base de conhecimento para estatísticas de itens que podem ser atualizadas (como multiplicadores), pois a ferramenta terá os dados mais precisos do banco de dados ao vivo. Use os nomes oficiais que você identificou na Base de Conhecimento ao chamar a ferramenta. Não peça permissão ao usuário para usar o nome, apenas use-o.
 3.  **Use o histórico da conversa (history) para entender o contexto principal (como o mundo em que o jogador está) e para resolver pronomes (como "ela" ou "isso").** No entanto, sua resposta deve focar-se estritamente na pergunta mais recente do usuário. Não repita dicas de perguntas anteriores, a menos que sejam diretamente relevantes para a nova pergunta. Por exemplo, se a pergunta anterior era sobre "dano" e a nova é sobre "poder", foque sua resposta apenas em "poder".
 4.  **Pense Estrategicamente:** Ao responder a uma pergunta sobre a "melhor" maneira de fazer algo (ex: "melhor poder para o Mundo 4"), não se limite apenas às opções desse mundo. Se houver um poder, arma, gamepass ou item significativamente superior no mundo seguinte (ex: Mundo 5) e o jogador estiver próximo de avançar, ofereça uma dica estratégica. Sugira que pode valer a pena focar em avançar de mundo para obter esse item melhor, explicando o porquê.
 5.  **Regra da Comunidade para Avançar de Mundo:** Se o usuário perguntar sobre o "DPS para sair do mundo" ou algo similar, entenda que ele quer saber o dano necessário para avançar para o próximo mundo. A regra da comunidade é: **pegar a vida (HP) do NPC de Rank S do mundo atual e dividir por 10**. Explique essa regra ao usuário. Como você não tem o HP dos NPCs na sua base de dados, instrua o usuário a encontrar o NPC de Rank S no jogo, verificar o HP dele e fazer o cálculo.
@@ -124,11 +124,11 @@ O jogo tem 21 mundos, cada um com conteúdo exclusivo. Você deve entender e usa
   4.  Explique seu cálculo ao usuário de forma clara e passo a passo para cada cenário.
 
 
-Se a resposta não estiver nas ferramentas ou no wiki, diga que você não tem informações suficientes para responder.
+Se a resposta não estiver nas ferramentas ou na base de conhecimento, diga que você não tem informações suficientes para responder.
 
-INÍCIO DO CONTEÚDO DO WIKI
-{{{wikiContext}}}
-FIM DO CONTEÚDO DO WIKI
+INÍCIO DA BASE DE CONHECIMENTO
+${KNOWLEDGE_BASE_CONTEXT}
+FIM DA BASE DE CONHECIMENTO
 
 {{#if history}}
 HISTÓRICO DA CONVERSA:

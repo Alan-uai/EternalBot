@@ -28,10 +28,10 @@ client.on('messageCreate', async (message: Message) => {
     }
 
     try {
-      // Call the generateSolutionStream flow, passing an empty wikiContext
+      // Call the generateSolutionStream flow.
+      // The flow now gets its context from the pre-compiled knowledge base.
       const stream = await generateSolutionStream({
         problemDescription,
-        wikiContext: '', // The flow will use the getGameData tool instead
         history: [], // History can be implemented later
       });
 
@@ -46,9 +46,13 @@ client.on('messageCreate', async (message: Message) => {
         fullResponse += decoder.decode(value, { stream: true });
       }
 
-      // Send the final response
+      // Send the final response. Discord has a 2000 character limit.
       if (fullResponse) {
-        message.reply(fullResponse);
+        // Split the message if it's too long
+        const chunks = fullResponse.match(/[\s\S]{1,2000}/g) || [];
+        for (const chunk of chunks) {
+            await message.reply(chunk);
+        }
       } else {
         message.reply('Não consegui encontrar uma solução para o seu problema.');
       }
