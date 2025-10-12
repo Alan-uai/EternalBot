@@ -89,5 +89,3 @@ export async function getGameData(worldName: string, category: string, itemName?
 export async function getRaceStats(raceName: string) {
   return getGameData("World1", "races", raceName);
 }
-
-    
