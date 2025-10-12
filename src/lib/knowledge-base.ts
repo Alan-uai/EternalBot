@@ -35,19 +35,6 @@ const allWorldsData = [
   world21Data, world22Data
 ];
 
-// Converte os artigos da wiki em uma string formatada
-const articlesContext = allWikiArticles
-  .map(article => `
---- INÍCIO DO ARTIGO: ${article.title} ---
-ID: ${article.id}
-Resumo: ${article.summary}
-Conteúdo:
-${article.content}
-Tags: ${Array.isArray(article.tags) ? article.tags.join(', ') : ''}
-${article.tables ? `Tabelas de Dados:\n${JSON.stringify(article.tables, null, 2)}` : ''}
---- FIM DO ARTIGO: ${article.title} ---
-`).join('\n\n');
-
 // Converte os dados estáticos dos mundos em uma string formatada
 const worldsDataContext = allWorldsData
   .map(world => `
@@ -56,15 +43,11 @@ ${JSON.stringify(world, null, 2)}
 --- FIM DOS DADOS DO MUNDO: ${world.name} ---
 `).join('\n\n');
 
-// Combina tudo em uma única base de conhecimento
-export const KNOWLEDGE_BASE_CONTEXT = `
+// Exporta apenas a parte estática do "livro"
+export const KNOWLEDGE_BASE_STATIC_CONTEXT = `
 # BASE DE CONHECIMENTO DO JOGO ANIME ETERNAL
 
-## SEÇÃO 1: ARTIGOS DA WIKI
-
-${articlesContext}
-
-## SEÇÃO 2: DADOS ESTATÍSTICOS BRUTOS POR MUNDO
+## SEÇÃO DE DADOS ESTATÍSTICOS BRUTOS POR MUNDO
 
 ${worldsDataContext}
 `;

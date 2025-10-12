@@ -5,47 +5,28 @@ import { generateSolution } from '@/ai/flows/generate-solution';
 import { initializeFirebaseServer } from '@/firebase/server';
 import { collection, onSnapshot, query, DocumentData } from 'firebase/firestore';
 import type { WikiArticle } from '@/lib/types';
-import { KNOWLEDGE_BASE_CONTEXT } from '@/lib/knowledge-base';
+import { KNOWLEDGE_BASE_STATIC_CONTEXT } from '@/lib/knowledge-base';
 
-// --- In-Memory Cache para os Artigos da Wiki ---
-let wikiArticlesCache: WikiArticle[] = [];
-let isCacheReady = false;
+// --- In-Memory Cache para o "Livro de Contexto" ---
+let formattedKnowledgeBaseContext: string = '';
+let isContextReady = false;
 
-// Função para inicializar o cache e o listener do Firestore
-async function initializeWikiCache() {
+// Função para inicializar e manter o "Livro de Contexto" atualizado
+async function initializeKnowledgeBase() {
     try {
         const { firestore } = initializeFirebaseServer();
         const articlesQuery = query(collection(firestore, 'wikiContent'));
 
-        console.log("Discord Bot: Conectando ao Firestore para cache da Wiki...");
+        console.log("Discord Bot: Conectando ao Firestore para construir a base de conhecimento...");
 
         onSnapshot(articlesQuery, (snapshot) => {
             const articles: WikiArticle[] = [];
             snapshot.forEach(doc => {
                 articles.push(doc.data() as WikiArticle);
             });
-            wikiArticlesCache = articles;
-            if (!isCacheReady) {
-                isCacheReady = true;
-                console.log(`Discord Bot: Cache da Wiki inicializado com ${articles.length} artigos.`);
-            } else {
-                console.log(`Discord Bot: Cache da Wiki atualizado em tempo real. Total de artigos: ${articles.length}.`);
-            }
-        }, (error) => {
-            console.error("Discord Bot: Erro no listener da Wiki:", error);
-        });
 
-    } catch (error) {
-        console.error("Discord Bot: Falha ao inicializar o cache da Wiki:", error);
-    }
-}
-
-// Função para formatar os artigos do cache para a IA
-function getFormattedWikiContextFromCache(): string {
-    if (!wikiArticlesCache || wikiArticlesCache.length === 0) {
-        return "Nenhum artigo da wiki encontrado no cache.";
-    }
-    return wikiArticlesCache.map(article => `
+            // Gera o "livro" formatado a partir dos artigos do Firestore
+            const articlesContext = articles.map(article => `
 --- INÍCIO DO ARTIGO: ${article.title} ---
 ID: ${article.id}
 Resumo: ${article.summary}
@@ -55,6 +36,29 @@ Tags: ${Array.isArray(article.tags) ? article.tags.join(', ') : ''}
 ${article.tables ? `Tabelas de Dados:\n${JSON.stringify(article.tables, null, 2)}` : ''}
 --- FIM DO ARTIGO: ${article.title} ---
 `).join('\n\n');
+
+            // Combina com os dados estáticos para criar o livro final
+            formattedKnowledgeBaseContext = `${articlesContext}\n\n${KNOWLEDGE_BASE_STATIC_CONTEXT}`;
+            
+            if (!isContextReady) {
+                isContextReady = true;
+                console.log(`Discord Bot: Base de conhecimento pronta com ${articles.length} artigos.`);
+            } else {
+                console.log(`Discord Bot: Base de conhecimento atualizada em tempo real. Total de artigos: ${articles.length}.`);
+            }
+        }, (error) => {
+            console.error("Discord Bot: Erro ao observar a coleção da Wiki:", error);
+            // Em caso de erro, podemos usar o contexto estático como fallback
+            if (!isContextReady) {
+                formattedKnowledgeBaseContext = KNOWLEDGE_BASE_STATIC_CONTEXT;
+                isContextReady = true; // Permite que o bot funcione com conhecimento limitado
+                 console.log("Discord Bot: Usando base de conhecimento estática como fallback.");
+            }
+        });
+
+    } catch (error) {
+        console.error("Discord Bot: Falha ao inicializar a base de conhecimento:", error);
+    }
 }
 
 const client = new Client({
@@ -67,8 +71,8 @@ const client = new Client({
 
 client.once('ready', () => {
   console.log('EternalBot is online!');
-  // Inicializa o cache quando o bot fica pronto
-  initializeWikiCache();
+  // Inicializa a base de conhecimento quando o bot fica pronto
+  initializeKnowledgeBase();
 });
 
 client.on('messageCreate', async (message: Message) => {
@@ -82,24 +86,19 @@ client.on('messageCreate', async (message: Message) => {
       return;
     }
 
-    if (!isCacheReady) {
+    if (!isContextReady) {
         message.reply('Ainda estou sincronizando meu conhecimento com a Wiki. Por favor, aguarde um momento e tente novamente.');
         return;
     }
 
     try {
-        const typingIndicator = await message.channel.sendTyping();
-
-        // O KNOWLEDGE_BASE_CONTEXT agora contém apenas os dados estáticos (mundos, etc).
-        // Vamos combiná-lo com o contexto dinâmico da Wiki vindo do nosso cache.
-        const dynamicWikiContext = getFormattedWikiContextFromCache();
-        const fullContextForAI = `${dynamicWikiContext}\n\n${KNOWLEDGE_BASE_CONTEXT}`;
-
-
-      // Passamos o contexto completo e atualizado para a IA
+        await message.channel.sendTyping();
+        
+      // Usa o "livro de contexto" pré-compilado e sempre atualizado
       const result = await generateSolution({
         problemDescription,
-        history: [], // O histórico pode ser implementado posteriormente
+        history: [], 
+        knowledgeBase: formattedKnowledgeBaseContext
       });
       
       const fullResponse = result.potentialSolution;

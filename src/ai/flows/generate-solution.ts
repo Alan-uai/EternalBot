@@ -11,8 +11,6 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'zod';
 import { getGameData } from '@/firebase/firestore/data';
-import { KNOWLEDGE_BASE_CONTEXT } from '@/lib/knowledge-base';
-
 
 const getGameDataTool = ai.defineTool(
   {
@@ -38,6 +36,7 @@ const MessageSchema = z.object({
 const GenerateSolutionInputSchema = z.object({
   problemDescription: z.string().describe('A description of the player is encountering in Anime Eternal.'),
   history: z.array(MessageSchema).optional().describe('The previous messages in the conversation.'),
+  knowledgeBase: z.string().optional().describe('A pre-compiled knowledge base of wiki articles and game data.'),
 });
 export type GenerateSolutionInput = z.infer<typeof GenerateSolutionInputSchema>;
 
@@ -48,38 +47,6 @@ export type GenerateSolutionOutput = z.infer<typeof GenerateSolutionOutputSchema
 
 export async function generateSolution(input: GenerateSolutionInput): Promise<GenerateSolutionOutput> {
   return generateSolutionFlow(input);
-}
-
-export async function generateSolutionStream(input: GenerateSolutionInput) {
-    try {
-        const { stream } = await prompt.stream(input);
-        
-        return new ReadableStream({
-            async start(controller) {
-                let previousText = '';
-                for await (const chunk of stream) {
-                    const currentText = chunk.output?.potentialSolution;
-                    if (currentText) {
-                        // Compare the current text with the previous one to find the new part.
-                        const newText = currentText.substring(previousText.length);
-                        if (newText) {
-                            controller.enqueue(new TextEncoder().encode(newText));
-                        }
-                        previousText = currentText; // Update the previous text
-                    }
-                }
-                controller.close();
-            }
-        });
-    } catch (error) {
-        console.error("Erro no fluxo de geração de solução (stream):", error);
-        return new ReadableStream({
-            start(controller) {
-                controller.enqueue(new TextEncoder().encode("Desculpe, não consegui processar sua pergunta. Tente reformulá-la."));
-                controller.close();
-            }
-        });
-    }
 }
 
 const prompt = ai.definePrompt({
@@ -121,13 +88,13 @@ O jogo tem 21 mundos, cada um com conteúdo exclusivo. Você deve entender e usa
       *   **Seu Tempo Atual:** Calcule o tempo usando os dados exatos que o jogador forneceu.
       *   **Tempo Otimizado (Média):** Calcule usando uma média de tempo considerada boa: **5 minutos para NPCs** e **15 minutos para Chefes**. Compare o DPS necessário para atingir essa média com o DPS atual do jogador e dê dicas.
       *   **Tempo Máximo Potencial (Hitkill):** Calcule o tempo teórico se o jogador tivesse os melhores poderes e itens dos mundos relevantes maximizados.
-  4.  Explique seu cálculo ao usuário de forma clara e passo a passo para cada cenário.
+  -  4.  Explique seu cálculo ao usuário de forma clara e passo a passo para cada cenário.
 
 
 Se a resposta não estiver nas ferramentas ou na base de conhecimento, diga que você não tem informações suficientes para responder.
 
 INÍCIO DA BASE DE CONHECIMENTO
-${KNOWLEDGE_BASE_CONTEXT}
+{{{knowledgeBase}}}
 FIM DA BASE DE CONHECIMENTO
 
 {{#if history}}

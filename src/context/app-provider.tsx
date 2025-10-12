@@ -9,6 +9,7 @@ import { collection, doc, deleteDoc, setDoc, serverTimestamp } from 'firebase/fi
 import { usePathname, useRouter } from 'next/navigation';
 import { useAdmin } from '@/hooks/use-admin';
 import { Loader2 } from 'lucide-react';
+import { KNOWLEDGE_BASE_STATIC_CONTEXT } from '@/lib/knowledge-base';
 
 
 interface AppContextType {
@@ -19,6 +20,7 @@ interface AppContextType {
   isWikiLoading: boolean;
   isAuthDialogOpen: boolean;
   setAuthDialogOpen: (open: boolean) => void;
+  knowledgeBaseContext: string;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -35,37 +37,30 @@ function AppStateProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   
   const [wikiArticles, setWikiArticles] = useState<WikiArticle[]>([]);
+  const [knowledgeBaseContext, setKnowledgeBaseContext] = useState<string>('');
   const [isAuthDialogOpen, setAuthDialogOpen] = useState(false);
   
-  // State to manage initial app load and redirection logic
   const [isInitialAppLoad, setIsInitialAppLoad] = useState(true);
 
-  // Effect to store the last visited route
   useEffect(() => {
     if (pathname) {
       localStorage.setItem(LAST_VISITED_ROUTE_KEY, pathname);
     }
   }, [pathname]);
 
-  // Effect to handle initial redirection ONCE
   useEffect(() => {
-    // Wait until we know the user's admin status and the app is ready
     if (!isAdminLoading && isInitialAppLoad) {
       const lastRoute = localStorage.getItem(LAST_VISITED_ROUTE_KEY);
       
-      // If a last route exists and we are not already there, go to it.
-      // The page-level guards will handle authorization.
       if (lastRoute && pathname !== lastRoute) {
         router.replace(lastRoute);
       }
       
-      // Mark initial load as complete to prevent this from running again
       setIsInitialAppLoad(false);
     }
   }, [isAdmin, isAdminLoading, isInitialAppLoad, router, pathname]);
 
 
-  // Firestore listeners
   const wikiCollectionRef = useMemoFirebase(() => {
     return firestore ? collection(firestore, 'wikiContent') : null;
   }, [firestore]);
@@ -81,7 +76,8 @@ function AppStateProvider({ children }: { children: ReactNode }) {
     try {
       const wikiCacheItem = window.localStorage.getItem(WIKI_CACHE_STORAGE_KEY);
       if (wikiCacheItem) {
-        setWikiArticles(JSON.parse(wikiCacheItem));
+        const cachedArticles = JSON.parse(wikiCacheItem);
+        setWikiArticles(cachedArticles);
       }
     } catch (error) {
       console.error("Falha ao carregar wiki do armazenamento local", error);
@@ -89,18 +85,34 @@ function AppStateProvider({ children }: { children: ReactNode }) {
   }, []);
   
   useEffect(() => {
-    if (firestoreWikiArticles && firestoreWikiArticles.length > 0) {
-       const hasChanged = JSON.stringify(firestoreWikiArticles) !== JSON.stringify(wikiArticles);
-       if (hasChanged) {
-         setWikiArticles(firestoreWikiArticles);
-         try {
-            window.localStorage.setItem(WIKI_CACHE_STORAGE_KEY, JSON.stringify(firestoreWikiArticles));
-         } catch(error) {
-            console.error("Falha ao salvar wiki no armazenamento local", error);
-         }
-       }
+    if (firestoreWikiArticles) {
+      // Generate the context book whenever articles change
+      const articlesContext = firestoreWikiArticles.map(article => `
+--- INÍCIO DO ARTIGO: ${article.title} ---
+ID: ${article.id}
+Resumo: ${article.summary}
+Conteúdo:
+${article.content}
+Tags: ${Array.isArray(article.tags) ? article.tags.join(', ') : ''}
+${article.tables ? `Tabelas de Dados:\n${JSON.stringify(article.tables, null, 2)}` : ''}
+--- FIM DO ARTIGO: ${article.title} ---
+      `).join('\n\n');
+      
+      const fullContext = `${articlesContext}\n\n${KNOWLEDGE_BASE_STATIC_CONTEXT}`;
+      setKnowledgeBaseContext(fullContext);
+
+      // Also update the local state and localStorage for quick UI rendering
+      const hasChanged = JSON.stringify(firestoreWikiArticles) !== JSON.stringify(wikiArticles);
+      if (hasChanged) {
+        setWikiArticles(firestoreWikiArticles);
+        try {
+          window.localStorage.setItem(WIKI_CACHE_STORAGE_KEY, JSON.stringify(firestoreWikiArticles));
+        } catch(error) {
+          console.error("Falha ao salvar wiki no armazenamento local", error);
+        }
+      }
     }
-  }, [firestoreWikiArticles, wikiArticles]);
+  }, [firestoreWikiArticles, wikiArticles]); // Dependency on firestoreWikiArticles will trigger regeneration
 
   const isAnswerSaved = useCallback((answerId: string) => {
     return !!savedAnswers && savedAnswers.some((saved) => saved.id === answerId);
@@ -131,7 +143,7 @@ function AppStateProvider({ children }: { children: ReactNode }) {
       await setDoc(answerRef, {
         id: answer.id,
         userId: user.uid,
-        question: '', // This could be improved by tracking the preceding user message
+        question: '',
         answer: answer.content,
         createdAt: serverTimestamp(),
       });
@@ -148,12 +160,12 @@ function AppStateProvider({ children }: { children: ReactNode }) {
     toggleSaveAnswer, 
     isAnswerSaved,
     wikiArticles: wikiArticles || [],
-    isWikiLoading: (isFirestoreWikiLoading || areSavedAnswersLoading) && wikiArticles.length === 0,
+    isWikiLoading: (isFirestoreWikiLoading && !knowledgeBaseContext), // Loading is true until the context is first generated
     isAuthDialogOpen,
     setAuthDialogOpen,
+    knowledgeBaseContext
   };
   
-  // While the initial redirection logic is running, show a full-screen loader.
   if (isInitialAppLoad || isAdminLoading) {
       return (
           <div className="flex h-screen w-screen items-center justify-center">

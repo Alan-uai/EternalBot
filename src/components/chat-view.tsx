@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { generateSolutionStream } from '@/ai/flows/generate-solution';
+import { generateSolution } from '@/ai/flows/generate-solution';
 import { Bot, User, Send, Bookmark, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
@@ -56,7 +56,7 @@ export function ChatView() {
   const [isLoading, setIsLoading] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const { toast } = useToast();
-  const { toggleSaveAnswer, isAnswerSaved, wikiArticles, isWikiLoading } = useApp();
+  const { toggleSaveAnswer, isAnswerSaved, isWikiLoading, knowledgeBaseContext } = useApp();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   const form = useForm<z.infer<typeof chatSchema>>({
@@ -106,78 +106,38 @@ export function ChatView() {
       content: values.prompt,
     };
   
-    const currentMessages = [...messages, userMessage];
-    setMessages(currentMessages);
+    setMessages((prevMessages) => [...prevMessages, userMessage]);
     setIsLoading(true);
     form.reset();
   
-    const assistantMessageId = `assistant-${Date.now()}`;
-    const assistantMessage: Message = {
-      id: assistantMessageId,
-      role: 'assistant',
-      content: '',
-      isStreaming: true,
-    };
-    setMessages((prev) => [...prev, assistantMessage]);
-  
     try {
-      const historyForAI = currentMessages.slice(0, -1).map(({ id, ...rest }) => rest);
+      // Get previous messages, excluding the current user message
+      const historyForAI = messages.map(({ id, isStreaming, ...rest }) => rest);
   
-      generateSolutionStream({
+      const result = await generateSolution({
         problemDescription: values.prompt,
         history: historyForAI,
-      }).then(async (stream) => {
-        if (!stream) {
-          throw new Error('A resposta da IA está vazia.');
-        }
-
-        const reader = stream.getReader();
-        const decoder = new TextDecoder();
-        let accumulatedContent = '';
-
-        const processText = async () => {
-          while (true) {
-            const { value, done } = await reader.read();
-            if (done) {
-              setMessages((prev) =>
-                prev.map((msg) =>
-                  msg.id === assistantMessageId ? { ...msg, isStreaming: false } : msg
-                )
-              );
-              setIsLoading(false);
-              break;
-            }
-            accumulatedContent += decoder.decode(value, { stream: true });
-            setMessages((prev) =>
-              prev.map((msg) =>
-                msg.id === assistantMessageId ? { ...msg, content: accumulatedContent } : msg
-              )
-            );
-          }
-        };
-        await processText();
-
-      }).catch(error => {
-        // This catch block will handle errors from the generateSolutionStream promise itself (e.g., network issues)
-        console.error('Erro ao iniciar o stream da solução:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Erro de Conexão',
-          description: 'Não foi possível conectar com a IA. Por favor, verifique sua conexão e tente novamente.',
-        });
-        setMessages((prev) => prev.filter(msg => msg.id !== userMessage.id && msg.id !== assistantMessageId));
-        setIsLoading(false);
+        // Pass the pre-compiled knowledge base context directly
+        knowledgeBase: knowledgeBaseContext
       });
   
+      const assistantMessage: Message = {
+        id: `assistant-${Date.now()}`,
+        role: 'assistant',
+        content: result.potentialSolution,
+      };
+  
+      setMessages((prevMessages) => [...prevMessages, assistantMessage]);
     } catch (error) {
-      // This catch block handles synchronous errors before the promise starts
       console.error('Erro ao gerar solução:', error);
       toast({
         variant: 'destructive',
         title: 'Erro',
         description: 'Falha ao obter uma resposta da IA. Por favor, tente novamente.',
       });
-      setMessages((prev) => prev.filter(msg => msg.id !== userMessage.id && msg.id !== assistantMessageId));
+       // Remove the user message that caused the error
+      setMessages((prevMessages) => prevMessages.filter(msg => msg.id !== userMessage.id));
+    } finally {
       setIsLoading(false);
     }
   }
@@ -253,7 +213,7 @@ export function ChatView() {
                       : 'bg-card'
                   )}
                 >
-                  {message.isStreaming && !message.content ? (
+                  {isLoading && message.id === messages[messages.length -1].id ? (
                     <TypingIndicator />
                   ) : message.role === 'assistant' ? (
                     <AssistantMessage content={message.content} />
@@ -261,7 +221,7 @@ export function ChatView() {
                     <p className="whitespace-pre-wrap">{message.content}</p>
                   )}
                   
-                  {message.role === 'assistant' && !message.isStreaming && message.content && (
+                  {message.role === 'assistant' && !isLoading && message.content && (
                      <Button
                         variant="ghost"
                         size="icon"
