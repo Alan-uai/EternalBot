@@ -111,8 +111,11 @@ ${article.tables ? `Tabelas de Dados:\n${JSON.stringify(article.tables, null, 2)
           console.error("Falha ao salvar wiki no armazenamento local", error);
         }
       }
+    } else if (!isFirestoreWikiLoading) {
+        // If there are no articles from firestore and we are not loading, use only the static context
+        setKnowledgeBaseContext(KNOWLEDGE_BASE_STATIC_CONTEXT);
     }
-  }, [firestoreWikiArticles, wikiArticles]); // Dependency on firestoreWikiArticles will trigger regeneration
+  }, [firestoreWikiArticles, isFirestoreWikiLoading]); 
 
   const isAnswerSaved = useCallback((answerId: string) => {
     return !!savedAnswers && savedAnswers.some((saved) => saved.id === answerId);
