@@ -1,6 +1,5 @@
 
 import { Client, GatewayIntentBits, Message } from 'discord.js';
-import 'dotenv/config';
 import { generateSolution } from '@/ai/flows/generate-solution';
 import { initializeFirebaseServer } from '@/firebase/server';
 import { collection, onSnapshot, query, DocumentData } from 'firebase/firestore';
