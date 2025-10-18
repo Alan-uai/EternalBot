@@ -1,8 +1,3 @@
-# Settings to manage and configure a Firebase App Hosting backend.
-# https://firebase.google.com/docs/app-hosting/configure
-
-runConfig:
-  # Increase this value if you'd like to automatically spin up
-  # more instances in response to increased traffic.
-  maxInstances: 1
-  timeoutSeconds: 300
+# Este arquivo não é mais necessário para a configuração do bot de Discord.
+# As configurações de execução agora são gerenciadas pelos scripts no package.json.
+# Você pode remover este arquivo com segurança.

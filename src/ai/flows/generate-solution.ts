@@ -1,17 +1,7 @@
 // src/ai/flows/generate-solution.ts
-'use server';
-/**
- * @fileOverview A flow that generates solutions to Anime Eternal game problems.
- *
- * - generateSolution - A function that generates a potential solution to a described problem.
- * - GenerateSolutionInput - The input type for the generateSolution function.
- * - GenerateSolutionOutput - The return type for the generateSolution function.
- */
-
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
-import { getGameData } from '@/firebase/firestore/data';
-
+import { ai } from '../genkit';
+import { z } from 'zod';
+import { getGameData } from '../../firebase/firestore/data';
 
 const getGameDataTool = ai.defineTool(
   {
@@ -35,8 +25,8 @@ const MessageSchema = z.object({
 });
 
 const GenerateSolutionInputSchema = z.object({
-  problemDescription: z.string().describe('A description of the player is encountering in Anime Eternal.'),
-  wikiContext: z.string().describe('The entire content of the game wiki to be used as a knowledge base.'),
+  problemDescription: z.string().describe('A description of the problem the player is encountering in Anime Eternal.'),
+  wikiContext: z.string().describe('A compilation of all wiki articles to be used as a knowledge base.'),
   history: z.array(MessageSchema).optional().describe('The previous messages in the conversation.'),
 });
 export type GenerateSolutionInput = z.infer<typeof GenerateSolutionInputSchema>;
@@ -45,59 +35,19 @@ const GenerateSolutionOutputSchema = z.object({
   structuredResponse: z
     .string()
     .describe(
-      'Uma string JSON de um array de objetos. Cada objeto deve ter: `marcador` ("texto_introdutorio", "inicio", "meio", "fim"), `titulo` (string), e `conteudo` (string, formatado em Markdown).'
+      'Uma string JSON de um array de objetos. Cada objeto deve ter: `marcador` ("texto_introdutorio", "meio", "fim"), `titulo` (string), e `conteudo` (string, formatado em Markdown).'
     ),
 });
-
 export type GenerateSolutionOutput = z.infer<typeof GenerateSolutionOutputSchema>;
 
 export async function generateSolution(input: GenerateSolutionInput): Promise<GenerateSolutionOutput> {
   return generateSolutionFlow(input);
 }
 
-export async function generateSolutionStream(input: GenerateSolutionInput) {
-    try {
-        const { stream } = await prompt.stream(input);
-        
-        return new ReadableStream({
-            async start(controller) {
-                let previousText = '';
-                for await (const chunk of stream) {
-                    const currentText = chunk.output?.structuredResponse;
-                    if (currentText) {
-                        // Compare the current text with the previous one to find the new part.
-                        const newText = currentText.substring(previousText.length);
-                        if (newText) {
-                            controller.enqueue(new TextEncoder().encode(newText));
-                        }
-                        previousText = currentText; // Update the previous text
-                    }
-                }
-                controller.close();
-            }
-        });
-    } catch (error) {
-        console.error("Erro no fluxo de geração de solução (stream):", error);
-        return new ReadableStream({
-            start(controller) {
-                const errorObject = {
-                    structuredResponse: JSON.stringify([{
-                        marcador: 'texto_introdutorio',
-                        titulo: 'Erro',
-                        conteudo: 'Desculpe, não consegui processar sua pergunta. Tente reformulá-la.'
-                    }])
-                };
-                controller.enqueue(new TextEncoder().encode(JSON.stringify(errorObject)));
-                controller.close();
-            }
-        });
-    }
-}
-
 export const prompt = ai.definePrompt({
   name: 'generateSolutionPrompt',
-  input: {schema: GenerateSolutionInputSchema},
-  output: {schema: GenerateSolutionOutputSchema},
+  input: { schema: GenerateSolutionInputSchema },
+  output: { schema: GenerateSolutionOutputSchema },
   tools: [getGameDataTool],
   prompt: `Você é um assistente especialista no jogo Anime Eternal e também uma calculadora estratégica. Sua resposta DEVE ser em Português-BR.
 
@@ -105,7 +55,7 @@ export const prompt = ai.definePrompt({
 Sua resposta DEVE ser uma string JSON de um array de objetos. Cada objeto representa uma seção da resposta.
 
 **Estrutura de cada objeto JSON:**
-- \`marcador\`: Use "texto_introdutorio", "inicio", "meio", ou "fim".
+- \`marcador\`: Use "texto_introdutorio", "meio", ou "fim".
 - \`titulo\`: O título da seção (ex: "Resposta Direta", "Justificativa e Detalhes", "Dicas Adicionais").
 - \`conteudo\`: O conteúdo da seção em formato Markdown.
 
@@ -115,7 +65,6 @@ Sua resposta DEVE ser uma string JSON de um array de objetos. Cada objeto repres
 3.  Se aplicável, termine com um ou mais objetos com \`marcador: "fim"\`. Use para dicas extras, estratégias de longo prazo, etc. Dê a eles títulos como "Dicas Adicionais".
 4.  **NÃO USE "INICIO" COMO MARCADOR.** A resposta direta agora está no "texto_introdutorio".
 5.  **A SAÍDA FINAL DEVE SER UM ÚNICO OBJETO JSON**, com uma única chave "structuredResponse" contendo a string JSON do array. **EXEMPLO DE SAÍDA FINAL:** {"structuredResponse": "[{\\"marcador\\":\\"texto_introdutorio\\",\\"titulo\\":\\"Solução Direta\\",\\"conteudo\\":\\"Conteúdo...\\"}]"}
-
 
 ### Estratégia Principal de Raciocínio
 1.  **Primeiro, analise o CONTEÚDO DO WIKI abaixo para entender profundamente a pergunta do usuário.** Sua tarefa é pesquisar e sintetizar informações de todos os artigos relevantes, não apenas o primeiro que encontrar. Use os resumos (summary) e o conteúdo para fazer conexões entre os termos do usuário e os nomes oficiais no jogo (ex: "Raid Green" é a "Green Planet Raid", "mundo de nanatsu" é o Mundo 13, "Windmill Island" é o "Mundo 2"). Preste atenção especial aos dados nas tabelas ('tables'), pois elas contêm estatísticas detalhadas.
