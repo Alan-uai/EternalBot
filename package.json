@@ -1,12 +1,12 @@
 {
-  "name": "discord-bot",
+  "name": "discord-bot-js",
   "version": "1.0.0",
   "private": true,
-  "main": "src/bot.ts",
+  "main": "src/bot.js",
+  "type": "module",
   "scripts": {
-    "start": "tsx src/bot.ts",
-    "watch": "tsx --watch src/bot.ts",
-    "deploy-commands": "tsx src/deploy-commands.ts"
+    "start": "node src/bot.js",
+    "deploy-commands": "node src/deploy-commands.js"
   },
   "dependencies": {
     "@genkit-ai/google-genai": "^1.20.0",
@@ -15,10 +15,5 @@
     "firebase": "^11.9.1",
     "genkit": "^1.20.0",
     "zod": "^3.24.2"
-  },
-  "devDependencies": {
-    "@types/node": "^20",
-    "tsx": "^4.16.2",
-    "typescript": "^5"
   }
 }
