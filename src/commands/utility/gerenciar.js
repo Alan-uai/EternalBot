@@ -1,6 +1,6 @@
 // src/commands/utility/gerenciar.js
 import { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
 import { allWikiArticles } from '../../data/wiki-data.js';
 
@@ -51,6 +51,8 @@ async function handleInteraction(interaction) {
 
     if (action === 'equipar') {
         await handleEquipAction(interaction, categoryId);
+    } else if (action === 'desequipar') {
+        await handleUnequipAction(interaction, categoryId);
     } else if (action === 'selectitem') {
         await handleSelectItemAction(interaction, categoryId, actionData[0]);
     } else if (action === 'selectlevel') {
@@ -72,6 +74,10 @@ async function handleInteraction(interaction) {
         const enchantType = actionData[1];
         const enchantId = actionData[2];
         await handleSetEnchantment(interaction, weaponId, enchantType, enchantId);
+    } else if (action === 'selectgamepass') {
+        await handleSelectGamepassAction(interaction, categoryId);
+    } else if (action === 'removegamepass') {
+        await handleRemoveGamepassAction(interaction, categoryId);
     }
 }
 
@@ -106,7 +112,19 @@ function getItemsForCategory(categoryId) {
                 });
             });
             break;
-        // Adicionar outros casos para pets, acessorios, etc.
+        case 'gamepasses':
+            const gamepassArticles = allWikiArticles.filter(a => a.id === 'gamepass-tier-list');
+            gamepassArticles.forEach(article => {
+                if(article.tables) {
+                    Object.values(article.tables).forEach(table => {
+                        table.rows.forEach(row => {
+                            if(row.Gamepass) items.push({ name: row.Gamepass, id: row.Gamepass.toLowerCase().replace(/ /g, '-') });
+                        });
+                    });
+                }
+            });
+            break;
+        // Adicionar outros casos para acessorios, etc.
     }
     // Remover duplicados
     return items.filter((item, index, self) =>
@@ -182,6 +200,19 @@ function getItemDetails(categoryId, itemId) {
 
 
 async function handleEquipAction(interaction, categoryId) {
+    if (categoryId === 'gamepasses') {
+        const items = getItemsForCategory(categoryId);
+        if (items.length === 0) {
+            return interaction.reply({ content: 'Nenhuma gamepass encontrada.', ephemeral: true });
+        }
+        const selectMenu = new StringSelectMenuBuilder()
+            .setCustomId(`gerenciar_${categoryId}_selectgamepass`)
+            .setPlaceholder('Selecione a gamepass para equipar')
+            .addOptions(items.slice(0, 25).map(item => ({ label: item.name, value: item.id })));
+        const row = new ActionRowBuilder().addComponents(selectMenu);
+        return interaction.reply({ content: 'Escolha a gamepass:', components: [row], ephemeral: true });
+    }
+
     const items = getItemsForCategory(categoryId);
 
     if (items.length === 0) {
@@ -257,6 +288,76 @@ async function handleSelectLevelAction(interaction, categoryId, itemId, levelId)
 
     await interaction.update({ content: `Item \`${itemId}\` (${levelId}) equipado com sucesso!`, components: [] });
 }
+
+async function handleUnequipAction(interaction, categoryId) {
+    const { firestore } = initializeFirebase();
+    const userRef = doc(firestore, 'users', interaction.user.id);
+    const userSnap = await getDoc(userRef);
+
+    if (!userSnap.exists()) {
+        return interaction.reply({ content: 'Perfil não encontrado.', ephemeral: true });
+    }
+
+    const userData = userSnap.data();
+    let itemsToUnequip = [];
+    let customIdPrefix = '';
+
+    if (categoryId === 'gamepasses') {
+        itemsToUnequip = userData.gamepasses || [];
+        customIdPrefix = `gerenciar_gamepasses_removegamepass`;
+    } else {
+        itemsToUnequip = Object.values(userData.equipped?.[categoryId] || {});
+        customIdPrefix = `gerenciar_${categoryId}_removeitem`; // Placeholder for future implementation
+    }
+
+    if (itemsToUnequip.length === 0) {
+        return interaction.reply({ content: `Você não tem nenhum item para desequipar em \`${categoryId}\`.`, ephemeral: true });
+    }
+
+    const selectMenu = new StringSelectMenuBuilder()
+        .setCustomId(customIdPrefix)
+        .setPlaceholder(`Selecione um item para desequipar`)
+        .addOptions(itemsToUnequip.slice(0, 25).map(item => ({
+            label: (item.id || item).replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+            value: item.id || item,
+        })));
+    
+    const row = new ActionRowBuilder().addComponents(selectMenu);
+    await interaction.reply({ content: `Escolha o item para desequipar:`, components: [row], ephemeral: true });
+}
+
+async function handleSelectGamepassAction(interaction, categoryId) {
+    const gamepassId = interaction.values[0];
+    const { firestore } = initializeFirebase();
+    const userRef = doc(firestore, 'users', interaction.user.id);
+
+    try {
+        await updateDoc(userRef, {
+            gamepasses: arrayUnion(gamepassId)
+        });
+        await interaction.update({ content: `Gamepass \`${gamepassId}\` equipada com sucesso!`, components: [] });
+    } catch (error) {
+        console.error("Erro ao equipar gamepass:", error);
+        await interaction.update({ content: 'Ocorreu um erro ao salvar sua gamepass.', components: [] });
+    }
+}
+
+async function handleRemoveGamepassAction(interaction, categoryId) {
+    const gamepassId = interaction.values[0];
+    const { firestore } = initializeFirebase();
+    const userRef = doc(firestore, 'users', interaction.user.id);
+
+    try {
+        await updateDoc(userRef, {
+            gamepasses: arrayRemove(gamepassId)
+        });
+        await interaction.update({ content: `Gamepass \`${gamepassId}\` desequipada com sucesso!`, components: [] });
+    } catch (error) {
+        console.error("Erro ao desequipar gamepass:", error);
+        await interaction.update({ content: 'Ocorreu um erro ao remover sua gamepass.', components: [] });
+    }
+}
+
 
 async function handleEditAction(interaction, categoryId) {
     const { firestore } = initializeFirebase();

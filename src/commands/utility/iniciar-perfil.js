@@ -295,8 +295,23 @@ async function createInventoryThreads(channel) {
                     .setDescription('Aqui você pode gerenciar seus itens equipados. A imagem acima exibirá seus itens.\n\nUse os botões abaixo para interagir.')
                     .setImage('https://via.placeholder.com/400x100/2f3136/2f3136.png'); // Placeholder
 
-                const actionRow = new ActionRowBuilder()
-                    .addComponents(
+                const actionRow = new ActionRowBuilder();
+                
+                if (category.id === 'gamepasses') {
+                    actionRow.addComponents(
+                        new ButtonBuilder()
+                            .setCustomId(`gerenciar_${category.id}_equipar`)
+                            .setLabel('Equipar')
+                            .setStyle(ButtonStyle.Success)
+                            .setEmoji('➕'),
+                        new ButtonBuilder()
+                            .setCustomId(`gerenciar_${category.id}_desequipar`)
+                            .setLabel('Desequipar')
+                            .setStyle(ButtonStyle.Danger)
+                            .setEmoji('➖')
+                    );
+                } else {
+                    actionRow.addComponents(
                         new ButtonBuilder()
                             .setCustomId(`gerenciar_${category.id}_equipar`)
                             .setLabel('Equipar')
@@ -313,6 +328,7 @@ async function createInventoryThreads(channel) {
                             .setStyle(ButtonStyle.Primary)
                             .setEmoji('✏️')
                     );
+                }
                 
                 await thread.send({ embeds: [embed], components: [actionRow] });
 
