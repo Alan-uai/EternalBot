@@ -1,0 +1,30 @@
+export const world16Data = {
+  id: 'world-16',
+  title: 'Mundo 16 - Ilha Bizarra',
+  summary: 'Introduz os Stands, um novo tipo de lutador focado em bônus de energia.',
+  npcs: [
+    { name: 'Usuário de Stand', rank: 'E', exp: 1.2e12, hp: '1tsTG' },
+    { name: 'Vampiro', rank: 'D', exp: 1.8e12, hp: '10tsTG' },
+    { name: 'Homem do Pilar', rank: 'C', exp: 2.6e12, hp: '100tsTG' },
+    { name: 'Assassino', rank: 'B', exp: 3.8e12, hp: '1qTG' },
+    { name: 'Mafioso', rank: 'A', exp: 5.5e12, hp: '10qTG' },
+    { name: 'Jotaro', rank: 'S', exp: 8e12, hp: '97.5NVG' },
+    { name: 'Dio', rank: 'SS', exp: 1.6e13, hp: '195NVG', drops: { aura: { name: 'Aura de Hamon', probability: 0.05 } } },
+  ],
+  pets: [
+    { name: 'Iggy', rank: 'Comum', rarity: 'Comum', energy_bonus: '0.16x' },
+    { name: 'Tartaruga', rank: 'Incomum', rarity: 'Incomum', energy_bonus: '0.32x' },
+    { name: 'Hierophant Green Mini', rank: 'Raro', rarity: 'Raro', energy_bonus: '0.48x' },
+  ],
+  stands: [
+    { id: 'star-platinum', name: 'Star Platinum', rarity: 'Comum', energy_bonus: '2%' },
+    { id: 'magicians-red', name: 'Magicians Red', rarity: 'Incomum', energy_bonus: '4%' },
+    { id: 'hierophant-green', name: 'Hierophant Green', rarity: 'Raro', energy_bonus: '6%' },
+    { id: 'the-world', name: 'The World', rarity: 'Épico', energy_bonus: '10%' },
+    { id: 'king-crimson', name: 'King Crimson', rarity: 'Lendário', energy_bonus: '15%' },
+    { id: 'killer-queen', name: 'Killer Queen', rarity: 'Mítico', energy_bonus: '20%' },
+    { id: 'golden-experience', name: 'Golden Experience', rarity: 'Mítico', energy_bonus: '25%' },
+    { id: 'golden-experience-requiem', name: 'Golden Experience Requiem', rarity: 'Phantom', energy_bonus: '35%' },
+    { id: 'the-world-over-heaven', name: 'The World Over Heaven', rarity: 'Phantom', energy_bonus: '40%' },
+  ],
+};
