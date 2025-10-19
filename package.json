@@ -5,8 +5,7 @@
   "main": "src/bot.js",
   "type": "module",
   "scripts": {
-    "start": "node src/bot.js",
-    "deploy-commands": "node src/deploy-commands.js"
+    "start": "node src/bot.js"
   },
   "dependencies": {
     "@genkit-ai/google-genai": "^1.20.0",
