@@ -1,7 +1,4 @@
-// Este arquivo será responsável por carregar e formatar os dados para a IA.
-// Por simplicidade, vamos apenas importar os dados estáticos e formatá-los.
-// Em uma versão mais avançada, isso poderia buscar dados do Firestore e fazer cache.
-
+// src/knowledge-base.js
 import { allWikiArticles } from './data/wiki-data.js';
 
 function formatArticle(article) {

@@ -1,6 +1,6 @@
 // src/commands/utility/profile.js
 import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
 
 export const data = new SlashCommandBuilder()
@@ -29,7 +29,7 @@ export async function execute(interaction) {
                 email: null, // O bot não tem acesso ao email por padrão
                 reputationPoints: 0,
                 credits: 0,
-                createdAt: new Date(),
+                createdAt: serverTimestamp(),
             };
             await setDoc(userRef, newUserProfile);
              const embed = new EmbedBuilder()

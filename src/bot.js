@@ -24,9 +24,8 @@ const client = new Client({
 const wikiContext = loadKnowledgeBase();
 client.wikiContext = wikiContext;
 
-// Carregar comandos de forma síncrona e robusta
+// Carregar comandos
 client.commands = new Collection();
-const commands = [];
 const foldersPath = path.join(__dirname, 'commands');
 const commandFolders = fs.readdirSync(foldersPath);
 
@@ -38,7 +37,6 @@ for (const folder of commandFolders) {
     const command = await import(`file://${filePath}`);
     if ('data' in command && 'execute' in command) {
       client.commands.set(command.data.name, command);
-      commands.push(command.data.toJSON());
     } else {
       console.log(
         `[AVISO] O comando em ${filePath} não possui a propriedade "data" ou "execute".`
@@ -47,12 +45,14 @@ for (const folder of commandFolders) {
   }
 }
 
-// Evento de Ready - Onde o deploy dos comandos acontece
+// Evento de Ready
 client.once(Events.ClientReady, async (readyClient) => {
   console.log(`Pronto! Logado como ${readyClient.user.tag}`);
   
   // Registrar/Atualizar os comandos na API do Discord
   const rest = new REST().setToken(process.env.DISCORD_TOKEN);
+  const commands = Array.from(client.commands.values()).map(c => c.data.toJSON());
+
   try {
     console.log(`Iniciada a atualização de ${commands.length} comandos de aplicação (/).`);
     const data = await rest.put(
@@ -85,17 +85,11 @@ client.on(Events.InteractionCreate, async (interaction) => {
     await command.execute(interaction, { wikiContext: client.wikiContext });
   } catch (error) {
     console.error(error);
+    const errorMessage = 'Ocorreu um erro ao executar este comando!';
     if (interaction.replied || interaction.deferred) {
-      await interaction.followUp({
-        content: 'Ocorreu um erro ao executar este comando!',
-        ephemeral: true,
-      });
+      await interaction.followUp({ content: errorMessage, ephemeral: true });
     } else {
-      // Adicionado 'ephemeral: true' para consistência
-      await interaction.reply({
-        content: 'Ocorreu um erro ao executar este comando!',
-        ephemeral: true,
-      });
+      await interaction.reply({ content: errorMessage, ephemeral: true });
     }
   }
 });
