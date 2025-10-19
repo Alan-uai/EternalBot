@@ -84,7 +84,7 @@ export const energyGainPerRankArticle = {
           { 'Rank': 72, 'Ganho de Energia': '11.2M' },
           { 'Rank': 73, 'Ganho de Energia': '22.3M' },
           { 'Rank': 74, 'Ganho de Energia': '44.7M' },
-          { 'Rank': 75, 'Ganho de Energia': '79.0M' },
+          { 'Rank': 75, 'Ganho de Energia': '18.8sx' },
           { 'Rank': 76, 'Ganho de Energia': '37.7sx' },
           { 'Rank': 77, 'Ganho de Energia': '75.4sx' },
           { 'Rank': 78, 'Ganho de Energia': '150sx' },
