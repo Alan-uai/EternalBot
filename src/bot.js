@@ -18,7 +18,7 @@ const client = new Client({
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
-    GatewayIntentBits.GuildMembers, // Adicionado para o evento GuildMemberUpdate
+    GatewayIntentBits.GuildMembers,
   ],
 });
 
@@ -72,29 +72,51 @@ client.once(Events.ClientReady, async (readyClient) => {
 });
 
 
-// Evento de interação para executar comandos
+// Evento de interação para executar comandos e interações
 client.on(Events.InteractionCreate, async (interaction) => {
-  if (!interaction.isChatInputCommand()) return;
+    // Se for um comando de chat
+    if (interaction.isChatInputCommand()) {
+        const command = interaction.client.commands.get(interaction.commandName);
 
-  const command = interaction.client.commands.get(interaction.commandName);
+        if (!command) {
+            console.error(`Nenhum comando correspondente a ${interaction.commandName} foi encontrado.`);
+            return;
+        }
 
-  if (!command) {
-    console.error(`Nenhum comando correspondente a ${interaction.commandName} foi encontrado.`);
-    return;
-  }
-
-  try {
-    await command.execute(interaction, { wikiContext: client.wikiContext });
-  } catch (error) {
-    console.error(error);
-    const errorMessage = 'Ocorreu um erro ao executar este comando!';
-    if (interaction.replied || interaction.deferred) {
-      await interaction.followUp({ content: errorMessage, ephemeral: true });
-    } else {
-      await interaction.reply({ content: errorMessage, ephemeral: true });
+        try {
+            await command.execute(interaction, { wikiContext: client.wikiContext });
+        } catch (error) {
+            console.error(error);
+            const errorMessage = 'Ocorreu um erro ao executar este comando!';
+            if (interaction.replied || interaction.deferred) {
+                await interaction.followUp({ content: errorMessage, ephemeral: true });
+            } else {
+                await interaction.reply({ content: errorMessage, ephemeral: true });
+            }
+        }
+        return;
     }
-  }
+
+    // Se for uma interação de botão ou modal (para o formulário)
+    if (interaction.isButton() || interaction.isModalSubmit()) {
+        const commandName = interaction.customId.split('_')[0]; // Ex: 'iniciar-perfil_abrir' -> 'iniciar-perfil'
+        const command = interaction.client.commands.get(commandName);
+
+        if (command && command.handleInteraction) {
+            try {
+                await command.handleInteraction(interaction);
+            } catch (error) {
+                console.error(`Erro ao lidar com interação para ${commandName}:`, error);
+                 if (interaction.replied || interaction.deferred) {
+                    await interaction.followUp({ content: 'Ocorreu um erro ao processar sua ação.', ephemeral: true });
+                } else {
+                    await interaction.reply({ content: 'Ocorreu um erro ao processar sua ação.', ephemeral: true });
+                }
+            }
+        }
+    }
 });
+
 
 // Evento para criar perfil ao verificar com Bloxlink
 client.on(Events.GuildMemberUpdate, async (oldMember, newMember) => {
