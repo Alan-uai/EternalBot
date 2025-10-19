@@ -163,12 +163,15 @@ client.on(Events.MessageCreate, async (message) => {
     // ID do canal restrito para o chat
     const CHAT_CHANNEL_ID = '1429309293076680744';
 
-    // 1. Ignora mensagens de outros bots
-    // 2. Verifica se a mensagem está no canal de chat correto
+    // 1. O bot só responde no canal de chat correto.
+    if (message.channel.id !== CHAT_CHANNEL_ID) {
+        return;
+    }
+    
+    // 2. Ignora mensagens de outros bots
     // 3. Verifica se a mensagem menciona o bot diretamente (e não @everyone ou um cargo)
     if (
         message.author.bot ||
-        message.channel.id !== CHAT_CHANNEL_ID ||
         !message.mentions.has(client.user.id) ||
         message.mentions.everyone // Ignora @everyone e @here
     ) {
@@ -220,6 +223,8 @@ client.on(Events.MessageCreate, async (message) => {
             // Armazenar temporariamente a pergunta e a resposta para o contexto do feedback
             client.interactions.set(`question_${message.id}`, question);
             client.interactions.set(`answer_${message.id}`, replyContent);
+            client.interactions.set(`replyMessageId_${message.id}`, replyMessage.id);
+
 
         } else {
             await message.reply('Desculpe, não consegui obter uma resposta.');
@@ -238,12 +243,15 @@ client.on(Events.InteractionCreate, async (interaction) => {
         const [,, userId, originalMessageId] = interaction.customId.split('_');
 
         if (interaction.customId.startsWith('feedback_dislike')) {
-            const MOD_CHANNEL_ID = '1429314152928641118';
-            const modChannel = await client.channels.fetch(MOD_CHANNEL_ID);
-
-            // Recupera a pergunta e a resposta originais
+            await interaction.deferUpdate(); // Confirma o clique para o Discord
+            
             const originalQuestion = client.interactions.get(`question_${originalMessageId}`);
             const badResponse = client.interactions.get(`answer_${originalMessageId}`);
+            const replyMessageId = client.interactions.get(`replyMessageId_${originalMessageId}`);
+            
+            // 1. Enviar para o canal de moderação
+            const MOD_CHANNEL_ID = '1429314152928641118';
+            const modChannel = await client.channels.fetch(MOD_CHANNEL_ID);
 
             if (modChannel && originalQuestion && badResponse) {
                 const feedbackEmbed = new EmbedBuilder()
@@ -274,10 +282,41 @@ client.on(Events.InteractionCreate, async (interaction) => {
                     );
 
                 await modChannel.send({ embeds: [feedbackEmbed], components: [modActionsRow] });
-                await interaction.reply({ content: 'Seu feedback foi enviado para a moderação. Obrigado por ajudar a melhorar o bot!', ephemeral: true });
-            } else {
-                 await interaction.reply({ content: 'Não foi possível registrar seu feedback. O contexto da mensagem original foi perdido.', ephemeral: true });
             }
+
+            // 2. Gerar nova resposta e editar a mensagem original
+            try {
+                const newResult = await generateSolution({
+                    problemDescription: originalQuestion,
+                    wikiContext: client.wikiContext,
+                });
+                
+                if (newResult && newResult.structuredResponse) {
+                    const newParsedResponse = JSON.parse(newResult.structuredResponse);
+                    let newReplyContent = '🔄 **Resposta regenerada:**\n\n';
+                    newParsedResponse.forEach((section) => {
+                        newReplyContent += `**${section.titulo}**\n${section.conteudo}\n\n`;
+                    });
+
+                    if (newReplyContent.length > 2000) {
+                        newReplyContent = newReplyContent.substring(0, 1997) + '...';
+                    }
+
+                    // Encontra a mensagem de resposta do bot e a edita
+                    const originalChannel = await client.channels.fetch(interaction.channelId);
+                    const replyMessage = await originalChannel.messages.fetch(replyMessageId);
+
+                    if(replyMessage) {
+                        await replyMessage.edit({ content: newReplyContent });
+                        // Atualiza a resposta armazenada para o caso de outro dislike
+                        client.interactions.set(`answer_${originalMessageId}`, newReplyContent);
+                    }
+                }
+
+            } catch (error) {
+                 console.error('Erro ao regenerar resposta:', error);
+            }
+
         } else if (interaction.customId.startsWith('feedback_like')) {
             await interaction.reply({ content: 'Obrigado pelo seu feedback positivo!', ephemeral: true });
         }
@@ -296,7 +335,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         const userChannel = guild.channels.cache.find(ch => ch.name === channelName && ch.type === ChannelType.GuildText);
 
         if (!userChannel) {
-             return interaction.reply({ content: `O canal de perfil para ${user.tag} não foi encontrado.`, ephemeral: true });
+             return interaction.reply({ content: `O canal de perfil para ${user.tag} não foi encontrado. Use /atualizar-perfil para criar.`, ephemeral: true });
         }
         
         const existingThreads = await userChannel.threads.fetch();
@@ -351,7 +390,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
         try {
             if (command.execute) {
-              await command.execute(interaction, { wikiContext: client.wikiContext });
+              await command.execute(interaction, { client });
             }
         } catch (error) {
             console.error(error);

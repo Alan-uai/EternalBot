@@ -10,7 +10,7 @@ const IMPORT_BUTTON_ID = `${CUSTOM_ID_PREFIX}_importar`;
 const FORM_MODAL_ID = `${CUSTOM_ID_PREFIX}_modal`;
 const IMPORT_MODAL_ID = `${CUSTOM_ID_PREFIX}_importar_modal`;
 
-const INVENTORY_CATEGORIES = [
+export const INVENTORY_CATEGORIES = [
     { id: 'armas', name: 'Armas', emoji: '⚔️' },
     { id: 'poderes', name: 'Poderes', emoji: '⚡' },
     { id: 'pets', name: 'Pets', emoji: '🐾' },
@@ -254,7 +254,7 @@ async function handleFormSubmit(interaction) {
     await interaction.editReply(`Seu perfil foi atualizado com sucesso! Seus painéis de inventário foram criados nos tópicos do seu canal privado: <#${channel.id}>`);
 }
 
-async function findOrCreateUserChannel(interaction, user) {
+export async function findOrCreateUserChannel(interaction, user) {
     const channelName = `perfil-${user.username.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
     let userChannel = interaction.guild.channels.cache.find(ch => ch.name === channelName && ch.type === ChannelType.GuildText);
 
@@ -289,7 +289,7 @@ async function findOrCreateUserChannel(interaction, user) {
     return userChannel;
 }
 
-async function createInventoryThreads(channel) {
+export async function createInventoryThreads(channel) {
     const existingThreads = await channel.threads.fetch();
     const existingThreadNames = new Set(existingThreads.threads.map(t => t.name));
 
