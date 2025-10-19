@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { Client, Collection, Events, GatewayIntentBits, REST, Routes } from 'discord.js';
 import { initializeFirebase } from './firebase/index.js';
 import { loadKnowledgeBase } from './knowledge-base.js';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 // Resolve __dirname for ES Modules
 const __filename = fileURLToPath(import.meta.url);
@@ -17,6 +18,7 @@ const client = new Client({
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildMembers, // Adicionado para o evento GuildMemberUpdate
   ],
 });
 
@@ -92,6 +94,37 @@ client.on(Events.InteractionCreate, async (interaction) => {
       await interaction.reply({ content: errorMessage, ephemeral: true });
     }
   }
+});
+
+// Evento para criar perfil ao verificar com Bloxlink
+client.on(Events.GuildMemberUpdate, async (oldMember, newMember) => {
+    const verifiedRoleId = '1429278854874140734';
+    const hadRole = oldMember.roles.cache.has(verifiedRoleId);
+    const hasRole = newMember.roles.cache.has(verifiedRoleId);
+
+    // Se o usuário ACABOU de receber o cargo
+    if (!hadRole && hasRole) {
+        const { firestore } = initializeFirebase();
+        const userRef = doc(firestore, 'users', newMember.id);
+        const userSnap = await getDoc(userRef);
+
+        if (!userSnap.exists()) {
+            try {
+                const newUserProfile = {
+                    id: newMember.id,
+                    username: newMember.user.username,
+                    email: null,
+                    reputationPoints: 0,
+                    credits: 0,
+                    createdAt: serverTimestamp(),
+                };
+                await setDoc(userRef, newUserProfile);
+                console.log(`Perfil criado automaticamente para o usuário verificado: ${newMember.user.tag} (${newMember.id})`);
+            } catch (error) {
+                console.error(`Falha ao criar perfil automático para ${newMember.id}:`, error);
+            }
+        }
+    }
 });
 
 
