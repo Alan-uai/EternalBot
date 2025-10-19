@@ -160,10 +160,20 @@ client.once(Events.ClientReady, async (readyClient) => {
 
 // Evento para responder a menções
 client.on(Events.MessageCreate, async (message) => {
-    // Ignora mensagens de outros bots ou mensagens que não mencionam o bot
-    if (message.author.bot || !message.mentions.has(client.user.id)) {
+    // ID do canal restrito para o chat
+    const CHAT_CHANNEL_ID = '1429309293076680744';
+
+    // 1. Ignora mensagens de outros bots
+    // 2. Verifica se a mensagem está no canal de chat correto
+    // 3. Verifica se a mensagem menciona o bot diretamente (e não @everyone ou um cargo)
+    if (
+        message.author.bot ||
+        message.channel.id !== CHAT_CHANNEL_ID ||
+        !message.mentions.users.has(client.user.id)
+    ) {
         return;
     }
+
 
     // Remove a menção para obter a pergunta limpa
     const question = message.content.replace(/<@!?(\d+)>/g, '').trim();
@@ -298,5 +308,3 @@ http.createServer((req, res) => {
 }).listen(port, () => {
   console.log(`Servidor web ouvindo na porta ${port}`);
 });
-
-    
