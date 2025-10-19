@@ -46,6 +46,7 @@ import { titansArticle } from './wiki-articles/titans.js';
 import { upgradesCostsArticle } from './wiki-articles/upgrades-costs.js';
 import { world20RaidsArticle } from './wiki-articles/world-20-raids.js';
 import { worldBossesArticle } from './wiki-articles/world-bosses.js';
+import { tokenFarmingGuideArticle } from './wiki-articles/token-farming-guide.js';
 
 export const allWikiArticles = [
     // World Data
@@ -97,4 +98,5 @@ export const allWikiArticles = [
     upgradesCostsArticle,
     jewelryCraftingArticle,
     idealRankPerWorldArticle,
+    tokenFarmingGuideArticle,
 ];
