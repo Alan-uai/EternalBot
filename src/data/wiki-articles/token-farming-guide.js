@@ -31,7 +31,7 @@ Ter um multiplicador alto não adianta se o local de farm não for eficiente. Pa
 **Fórmula de Eficiência:**
 **Tokens por Sala = (Nº de NPCs na Sala) * (Nº de Tokens Diferentes que Dropam) * (Chance de Drop de Cada Token)**
 
-Esta fórmula nos dá uma estimativa matemática de quantos tokens você pode esperar obter ao limpar uma única sala em uma raid.
+Esta fórmula nos dá uma estimativa matemática de quantos tokens você pode esperar obter ao limpar uma única sala em uma raid. O número total de salas em uma dungeon afeta o rendimento total, mas esta fórmula mede a eficiência por tempo gasto.
 
 **Exemplo Prático: Restaurante Raid vs. Cursed Raid**
 
@@ -49,8 +49,17 @@ Vamos usar o exemplo que você deu:
 
 **Conclusão da Análise:** Matematicamente, a **Cursed Raid é aproximadamente 19% mais eficiente** para farm de tokens do que a Restaurante Raid, pois você pode esperar quase 1 token a mais por sala limpa.
 
-A IA deve usar essa mesma lógica para analisar outras raids (Progression, Ghoul, Dungeons do Lobby como Easy/Medium/Hard, etc.) e recomendar o local mais eficiente com base nos dados disponíveis sobre drops.
+### Parte 3: Multiplicadores de Chave de Raid (2x e 3x)
+
+Um fator crucial para o farm de alto nível é o uso de chaves de raid extras para multiplicar as recompensas.
+
+- **Raids com Multiplicador:** As raids **Restaurante, Cursed, Progression e Progression 2** oferecem a opção de usar 2 ou 3 chaves de uma vez.
+- **Funcionamento:** Ao usar 2x ou 3x as chaves, você recebe **2x ou 3x a quantidade de tokens** e outras recompensas ao final da raid.
+
+Isso significa que, embora a Cursed Raid seja mais eficiente por sala, se um jogador puder completar a Restaurante Raid três vezes no mesmo tempo que leva para completar a Cursed Raid uma vez (ou usar o modo 3x), a escolha pode mudar. A IA deve considerar esses multiplicadores como um fator decisivo nas recomendações.
+
+**Cenários de Comparação:** A IA deve ser capaz de criar cenários comparativos, como "Análise de Dungeons do Lobby" versus "Análise de Raids de Mundo (com multiplicadores)", para dar ao jogador a visão mais completa.
 `,
-  tags: ['tokens', 'farm', 'guia', 'método', 'otimização', 'bônus', 'cálculo', 'eficiente', 'raid', 'dungeon'],
+  tags: ['tokens', 'farm', 'guia', 'método', 'otimização', 'bônus', 'cálculo', 'eficiente', 'raid', 'dungeon', '3x'],
   imageUrl: 'wiki-13',
 };
