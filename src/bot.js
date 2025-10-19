@@ -97,9 +97,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
         return;
     }
 
-    // Se for uma interação de botão ou modal (para o formulário)
+    // Se for uma interação de botão ou modal
     if (interaction.isButton() || interaction.isModalSubmit()) {
-        const commandName = interaction.customId.split('_')[0]; // Ex: 'iniciar-perfil_abrir' -> 'iniciar-perfil'
+        // IDs customizados podem ser `iniciar-perfil_abrir` ou `inventario_poderes` ou `gerenciar_poderes_equipar`
+        const commandName = interaction.customId.split('_')[0]; 
         const command = interaction.client.commands.get(commandName);
 
         if (command && command.handleInteraction) {
@@ -113,6 +114,16 @@ client.on(Events.InteractionCreate, async (interaction) => {
                     await interaction.reply({ content: 'Ocorreu um erro ao processar sua ação.', ephemeral: true });
                 }
             }
+        } else {
+            // Fallback para o novo sistema de inventário
+             const gerenciarCommand = interaction.client.commands.get('inventario');
+             if(interaction.customId.startsWith('gerenciar_') && gerenciarCommand && gerenciarCommand.handleInteraction) {
+                  try {
+                        await gerenciarCommand.handleInteraction(interaction);
+                    } catch (error) {
+                        console.error(`Erro ao lidar com interação de gerenciamento:`, error);
+                    }
+             }
         }
     }
 });

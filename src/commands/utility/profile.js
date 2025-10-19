@@ -1,14 +1,14 @@
 // src/commands/utility/profile.js
-import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { doc, getDoc } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
 
 export const data = new SlashCommandBuilder()
     .setName('perfil')
-    .setDescription('Mostra seu perfil de jogador ou de outro usuário.')
+    .setDescription('Mostra suas estatísticas de jogador ou de outro usuário.')
     .addUserOption(option => 
         option.setName('usuario')
-              .setDescription('O usuário do qual você quer ver o perfil (deixe em branco para ver o seu).')
+              .setDescription('O usuário do qual você quer ver o perfil.')
               .setRequired(false));
 
 export async function execute(interaction) {
@@ -34,7 +34,7 @@ export async function execute(interaction) {
 
     const embed = new EmbedBuilder()
       .setColor(0x4BC5FF)
-      .setTitle(`Perfil de ${userData.username}`)
+      .setTitle(`Perfil de ${userData.username || targetUser.username}`)
       .setThumbnail(targetUser.displayAvatarURL({ dynamic: true }))
       .addFields(
         { name: 'Reputação', value: `\`${userData.reputationPoints || 0}\``, inline: true },
@@ -53,3 +53,10 @@ export async function execute(interaction) {
       
     await interaction.editReply({ embeds: [embed] });
 };
+
+async function handleInteraction(interaction) {
+    // Esta função será para interações futuras no perfil, se necessário.
+    await interaction.reply({ content: 'Interação de perfil recebida!', ephemeral: true });
+}
+
+export { handleInteraction };
