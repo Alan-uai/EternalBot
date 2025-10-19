@@ -43,10 +43,11 @@ import { standsArticle } from './wiki-articles/stands.js';
 import { starChancesArticle } from './wiki-articles/star-chances.js';
 import { swordsArticle } from './wiki-articles/swords.js';
 import { titansArticle } from './wiki-articles/titans.js';
+import { tokenFarmingGuideArticle } from './wiki-articles/token-farming-guide.js';
 import { upgradesCostsArticle } from './wiki-articles/upgrades-costs.js';
+import { world19PowerProgressionArticle } from './wiki-articles/world-19-power-progression.js';
 import { world20RaidsArticle } from './wiki-articles/world-20-raids.js';
 import { worldBossesArticle } from './wiki-articles/world-bosses.js';
-import { tokenFarmingGuideArticle } from './wiki-articles/token-farming-guide.js';
 
 export const allWikiArticles = [
     // World Data
@@ -99,4 +100,5 @@ export const allWikiArticles = [
     jewelryCraftingArticle,
     idealRankPerWorldArticle,
     tokenFarmingGuideArticle,
+    world19PowerProgressionArticle,
 ];
