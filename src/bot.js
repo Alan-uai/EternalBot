@@ -99,7 +99,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
     // Se for uma interação de botão ou modal
     if (interaction.isButton() || interaction.isModalSubmit()) {
-        // IDs customizados podem ser `iniciar-perfil_abrir` ou `inventario_poderes` ou `gerenciar_poderes_equipar`
+        // IDs customizados podem ser `iniciar-perfil_abrir` ou `gerenciar_poderes_equipar`
         const commandName = interaction.customId.split('_')[0]; 
         const command = interaction.client.commands.get(commandName);
 
@@ -116,7 +116,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
             }
         } else {
             // Fallback para o novo sistema de inventário
-             const gerenciarCommand = interaction.client.commands.get('inventario');
+             const gerenciarCommand = interaction.client.commands.get('gerenciar');
              if(interaction.customId.startsWith('gerenciar_') && gerenciarCommand && gerenciarCommand.handleInteraction) {
                   try {
                         await gerenciarCommand.handleInteraction(interaction);

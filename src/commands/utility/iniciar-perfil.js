@@ -1,5 +1,5 @@
 // src/commands/utility/iniciar-perfil.js
-import { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle, ChannelType, PermissionsBitField } from 'discord.js';
+import { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle, ChannelType, PermissionsBitField, EmbedBuilder } from 'discord.js';
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, query, where, getDocs } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
 
@@ -9,6 +9,17 @@ const FORM_BUTTON_ID = `${CUSTOM_ID_PREFIX}_abrir`;
 const IMPORT_BUTTON_ID = `${CUSTOM_ID_PREFIX}_importar`;
 const FORM_MODAL_ID = `${CUSTOM_ID_PREFIX}_modal`;
 const IMPORT_MODAL_ID = `${CUSTOM_ID_PREFIX}_importar_modal`;
+
+const INVENTORY_CATEGORIES = [
+    { id: 'armas', name: 'Armas', emoji: '⚔️' },
+    { id: 'poderes', name: 'Poderes', emoji: '⚡' },
+    { id: 'pets', name: 'Pets', emoji: '🐾' },
+    { id: 'acessorios', name: 'Acessórios', emoji: '🧢' },
+    { id: 'auras', name: 'Auras', emoji: '✨' },
+    { id: 'gamepasses', name: 'Gamepasses', emoji: '🎟️' },
+    { id: 'sombras', name: 'Sombras', emoji: '👤' },
+    { id: 'stands', name: 'Stands', emoji: '🕺' }
+];
 
 export const data = new SlashCommandBuilder()
     .setName('iniciar-perfil')
@@ -89,16 +100,14 @@ async function handleImportSubmit(interaction) {
     }
 
     const webUserData = querySnapshot.docs[0].data();
-    const webUserRef = querySnapshot.docs[0].ref;
-
+    
     const discordUserRef = doc(firestore, 'users', discordUser.id);
     
-    // Mescla os dados da web com o perfil do Discord.
-    // O ID do discord é mantido, mas as outras informações são importadas.
     const profileDataToUpdate = {
-        ...webUserData, // Importa todos os dados do perfil web
-        id: discordUser.id, // Garante que o ID do documento seja o do Discord
-        username: discordUser.username, // Atualiza para o username atual do Discord
+        ...webUserData,
+        id: discordUser.id, 
+        username: discordUser.username,
+        email: email, // Salva o e-mail usado para a importação
         lastUpdated: serverTimestamp()
     };
 
@@ -108,6 +117,9 @@ async function handleImportSubmit(interaction) {
     if (!channel) {
          return interaction.editReply('Seu perfil foi importado, mas houve um erro ao criar seu canal privado. Por favor, contate um administrador.');
     }
+    
+    // Dispara a criação dos tópicos do inventário
+    await createInventoryThreads(channel);
     
     const confirmationMessage = `**Perfil importado do site com sucesso!**
 
@@ -119,7 +131,7 @@ async function handleImportSubmit(interaction) {
 `;
     await channel.send(confirmationMessage);
 
-    await interaction.editReply(`Seu perfil foi importado com sucesso! Veja as informações no seu canal privado: <#${channel.id}>`);
+    await interaction.editReply(`Seu perfil foi importado com sucesso! Seus painéis de inventário foram criados nos tópicos do seu canal privado: <#${channel.id}>`);
 }
 
 
@@ -200,12 +212,21 @@ async function handleFormSubmit(interaction) {
         lastUpdated: serverTimestamp()
     };
     
-    await updateDoc(userRef, profileData);
+    const userSnap = await getDoc(userRef);
+    if (userSnap.exists()) {
+        await updateDoc(userRef, profileData);
+    } else {
+        await setDoc(userRef, { ...profileData, id: user.id, username: user.username, createdAt: serverTimestamp() }, { merge: true });
+    }
+
 
     const channel = await findOrCreateUserChannel(interaction, user);
     if (!channel) {
         return interaction.editReply('Seu perfil foi atualizado, mas houve um erro ao criar seu canal privado. Por favor, contate um administrador.');
     }
+    
+    // Dispara a criação dos tópicos do inventário
+    await createInventoryThreads(channel);
     
     const confirmationMessage = `**Suas estatísticas foram atualizadas com sucesso!**
 
@@ -217,12 +238,12 @@ async function handleFormSubmit(interaction) {
 `;
     await channel.send(confirmationMessage);
 
-    await interaction.editReply(`Seu perfil foi atualizado com sucesso! Veja as informações no seu canal privado: <#${channel.id}>`);
+    await interaction.editReply(`Seu perfil foi atualizado com sucesso! Seus painéis de inventário foram criados nos tópicos do seu canal privado: <#${channel.id}>`);
 }
 
 async function findOrCreateUserChannel(interaction, user) {
     const channelName = `perfil-${user.username.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
-    let userChannel = interaction.guild.channels.cache.find(ch => ch.name === channelName);
+    let userChannel = interaction.guild.channels.cache.find(ch => ch.name === channelName && ch.type === ChannelType.GuildText);
 
     if (!userChannel) {
         try {
@@ -241,7 +262,7 @@ async function findOrCreateUserChannel(interaction, user) {
                     },
                     {
                         id: interaction.client.user.id,
-                        allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages],
+                        allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ManageThreads],
                     },
                 ],
             });
@@ -255,5 +276,51 @@ async function findOrCreateUserChannel(interaction, user) {
     return userChannel;
 }
 
+async function createInventoryThreads(channel) {
+    const existingThreads = await channel.threads.fetch();
+    const existingThreadNames = new Set(existingThreads.threads.map(t => t.name));
+
+    for (const category of INVENTORY_CATEGORIES) {
+        if (!existingThreadNames.has(category.name.toLowerCase())) {
+            try {
+                const thread = await channel.threads.create({
+                    name: category.name.toLowerCase(),
+                    autoArchiveDuration: 10080, // 7 dias
+                    reason: `Tópico de inventário para ${category.name}`
+                });
+
+                const embed = new EmbedBuilder()
+                    .setColor(0x4BC5FF)
+                    .setTitle(`${category.emoji} Gerenciador de ${category.name}`)
+                    .setDescription('Aqui você pode gerenciar seus itens equipados. A imagem acima exibirá seus itens.\n\nUse os botões abaixo para interagir.')
+                    .setImage('https://via.placeholder.com/400x100/2f3136/2f3136.png'); // Placeholder
+
+                const actionRow = new ActionRowBuilder()
+                    .addComponents(
+                        new ButtonBuilder()
+                            .setCustomId(`gerenciar_${category.id}_equipar`)
+                            .setLabel('Equipar')
+                            .setStyle(ButtonStyle.Success)
+                            .setEmoji('➕'),
+                        new ButtonBuilder()
+                            .setCustomId(`gerenciar_${category.id}_desequipar`)
+                            .setLabel('Desequipar')
+                            .setStyle(ButtonStyle.Danger)
+                            .setEmoji('➖'),
+                        new ButtonBuilder()
+                            .setCustomId(`gerenciar_${category.id}_editar`)
+                            .setLabel('Ver/Editar')
+                            .setStyle(ButtonStyle.Primary)
+                            .setEmoji('✏️')
+                    );
+                
+                await thread.send({ embeds: [embed], components: [actionRow] });
+
+            } catch (error) {
+                console.error(`Falha ao criar tópico para ${category.name}:`, error);
+            }
+        }
+    }
+}
 
 export { handleInteraction };
