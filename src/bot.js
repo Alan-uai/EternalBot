@@ -35,6 +35,7 @@ for (const folder of commandFolders) {
     .filter((file) => file.endsWith('.js'));
   for (const file of commandFiles) {
     const filePath = path.join(commandsPath, file);
+    // Use dynamic import with file:// protocol for ES Modules
     const command = await import(`file://${filePath}`);
     if ('data' in command && 'execute' in command) {
       client.commands.set(command.data.name, command);
