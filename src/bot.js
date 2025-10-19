@@ -9,6 +9,7 @@ import { initializeFirebase } from './firebase/index.js';
 import { loadKnowledgeBase } from './knowledge-base.js';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { lobbyDungeonsArticle } from './data/wiki-articles/lobby-dungeons.js';
+import { generateSolution } from './ai/flows/generate-solution.js';
 
 // Resolve __dirname for ES Modules
 const __filename = fileURLToPath(import.meta.url);
@@ -38,6 +39,8 @@ for (const folder of commandFolders) {
   const commandFiles = fs.readdirSync(commandsPath).filter((file) => file.endsWith('.js'));
   for (const file of commandFiles) {
     const filePath = path.join(commandsPath, file);
+    // Skip the chat command as it's being handled by mentions
+    if (path.basename(filePath) === 'chat.js') continue;
     const command = await import(`file://${filePath}`);
     
     // Configurar comandos de barra
@@ -155,6 +158,51 @@ client.once(Events.ClientReady, async (readyClient) => {
 });
 
 
+// Evento para responder a menções
+client.on(Events.MessageCreate, async (message) => {
+    // Ignora mensagens de outros bots ou mensagens que não mencionam o bot
+    if (message.author.bot || !message.mentions.has(client.user.id)) {
+        return;
+    }
+
+    // Remove a menção para obter a pergunta limpa
+    const question = message.content.replace(/<@!?(\d+)>/g, '').trim();
+
+    if (!question) {
+        await message.reply('Olá! Em que posso ajudar sobre o Anime Eternal?');
+        return;
+    }
+
+    try {
+        await message.channel.sendTyping();
+        const result = await generateSolution({
+            problemDescription: question,
+            wikiContext: client.wikiContext,
+        });
+
+        if (result && result.structuredResponse) {
+            const parsedResponse = JSON.parse(result.structuredResponse);
+            
+            let replyContent = '';
+            parsedResponse.forEach((section) => {
+                replyContent += `**${section.titulo}**\n${section.conteudo}\n\n`;
+            });
+            
+            if (replyContent.length > 2000) {
+                replyContent = replyContent.substring(0, 1997) + '...';
+            }
+
+            await message.reply(replyContent);
+        } else {
+            await message.reply('Desculpe, não consegui obter uma resposta.');
+        }
+    } catch (error) {
+        console.error('Erro ao chamar o fluxo generateSolution via menção:', error);
+        await message.reply('Ocorreu um erro ao processar sua pergunta.');
+    }
+});
+
+
 // Evento de interação para executar comandos e interações
 client.on(Events.InteractionCreate, async (interaction) => {
     // Se for um comando de chat
@@ -250,3 +298,5 @@ http.createServer((req, res) => {
 }).listen(port, () => {
   console.log(`Servidor web ouvindo na porta ${port}`);
 });
+
+    
