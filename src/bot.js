@@ -81,6 +81,7 @@ function checkRaidTimes() {
     raidSchedule.forEach(async (raid) => {
         const raidMinute = parseInt(raid['Horário'].substring(3, 5), 10);
         const raidIdentifier = `${currentHour}:${raidMinute}`;
+        const roleMention = raid.roleId ? `<@&${raid.roleId}>` : '@everyone';
 
         // Check for 5-minute warning
         if (currentMinute === (raidMinute - 5 + 60) % 60) {
@@ -90,7 +91,7 @@ function checkRaidTimes() {
                     const embed = new EmbedBuilder()
                         .setColor(0xFFD700) // Gold
                         .setTitle(`🚨 Alerta de Raid: ${raid['Dificuldade']} começa em 5 minutos!`)
-                        .setDescription(`Prepare-se para a batalha! A dungeon do lobby está prestes a abrir.`)
+                        .setDescription(`Preparem-se para a batalha! A dungeon do lobby está prestes a abrir.`)
                         .addFields(
                             { name: 'Dificuldade', value: raid['Dificuldade'], inline: true },
                             { name: 'Horário', value: `Começa às HH:${raidMinute.toString().padStart(2, '0')}`, inline: true },
@@ -98,7 +99,7 @@ function checkRaidTimes() {
                         )
                         .setTimestamp();
                     
-                    const sentMessage = await channel.send({ embeds: [embed] });
+                    const sentMessage = await channel.send({ content: roleMention, embeds: [embed] });
                     setTimeout(() => sentMessage.delete().catch(console.error), TEN_MINUTES_IN_MS);
                     notifiedRaids.add(`${raidIdentifier}-warning`);
                 }
@@ -122,7 +123,7 @@ function checkRaidTimes() {
                         )
                         .setTimestamp();
 
-                    const sentMessage = await channel.send({ embeds: [embed] });
+                    const sentMessage = await channel.send({ content: roleMention, embeds: [embed] });
                     setTimeout(() => sentMessage.delete().catch(console.error), TEN_MINUTES_IN_MS);
                     notifiedRaids.add(`${raidIdentifier}-start`);
                 }
