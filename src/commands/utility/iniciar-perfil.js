@@ -216,7 +216,14 @@ async function handleFormSubmit(interaction) {
     if (userSnap.exists()) {
         await updateDoc(userRef, profileData);
     } else {
-        await setDoc(userRef, { ...profileData, id: user.id, username: user.username, createdAt: serverTimestamp() }, { merge: true });
+        await setDoc(userRef, { 
+            ...profileData, 
+            id: user.id, 
+            username: user.username, 
+            createdAt: serverTimestamp(),
+            reputationPoints: 0,
+            credits: 0
+        });
     }
 
 
