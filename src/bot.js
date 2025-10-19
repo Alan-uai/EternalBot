@@ -431,15 +431,25 @@ client.on(Events.InteractionCreate, async (interaction) => {
     }
 });
 
+const ALL_RAIDS_ROLE_ID = '1429360300594958397';
+const RAID_NOTIFICATION_ROLES = [
+    '1429357175373041786', // Easy
+    '1429357351906967562', // Medium
+    '1429357358303150200', // Hard
+    '1429357528168271894', // Insane
+    '1429357529044877312', // Crazy
+    '1429357529317511279', // Nightmare
+    '1429357530106298428'  // Leaf
+];
 
-// Evento para criar perfil ao verificar com Bloxlink
+// Evento para gerenciar cargos
 client.on(Events.GuildMemberUpdate, async (oldMember, newMember) => {
+    // --- Lógica para Cargo de Verificado (Bloxlink) ---
     const verifiedRoleId = '1429278854874140734';
-    const hadRole = oldMember.roles.cache.has(verifiedRoleId);
-    const hasRole = newMember.roles.cache.has(verifiedRoleId);
+    const hadVerifiedRole = oldMember.roles.cache.has(verifiedRoleId);
+    const hasVerifiedRole = newMember.roles.cache.has(verifiedRoleId);
 
-    // Se o usuário ACABOU de receber o cargo
-    if (!hadRole && hasRole) {
+    if (!hadVerifiedRole && hasVerifiedRole) {
         const { firestore } = initializeFirebase();
         const userRef = doc(firestore, 'users', newMember.id);
         const userSnap = await getDoc(userRef);
@@ -461,6 +471,29 @@ client.on(Events.GuildMemberUpdate, async (oldMember, newMember) => {
             }
         }
     }
+
+    // --- Lógica para Cargo "ALL" de Raids ---
+    const hadAllRaidsRole = oldMember.roles.cache.has(ALL_RAIDS_ROLE_ID);
+    const hasAllRaidsRole = newMember.roles.cache.has(ALL_RAIDS_ROLE_ID);
+
+    if (!hadAllRaidsRole && hasAllRaidsRole) {
+        console.log(`Usuário ${newMember.user.tag} recebeu o cargo ALL. Verificando e adicionando cargos de raid...`);
+        const rolesToAdd = [];
+        for (const roleId of RAID_NOTIFICATION_ROLES) {
+            if (!newMember.roles.cache.has(roleId)) {
+                rolesToAdd.push(roleId);
+            }
+        }
+
+        if (rolesToAdd.length > 0) {
+            try {
+                await newMember.roles.add(rolesToAdd, 'Atribuição automática pelo cargo ALL Raids');
+                console.log(`Adicionados ${rolesToAdd.length} cargos de raid para ${newMember.user.tag}.`);
+            } catch (error) {
+                console.error(`Falha ao adicionar cargos de raid para ${newMember.user.tag}:`, error);
+            }
+        }
+    }
 });
 
 
@@ -476,3 +509,5 @@ http.createServer((req, res) => {
 }).listen(port, () => {
   console.log(`Servidor web ouvindo na porta ${port}`);
 });
+
+    
