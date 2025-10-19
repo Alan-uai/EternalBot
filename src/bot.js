@@ -64,6 +64,7 @@ for (const folder of commandFolders) {
 const RAID_CHANNEL_ID = '1429260587648417964';
 const GAME_LINK = 'https://www.roblox.com/games/90462358603255/15-Min-Anime-Eternal';
 const notifiedRaids = new Set();
+const TEN_MINUTES_IN_MS = 10 * 60 * 1000;
 
 function checkRaidTimes() {
     const now = new Date();
@@ -97,7 +98,8 @@ function checkRaidTimes() {
                         )
                         .setTimestamp();
                     
-                    await channel.send({ embeds: [embed] });
+                    const sentMessage = await channel.send({ embeds: [embed] });
+                    setTimeout(() => sentMessage.delete().catch(console.error), TEN_MINUTES_IN_MS);
                     notifiedRaids.add(`${raidIdentifier}-warning`);
                 }
             }
@@ -120,7 +122,8 @@ function checkRaidTimes() {
                         )
                         .setTimestamp();
 
-                    await channel.send({ embeds: [embed] });
+                    const sentMessage = await channel.send({ embeds: [embed] });
+                    setTimeout(() => sentMessage.delete().catch(console.error), TEN_MINUTES_IN_MS);
                     notifiedRaids.add(`${raidIdentifier}-start`);
                 }
             }
