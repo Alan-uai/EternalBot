@@ -9,6 +9,7 @@ const FORM_BUTTON_ID = `${CUSTOM_ID_PREFIX}_abrir`;
 const IMPORT_BUTTON_ID = `${CUSTOM_ID_PREFIX}_importar`;
 const FORM_MODAL_ID = `${CUSTOM_ID_PREFIX}_modal`;
 const IMPORT_MODAL_ID = `${CUSTOM_ID_PREFIX}_importar_modal`;
+const PROFILE_CATEGORY_ID = '1426957344897761280'; // ID da Categoria "Perfis"
 
 export const INVENTORY_CATEGORIES = [
     { id: 'armas', name: 'Armas', emoji: '⚔️' },
@@ -263,6 +264,7 @@ export async function findOrCreateUserChannel(interaction, user) {
             userChannel = await interaction.guild.channels.create({
                 name: channelName,
                 type: ChannelType.GuildText,
+                parent: PROFILE_CATEGORY_ID, // Adiciona o canal à categoria especificada
                 permissionOverwrites: [
                     {
                         id: interaction.guild.roles.everyone,
