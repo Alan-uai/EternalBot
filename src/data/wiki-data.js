@@ -28,6 +28,7 @@ import { energyGainPerRankArticle } from './wiki-articles/energy-gain.js';
 import { gamepassTierListArticle } from './wiki-articles/gamepass-tier-list.js';
 import { gettingStartedArticle } from './wiki-articles/getting-started.js';
 import { guildWarsArticle } from './wiki-articles/guild-wars.js';
+import { halloweenEventGuideArticle } from './wiki-articles/halloween-event-guide.js';
 import { howToGetStrongerArticle } from './wiki-articles/how-to-get-stronger.js';
 import { idealRankPerWorldArticle } from './wiki-articles/ideal-rank-per-world.js';
 import { jewelryCraftingArticle } from './wiki-articles/jewelry-crafting.js';
@@ -101,4 +102,5 @@ export const allWikiArticles = [
     idealRankPerWorldArticle,
     tokenFarmingGuideArticle,
     world19PowerProgressionArticle,
+    halloweenEventGuideArticle,
 ];
