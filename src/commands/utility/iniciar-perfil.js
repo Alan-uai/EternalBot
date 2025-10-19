@@ -1,6 +1,6 @@
 // src/commands/utility/iniciar-perfil.js
 import { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle, ChannelType, PermissionsBitField } from 'discord.js';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
 
 const FORMULARIO_CHANNEL_ID = '1429260045371310200';
@@ -53,50 +53,50 @@ async function handleOpenFormButton(interaction) {
 
     const worldInput = new TextInputBuilder()
         .setCustomId('currentWorld')
-        .setLabel("Qual é o seu mundo atual?")
-        .setPlaceholder("Ex: Mundo 19 - Ilha do Inferno")
+        .setLabel("Mundo Atual")
+        .setPlaceholder("Ex: 23")
         .setStyle(TextInputStyle.Short)
-        .setValue(userData.currentWorld || '')
+        .setValue(String(userData.currentWorld || ''))
         .setRequired(true);
 
     const rankInput = new TextInputBuilder()
         .setCustomId('rank')
-        .setLabel("Qual é o seu Rank?")
-        .setPlaceholder("Ex: 125")
+        .setLabel("Seu Rank")
+        .setPlaceholder("Ex: 115")
         .setStyle(TextInputStyle.Short)
-        .setValue(userData.rank || '')
+        .setValue(String(userData.rank || ''))
         .setRequired(true);
     
-    const petsInput = new TextInputBuilder()
-        .setCustomId('pets')
-        .setLabel("Quais são seus melhores PETS equipados?")
-        .setPlaceholder("Ex: 2x Phantom King, 1x Mythic Dragon")
-        .setStyle(TextInputStyle.Paragraph)
-        .setValue(userData.pets || '')
-        .setRequired(false);
+    const dpsInput = new TextInputBuilder()
+        .setCustomId('dps')
+        .setLabel("Dano Total (DPS)")
+        .setPlaceholder("Ex: 1.5sx")
+        .setStyle(TextInputStyle.Short)
+        .setValue(userData.dps || '')
+        .setRequired(true);
 
-    const aurasInput = new TextInputBuilder()
-        .setCustomId('auras')
-        .setLabel("Quais AURAS você tem equipadas?")
-        .setPlaceholder("Ex: Aura do Imperador Vermelho, Aura da Folha")
-        .setStyle(TextInputStyle.Paragraph)
-        .setValue(userData.auras || '')
-        .setRequired(false);
+    const energyInput = new TextInputBuilder()
+        .setCustomId('totalEnergy')
+        .setLabel("Energia Atual (Acumulada)")
+        .setPlaceholder("Ex: 1.5sx")
+        .setStyle(TextInputStyle.Short)
+        .setValue(userData.totalEnergy || '')
+        .setRequired(true);
 
-    const powersInput = new TextInputBuilder()
-        .setCustomId('powers')
-        .setLabel("Quais PODERES (Gacha/Progressão) você usa?")
-        .setPlaceholder("Ex: Super Saiyajin Blue, Poder do Pirata (Phantom)")
-        .setStyle(TextInputStyle.Paragraph)
-        .setValue(userData.powers || '')
-        .setRequired(false);
+    const energyPerClickInput = new TextInputBuilder()
+        .setCustomId('energyPerClick')
+        .setLabel("Ganho de Energia (por clique)")
+        .setPlaceholder("Ex: 87.04O")
+        .setStyle(TextInputStyle.Short)
+        .setValue(userData.energyPerClick || '')
+        .setRequired(true);
 
     modal.addComponents(
         new ActionRowBuilder().addComponents(worldInput),
         new ActionRowBuilder().addComponents(rankInput),
-        new ActionRowBuilder().addComponents(petsInput),
-        new ActionRowBuilder().addComponents(aurasInput),
-        new ActionRowBuilder().addComponents(powersInput),
+        new ActionRowBuilder().addComponents(dpsInput),
+        new ActionRowBuilder().addComponents(energyInput),
+        new ActionRowBuilder().addComponents(energyPerClickInput)
     );
 
     await interaction.showModal(modal);
@@ -112,13 +112,12 @@ async function handleFormSubmit(interaction) {
     const profileData = {
         currentWorld: interaction.fields.getTextInputValue('currentWorld'),
         rank: interaction.fields.getTextInputValue('rank'),
-        pets: interaction.fields.getTextInputValue('pets') || null,
-        auras: interaction.fields.getTextInputValue('auras') || null,
-        powers: interaction.fields.getTextInputValue('powers') || null,
+        dps: interaction.fields.getTextInputValue('dps'),
+        totalEnergy: interaction.fields.getTextInputValue('totalEnergy'),
+        energyPerClick: interaction.fields.getTextInputValue('energyPerClick'),
         lastUpdated: serverTimestamp()
     };
     
-    // Usando updateDoc para não sobrescrever o perfil inteiro
     await updateDoc(userRef, profileData);
 
     const channelName = `perfil-${user.username.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
@@ -131,21 +130,21 @@ async function handleFormSubmit(interaction) {
                 type: ChannelType.GuildText,
                 permissionOverwrites: [
                     {
-                        id: interaction.guild.roles.everyone, // @everyone
+                        id: interaction.guild.roles.everyone,
                         deny: [PermissionsBitField.Flags.ViewChannel],
                     },
                     {
                         id: user.id,
                         allow: [PermissionsBitField.Flags.ViewChannel],
-                        deny: [PermissionsBitField.Flags.SendMessages] // Usuário não pode enviar mensagens
+                        deny: [PermissionsBitField.Flags.SendMessages]
                     },
                     {
-                        id: interaction.client.user.id, // O Bot
+                        id: interaction.client.user.id,
                         allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages],
                     },
                 ],
             });
-             await userChannel.send(`Bem-vindo ao seu perfil, <@${user.id}>! Suas informações foram atualizadas.`);
+             await userChannel.send(`Bem-vindo ao seu canal de perfil, <@${user.id}>! Suas informações foram salvas.`);
 
         } catch (error) {
             console.error("Falha ao criar canal privado:", error);
@@ -153,19 +152,17 @@ async function handleFormSubmit(interaction) {
         }
     }
     
-    // Envia a confirmação no canal privado do usuário
-     const confirmationMessage = `**Suas informações foram salvas com sucesso!**
+    const confirmationMessage = `**Suas estatísticas foram atualizadas com sucesso!**
 
-- **Mundo:** ${profileData.currentWorld}
+- **Mundo Atual:** ${profileData.currentWorld}
 - **Rank:** ${profileData.rank}
-- **Pets:** ${profileData.pets || 'Não informado'}
-- **Auras:** ${profileData.auras || 'Não informado'}
-- **Poderes:** ${profileData.powers || 'Não informado'}
+- **Dano Total (DPS):** ${profileData.dps}
+- **Energia Atual (Acumulada):** ${profileData.totalEnergy}
+- **Ganho de Energia (por clique):** ${profileData.energyPerClick}
 `;
     await userChannel.send(confirmationMessage);
 
     await interaction.editReply(`Seu perfil foi atualizado com sucesso! Veja as informações no seu canal privado: <#${userChannel.id}>`);
 }
 
-// Exportar handleInteraction para ser usado no bot.js
 export { handleInteraction };
