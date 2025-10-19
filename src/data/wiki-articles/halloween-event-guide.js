@@ -14,27 +14,27 @@ Uma nova raid temporária está disponível no Mundo 1.
 
 ### Sistema de Progressão da Halloween Bag
 
-A Halloween Bag funciona de forma similar ao poder "Adolla" do Mundo 19. Você começa com uma versão Comum e a evolui usando **Halloween Candies** (doces de Halloween), que são obtidos durante a raid.
+A Halloween Bag funciona de forma similar ao poder "Adolla" do Mundo 19. Você começa com uma versão Comum e a evolui usando **Halloween Candies** (doces de Halloween), que são obtidos durante a raid. O nível da bag é aumentado no **Halloween Bag Leveling**, enquanto a raridade é evoluída no **Halloween Envolve**.
 
 #### **Etapa 1: Comum**
 - **Bônus Base:** 0.5x Energia
-- **Leveling:** Você deve upar este item até o nível máximo.
+- **Leveling:** Você deve upar este item até o nível máximo no **Halloween Bag Leveling**.
 - **Bônus Máximo (após leveling):** 1.5x Energia
 
 #### **Etapa 2: Incomum**
-- **Como Obter:** Com a Bag Comum no nível máximo (nível 100), vá para o "Halloween Bag Evolve" e crafte a versão Incomum. O processo de leveling com Halloween Candies tem 100% de chance de sucesso.
+- **Como Obter:** Com a Bag Comum no nível máximo (nível 100), vá para o **"Halloween Envolve"** e crafte a versão Incomum. O processo de leveling com Halloween Candies tem 100% de chance de sucesso.
 - **Bônus Base:** 1x Energia, 1x Dano
 - **Leveling:** Upe o item até o nível máximo.
 - **Bônus Máximo (após leveling):** 2x Energia, 2x Dano
 
 #### **Etapa 3: Épico**
-- **Como Obter:** Evolua a Bag Incomum no nível máximo para obter a versão Épica.
+- **Como Obter:** Evolua a Bag Incomum no nível máximo para obter a versão Épica no **Halloween Envolve**.
 - **Bônus Base:** 2x Energia, 2x Dano, 1x Moedas (Coin)
 - **Leveling:** Upe o item até o nível 100.
 - **Bônus Máximo (após leveling):** 3x Energia, 3x Dano, 2x Moedas
 
 #### **Etapa 4: Lendário**
-- **Como Obter:** Evolua a Bag Épica no nível máximo para obter a versão final, Lendária.
+- **Como Obter:** Evolua a Bag Épica no nível máximo para obter a versão final, Lendária, no **Halloween Envolve**.
 - **Bônus Base:** 3x Energia, 3x Dano, 2x Moedas
 - **Leveling:** Upe o item até o nível máximo.
 - **Bônus Máximo (após leveling):** 5x Energia, 5x Dano, 4x Moedas
