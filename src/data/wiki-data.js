@@ -29,6 +29,7 @@ import { gamepassTierListArticle } from './wiki-articles/gamepass-tier-list.js';
 import { gettingStartedArticle } from './wiki-articles/getting-started.js';
 import { guildWarsArticle } from './wiki-articles/guild-wars.js';
 import { howToGetStrongerArticle } from './wiki-articles/how-to-get-stronger.js';
+import { idealRankPerWorldArticle } from './wiki-articles/ideal-rank-per-world.js';
 import { jewelryCraftingArticle } from './wiki-articles/jewelry-crafting.js';
 import { legendaryWeaponsArticle } from './wiki-articles/legendary-weapons.js';
 import { levelExpArticle } from './wiki-articles/level-exp.js';
@@ -95,4 +96,5 @@ export const allWikiArticles = [
     starChancesArticle,
     upgradesCostsArticle,
     jewelryCraftingArticle,
+    idealRankPerWorldArticle,
 ];
