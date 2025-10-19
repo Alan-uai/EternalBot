@@ -4,10 +4,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import http from 'node:http';
 import { fileURLToPath } from 'node:url';
-import { Client, Collection, Events, GatewayIntentBits, REST, Routes } from 'discord.js';
+import { Client, Collection, Events, GatewayIntentBits, REST, Routes, EmbedBuilder } from 'discord.js';
 import { initializeFirebase } from './firebase/index.js';
 import { loadKnowledgeBase } from './knowledge-base.js';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { lobbyDungeonsArticle } from './data/wiki-articles/lobby-dungeons.js';
 
 // Resolve __dirname for ES Modules
 const __filename = fileURLToPath(import.meta.url);
@@ -56,6 +57,75 @@ for (const folder of commandFolders) {
   }
 }
 
+// --- Raid Alert Scheduler ---
+const RAID_CHANNEL_ID = '1429260587648417964';
+const GAME_LINK = 'https://www.roblox.com/games/90462358603255/15-Min-Anime-Eternal';
+const notifiedRaids = new Set();
+
+function checkRaidTimes() {
+    const now = new Date();
+    const currentMinute = now.getMinutes();
+    const currentHour = now.getHours();
+
+    // Reset notified raids at the beginning of each hour
+    if (currentMinute === 0) {
+        notifiedRaids.clear();
+    }
+    
+    const raidSchedule = lobbyDungeonsArticle.tables.lobbySchedule.rows;
+
+    raidSchedule.forEach(async (raid) => {
+        const raidMinute = parseInt(raid['Horário'].substring(3, 5), 10);
+        const raidIdentifier = `${currentHour}:${raidMinute}`;
+
+        // Check for 5-minute warning
+        if (currentMinute === (raidMinute - 5 + 60) % 60) {
+            if (!notifiedRaids.has(`${raidIdentifier}-warning`)) {
+                const channel = await client.channels.fetch(RAID_CHANNEL_ID);
+                if (channel) {
+                    const embed = new EmbedBuilder()
+                        .setColor(0xFFD700) // Gold
+                        .setTitle(`🚨 Alerta de Raid: ${raid['Dificuldade']} começa em 5 minutos!`)
+                        .setDescription(`Prepare-se para a batalha! A dungeon do lobby está prestes a abrir.`)
+                        .addFields(
+                            { name: 'Dificuldade', value: raid['Dificuldade'], inline: true },
+                            { name: 'Horário', value: `Começa às HH:${raidMinute.toString().padStart(2, '0')}`, inline: true },
+                            { name: 'Entrar no Jogo', value: `[Clique aqui para jogar](${GAME_LINK})` }
+                        )
+                        .setTimestamp();
+                    
+                    await channel.send({ embeds: [embed] });
+                    notifiedRaids.add(`${raidIdentifier}-warning`);
+                }
+            }
+        }
+
+        // Check for raid start
+        if (currentMinute === raidMinute) {
+             if (!notifiedRaids.has(`${raidIdentifier}-start`)) {
+                const channel = await client.channels.fetch(RAID_CHANNEL_ID);
+                 if (channel) {
+                    const embed = new EmbedBuilder()
+                        .setColor(0xFF4B4B) // Red
+                        .setTitle(`🔥 A Raid Começou: ${raid['Dificuldade']}!`)
+                        .setDescription(`O portal está aberto! Entre agora para não perder.`)
+                        .addFields(
+                            { name: 'Dificuldade', value: raid['Dificuldade'], inline: true },
+                            { name: 'Vida do Chefe', value: `\`${raid['Vida Último Boss']}\``, inline: true },
+                            { name: 'Dano Recomendado', value: `\`${raid['Dano Recomendado']}\``, inline: true },
+                            { name: 'Entrar no Jogo', value: `**[Clique aqui para ir para o jogo](${GAME_LINK})**` }
+                        )
+                        .setTimestamp();
+
+                    await channel.send({ embeds: [embed] });
+                    notifiedRaids.add(`${raidIdentifier}-start`);
+                }
+            }
+        }
+    });
+}
+// ------------------------
+
 // Evento de Ready
 client.once(Events.ClientReady, async (readyClient) => {
   console.log(`Pronto! Logado como ${readyClient.user.tag}`);
@@ -78,6 +148,10 @@ client.once(Events.ClientReady, async (readyClient) => {
   // Inicializar o Firebase
   initializeFirebase();
   console.log('Firebase inicializado.');
+
+  // Iniciar o agendador de raids
+  console.log('Agendador de alertas de raid iniciado.');
+  setInterval(checkRaidTimes, 60000); // Executa a cada 60 segundos
 });
 
 
