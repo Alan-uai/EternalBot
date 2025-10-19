@@ -2,7 +2,7 @@
 import 'dotenv/config';
 import fs from 'node:fs';
 import path from 'node:path';
-import http from 'node:http'; // Importa o módulo HTTP
+import http from 'node:http';
 import { fileURLToPath } from 'node:url';
 import { Client, Collection, Events, GatewayIntentBits, REST, Routes } from 'discord.js';
 import { initializeFirebase } from './firebase/index.js';
@@ -24,7 +24,7 @@ const client = new Client({
 const wikiContext = loadKnowledgeBase();
 client.wikiContext = wikiContext;
 
-// Carregar comandos
+// Carregar comandos de forma síncrona e robusta
 client.commands = new Collection();
 const commands = [];
 const foldersPath = path.join(__dirname, 'commands');
@@ -32,12 +32,9 @@ const commandFolders = fs.readdirSync(foldersPath);
 
 for (const folder of commandFolders) {
   const commandsPath = path.join(foldersPath, folder);
-  const commandFiles = fs
-    .readdirSync(commandsPath)
-    .filter((file) => file.endsWith('.js'));
+  const commandFiles = fs.readdirSync(commandsPath).filter((file) => file.endsWith('.js'));
   for (const file of commandFiles) {
     const filePath = path.join(commandsPath, file);
-    // Use dynamic import with file:// protocol for ES Modules
     const command = await import(`file://${filePath}`);
     if ('data' in command && 'execute' in command) {
       client.commands.set(command.data.name, command);
@@ -49,6 +46,29 @@ for (const folder of commandFolders) {
     }
   }
 }
+
+// Evento de Ready - Onde o deploy dos comandos acontece
+client.once(Events.ClientReady, async (readyClient) => {
+  console.log(`Pronto! Logado como ${readyClient.user.tag}`);
+  
+  // Registrar/Atualizar os comandos na API do Discord
+  const rest = new REST().setToken(process.env.DISCORD_TOKEN);
+  try {
+    console.log(`Iniciada a atualização de ${commands.length} comandos de aplicação (/).`);
+    const data = await rest.put(
+      Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
+      { body: commands },
+    );
+    console.log(`Recarregados com sucesso ${data.length} comandos de aplicação (/).`);
+  } catch (error) {
+    console.error('Erro ao registrar comandos:', error);
+  }
+
+  // Inicializar o Firebase
+  initializeFirebase();
+  console.log('Firebase inicializado.');
+});
+
 
 // Evento de interação para executar comandos
 client.on(Events.InteractionCreate, async (interaction) => {
@@ -71,6 +91,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         ephemeral: true,
       });
     } else {
+      // Adicionado 'ephemeral: true' para consistência
       await interaction.reply({
         content: 'Ocorreu um erro ao executar este comando!',
         ephemeral: true,
@@ -79,33 +100,12 @@ client.on(Events.InteractionCreate, async (interaction) => {
   }
 });
 
-// Evento de Ready
-client.once(Events.ClientReady, async (readyClient) => {
-  console.log(`Pronto! Logado como ${readyClient.user.tag}`);
-  
-  // Registrar/Atualizar os comandos na API do Discord
-  const rest = new REST().setToken(process.env.DISCORD_TOKEN);
-  try {
-    console.log(`Iniciada a atualização de ${commands.length} comandos de aplicação (/).`);
-    const data = await rest.put(
-      Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
-      { body: commands },
-    );
-    console.log(`Recarregados com sucesso ${data.length} comandos de aplicação (/).`);
-  } catch (error) {
-    console.error('Erro ao registrar comandos:', error);
-  }
-
-  // Inicializar o Firebase
-  initializeFirebase();
-  console.log('Firebase inicializado.');
-});
 
 // Login
 client.login(process.env.DISCORD_TOKEN);
 
 
-// Mini Web Server para manter o bot vivo em plataformas de Web Service
+// Mini Web Server para manter o bot vivo
 const port = process.env.PORT || 3000;
 http.createServer((req, res) => {
   res.writeHead(200, { 'Content-Type': 'text/plain' });
