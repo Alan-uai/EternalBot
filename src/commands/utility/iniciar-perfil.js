@@ -1,12 +1,14 @@
 // src/commands/utility/iniciar-perfil.js
 import { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle, ChannelType, PermissionsBitField } from 'discord.js';
-import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, query, where, getDocs } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
 
 const FORMULARIO_CHANNEL_ID = '1429260045371310200';
 const CUSTOM_ID_PREFIX = 'iniciar-perfil';
-const BUTTON_ID = `${CUSTOM_ID_PREFIX}_abrir`;
-const MODAL_ID = `${CUSTOM_ID_PREFIX}_modal`;
+const FORM_BUTTON_ID = `${CUSTOM_ID_PREFIX}_abrir`;
+const IMPORT_BUTTON_ID = `${CUSTOM_ID_PREFIX}_importar`;
+const FORM_MODAL_ID = `${CUSTOM_ID_PREFIX}_modal`;
+const IMPORT_MODAL_ID = `${CUSTOM_ID_PREFIX}_importar_modal`;
 
 export const data = new SlashCommandBuilder()
     .setName('iniciar-perfil')
@@ -20,26 +22,106 @@ export async function execute(interaction) {
     const row = new ActionRowBuilder()
         .addComponents(
             new ButtonBuilder()
-                .setCustomId(BUTTON_ID)
-                .setLabel('Abrir Formulário de Perfil')
+                .setCustomId(FORM_BUTTON_ID)
+                .setLabel('Preencher Formulário')
                 .setStyle(ButtonStyle.Primary)
-                .setEmoji('📝')
+                .setEmoji('📝'),
+            new ButtonBuilder()
+                .setCustomId(IMPORT_BUTTON_ID)
+                .setLabel('Importar do Site')
+                .setStyle(ButtonStyle.Success)
+                .setEmoji('🔄')
         );
 
     await interaction.reply({
-        content: '**Bem-vindo ao Guia Eterno!**\n\nClique no botão abaixo para preencher ou atualizar as informações do seu perfil de jogador no Anime Eternal.',
+        content: '**Bem-vindo ao Guia Eterno!**\n\n- Clique em **Preencher Formulário** para inserir ou atualizar suas informações manualmente.\n- Clique em **Importar do Site** para sincronizar seus dados usando o e-mail da sua conta do site.',
         components: [row],
-        ephemeral: true, // Apenas o usuário que digitou o comando vê isso
+        ephemeral: true,
     });
 }
 
 async function handleInteraction(interaction) {
-    if (interaction.isButton() && interaction.customId === BUTTON_ID) {
-        await handleOpenFormButton(interaction);
-    } else if (interaction.isModalSubmit() && interaction.customId === MODAL_ID) {
-        await handleFormSubmit(interaction);
+    if (interaction.isButton()) {
+        if (interaction.customId === FORM_BUTTON_ID) {
+            await handleOpenFormButton(interaction);
+        } else if (interaction.customId === IMPORT_BUTTON_ID) {
+            await handleOpenImportModal(interaction);
+        }
+    } else if (interaction.isModalSubmit()) {
+        if (interaction.customId === FORM_MODAL_ID) {
+            await handleFormSubmit(interaction);
+        } else if (interaction.customId === IMPORT_MODAL_ID) {
+            await handleImportSubmit(interaction);
+        }
     }
 }
+
+async function handleOpenImportModal(interaction) {
+    const modal = new ModalBuilder()
+        .setCustomId(IMPORT_MODAL_ID)
+        .setTitle('Importar Perfil do Site');
+
+    const emailInput = new TextInputBuilder()
+        .setCustomId('email')
+        .setLabel("E-mail da sua conta do site")
+        .setPlaceholder("Ex: seuemail@gmail.com")
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true);
+
+    modal.addComponents(new ActionRowBuilder().addComponents(emailInput));
+    await interaction.showModal(modal);
+}
+
+async function handleImportSubmit(interaction) {
+    await interaction.deferReply({ ephemeral: true });
+
+    const email = interaction.fields.getTextInputValue('email');
+    const { firestore } = initializeFirebase();
+    const discordUser = interaction.user;
+
+    const usersRef = collection(firestore, 'users');
+    const q = query(usersRef, where("email", "==", email));
+
+    const querySnapshot = await getDocs(q);
+
+    if (querySnapshot.empty) {
+        return interaction.editReply({ content: `Nenhum perfil encontrado no site com o e-mail \`${email}\`. Verifique o e-mail e tente novamente.`, ephemeral: true });
+    }
+
+    const webUserData = querySnapshot.docs[0].data();
+    const webUserRef = querySnapshot.docs[0].ref;
+
+    const discordUserRef = doc(firestore, 'users', discordUser.id);
+    
+    // Mescla os dados da web com o perfil do Discord.
+    // O ID do discord é mantido, mas as outras informações são importadas.
+    const profileDataToUpdate = {
+        ...webUserData, // Importa todos os dados do perfil web
+        id: discordUser.id, // Garante que o ID do documento seja o do Discord
+        username: discordUser.username, // Atualiza para o username atual do Discord
+        lastUpdated: serverTimestamp()
+    };
+
+    await setDoc(discordUserRef, profileDataToUpdate, { merge: true });
+
+    const channel = await findOrCreateUserChannel(interaction, discordUser);
+    if (!channel) {
+         return interaction.editReply('Seu perfil foi importado, mas houve um erro ao criar seu canal privado. Por favor, contate um administrador.');
+    }
+    
+    const confirmationMessage = `**Perfil importado do site com sucesso!**
+
+- **Mundo Atual:** ${profileDataToUpdate.currentWorld || 'N/D'}
+- **Rank:** ${profileDataToUpdate.rank || 'N/D'}
+- **Dano Total (DPS):** ${profileDataToUpdate.dps || 'N/D'}
+- **Energia Atual (Acumulada):** ${profileDataToUpdate.totalEnergy || 'N/D'}
+- **Ganho de Energia (por clique):** ${profileDataToUpdate.energyPerClick || 'N/D'}
+`;
+    await channel.send(confirmationMessage);
+
+    await interaction.editReply(`Seu perfil foi importado com sucesso! Veja as informações no seu canal privado: <#${channel.id}>`);
+}
+
 
 async function handleOpenFormButton(interaction) {
     const { firestore } = initializeFirebase();
@@ -48,7 +130,7 @@ async function handleOpenFormButton(interaction) {
     const userData = userSnap.exists() ? userSnap.data() : {};
 
     const modal = new ModalBuilder()
-        .setCustomId(MODAL_ID)
+        .setCustomId(FORM_MODAL_ID)
         .setTitle('Formulário de Perfil - Guia Eterno');
 
     const worldInput = new TextInputBuilder()
@@ -120,6 +202,25 @@ async function handleFormSubmit(interaction) {
     
     await updateDoc(userRef, profileData);
 
+    const channel = await findOrCreateUserChannel(interaction, user);
+    if (!channel) {
+        return interaction.editReply('Seu perfil foi atualizado, mas houve um erro ao criar seu canal privado. Por favor, contate um administrador.');
+    }
+    
+    const confirmationMessage = `**Suas estatísticas foram atualizadas com sucesso!**
+
+- **Mundo Atual:** ${profileData.currentWorld}
+- **Rank:** ${profileData.rank}
+- **Dano Total (DPS):** ${profileData.dps}
+- **Energia Atual (Acumulada):** ${profileData.totalEnergy}
+- **Ganho de Energia (por clique):** ${profileData.energyPerClick}
+`;
+    await channel.send(confirmationMessage);
+
+    await interaction.editReply(`Seu perfil foi atualizado com sucesso! Veja as informações no seu canal privado: <#${channel.id}>`);
+}
+
+async function findOrCreateUserChannel(interaction, user) {
     const channelName = `perfil-${user.username.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
     let userChannel = interaction.guild.channels.cache.find(ch => ch.name === channelName);
 
@@ -148,21 +249,11 @@ async function handleFormSubmit(interaction) {
 
         } catch (error) {
             console.error("Falha ao criar canal privado:", error);
-            return interaction.editReply('Seu perfil foi atualizado, mas houve um erro ao criar seu canal privado. Por favor, contate um administrador.');
+            return null;
         }
     }
-    
-    const confirmationMessage = `**Suas estatísticas foram atualizadas com sucesso!**
-
-- **Mundo Atual:** ${profileData.currentWorld}
-- **Rank:** ${profileData.rank}
-- **Dano Total (DPS):** ${profileData.dps}
-- **Energia Atual (Acumulada):** ${profileData.totalEnergy}
-- **Ganho de Energia (por clique):** ${profileData.energyPerClick}
-`;
-    await userChannel.send(confirmationMessage);
-
-    await interaction.editReply(`Seu perfil foi atualizado com sucesso! Veja as informações no seu canal privado: <#${userChannel.id}>`);
+    return userChannel;
 }
+
 
 export { handleInteraction };
