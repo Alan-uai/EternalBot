@@ -4,10 +4,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import http from 'node:http';
 import { fileURLToPath } from 'node:url';
-import { Client, Collection, Events, GatewayIntentBits, REST, Routes, EmbedBuilder } from 'discord.js';
+import { Client, Collection, Events, GatewayIntentBits, REST, Routes, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType } from 'discord.js';
 import { initializeFirebase } from './firebase/index.js';
 import { loadKnowledgeBase } from './knowledge-base.js';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { lobbyDungeonsArticle } from './data/wiki-articles/lobby-dungeons.js';
 import { generateSolution } from './ai/flows/generate-solution.js';
 
@@ -169,7 +169,8 @@ client.on(Events.MessageCreate, async (message) => {
     if (
         message.author.bot ||
         message.channel.id !== CHAT_CHANNEL_ID ||
-        !message.mentions.users.has(client.user.id)
+        !message.mentions.has(client.user.id) ||
+        message.mentions.everyone // Ignora @everyone e @here
     ) {
         return;
     }
@@ -202,7 +203,24 @@ client.on(Events.MessageCreate, async (message) => {
                 replyContent = replyContent.substring(0, 1997) + '...';
             }
 
-            await message.reply(replyContent);
+            const feedbackRow = new ActionRowBuilder()
+                .addComponents(
+                    new ButtonBuilder()
+                        .setCustomId(`feedback_like_${message.id}`)
+                        .setLabel('👍')
+                        .setStyle(ButtonStyle.Success),
+                    new ButtonBuilder()
+                        .setCustomId(`feedback_dislike_${message.author.id}_${message.id}`)
+                        .setLabel('👎')
+                        .setStyle(ButtonStyle.Danger)
+                );
+
+            const replyMessage = await message.reply({ content: replyContent, components: [feedbackRow] });
+
+            // Armazenar temporariamente a pergunta e a resposta para o contexto do feedback
+            client.interactions.set(`question_${message.id}`, question);
+            client.interactions.set(`answer_${message.id}`, replyContent);
+
         } else {
             await message.reply('Desculpe, não consegui obter uma resposta.');
         }
@@ -215,6 +233,113 @@ client.on(Events.MessageCreate, async (message) => {
 
 // Evento de interação para executar comandos e interações
 client.on(Events.InteractionCreate, async (interaction) => {
+
+    if (interaction.isButton() && interaction.customId.startsWith('feedback_')) {
+        const [,, userId, originalMessageId] = interaction.customId.split('_');
+
+        if (interaction.customId.startsWith('feedback_dislike')) {
+            const MOD_CHANNEL_ID = '1429314152928641118';
+            const modChannel = await client.channels.fetch(MOD_CHANNEL_ID);
+
+            // Recupera a pergunta e a resposta originais
+            const originalQuestion = client.interactions.get(`question_${originalMessageId}`);
+            const badResponse = client.interactions.get(`answer_${originalMessageId}`);
+
+            if (modChannel && originalQuestion && badResponse) {
+                const feedbackEmbed = new EmbedBuilder()
+                    .setColor(0xFF4B4B)
+                    .setTitle('👎 Novo Feedback Negativo')
+                    .setAuthor({ name: interaction.user.tag, iconURL: interaction.user.displayAvatarURL() })
+                    .addFields(
+                        { name: 'Usuário', value: `<@${interaction.user.id}>` },
+                        { name: 'Pergunta Original', value: `\`\`\`${originalQuestion}\`\`\`` },
+                        { name: 'Resposta Negativa', value: `\`\`\`${badResponse.substring(0, 1020)}...\`\`\`` }
+                    )
+                    .setTimestamp();
+                
+                const modActionsRow = new ActionRowBuilder()
+                    .addComponents(
+                         new ButtonBuilder()
+                            .setCustomId(`mod_seen_${userId}`)
+                            .setLabel('Visto')
+                            .setStyle(ButtonStyle.Secondary),
+                        new ButtonBuilder()
+                            .setCustomId(`mod_solving_${userId}`)
+                            .setLabel('Visto e Resolvendo')
+                            .setStyle(ButtonStyle.Primary),
+                        new ButtonBuilder()
+                            .setCustomId(`mod_solved_${userId}`)
+                            .setLabel('Resolvido')
+                            .setStyle(ButtonStyle.Success)
+                    );
+
+                await modChannel.send({ embeds: [feedbackEmbed], components: [modActionsRow] });
+                await interaction.reply({ content: 'Seu feedback foi enviado para a moderação. Obrigado por ajudar a melhorar o bot!', ephemeral: true });
+            } else {
+                 await interaction.reply({ content: 'Não foi possível registrar seu feedback. O contexto da mensagem original foi perdido.', ephemeral: true });
+            }
+        } else if (interaction.customId.startsWith('feedback_like')) {
+            await interaction.reply({ content: 'Obrigado pelo seu feedback positivo!', ephemeral: true });
+        }
+        return; // Finaliza aqui para não cair em outros handlers
+    }
+
+    if (interaction.isButton() && interaction.customId.startsWith('mod_')) {
+        const [_, status, userId] = interaction.customId.split('_');
+        const user = await client.users.fetch(userId);
+        if (!user) {
+            return interaction.reply({ content: 'Não foi possível encontrar o usuário original.', ephemeral: true });
+        }
+
+        const guild = interaction.guild;
+        const channelName = `perfil-${user.username.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
+        const userChannel = guild.channels.cache.find(ch => ch.name === channelName && ch.type === ChannelType.GuildText);
+
+        if (!userChannel) {
+             return interaction.reply({ content: `O canal de perfil para ${user.tag} não foi encontrado.`, ephemeral: true });
+        }
+        
+        const existingThreads = await userChannel.threads.fetch();
+        let notificationThread = existingThreads.threads.find(t => t.name === 'notificações');
+
+        if (!notificationThread) {
+             notificationThread = await userChannel.threads.create({
+                name: 'notificações',
+                autoArchiveDuration: 10080,
+                reason: `Tópico de notificações para ${user.tag}`
+            });
+        }
+        
+        let message;
+        switch(status) {
+            case 'seen':
+                message = 'Seu feedback foi visto por um moderador, obrigado!';
+                break;
+            case 'solving':
+                 message = 'Seu feedback foi visto por um moderador e está em desenvolvimento, obrigado!';
+                break;
+            case 'solved':
+                 message = 'Seu feedback resolveu um problema, obrigado!';
+                break;
+            default:
+                return;
+        }
+
+        await notificationThread.send(`<@${userId}>, ${message}`);
+        await interaction.reply({ content: `Notificação de status '${status}' enviada para ${user.tag}.`, ephemeral: true });
+        
+        // Desabilitar botões na mensagem de moderação após a ação
+        const originalMessage = interaction.message;
+        const disabledRow = new ActionRowBuilder();
+        originalMessage.components[0].components.forEach(component => {
+            disabledRow.addComponents(ButtonBuilder.from(component).setDisabled(true));
+        });
+        await originalMessage.edit({ components: [disabledRow] });
+
+        return;
+    }
+
+
     // Se for um comando de chat
     if (interaction.isChatInputCommand()) {
         const command = client.commands.get(interaction.commandName);

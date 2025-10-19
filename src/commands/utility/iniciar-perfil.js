@@ -18,7 +18,8 @@ const INVENTORY_CATEGORIES = [
     { id: 'auras', name: 'Auras', emoji: '✨' },
     { id: 'gamepasses', name: 'Gamepasses', emoji: '🎟️' },
     { id: 'sombras', name: 'Sombras', emoji: '👤' },
-    { id: 'stands', name: 'Stands', emoji: '🕺' }
+    { id: 'stands', name: 'Stands', emoji: '🕺' },
+    { id: 'notificacoes', name: 'Notificações', emoji: '🔔', isPrivate: true }
 ];
 
 export const data = new SlashCommandBuilder()
@@ -108,10 +109,15 @@ async function handleImportSubmit(interaction) {
         id: discordUser.id, 
         username: discordUser.username,
         email: email, // Salva o e-mail usado para a importação
-        lastUpdated: serverTimestamp()
     };
 
-    await setDoc(discordUserRef, profileDataToUpdate, { merge: true });
+    const userSnap = await getDoc(discordUserRef);
+    if(userSnap.exists()) {
+        await updateDoc(discordUserRef, { ...profileDataToUpdate, lastUpdated: serverTimestamp() });
+    } else {
+        await setDoc(discordUserRef, { ...profileDataToUpdate, createdAt: serverTimestamp() }, { merge: true });
+    }
+
 
     const channel = await findOrCreateUserChannel(interaction, discordUser);
     if (!channel) {
@@ -295,6 +301,15 @@ async function createInventoryThreads(channel) {
                     autoArchiveDuration: 10080, // 7 dias
                     reason: `Tópico de inventário para ${category.name}`
                 });
+                
+                if(category.isPrivate) {
+                     const embed = new EmbedBuilder()
+                        .setColor(0x808080)
+                        .setTitle(`${category.emoji} ${category.name}`)
+                        .setDescription('Este é o seu feed de notificações sobre o bot.');
+                     await thread.send({ embeds: [embed] });
+                     continue;
+                }
 
                 const embed = new EmbedBuilder()
                     .setColor(0x4BC5FF)
