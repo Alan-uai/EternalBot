@@ -2,6 +2,7 @@
 import 'dotenv/config';
 import fs from 'node:fs';
 import path from 'node:path';
+import http from 'node:http'; // Importa o módulo HTTP
 import { fileURLToPath } from 'node:url';
 import { Client, Collection, Events, GatewayIntentBits, REST, Routes } from 'discord.js';
 import { initializeFirebase } from './firebase/index.js';
@@ -49,25 +50,6 @@ for (const folder of commandFolders) {
   }
 }
 
-// Registrar os comandos na API do Discord
-const rest = new REST().setToken(process.env.DISCORD_TOKEN);
-
-(async () => {
-  try {
-    console.log(`Iniciada a atualização de ${commands.length} comandos de aplicação (/).`);
-
-    const data = await rest.put(
-      Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
-      { body: commands },
-    );
-
-    console.log(`Recarregados com sucesso ${data.length} comandos de aplicação (/).`);
-  } catch (error) {
-    console.error(error);
-  }
-})();
-
-
 // Evento de interação para executar comandos
 client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
@@ -98,8 +80,22 @@ client.on(Events.InteractionCreate, async (interaction) => {
 });
 
 // Evento de Ready
-client.once(Events.ClientReady, (readyClient) => {
+client.once(Events.ClientReady, async (readyClient) => {
   console.log(`Pronto! Logado como ${readyClient.user.tag}`);
+  
+  // Registrar/Atualizar os comandos na API do Discord
+  const rest = new REST().setToken(process.env.DISCORD_TOKEN);
+  try {
+    console.log(`Iniciada a atualização de ${commands.length} comandos de aplicação (/).`);
+    const data = await rest.put(
+      Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
+      { body: commands },
+    );
+    console.log(`Recarregados com sucesso ${data.length} comandos de aplicação (/).`);
+  } catch (error) {
+    console.error('Erro ao registrar comandos:', error);
+  }
+
   // Inicializar o Firebase
   initializeFirebase();
   console.log('Firebase inicializado.');
@@ -107,3 +103,13 @@ client.once(Events.ClientReady, (readyClient) => {
 
 // Login
 client.login(process.env.DISCORD_TOKEN);
+
+
+// Mini Web Server para manter o bot vivo em plataformas de Web Service
+const port = process.env.PORT || 3000;
+http.createServer((req, res) => {
+  res.writeHead(200, { 'Content-Type': 'text/plain' });
+  res.end('Bot is running!\n');
+}).listen(port, () => {
+  console.log(`Servidor web ouvindo na porta ${port}`);
+});
