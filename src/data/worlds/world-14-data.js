@@ -1,3 +1,4 @@
+
 export const world14Data = {
   id: 'world-14',
   title: 'Mundo 14 - Ilha da Magia',
@@ -8,7 +9,7 @@ export const world14Data = {
     { name: 'Cavaleiro Mágico', rank: 'C', exp: 9.5e10, hp: '100NVG' },
     { name: 'Vice-Capitão', rank: 'B', exp: 1.4e11, hp: '1TGN' },
     { name: 'Capitão', rank: 'A', exp: 2e11, hp: '10TGN' },
-    { name 'Rei Mago', rank: 'S', exp: 3e11, hp: '2.39SeV' },
+    { name: 'Rei Mago', rank: 'S', exp: 3e11, hp: '2.39SeV' },
     { name: 'Valzora', rank: 'SS', exp: 6e11, hp: '4.79SeV', drops: {} },
   ],
   pets: [
