@@ -24,8 +24,11 @@ async function handleInteraction(interaction) {
         await handleSelectItemAction(interaction, categoryId, actionData[0]);
     } else if (action === 'selectlevel') {
         await handleSelectLevelAction(interaction, categoryId, actionData[0], actionData[1]);
+    } else if (action === 'editar') {
+        await handleEditAction(interaction, categoryId);
+    } else if (action === 'selectweaponedit') {
+        await handleSelectWeaponForEdit(interaction, categoryId, actionData[0]);
     }
-    // Adicionar lógica para desequipar e editar
 }
 
 function getItemsForCategory(categoryId) {
@@ -209,6 +212,98 @@ async function handleSelectLevelAction(interaction, categoryId, itemId, levelId)
      });
 
     await interaction.update({ content: `Item \`${itemId}\` (${levelId}) equipado com sucesso!`, components: [] });
+}
+
+async function handleEditAction(interaction, categoryId) {
+    const { firestore } = initializeFirebase();
+    const userRef = doc(firestore, 'users', interaction.user.id);
+    const userSnap = await getDoc(userRef);
+
+    if (!userSnap.exists()) {
+        return interaction.reply({ content: "Você não tem um perfil. Use `/iniciar-perfil` primeiro.", ephemeral: true });
+    }
+
+    const userData = userSnap.data();
+    const equippedItems = userData.equipped?.[categoryId];
+
+    if (!equippedItems || Object.keys(equippedItems).length === 0) {
+        return interaction.reply({ content: `Você não tem nenhum item equipado na categoria \`${categoryId}\`.`, ephemeral: true });
+    }
+
+    const selectMenu = new StringSelectMenuBuilder()
+        .setCustomId(`gerenciar_${categoryId}_selectweaponedit`)
+        .setPlaceholder('Selecione um item para editar')
+        .addOptions(
+            Object.values(equippedItems).map(item => ({
+                label: item.id.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+                value: item.id,
+            }))
+        );
+
+    const row = new ActionRowBuilder().addComponents(selectMenu);
+
+    await interaction.reply({
+        content: `Escolha o item de \`${categoryId}\` que deseja editar:`,
+        components: [row],
+        ephemeral: true
+    });
+}
+
+function findWeaponType(weaponId) {
+    const allArticles = allWikiArticles.filter(a => a.id.includes('swords') || a.id.includes('scythes'));
+    for (const article of allArticles) {
+        for (const table of Object.values(article.tables || {})) {
+            const foundWeapon = table.rows.find(row => row.name.toLowerCase().replace(/ /g, '-') === weaponId);
+            if (foundWeapon) {
+                return foundWeapon.type; // 'damage', 'energy', or 'scythe'
+            }
+        }
+    }
+    return null;
+}
+
+
+async function handleSelectWeaponForEdit(interaction, categoryId, weaponId) {
+    if (categoryId !== 'armas') {
+        // Fallback for other categories (future implementation)
+        return interaction.update({ content: 'Edição para esta categoria ainda não implementada.', components: [] });
+    }
+
+    const weaponType = findWeaponType(weaponId);
+
+    if (!weaponType) {
+        return interaction.update({ content: `Não foi possível determinar o tipo da arma \`${weaponId}\`.`, components: [] });
+    }
+
+    let options = [];
+    if (weaponType === 'energy') {
+        options = [{ label: 'Envolver (Evoluir)', value: 'envolver' }];
+    } else if (weaponType === 'damage') {
+        options = [
+            { label: 'Envolver (Evoluir)', value: 'envolver' },
+            { label: 'Stone', value: 'stone' },
+            { label: 'Breathing', value: 'breathing' }
+        ];
+    } else if (weaponType === 'scythe') {
+        options = [
+            { label: 'Envolver (Evoluir)', value: 'envolver' },
+            { label: 'Passiva', value: 'passiva' }
+        ];
+    } else {
+        return interaction.update({ content: 'Tipo de arma desconhecido.', components: [] });
+    }
+
+    const selectMenu = new StringSelectMenuBuilder()
+        .setCustomId(`gerenciar_armas_edittype_${weaponId}`)
+        .setPlaceholder('O que você quer editar?')
+        .addOptions(options);
+
+    const row = new ActionRowBuilder().addComponents(selectMenu);
+
+    await interaction.update({
+        content: `Você selecionou \`${weaponId.replace(/-/g, ' ')}\`. O que você deseja editar?`,
+        components: [row]
+    });
 }
 
 
