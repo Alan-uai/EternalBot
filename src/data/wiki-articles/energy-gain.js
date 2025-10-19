@@ -120,7 +120,24 @@ export const energyGainPerRankArticle = {
           { 'Rank': 108, 'Ganho de Energia': '161N' },
           { 'Rank': 109, 'Ganho de Energia': '323N' },
           { 'Rank': 110, 'Ganho de Energia': '647N' },
+          { 'Rank': 111, 'Ganho de Energia': '1.29de' },
+          { 'Rank': 112, 'Ganho de Energia': '2.58de' },
+          { 'Rank': 113, 'Ganho de Energia': '5.17de' },
+          { 'Rank': 114, 'Ganho de Energia': '10.3de' },
+          { 'Rank': 115, 'Ganho de Energia': '20.7de' },
+          { 'Rank': 116, 'Ganho de Energia': '41.4de' },
+          { 'Rank': 117, 'Ganho de Energia': '82.8de' },
+          { 'Rank': 118, 'Ganho de Energia': '165de' },
+          { 'Rank': 119, 'Ganho de Energia': '331de' },
+          { 'Rank': 120, 'Ganho de Energia': '662de' },
+          { 'Rank': 121, 'Ganho de Energia': '1.32Ud' },
+          { 'Rank': 122, 'Ganho de Energia': '2.65Ud' },
+          { 'Rank': 123, 'Ganho de Energia': '5.3Ud' },
+          { 'Rank': 124, 'Ganho de Energia': '10.6Ud' },
+          { 'Rank': 125, 'Ganho de Energia': '21.2Ud' },
         ]
       }
     }
 };
+
+    
