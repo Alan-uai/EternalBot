@@ -37,7 +37,7 @@ for (const folder of commandFolders) {
   for (const file of commandFiles) {
     const filePath = path.join(commandsPath, file);
     const command = await import(`file://${filePath}`);
-    if ('data' in command && 'execute' in command) {
+    if ('data' in command) {
       client.commands.set(command.data.name, command);
     } else {
       console.log(
@@ -53,7 +53,7 @@ client.once(Events.ClientReady, async (readyClient) => {
   
   // Registrar/Atualizar os comandos na API do Discord
   const rest = new REST().setToken(process.env.DISCORD_TOKEN);
-  const commands = Array.from(client.commands.values()).map(c => c.data.toJSON());
+  const commands = Array.from(client.commands.values()).map(c => c.data.toJSON ? c.data.toJSON() : c.data);
 
   try {
     console.log(`Iniciada a atualização de ${commands.length} comandos de aplicação (/).`);
@@ -97,10 +97,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
         return;
     }
 
-    // Se for uma interação de botão ou modal
-    if (interaction.isButton() || interaction.isModalSubmit()) {
-        // IDs customizados podem ser `iniciar-perfil_abrir` ou `gerenciar_poderes_equipar`
-        const commandName = interaction.customId.split('_')[0]; 
+    // Se for uma interação de botão, menu ou modal
+    if (interaction.isButton() || interaction.isModalSubmit() || interaction.isStringSelectMenu()) {
+        const customIdParts = interaction.customId.split('_');
+        const commandName = customIdParts[0]; 
         const command = interaction.client.commands.get(commandName);
 
         if (command && command.handleInteraction) {
@@ -114,16 +114,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
                     await interaction.reply({ content: 'Ocorreu um erro ao processar sua ação.', ephemeral: true });
                 }
             }
-        } else {
-            // Fallback para o novo sistema de inventário
-             const gerenciarCommand = interaction.client.commands.get('gerenciar');
-             if(interaction.customId.startsWith('gerenciar_') && gerenciarCommand && gerenciarCommand.handleInteraction) {
-                  try {
-                        await gerenciarCommand.handleInteraction(interaction);
-                    } catch (error) {
-                        console.error(`Erro ao lidar com interação de gerenciamento:`, error);
-                    }
-             }
         }
     }
 });
