@@ -1,6 +1,6 @@
 // src/commands/utility/gerenciar.js
 import { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
-import { doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, deleteField } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
 import { allWikiArticles } from '../../data/wiki-data.js';
 
@@ -78,6 +78,10 @@ async function handleInteraction(interaction) {
         await handleSelectGamepassAction(interaction, categoryId);
     } else if (action === 'removegamepass') {
         await handleRemoveGamepassAction(interaction, categoryId);
+    } else if (action === 'selectaura') {
+        await handleSelectAuraAction(interaction, categoryId);
+    } else if (action === 'removeaura') {
+        await handleRemoveAuraAction(interaction, categoryId);
     }
 }
 
@@ -123,6 +127,18 @@ function getItemsForCategory(categoryId) {
                     });
                 }
             });
+            break;
+        case 'auras':
+            const auraArticle = allWikiArticles.find(a => a.id === 'aura-system');
+            if (auraArticle && auraArticle.content) {
+                 // Extrair auras do conteúdo de texto
+                 const auraRegex = /\*\s*\w+\s\d+\s\(.+\):\s*(Aura[^\(]+)/g;
+                 let match;
+                 while ((match = auraRegex.exec(auraArticle.content)) !== null) {
+                    const auraName = match[1].trim();
+                    items.push({ name: auraName, id: auraName.toLowerCase().replace(/ /g, '-') });
+                 }
+            }
             break;
         // Adicionar outros casos para acessorios, etc.
     }
@@ -212,6 +228,18 @@ async function handleEquipAction(interaction, categoryId) {
         const row = new ActionRowBuilder().addComponents(selectMenu);
         return interaction.reply({ content: 'Escolha a gamepass:', components: [row], ephemeral: true });
     }
+     if (categoryId === 'auras') {
+        const items = getItemsForCategory(categoryId);
+        if (items.length === 0) {
+            return interaction.reply({ content: 'Nenhuma aura encontrada.', ephemeral: true });
+        }
+        const selectMenu = new StringSelectMenuBuilder()
+            .setCustomId(`gerenciar_${categoryId}_selectaura`)
+            .setPlaceholder('Selecione a aura para equipar')
+            .addOptions(items.slice(0, 25).map(item => ({ label: item.name, value: item.id })));
+        const row = new ActionRowBuilder().addComponents(selectMenu);
+        return interaction.reply({ content: 'Escolha a aura:', components: [row], ephemeral: true });
+    }
 
     const items = getItemsForCategory(categoryId);
 
@@ -247,7 +275,7 @@ async function handleSelectItemAction(interaction, categoryId, itemId) {
         const userRef = doc(firestore, 'users', interaction.user.id);
         
         await updateDoc(userRef, {
-            [`equipped.${categoryId}.${itemId}`]: { id: itemId, equippedAt: new Date() }
+            [`equipped.${categoryId}.${itemId.replace(/-/g, '_')}`]: { id: itemId, equippedAt: new Date() }
         });
 
         return interaction.update({ content: `Item \`${itemId}\` equipado com sucesso!`, components: [] });
@@ -275,18 +303,19 @@ async function handleSelectItemAction(interaction, categoryId, itemId) {
 async function handleSelectLevelAction(interaction, categoryId, itemId, levelId) {
      const { firestore } = initializeFirebase();
      const userRef = doc(firestore, 'users', interaction.user.id);
+     const selectedLevelId = interaction.values[0];
 
      const equippedItemPath = `equipped.${categoryId}.${itemId.replace(/-/g, '_')}`;
 
      await updateDoc(userRef, {
         [equippedItemPath]: {
             id: itemId,
-            level: levelId,
+            level: selectedLevelId,
             equippedAt: new Date()
         }
      });
 
-    await interaction.update({ content: `Item \`${itemId}\` (${levelId}) equipado com sucesso!`, components: [] });
+    await interaction.update({ content: `Item \`${itemId}\` (${selectedLevelId}) equipado com sucesso!`, components: [] });
 }
 
 async function handleUnequipAction(interaction, categoryId) {
@@ -305,22 +334,34 @@ async function handleUnequipAction(interaction, categoryId) {
     if (categoryId === 'gamepasses') {
         itemsToUnequip = userData.gamepasses || [];
         customIdPrefix = `gerenciar_gamepasses_removegamepass`;
+    } else if (categoryId === 'auras') {
+        itemsToUnequip = userData.auras || [];
+        customIdPrefix = `gerenciar_auras_removeaura`;
     } else {
-        itemsToUnequip = Object.values(userData.equipped?.[categoryId] || {});
-        customIdPrefix = `gerenciar_${categoryId}_removeitem`; // Placeholder for future implementation
+        const equippedInCategory = userData.equipped?.[categoryId] || {};
+        // Convert object to array for menu
+        itemsToUnequip = Object.keys(equippedInCategory).map(key => ({
+            id: equippedInCategory[key].id,
+            name: equippedInCategory[key].id.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+        }));
+        customIdPrefix = `gerenciar_${categoryId}_removeitem`;
     }
+
 
     if (itemsToUnequip.length === 0) {
         return interaction.reply({ content: `Você não tem nenhum item para desequipar em \`${categoryId}\`.`, ephemeral: true });
     }
+    
+    // Handle both array of strings (gamepasses, auras) and array of objects
+    const options = itemsToUnequip.slice(0, 25).map(item => ({
+        label: typeof item === 'string' ? item.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : item.name,
+        value: typeof item === 'string' ? item : item.id,
+    }));
 
     const selectMenu = new StringSelectMenuBuilder()
         .setCustomId(customIdPrefix)
         .setPlaceholder(`Selecione um item para desequipar`)
-        .addOptions(itemsToUnequip.slice(0, 25).map(item => ({
-            label: (item.id || item).replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-            value: item.id || item,
-        })));
+        .addOptions(options);
     
     const row = new ActionRowBuilder().addComponents(selectMenu);
     await interaction.reply({ content: `Escolha o item para desequipar:`, components: [row], ephemeral: true });
@@ -358,6 +399,37 @@ async function handleRemoveGamepassAction(interaction, categoryId) {
     }
 }
 
+async function handleSelectAuraAction(interaction, categoryId) {
+    const auraId = interaction.values[0];
+    const { firestore } = initializeFirebase();
+    const userRef = doc(firestore, 'users', interaction.user.id);
+
+    try {
+        await updateDoc(userRef, {
+            auras: arrayUnion(auraId)
+        });
+        await interaction.update({ content: `Aura \`${auraId}\` equipada com sucesso!`, components: [] });
+    } catch (error) {
+        console.error("Erro ao equipar aura:", error);
+        await interaction.update({ content: 'Ocorreu um erro ao salvar sua aura.', components: [] });
+    }
+}
+
+async function handleRemoveAuraAction(interaction, categoryId) {
+    const auraId = interaction.values[0];
+    const { firestore } = initializeFirebase();
+    const userRef = doc(firestore, 'users', interaction.user.id);
+
+    try {
+        await updateDoc(userRef, {
+            auras: arrayRemove(auraId)
+        });
+        await interaction.update({ content: `Aura \`${auraId}\` desequipada com sucesso!`, components: [] });
+    } catch (error) {
+        console.error("Erro ao desequipar aura:", error);
+        await interaction.update({ content: 'Ocorreu um erro ao remover sua aura.', components: [] });
+    }
+}
 
 async function handleEditAction(interaction, categoryId) {
     const { firestore } = initializeFirebase();

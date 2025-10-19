@@ -297,7 +297,7 @@ async function createInventoryThreads(channel) {
 
                 const actionRow = new ActionRowBuilder();
                 
-                if (category.id === 'gamepasses') {
+                if (category.id === 'gamepasses' || category.id === 'auras') {
                     actionRow.addComponents(
                         new ButtonBuilder()
                             .setCustomId(`gerenciar_${category.id}_equipar`)
