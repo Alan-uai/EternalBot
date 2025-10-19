@@ -1,47 +1,47 @@
 
 export const tokenFarmingGuideArticle = {
   id: 'token-farming-guide',
-  title: 'Guia de Farm de Tokens',
-  summary: 'Aprenda a otimizar seu ganho de Tokens de Respiração e Artes Demoníacas, calculando os bônus de drop de itens e gamepasses.',
-  content: `Este guia explica como maximizar a coleta de Tokens de Respiração (Breathing) e Tokens de Artes Demoníacas (Demon Arts), que são essenciais para evoluir suas armas de dano. A estratégia se baseia em acumular diferentes bônus de drop.
+  title: 'Guia do Melhor Método para Farm de Tokens',
+  summary: 'Aprenda o método mais eficiente para farmar qualquer tipo de token no jogo, empilhando todos os bônus de drop disponíveis para maximizar seus ganhos.',
+  content: `Este guia explica o método definitivo para maximizar a coleta de **qualquer token** no Anime Eternal, seja de Respiração (Breathing), Artes Demoníacas (Demon Arts) ou outros. A estratégia consiste em acumular e multiplicar todos os bônus de drop de itens disponíveis.
 
-### NPCs que Dropam Tokens
-A principal forma de obter esses tokens é derrotando NPCs específicos, geralmente os de rank mais baixo em cada mundo, que têm uma chance de dropar uma certa quantidade de tokens.
+### A Fórmula do Farm Otimizado
 
-### Fórmula de Cálculo de Ganho de Tokens
-Para calcular quantos tokens você pode ganhar, a IA deve usar a seguinte fórmula, que considera todos os multiplicadores de bônus disponíveis no jogo:
+Para calcular o ganho máximo de tokens, você deve multiplicar o drop base do NPC (ou da fonte do token) por todos os seus bônus de multiplicador. A fórmula é:
 
-**Ganho Final = (Drop Base do NPC) * (Bônus de Ficha) * (Bônus de Aura) * (Bônus de Poção) * (Bônus de Macarrão)**
+**Ganho Final = (Drop Base) * (Bônus de Ficha) * (Bônus de Aura) * (Bônus de Poção) * (Bônus de Macarrão)**
 
-**Detalhes dos Bônus:**
-- **Drop Base:** A quantidade de tokens que um NPC dropa sem nenhum bônus. Varia por NPC.
-- **Bônus de Ficha (Gamepass):** Multiplica o ganho por 2 (\`x2\`). Este é geralmente uma gamepass de "2x Tokens".
-- **Bônus de Aura:** Aumenta o ganho em 25% (\`x1.25\`).
-- **Bônus de Poção (2x Drop):** Multiplica o ganho por 2 (\`x2\`).
-- **Bônus de Macarrão (Drop):** Aumenta o ganho em 50% (\`x1.5\`).
+### Detalhes de Cada Bônus
 
-### Exemplo de Cálculo
-Vamos supor que um NPC dropa **100 tokens** como base.
+- **Drop Base:** A quantidade de tokens que um NPC ou fonte dropa sem nenhum bônus. Este valor varia.
+- **Bônus de Ficha (Gamepass):** Um multiplicador direto de **x2** no ganho, geralmente vindo de uma gamepass como "2x Tokens".
+- **Bônus de Aura:** Aumenta o ganho em 25%, resultando em um multiplicador de **x1.25**.
+- **Bônus de Poção (2x Drop):** Multiplica o ganho por **x2**.
+- **Bônus de Macarrão (Comida de Drop):** Aumenta o ganho em 50%, resultando em um multiplicador de **x1.5**.
 
-- Com **Bônus de Ficha**: 100 * 2 = 200 tokens
-- Com **Ficha + Aura**: 100 * 2 * 1.25 = 250 tokens
-- Com **Ficha + Aura + Poção**: 100 * 2 * 1.25 * 2 = 500 tokens
-- Com **Todos os Bônus (Ficha + Aura + Poção + Macarrão)**: 100 * 2 * 1.25 * 2 * 1.5 = **750 tokens**
+### O Multiplicador Máximo
 
-Isso representa um aumento de **7.5x** sobre o drop base.
+Ao combinar todos esses bônus, você alcança um multiplicador massivo:
 
-### Cenários de Farm
-A tabela abaixo mostra o potencial de ganho para diferentes quantidades de drop base, considerando todos os bônus ativos.`,
-  tags: ['tokens', 'farm', 'guia', 'respiração', 'breathing', 'artes demoníacas', 'demon arts', 'cálculo', 'bônus'],
+\`2 (Ficha) * 1.25 (Aura) * 2 (Poção) * 1.5 (Macarrão) = 7.5x\`
+
+Isso significa que, com o método otimizado, você pode ganhar **7.5 vezes mais tokens** do que o normal.
+
+### Exemplos de Ganho na Prática
+
+A tabela abaixo demonstra o poder deste método, mostrando o potencial de ganho para diferentes quantidades de drop base quando todos os bônus estão ativos.
+
+`,
+  tags: ['tokens', 'farm', 'guia', 'método', 'otimização', 'bônus', 'cálculo', 'eficiente'],
   imageUrl: 'wiki-13',
   tables: {
     tokenFarmingExamples: {
-      headers: ['Drop Base', 'Ganho Final (com todos os bônus)'],
+      headers: ['Drop Base do NPC/Fonte', 'Seu Ganho Final (com todos os bônus)'],
       rows: [
-        { 'Drop Base': '100k', 'Ganho Final (com todos os bônus)': '750k' },
-        { 'Drop Base': '200k', 'Ganho Final (com todos os bônus)': '1.5M' },
-        { 'Drop Base': '500k', 'Ganho Final (com todos os bônus)': '3.75M' },
-        { 'Drop Base': '1M (1000k)', 'Ganho Final (com todos os bônus)': '7.5M' },
+        { 'Drop Base do NPC/Fonte': '100k', 'Seu Ganho Final (com todos os bônus)': '750k' },
+        { 'Drop Base do NPC/Fonte': '200k', 'Seu Ganho Final (com todos os bônus)': '1.5M' },
+        { 'Drop Base do NPC/Fonte': '500k', 'Seu Ganho Final (com todos os bônus)': '3.75M' },
+        { 'Drop Base do NPC/Fonte': '1M (1,000k)', 'Seu Ganho Final (com todos os bônus)': '7.5M' },
       ],
     },
   },
