@@ -26,8 +26,9 @@ const client = new Client({
 const wikiContext = loadKnowledgeBase();
 client.wikiContext = wikiContext;
 
-// Carregar comandos
+// Carregar comandos e manipuladores de interação
 client.commands = new Collection();
+client.interactions = new Collection();
 const foldersPath = path.join(__dirname, 'commands');
 const commandFolders = fs.readdirSync(foldersPath);
 
@@ -37,12 +38,20 @@ for (const folder of commandFolders) {
   for (const file of commandFiles) {
     const filePath = path.join(commandsPath, file);
     const command = await import(`file://${filePath}`);
+    
+    // Configurar comandos de barra
     if ('data' in command) {
       client.commands.set(command.data.name, command);
     } else {
       console.log(
-        `[AVISO] O comando em ${filePath} não possui a propriedade "data" ou "execute".`
+        `[AVISO] O comando em ${filePath} não possui a propriedade "data".`
       );
+    }
+
+    // Configurar manipuladores de interação (para botões, menus, modais)
+    if('handleInteraction' in command) {
+        // Usamos o nome do comando como chave para o manipulador
+        client.interactions.set(command.data.name, command.handleInteraction);
     }
   }
 }
@@ -76,7 +85,7 @@ client.once(Events.ClientReady, async (readyClient) => {
 client.on(Events.InteractionCreate, async (interaction) => {
     // Se for um comando de chat
     if (interaction.isChatInputCommand()) {
-        const command = interaction.client.commands.get(interaction.commandName);
+        const command = client.commands.get(interaction.commandName);
 
         if (!command) {
             console.error(`Nenhum comando correspondente a ${interaction.commandName} foi encontrado.`);
@@ -84,7 +93,9 @@ client.on(Events.InteractionCreate, async (interaction) => {
         }
 
         try {
-            await command.execute(interaction, { wikiContext: client.wikiContext });
+            if (command.execute) {
+              await command.execute(interaction, { wikiContext: client.wikiContext });
+            }
         } catch (error) {
             console.error(error);
             const errorMessage = 'Ocorreu um erro ao executar este comando!';
@@ -99,18 +110,20 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
     // Se for uma interação de botão, menu ou modal
     if (interaction.isButton() || interaction.isModalSubmit() || interaction.isStringSelectMenu()) {
+        // O customId será formatado como "commandName_action_data"
         const customIdParts = interaction.customId.split('_');
         const commandName = customIdParts[0]; 
-        const command = interaction.client.commands.get(commandName);
+        
+        const interactionHandler = client.interactions.get(commandName);
 
-        if (command && command.handleInteraction) {
+        if (interactionHandler) {
             try {
-                await command.handleInteraction(interaction);
+                await interactionHandler(interaction);
             } catch (error) {
                 console.error(`Erro ao lidar com interação para ${commandName}:`, error);
                  if (interaction.replied || interaction.deferred) {
                     await interaction.followUp({ content: 'Ocorreu um erro ao processar sua ação.', ephemeral: true });
-                } else {
+                } else if (!interaction.replied) {
                     await interaction.reply({ content: 'Ocorreu um erro ao processar sua ação.', ephemeral: true });
                 }
             }

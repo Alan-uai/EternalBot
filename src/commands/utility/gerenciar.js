@@ -10,13 +10,44 @@ export const data = {
     description: 'Comando interno para gerenciar interações de inventário.'
 };
 
+// Dados estáticos para os encantamentos, pois não estão na wiki
+const ENCHANTMENTS = {
+    breathing: [
+        { name: 'Respiração da Água (Comum)', id: 'water_common' },
+        { name: 'Respiração do Trovão (Incomum)', id: 'thunder_uncommon' },
+        { name: 'Respiração da Besta (Raro)', id: 'beast_rare' },
+        { name: 'Respiração do Vento (Épico)', id: 'wind_epic' },
+        { name: 'Respiração das Chamas (Lendário)', id: 'flame_legendary' },
+        { name: 'Respiração da Lua (Mítico)', id: 'moon_mythic' },
+        { name: 'Respiração do Sol (Phantom)', id: 'sun_phantom' },
+    ],
+    stone: [
+        { name: 'Runa de Gelo (Comum)', id: 'ice_common' },
+        { name: 'Runa de Veneno (Incomum)', id: 'poison_uncommon' },
+        { name: 'Runa de Sangue (Raro)', id: 'blood_rare' },
+        { name: 'Runa da Escuridão (Épico)', id: 'darkness_epic' },
+        { name: 'Runa da Luz (Lendário)', id: 'light_legendary' },
+        { name: 'Runa do Espaço (Mítico)', id: 'space_mythic' },
+        { name: 'Runa do Tempo (Phantom)', id: 'time_phantom' },
+    ],
+    passiva: [
+        { name: 'Passiva de Velocidade (Comum)', id: 'speed_common' },
+        { name: 'Passiva de Alcance (Incomum)', id: 'range_uncommon' },
+        { name: 'Passiva de Dano Crítico (Raro)', id: 'crit_rare' },
+        { name: 'Passiva de Dano em Área (Épico)', id: 'aoe_epic' },
+        { name: 'Passiva de Dreno de Vida (Lendário)', id: 'lifesteal_legendary' },
+        { name: 'Passiva de Execução (Mítico)', id: 'execute_mythic' },
+        { name: 'Passiva de Duplicação (Phantom)', id: 'duplication_phantom' },
+    ]
+};
+
 async function handleInteraction(interaction) {
     const { customId, user } = interaction;
     const parts = customId.split('_');
     const command = parts[0]; // 'gerenciar'
     const categoryId = parts[1];
     const action = parts[2];
-    const actionData = parts.slice(3); // O resto dos dados, como ID do item
+    const actionData = parts.slice(3); // O resto dos dados
 
     if (action === 'equipar') {
         await handleEquipAction(interaction, categoryId);
@@ -28,6 +59,19 @@ async function handleInteraction(interaction) {
         await handleEditAction(interaction, categoryId);
     } else if (action === 'selectweaponedit') {
         await handleSelectWeaponForEdit(interaction, categoryId, actionData[0]);
+    } else if (action === 'edittype') { // ex: gerenciar_armas_edittype_bloodthorn_envolver
+        const weaponId = actionData[0];
+        const editType = actionData[1];
+        await handleWeaponEditType(interaction, weaponId, editType);
+    } else if (action === 'setstar') { // ex: gerenciar_armas_setstar_bloodthorn_2
+        const weaponId = actionData[0];
+        const starLevel = actionData[1];
+        await handleSetStarLevel(interaction, weaponId, starLevel);
+    } else if (action === 'setenchant') { // ex: gerenciar_armas_setenchant_bloodthorn_breathing_sun_phantom
+        const weaponId = actionData[0];
+        const enchantType = actionData[1];
+        const enchantId = actionData[2];
+        await handleSetEnchantment(interaction, weaponId, enchantType, enchantId);
     }
 }
 
@@ -264,15 +308,18 @@ function findWeaponType(weaponId) {
 
 
 async function handleSelectWeaponForEdit(interaction, categoryId, weaponId) {
+    // This is a menu selection, so we use interaction.values[0]
+    const selectedWeaponId = interaction.values[0];
+
     if (categoryId !== 'armas') {
         // Fallback for other categories (future implementation)
         return interaction.update({ content: 'Edição para esta categoria ainda não implementada.', components: [] });
     }
 
-    const weaponType = findWeaponType(weaponId);
+    const weaponType = findWeaponType(selectedWeaponId);
 
     if (!weaponType) {
-        return interaction.update({ content: `Não foi possível determinar o tipo da arma \`${weaponId}\`.`, components: [] });
+        return interaction.update({ content: `Não foi possível determinar o tipo da arma \`${selectedWeaponId}\`.`, components: [] });
     }
 
     let options = [];
@@ -281,8 +328,8 @@ async function handleSelectWeaponForEdit(interaction, categoryId, weaponId) {
     } else if (weaponType === 'damage') {
         options = [
             { label: 'Envolver (Evoluir)', value: 'envolver' },
-            { label: 'Stone', value: 'stone' },
-            { label: 'Breathing', value: 'breathing' }
+            { label: 'Stone (Runa)', value: 'stone' },
+            { label: 'Breathing (Respiração)', value: 'breathing' }
         ];
     } else if (weaponType === 'scythe') {
         options = [
@@ -294,16 +341,101 @@ async function handleSelectWeaponForEdit(interaction, categoryId, weaponId) {
     }
 
     const selectMenu = new StringSelectMenuBuilder()
-        .setCustomId(`gerenciar_armas_edittype_${weaponId}`)
+        .setCustomId(`gerenciar_armas_edittype_${selectedWeaponId}`)
         .setPlaceholder('O que você quer editar?')
-        .addOptions(options);
+        .addOptions(
+             options.map(opt => ({
+                label: opt.label,
+                value: opt.value
+             }))
+        );
 
     const row = new ActionRowBuilder().addComponents(selectMenu);
 
     await interaction.update({
-        content: `Você selecionou \`${weaponId.replace(/-/g, ' ')}\`. O que você deseja editar?`,
+        content: `Você selecionou \`${selectedWeaponId.replace(/-/g, ' ')}\`. O que você deseja editar?`,
         components: [row]
     });
+}
+
+async function handleWeaponEditType(interaction, weaponId, editType) {
+    const selectedEditType = interaction.values[0];
+    let menuBuilder;
+
+    if (selectedEditType === 'envolver') {
+        menuBuilder = new StringSelectMenuBuilder()
+            .setCustomId(`gerenciar_armas_setstar_${weaponId}`)
+            .setPlaceholder('Selecione o nível da estrela')
+            .addOptions([
+                { label: '⭐ 1 Estrela', value: '1' },
+                { label: '⭐⭐ 2 Estrelas', value: '2' },
+                { label: '⭐⭐⭐ 3 Estrelas', value: '3' },
+            ]);
+    } else if (selectedEditType === 'breathing' || selectedEditType === 'stone' || selectedEditType === 'passiva') {
+         const enchantments = ENCHANTMENTS[selectedEditType];
+         menuBuilder = new StringSelectMenuBuilder()
+            .setCustomId(`gerenciar_armas_setenchant_${weaponId}_${selectedEditType}`)
+            .setPlaceholder(`Selecione o encantamento de ${selectedEditType}`)
+            .addOptions(
+                enchantments.map(ench => ({
+                    label: ench.name,
+                    value: ench.id
+                }))
+            );
+    } else {
+        return interaction.update({ content: 'Ação de edição inválida.', components: [] });
+    }
+
+    const row = new ActionRowBuilder().addComponents(menuBuilder);
+    await interaction.update({
+        content: `Editando ${selectedEditType.charAt(0).toUpperCase() + selectedEditType.slice(1)} para a arma \`${weaponId.replace(/-/g, ' ')}\`:`,
+        components: [row]
+    });
+}
+
+async function handleSetStarLevel(interaction, weaponId, starLevel) {
+    const selectedStarLevel = interaction.values[0];
+    const { firestore } = initializeFirebase();
+    const userRef = doc(firestore, 'users', interaction.user.id);
+
+    const weaponPath = `equipped.armas.${weaponId.replace(/-/g, '_')}.evolutionLevel`;
+    
+    try {
+        await updateDoc(userRef, { [weaponPath]: parseInt(selectedStarLevel, 10) });
+        await interaction.update({ content: `Arma \`${weaponId.replace(/-/g, ' ')}\` envolvida para ${selectedStarLevel} estrela(s) com sucesso!`, components: [] });
+    } catch (error) {
+        console.error("Erro ao atualizar o nível da estrela:", error);
+        await interaction.update({ content: 'Ocorreu um erro ao salvar a evolução da sua arma.', components: [] });
+    }
+}
+
+async function handleSetEnchantment(interaction, weaponId, enchantType, enchantId) {
+    const selectedEnchantId = interaction.values[0];
+    const { firestore } = initializeFirebase();
+    const userRef = doc(firestore, 'users', interaction.user.id);
+    
+    const enchantName = ENCHANTMENTS[enchantType].find(e => e.id === selectedEnchantId)?.name || selectedEnchantId;
+
+    const enchantFieldMap = {
+        breathing: 'breathingEnchantment',
+        stone: 'stoneEnchantment',
+        passiva: 'passiveEnchantment'
+    };
+
+    const fieldToUpdate = enchantFieldMap[enchantType];
+    if (!fieldToUpdate) {
+        return interaction.update({ content: 'Tipo de encantamento inválido.', components: [] });
+    }
+
+    const weaponPath = `equipped.armas.${weaponId.replace(/-/g, '_')}.${fieldToUpdate}`;
+
+    try {
+        await updateDoc(userRef, { [weaponPath]: selectedEnchantId });
+        await interaction.update({ content: `Encantamento \`${enchantName}\` aplicado à arma \`${weaponId.replace(/-/g, ' ')}\` com sucesso!`, components: [] });
+    } catch (error) {
+        console.error("Erro ao definir encantamento:", error);
+        await interaction.update({ content: 'Ocorreu um erro ao salvar o encantamento da sua arma.', components: [] });
+    }
 }
 
 
