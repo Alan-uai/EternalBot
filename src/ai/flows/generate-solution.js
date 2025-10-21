@@ -79,7 +79,7 @@ Sua resposta DEVE ser uma string JSON de um array de objetos. Cada objeto repres
 - **DANO BASE:** O dano base de um jogador é igual à sua **energia total acumulada**.
 - **GANHO DE ENERGIA:** É a quantidade de energia que um jogador ganha por segundo.
 - **DPS (DANO POR SEGUNDO):** Este é o dano total que o jogador causa por segundo.
-- **CÁLCULO DE DPS COM FAST CLICK:** A gamepass "fast click" dá ao jogador 4 cliques por segundo. **SEMPRE considere este cenário nos cálculos de DPS.** O DPS total com esta gamepass é calculado como \`(Dano Base * 4)\`.
+- **CÁLCULO DE DPS COM FAST CLICK:** A gamepass "fast click" dá ao jogador 5 cliques por segundo. **SEMPRE considere este cenário nos cálculos de DPS.** O DPS total com esta gamepass é calculado como \`(Dano Base * 5)\`.
 - **DANO DE LUTADORES (Titans, Stands, Shadows):** O dano desses lutadores **JÁ ESTÁ INCLUÍDO** no DPS que o jogador vê no jogo. **NUNCA** calcule o dano de um lutador e o adicione ao DPS total do jogador, pois isso resultaria em contagem dupla. Apenas mencione o bônus percentual do lutador como uma informação adicional.
 - Ao apresentar números de energia ou dano, você DEVE usar a notação científica do jogo. Consulte o artigo "Abreviações de Notação Científica" para usar as abreviações corretas (k, M, B, T, qd, etc.).
 - Ao listar poderes ou itens, você DEVE especificar seus bônus:
@@ -130,5 +130,3 @@ const generateSolutionFlow = ai.defineFlow(
     }
   }
 );
-
-    
