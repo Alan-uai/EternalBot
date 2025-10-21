@@ -343,6 +343,7 @@
         "exp": { "type": "number", "description": "Experience points dropped by the NPC." },
         "hp": { "type": "string", "description": "Health points of the NPC." },
         "world": { "type": "string", "description": "The world where the NPC is located." },
+        "videoUrl": { "type": "string", "description": "An optional URL to a video showing the location of the NPC." },
         "drops": {
           "type": "object",
           "description": "Details about the items dropped by the NPC.",
