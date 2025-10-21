@@ -3,19 +3,27 @@ export const idealRankPerWorldArticle = {
   id: 'ideal-rank-per-world',
   title: 'Guia de Rank Ideal por Mundo',
   summary: 'Uma análise estratégica sobre o rank ideal para farmar em cada mundo, baseado no tempo para derrotar os chefes e na eficiência do ganho de energia.',
-  content: `Este guia oferece uma perspectiva estratégica sobre qual seria o "rank ideal" para se manter e farmar em cada mundo do Anime Eternal. A metodologia se baseia no dano por segundo (DPS) necessário para derrotar o chefe principal (Rank SS ou SSS) de cada mundo em um tempo específico.
+  content: `Este guia oferece uma perspectiva estratégica sobre qual seria o "rank ideal" para se manter e farmar em cada mundo do Anime Eternal. A metodologia se baseia no dano por segundo (DPS) necessário para derrotar o chefe principal (Rank SS ou SSS) de cada mundo em um tempo específico, após um período de farm de energia.
 
 ### Metodologia
 
-A premissa é que o rank ideal é aquele que permite ao jogador causar dano suficiente para derrotar o chefe em um tempo alvo. A análise assume que o jogador possui a gamepass **"Fast Click" (5 cliques/segundo)**, e que o dano base é igual à energia acumulada, que por sua vez é igual ao ganho de energia por clique do rank.
+A premissa é que o rank ideal é aquele que, após um período de farm, permite ao jogador causar dano suficiente para derrotar o chefe em um tempo alvo. A análise assume que o jogador possui a gamepass **"Fast Click" (5 cliques/segundo)**.
 
-- **Rank Ideal (Luta ~5 min):** O rank mais baixo cujo DPS (`Ganho de Energia * 5`) é suficiente para derrotar o chefe em aproximadamente 5 minutos. Este é o ponto de farm mais eficiente antes de avançar.
-- **Rank Médio (Luta ~10 min):** O rank mais baixo necessário para derrotar o chefe em aproximadamente 10 minutos.
-- **Rank Mínimo (Luta ~15 min):** O rank mais baixo necessário para derrotar o chefe em aproximadamente 15 minutos.
+1.  **Cálculo da Energia Acumulada:** Primeiro, calculamos a energia total que um jogador acumularia em **6 horas de farm** em um determinado rank.
+    *   \`Energia Acumulada = (Ganho de Energia do Rank * 5 cliques/s) * 21600 segundos (6h)\`
+2.  **Cálculo do DPS Potencial:** Essa energia acumulada se torna o dano base. O DPS potencial do jogador é esse dano base multiplicado pelos 5 cliques por segundo.
+    *   \`DPS Potencial = Energia Acumulada * 5\`
+3.  **Cálculo do DPS Necessário:** Calculamos o DPS necessário para derrotar o chefe nos tempos alvo.
+    *   \`DPS Necessário = HP do Chefe / Tempo em Segundos (300s, 600s, 900s)\`
+4.  **Determinação do Rank:** O rank listado é o mais baixo cujo **DPS Potencial** atinge ou ultrapassa o **DPS Necessário** para cada cenário.
 
-**Importante:** Esta é uma análise teórica e serve como uma linha de base. Bônus de poderes, armas, pets, gamepasses e outros multiplicadores irão acelerar drasticamente sua progressão e permitir que você avance com ranks mais baixos do que os listados. Use esta tabela como uma referência de poder base.`,
+- **Rank Ideal (Luta ~5 min):** O rank que, após 6h de farm, consegue derrotar o chefe em 5 minutos.
+- **Rank Médio (Luta ~10 min):** O rank que, após 6h de farm, consegue derrotar o chefe em 10 minutos.
+- **Rank Mínimo (Luta ~15 min):** O rank que, após 6h de farm, consegue derrotar o chefe em 15 minutos.
+
+**Importante:** Esta é uma análise teórica e serve como uma linha de base. Bônus de poderes, armas, pets e outras gamepasses irão acelerar drasticamente sua progressão e permitir que você avance com ranks mais baixos do que os listados.`,
   tags: ['rank', 'guia', 'estratégia', 'mundo', 'ideal', 'farm', 'dps', 'chefe'],
-  imageUrl: 'wiki-6', // Reusing rank system image
+  imageUrl: 'wiki-6',
   tables: {
     idealRank: {
       headers: ['Mundo', 'Chefe (Rank SS/SSS)', 'HP do Chefe', 'Rank Ideal (Luta ~5min)', 'Rank Médio (Luta ~10min)', 'Rank Mínimo (Luta ~15min)'],
@@ -45,3 +53,5 @@ A premissa é que o rank ideal é aquele que permite ao jogador causar dano sufi
     },
   },
 };
+
+    
