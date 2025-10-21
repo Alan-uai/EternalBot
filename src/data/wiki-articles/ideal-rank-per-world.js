@@ -7,20 +7,11 @@ export const idealRankPerWorldArticle = {
 
 ### Metodologia
 
-A premissa é que o "rank ideal" é aquele onde, após farmar por um tempo determinado, seu poder acumulado permite derrotar o chefe principal em um tempo razoável.
+A premissa é que o "rank ideal" é aquele onde, após farmar por um tempo determinado, seu poder acumulado permite derrotar o chefe principal em um tempo razoável. A análise considera um jogador com a gamepass "Fast Click" (5 cliques/segundo).
 
-- **Rank Ideal (5 min de luta):** Assume que o jogador farmou por **6 horas** nesse rank. É o ponto de farm mais eficiente antes de se tornar forte demais para o mundo.
-- **Rank Médio (10 min de luta):** Assume que o jogador farmou por **12 horas**. Um bom indicador de que você está no caminho certo.
-- **Rank Mínimo (15 min de luta):** Assume que o jogador farmou por **24 horas**. É o mínimo viável para começar a farmar o chefe do mundo.
-
-**Cálculo Base:**
-1.  **Dano Total Necessário:** Primeiro, calculamos o dano total necessário para derrotar o chefe no tempo de luta alvo (5, 10 ou 15 minutos).
-    *   \`Dano Total = HP do Chefe\`
-2.  **Energia Acumulada Requerida:** O dano total do jogador durante a luta é o resultado da sua energia acumulada multiplicada pelos cliques. Para encontrar a energia que ele precisaria ter no início da luta, a fórmula é:
-    *   \`Energia Acumulada Necessária = Dano Total / (5 cliques/s * Tempo de Luta em segundos)\`
-3.  **Ganho de Energia por Hora:** Calculamos quanto de energia o jogador precisaria ganhar por hora para atingir esse total no tempo de farm estipulado (6, 12 ou 24 horas).
-    *   \`Ganho de Energia por Hora = Energia Acumulada Necessária / Horas de Farm\`
-4.  **Encontrar o Rank:** Finalmente, procuramos na tabela de ranks qual deles oferece um ganho de energia por hora (considerando 5 cliques/s) mais próximo do valor calculado.
+- **Rank Ideal (Luta de 5 min):** Assume que o jogador farmou por **6 horas**. É o ponto de farm mais eficiente. Derrotar o chefe mais rápido que isso sugere que o jogador já poderia estar no próximo mundo.
+- **Rank Médio (Luta de 10 min):** Assume que o jogador farmou por **12 horas**. Um bom indicador de que você está no caminho certo para aquele mundo.
+- **Rank Mínimo (Luta de 15 min):** Assume que o jogador farmou por **24 horas**. É o mínimo viável para começar a farmar o chefe do mundo.
 
 A tabela abaixo mostra os ranks estimados para cada cenário.
 
@@ -38,20 +29,20 @@ A tabela abaixo mostra os ranks estimados para cada cenário.
         { 'Mundo': 5, 'Chefe (Rank SS)': 'Rangoki', 'HP do Chefe': '31.2de', 'Rank Ideal (após 6h de farm)': '101', 'Rank Médio (após 12h de farm)': '99', 'Rank Mínimo (após 24h de farm)': '96' },
         { 'Mundo': 6, 'Chefe (Rank SS)': 'Statue of God', 'HP do Chefe': '195Ud', 'Rank Ideal (após 6h de farm)': '113', 'Rank Médio (após 12h de farm)': '111', 'Rank Mínimo (após 24h de farm)': '108' },
         { 'Mundo': 7, 'Chefe (Rank SS)': 'Novi Chroni', 'HP do Chefe': '101TdD', 'Rank Ideal (após 6h de farm)': '125', 'Rank Médio (após 12h de farm)': '123', 'Rank Mínimo (após 24h de farm)': '120' },
-        { 'Mundo': 8, 'Chefe (Rank SS)': 'Itechi/Madera', 'HP do Chefe': '~4.2QnD', 'Rank Ideal (após 6h de farm)': '>125', 'Rank Médio (após 12h de farm)': '>125', 'Rank Mínimo (após 24h de farm)': '125' },
-        { 'Mundo': 9, 'Chefe (Rank SS)': 'Veggita', 'HP do Chefe': '2.46OcD', 'Rank Ideal (após 6h de farm)': '>125', 'Rank Médio (após 12h de farm)': '>125', 'Rank Mínimo (após 24h de farm)': '>125' },
-        { 'Mundo': 10, 'Chefe (Rank SS)': 'Ken Turbo', 'HP do Chefe': '494SxD', 'Rank Ideal (após 6h de farm)': '>125', 'Rank Médio (após 12h de farm)': '>125', 'Rank Mínimo (após 24h de farm)': '>125' },
-        { 'Mundo': 11, 'Chefe (Rank SS)': 'Killas Godspeed', 'HP do Chefe': '49.4Vgn', 'Rank Ideal (após 6h de farm)': '>125', 'Rank Médio (após 12h de farm)': '>125', 'Rank Mínimo (após 24h de farm)': '>125' },
-        { 'Mundo': 12, 'Chefe (Rank SS)': 'Garou Cósmico', 'HP do Chefe': '2.96DVg', 'Rank Ideal (após 6h de farm)': '>125', 'Rank Médio (após 12h de farm)': '>125', 'Rank Mínimo (após 24h de farm)': '>125' },
-        { 'Mundo': 13, 'Chefe (Rank SS)': 'Esanor/Number 8', 'HP do Chefe': '~7.6DVg', 'Rank Ideal (após 6h de farm)': '>125', 'Rank Médio (após 12h de farm)': '>125', 'Rank Mínimo (após 24h de farm)': '>125' },
-        { 'Mundo': 14, 'Chefe (Rank SS)': 'Valzora', 'HP do Chefe': '4.79SeV', 'Rank Ideal (após 6h de farm)': '>125', 'Rank Médio (após 12h de farm)': '>125', 'Rank Mínimo (após 24h de farm)': '>125' },
-        { 'Mundo': 15, 'Chefe (Rank SS)': 'The Paladin', 'HP do Chefe': '967SPG', 'Rank Ideal (após 6h de farm)': '>125', 'Rank Médio (após 12h de farm)': '>125', 'Rank Mínimo (após 24h de farm)': '>125' },
-        { 'Mundo': 16, 'Chefe (Rank SS)': 'Dio', 'HP do Chefe': '195NVG', 'Rank Ideal (após 6h de farm)': '>125', 'Rank Médio (após 12h de farm)': '>125', 'Rank Mínimo (após 24h de farm)': '>125' },
-        { 'Mundo': 17, 'Chefe (Rank SS)': 'Arama', 'HP do Chefe': '686UTG', 'Rank Ideal (após 6h de farm)': '>125', 'Rank Médio (após 12h de farm)': '>125', 'Rank Mínimo (após 24h de farm)': '>125' },
-        { 'Mundo': 18, 'Chefe (Rank SS)': 'Mr. Chainsaw', 'HP do Chefe': '1.5qTG', 'Rank Ideal (após 6h de farm)': '>125', 'Rank Médio (após 12h de farm)': '>125', 'Rank Mínimo (após 24h de farm)': '>125' },
-        { 'Mundo': 19, 'Chefe (Rank SS)': 'Bansho', 'HP do Chefe': '605UTG', 'Rank Ideal (após 6h de farm)': '>125', 'Rank Médio (após 12h de farm)': '>125', 'Rank Mínimo (após 24h de farm)': '>125' },
-        { 'Mundo': 20, 'Chefe (Rank SSS)': 'Frezi Final Form', 'HP do Chefe': '47qTG', 'Rank Ideal (após 6h de farm)': '>125', 'Rank Médio (após 12h de farm)': '>125', 'Rank Mínimo (após 24h de farm)': '>125' },
-        { 'Mundo': 21, 'Chefe (Rank SSS)': 'Vasto Ichge', 'HP do Chefe': '3.7ssTG', 'Rank Ideal (após 6h de farm)': '>125', 'Rank Médio (após 12h de farm)': '>125', 'Rank Mínimo (após 24h de farm)': '>125' },
+        { 'Mundo': 8, 'Chefe (Rank SS)': 'Itechi/Madera', 'HP do Chefe': '~4.2QnD', 'Rank Ideal (após 6h de farm)': '134', 'Rank Médio (após 12h de farm)': '132', 'Rank Mínimo (após 24h de farm)': '129' },
+        { 'Mundo': 9, 'Chefe (Rank SS)': 'Veggita', 'HP do Chefe': '2.46OcD', 'Rank Ideal (após 6h de farm)': '146', 'Rank Médio (após 12h de farm)': '144', 'Rank Mínimo (após 24h de farm)': '141' },
+        { 'Mundo': 10, 'Chefe (Rank SS)': 'Ken Turbo', 'HP do Chefe': '494SxD', 'Rank Ideal (após 6h de farm)': '152', 'Rank Médio (após 12h de farm)': '150', 'Rank Mínimo (após 24h de farm)': '147' },
+        { 'Mundo': 11, 'Chefe (Rank SS)': 'Killas Godspeed', 'HP do Chefe': '49.4Vgn', 'Rank Ideal (após 6h de farm)': '164', 'Rank Médio (após 12h de farm)': '162', 'Rank Mínimo (após 24h de farm)': '159' },
+        { 'Mundo': 12, 'Chefe (Rank SS)': 'Garou Cósmico', 'HP do Chefe': '2.96DVg', 'Rank Ideal (após 6h de farm)': '170', 'Rank Médio (após 12h de farm)': '168', 'Rank Mínimo (após 24h de farm)': '165' },
+        { 'Mundo': 13, 'Chefe (Rank SS)': 'Esanor/Number 8', 'HP do Chefe': '~7.6DVg', 'Rank Ideal (após 6h de farm)': '173', 'Rank Médio (após 12h de farm)': '171', 'Rank Mínimo (após 24h de farm)': '168' },
+        { 'Mundo': 14, 'Chefe (Rank SS)': 'Valzora', 'HP do Chefe': '4.79SeV', 'Rank Ideal (após 6h de farm)': '179', 'Rank Médio (após 12h de farm)': '177', 'Rank Mínimo (após 24h de farm)': '174' },
+        { 'Mundo': 15, 'Chefe (Rank SS)': 'The Paladin', 'HP do Chefe': '967SPG', 'Rank Ideal (após 6h de farm)': '185', 'Rank Médio (após 12h de farm)': '183', 'Rank Mínimo (após 24h de farm)': '180' },
+        { 'Mundo': 16, 'Chefe (Rank SS)': 'Dio', 'HP do Chefe': '195NVG', 'Rank Ideal (após 6h de farm)': '191', 'Rank Médio (após 12h de farm)': '189', 'Rank Mínimo (após 24h de farm)': '186' },
+        { 'Mundo': 17, 'Chefe (Rank SS)': 'Arama', 'HP do Chefe': '686UTG', 'Rank Ideal (após 6h de farm)': '197', 'Rank Médio (após 12h de farm)': '195', 'Rank Mínimo (após 24h de farm)': '192' },
+        { 'Mundo': 18, 'Chefe (Rank SS)': 'Mr. Chainsaw', 'HP do Chefe': '1.5qTG', 'Rank Ideal (após 6h de farm)': '203', 'Rank Médio (após 12h de farm)': '201', 'Rank Mínimo (após 24h de farm)': '198' },
+        { 'Mundo': 19, 'Chefe (Rank SS)': 'Bansho', 'HP do Chefe': '605UTG', 'Rank Ideal (após 6h de farm)': '197', 'Rank Médio (após 12h de farm)': '195', 'Rank Mínimo (após 24h de farm)': '192' },
+        { 'Mundo': 20, 'Chefe (Rank SSS)': 'Frezi Final Form', 'HP do Chefe': '47qTG', 'Rank Ideal (após 6h de farm)': '206', 'Rank Médio (após 12h de farm)': '204', 'Rank Mínimo (após 24h de farm)': '201' },
+        { 'Mundo': 21, 'Chefe (Rank SSS)': 'Vasto Ichge', 'HP do Chefe': '3.7ssTG', 'Rank Ideal (após 6h de farm)': '212', 'Rank Médio (após 12h de farm)': '210', 'Rank Mínimo (após 24h de farm)': '207' },
       ],
     },
   },
