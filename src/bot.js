@@ -164,38 +164,52 @@ client.once(Events.ClientReady, async (readyClient) => {
 
 // Evento para responder a menções
 client.on(Events.MessageCreate, async (message) => {
-    // ID do canal restrito para o chat
     const CHAT_CHANNEL_ID = '1429309293076680744';
 
-    // 1. O bot só responde no canal de chat correto.
-    if (message.channel.id !== CHAT_CHANNEL_ID) {
-        return;
-    }
-    
-    // 2. Ignora mensagens de outros bots
-    // 3. Verifica se a mensagem menciona o bot diretamente (e não @everyone ou um cargo)
-    if (
-        message.author.bot ||
-        !message.mentions.has(client.user.id) ||
-        message.mentions.everyone // Ignora @everyone e @here
-    ) {
+    if (message.channel.id !== CHAT_CHANNEL_ID || message.author.bot || !message.mentions.has(client.user.id) || message.mentions.everyone) {
         return;
     }
 
-
-    // Remove a menção para obter a pergunta limpa
     const question = message.content.replace(/<@!?(\d+)>/g, '').trim();
-
     if (!question) {
         await message.reply('Olá! Em que posso ajudar sobre o Anime Eternal?');
         return;
     }
 
+    await message.channel.sendTyping();
+
+    const history = [];
+    
+    // Verifica se é uma resposta a uma mensagem anterior
+    if (message.reference && message.reference.messageId) {
+        try {
+            const repliedToMessage = await message.channel.messages.fetch(message.reference.messageId);
+
+            // Se o usuário respondeu à mensagem do bot
+            if (repliedToMessage.author.id === client.user.id) {
+                // Adiciona a resposta do bot ao histórico
+                history.push({ role: 'assistant', content: repliedToMessage.content });
+
+                // Tenta buscar a pergunta original à qual o bot respondeu
+                if (repliedToMessage.reference && repliedToMessage.reference.messageId) {
+                    const originalMessage = await message.channel.messages.fetch(repliedToMessage.reference.messageId);
+                    if (originalMessage.author.id !== client.user.id) {
+                         const originalQuestion = originalMessage.content.replace(/<@!?(\d+)>/g, '').trim();
+                        history.unshift({ role: 'user', content: originalQuestion });
+                    }
+                }
+            }
+        } catch (error) {
+            console.warn("Não foi possível buscar o histórico da conversa:", error);
+        }
+    }
+
+
     try {
-        await message.channel.sendTyping();
         const result = await generateSolution({
             problemDescription: question,
             wikiContext: client.wikiContext,
+            history: history.length > 0 ? history : undefined,
         });
 
         if (result && result.structuredResponse) {
@@ -224,11 +238,10 @@ client.on(Events.MessageCreate, async (message) => {
 
             const replyMessage = await message.reply({ content: replyContent, components: [feedbackRow] });
 
-            // Armazenar temporariamente a pergunta e a resposta para o contexto do feedback
             client.interactions.set(`question_${message.id}`, question);
             client.interactions.set(`answer_${message.id}`, replyContent);
+            client.interactions.set(`history_${message.id}`, history); // Armazena o histórico para re-geração
             client.interactions.set(`replyMessageId_${message.id}`, replyMessage.id);
-
 
         } else {
             await message.reply('Desculpe, não consegui obter uma resposta.');
@@ -247,13 +260,13 @@ client.on(Events.InteractionCreate, async (interaction) => {
         const [,, userId, originalMessageId] = interaction.customId.split('_');
 
         if (interaction.customId.startsWith('feedback_dislike')) {
-            await interaction.deferUpdate(); // Confirma o clique para o Discord
+            await interaction.deferUpdate();
             
             const originalQuestion = client.interactions.get(`question_${originalMessageId}`);
             const badResponse = client.interactions.get(`answer_${originalMessageId}`);
             const replyMessageId = client.interactions.get(`replyMessageId_${originalMessageId}`);
+            const conversationHistory = client.interactions.get(`history_${originalMessageId}`);
             
-            // 1. Enviar para o canal de moderação
             const MOD_CHANNEL_ID = '1429314152928641118';
             const modChannel = await client.channels.fetch(MOD_CHANNEL_ID);
 
@@ -288,11 +301,11 @@ client.on(Events.InteractionCreate, async (interaction) => {
                 await modChannel.send({ embeds: [feedbackEmbed], components: [modActionsRow] });
             }
 
-            // 2. Gerar nova resposta e editar a mensagem original
             try {
                 const newResult = await generateSolution({
                     problemDescription: originalQuestion,
                     wikiContext: client.wikiContext,
+                    history: conversationHistory, // Usa o histórico armazenado
                 });
                 
                 if (newResult && newResult.structuredResponse) {
@@ -306,13 +319,11 @@ client.on(Events.InteractionCreate, async (interaction) => {
                         newReplyContent = newReplyContent.substring(0, 1997) + '...';
                     }
 
-                    // Encontra a mensagem de resposta do bot e a edita
                     const originalChannel = await client.channels.fetch(interaction.channelId);
                     const replyMessage = await originalChannel.messages.fetch(replyMessageId);
 
                     if(replyMessage) {
                         await replyMessage.edit({ content: newReplyContent });
-                        // Atualiza a resposta armazenada para o caso de outro dislike
                         client.interactions.set(`answer_${originalMessageId}`, newReplyContent);
                     }
                 }
@@ -324,7 +335,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         } else if (interaction.customId.startsWith('feedback_like')) {
             await interaction.reply({ content: 'Obrigado pelo seu feedback positivo!', ephemeral: true });
         }
-        return; // Finaliza aqui para não cair em outros handlers
+        return;
     }
 
     if (interaction.isButton() && interaction.customId.startsWith('mod_')) {
@@ -371,7 +382,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
         await notificationThread.send(`<@${userId}>, ${message}`);
         await interaction.reply({ content: `Notificação de status '${status}' enviada para ${user.tag}.`, ephemeral: true });
         
-        // Desabilitar botões na mensagem de moderação após a ação
         const originalMessage = interaction.message;
         const disabledRow = new ActionRowBuilder();
         originalMessage.components[0].components.forEach(component => {
