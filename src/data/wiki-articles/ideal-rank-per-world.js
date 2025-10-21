@@ -11,7 +11,7 @@ A premissa é que o "rank ideal" é aquele onde, após farmar por um tempo deter
 
 - **Rank Ideal (Luta de 5 min):** Assume que o jogador farmou por **6 horas**. É o ponto de farm mais eficiente. Derrotar o chefe mais rápido que isso sugere que o jogador já poderia estar no próximo mundo.
 - **Rank Médio (Luta de 10 min):** Assume que o jogador farmou por **12 horas**. Um bom indicador de que você está no caminho certo para aquele mundo.
-- **Rank Mínimo (Luta de 15 min):** Assume que o jogador farmou por **24 horas**. É o mínimo viável para começar a farmar o chefe do mundo.
+- **Rank Mínimo (Luta de 24 min):** Assume que o jogador farmou por **24 horas**. É o mínimo viável para começar a farmar o chefe do mundo.
 
 A tabela abaixo mostra os ranks estimados para cada cenário.
 
@@ -47,5 +47,3 @@ A tabela abaixo mostra os ranks estimados para cada cenário.
     },
   },
 };
-
-    
