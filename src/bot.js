@@ -179,29 +179,24 @@ client.on(Events.MessageCreate, async (message) => {
     await message.channel.sendTyping();
 
     const history = [];
-    
-    // Verifica se é uma resposta a uma mensagem anterior
-    if (message.reference && message.reference.messageId) {
-        try {
-            const repliedToMessage = await message.channel.messages.fetch(message.reference.messageId);
+    let currentMessage = message;
+    const historyLimit = 10; // Limite de 5 trocas (5 user, 5 assistant)
 
-            // Se o usuário respondeu à mensagem do bot
-            if (repliedToMessage.author.id === client.user.id) {
-                // Adiciona a resposta do bot ao histórico
-                history.push({ role: 'assistant', content: repliedToMessage.content });
-
-                // Tenta buscar a pergunta original à qual o bot respondeu
-                if (repliedToMessage.reference && repliedToMessage.reference.messageId) {
-                    const originalMessage = await message.channel.messages.fetch(repliedToMessage.reference.messageId);
-                    if (originalMessage.author.id !== client.user.id) {
-                         const originalQuestion = originalMessage.content.replace(/<@!?(\d+)>/g, '').trim();
-                        history.unshift({ role: 'user', content: originalQuestion });
-                    }
-                }
-            }
-        } catch (error) {
-            console.warn("Não foi possível buscar o histórico da conversa:", error);
+    try {
+        // Loop para construir o histórico da conversa, subindo pelas respostas.
+        while (currentMessage.reference && history.length < historyLimit) {
+            const repliedToMessage = await message.channel.messages.fetch(currentMessage.reference.messageId);
+            
+            const role = repliedToMessage.author.id === client.user.id ? 'assistant' : 'user';
+            const content = repliedToMessage.content.replace(/<@!?(\d+)>/g, '').trim();
+            
+            // Adiciona a mensagem anterior no início do array de histórico
+            history.unshift({ role, content });
+            
+            currentMessage = repliedToMessage; // Move para a próxima mensagem na cadeia de respostas
         }
+    } catch (error) {
+        console.warn("Não foi possível buscar o histórico completo da conversa:", error);
     }
 
 
@@ -448,7 +443,6 @@ const RAID_NOTIFICATION_ROLES = [
     '1429357358303150200', // Hard
     '1429357528168271894', // Insane
     '1429357529044877312', // Crazy
-    '1429357529317511279', // Nightmare
     '1429357530106298428'  // Leaf
 ];
 
