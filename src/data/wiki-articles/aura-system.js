@@ -17,7 +17,8 @@ export const auraArticle = {
 *   **Mundo 15 (The Paladin):** Aura Virtual (35% de Drops)
 *   **Mundo 16 (Dio):** Aura de Hamon (10% de Exp)
 *   **Mundo 17 (Arama):** Aura de Ghoul (1.0x)
-*   **Mundo 19 (Leonardo):** Aura do Capitão de Fogo (1.5x)`,
+*   **Mundo 19 (Leonardo):** Aura do Capitão de Fogo (1.5x)
+*   **Mundo 19 (Blood Queen):** Blood aura (2.0x)`,
     tags: ['aura', 'poder', 'habilidades', 'buffs', 'drop de chefe', 'sistema', 'geral'],
     imageUrl: 'wiki-2',
 };
