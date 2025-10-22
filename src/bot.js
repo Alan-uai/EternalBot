@@ -251,144 +251,6 @@ client.on(Events.MessageCreate, async (message) => {
 // Evento de interação para executar comandos e interações
 client.on(Events.InteractionCreate, async (interaction) => {
 
-    if (interaction.isButton() && interaction.customId.startsWith('feedback_')) {
-        const [,, userId, originalMessageId] = interaction.customId.split('_');
-
-        if (interaction.customId.startsWith('feedback_dislike')) {
-            await interaction.deferUpdate();
-            
-            const originalQuestion = client.interactions.get(`question_${originalMessageId}`);
-            const badResponse = client.interactions.get(`answer_${originalMessageId}`);
-            const replyMessageId = client.interactions.get(`replyMessageId_${originalMessageId}`);
-            const conversationHistory = client.interactions.get(`history_${originalMessageId}`);
-            
-            const MOD_CHANNEL_ID = '1429314152928641118';
-            const modChannel = await client.channels.fetch(MOD_CHANNEL_ID);
-
-            if (modChannel && originalQuestion && badResponse) {
-                const feedbackEmbed = new EmbedBuilder()
-                    .setColor(0xFF4B4B)
-                    .setTitle('👎 Novo Feedback Negativo')
-                    .setAuthor({ name: interaction.user.tag, iconURL: interaction.user.displayAvatarURL() })
-                    .addFields(
-                        { name: 'Usuário', value: `<@${interaction.user.id}>` },
-                        { name: 'Pergunta Original', value: `\`\`\`${originalQuestion}\`\`\`` },
-                        { name: 'Resposta Negativa', value: `\`\`\`${badResponse.substring(0, 1020)}...\`\`\`` }
-                    )
-                    .setTimestamp();
-                
-                const modActionsRow = new ActionRowBuilder()
-                    .addComponents(
-                         new ButtonBuilder()
-                            .setCustomId(`mod_seen_${userId}`)
-                            .setLabel('Visto')
-                            .setStyle(ButtonStyle.Secondary),
-                        new ButtonBuilder()
-                            .setCustomId(`mod_solving_${userId}`)
-                            .setLabel('Visto e Resolvendo')
-                            .setStyle(ButtonStyle.Primary),
-                        new ButtonBuilder()
-                            .setCustomId(`mod_solved_${userId}`)
-                            .setLabel('Resolvido')
-                            .setStyle(ButtonStyle.Success)
-                    );
-
-                await modChannel.send({ embeds: [feedbackEmbed], components: [modActionsRow] });
-            }
-
-            try {
-                const newResult = await generateSolution({
-                    problemDescription: originalQuestion,
-                    wikiContext: client.wikiContext,
-                    history: conversationHistory, // Usa o histórico armazenado
-                });
-                
-                if (newResult && newResult.structuredResponse) {
-                    const newParsedResponse = JSON.parse(newResult.structuredResponse);
-                    let newReplyContent = '🔄 **Resposta regenerada:**\n\n';
-                    newParsedResponse.forEach((section) => {
-                        newReplyContent += `**${section.titulo}**\n${section.conteudo}\n\n`;
-                    });
-
-                    if (newReplyContent.length > 2000) {
-                        newReplyContent = newReplyContent.substring(0, 1997) + '...';
-                    }
-
-                    const originalChannel = await client.channels.fetch(interaction.channelId);
-                    const replyMessage = await originalChannel.messages.fetch(replyMessageId);
-
-                    if(replyMessage) {
-                        await replyMessage.edit({ content: newReplyContent });
-                        client.interactions.set(`answer_${originalMessageId}`, newReplyContent);
-                    }
-                }
-
-            } catch (error) {
-                 console.error('Erro ao regenerar resposta:', error);
-            }
-
-        } else if (interaction.customId.startsWith('feedback_like')) {
-            await interaction.reply({ content: 'Obrigado pelo seu feedback positivo!', ephemeral: true });
-        }
-        return;
-    }
-
-    if (interaction.isButton() && interaction.customId.startsWith('mod_')) {
-        const [_, status, userId] = interaction.customId.split('_');
-        const user = await client.users.fetch(userId);
-        if (!user) {
-            return interaction.reply({ content: 'Não foi possível encontrar o usuário original.', ephemeral: true });
-        }
-
-        const guild = interaction.guild;
-        const channelName = `perfil-${user.username.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
-        const userChannel = guild.channels.cache.find(ch => ch.name === channelName && ch.type === ChannelType.GuildText);
-
-        if (!userChannel) {
-             return interaction.reply({ content: `O canal de perfil para ${user.tag} não foi encontrado. Use /atualizar-perfil para criar.`, ephemeral: true });
-        }
-        
-        const existingThreads = await userChannel.threads.fetch();
-        let notificationThread = existingThreads.threads.find(t => t.name === 'notificações');
-
-        if (!notificationThread) {
-             notificationThread = await userChannel.threads.create({
-                name: 'notificações',
-                autoArchiveDuration: 10080,
-                reason: `Tópico de notificações para ${user.tag}`
-            });
-        }
-        
-        let message;
-        switch(status) {
-            case 'seen':
-                message = 'Seu feedback foi visto por um moderador, obrigado!';
-                break;
-            case 'solving':
-                 message = 'Seu feedback foi visto por um moderador e está em desenvolvimento, obrigado!';
-                break;
-            case 'solved':
-                 message = 'Seu feedback resolveu um problema, obrigado!';
-                break;
-            default:
-                return;
-        }
-
-        await notificationThread.send(`<@${userId}>, ${message}`);
-        await interaction.reply({ content: `Notificação de status '${status}' enviada para ${user.tag}.`, ephemeral: true });
-        
-        const originalMessage = interaction.message;
-        const disabledRow = new ActionRowBuilder();
-        originalMessage.components[0].components.forEach(component => {
-            disabledRow.addComponents(ButtonBuilder.from(component).setDisabled(true));
-        });
-        await originalMessage.edit({ components: [disabledRow] });
-
-        return;
-    }
-
-
-    // Se for um comando de chat
     if (interaction.isChatInputCommand()) {
         const command = client.commands.get(interaction.commandName);
 
@@ -398,9 +260,12 @@ client.on(Events.InteractionCreate, async (interaction) => {
         }
 
         try {
+            // A maioria dos comandos terá um 'execute'
             if (command.execute) {
               await command.execute(interaction, { client });
             }
+            // Comandos com lógica de interação mais complexa (botões, modais) usam 'handleInteraction'
+            // O próprio comando `updlog` chama seu handleInteraction, então não precisamos chamar aqui.
         } catch (error) {
             console.error(error);
             const errorMessage = 'Ocorreu um erro ao executar este comando!';
@@ -413,9 +278,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         return;
     }
 
-    // Se for uma interação de botão, menu ou modal
     if (interaction.isButton() || interaction.isModalSubmit() || interaction.isStringSelectMenu()) {
-        // O customId será formatado como "commandName_action_data"
         const customIdParts = interaction.customId.split('_');
         const commandName = customIdParts[0]; 
         
@@ -423,7 +286,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
         if (interactionHandler) {
             try {
-                await interactionHandler(interaction);
+                await interactionHandler(interaction, { client });
             } catch (error) {
                 console.error(`Erro ao lidar com interação para ${commandName}:`, error);
                  if (interaction.replied || interaction.deferred) {
@@ -432,9 +295,148 @@ client.on(Events.InteractionCreate, async (interaction) => {
                     await interaction.reply({ content: 'Ocorreu um erro ao processar sua ação.', ephemeral: true });
                 }
             }
+        } else if (interaction.isButton() && interaction.customId.startsWith('feedback_')) {
+             await handleFeedbackButton(interaction);
+        } else if (interaction.isButton() && interaction.customId.startsWith('mod_')) {
+             await handleModButton(interaction);
         }
     }
 });
+
+
+async function handleFeedbackButton(interaction) {
+    const [,, userId, originalMessageId] = interaction.customId.split('_');
+
+    if (interaction.customId.startsWith('feedback_dislike')) {
+        await interaction.deferUpdate();
+        
+        const originalQuestion = client.interactions.get(`question_${originalMessageId}`);
+        const badResponse = client.interactions.get(`answer_${originalMessageId}`);
+        const replyMessageId = client.interactions.get(`replyMessageId_${originalMessageId}`);
+        const conversationHistory = client.interactions.get(`history_${originalMessageId}`);
+        
+        const MOD_CHANNEL_ID = '1429314152928641118';
+        const modChannel = await client.channels.fetch(MOD_CHANNEL_ID);
+
+        if (modChannel && originalQuestion && badResponse) {
+            const feedbackEmbed = new EmbedBuilder()
+                .setColor(0xFF4B4B)
+                .setTitle('👎 Novo Feedback Negativo')
+                .setAuthor({ name: interaction.user.tag, iconURL: interaction.user.displayAvatarURL() })
+                .addFields(
+                    { name: 'Usuário', value: `<@${interaction.user.id}>` },
+                    { name: 'Pergunta Original', value: `\`\`\`${originalQuestion}\`\`\`` },
+                    { name: 'Resposta Negativa', value: `\`\`\`${badResponse.substring(0, 1020)}...\`\`\`` }
+                )
+                .setTimestamp();
+            
+            const modActionsRow = new ActionRowBuilder()
+                .addComponents(
+                     new ButtonBuilder()
+                        .setCustomId(`mod_seen_${userId}`)
+                        .setLabel('Visto')
+                        .setStyle(ButtonStyle.Secondary),
+                    new ButtonBuilder()
+                        .setCustomId(`mod_solving_${userId}`)
+                        .setLabel('Visto e Resolvendo')
+                        .setStyle(ButtonStyle.Primary),
+                    new ButtonBuilder()
+                        .setCustomId(`mod_solved_${userId}`)
+                        .setLabel('Resolvido')
+                        .setStyle(ButtonStyle.Success)
+                );
+
+            await modChannel.send({ embeds: [feedbackEmbed], components: [modActionsRow] });
+        }
+
+        try {
+            const newResult = await generateSolution({
+                problemDescription: originalQuestion,
+                wikiContext: client.wikiContext,
+                history: conversationHistory, // Usa o histórico armazenado
+            });
+            
+            if (newResult && newResult.structuredResponse) {
+                const newParsedResponse = JSON.parse(newResult.structuredResponse);
+                let newReplyContent = '🔄 **Resposta regenerada:**\n\n';
+                newParsedResponse.forEach((section) => {
+                    newReplyContent += `**${section.titulo}**\n${section.conteudo}\n\n`;
+                });
+
+                if (newReplyContent.length > 2000) {
+                    newReplyContent = newReplyContent.substring(0, 1997) + '...';
+                }
+
+                const originalChannel = await client.channels.fetch(interaction.channelId);
+                const replyMessage = await originalChannel.messages.fetch(replyMessageId);
+
+                if(replyMessage) {
+                    await replyMessage.edit({ content: newReplyContent });
+                    client.interactions.set(`answer_${originalMessageId}`, newReplyContent);
+                }
+            }
+
+        } catch (error) {
+             console.error('Erro ao regenerar resposta:', error);
+        }
+
+    } else if (interaction.customId.startsWith('feedback_like')) {
+        await interaction.reply({ content: 'Obrigado pelo seu feedback positivo!', ephemeral: true });
+    }
+}
+
+async function handleModButton(interaction) {
+    const [_, status, userId] = interaction.customId.split('_');
+    const user = await client.users.fetch(userId);
+    if (!user) {
+        return interaction.reply({ content: 'Não foi possível encontrar o usuário original.', ephemeral: true });
+    }
+
+    const guild = interaction.guild;
+    const channelName = `perfil-${user.username.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
+    const userChannel = guild.channels.cache.find(ch => ch.name === channelName && ch.type === ChannelType.GuildText);
+
+    if (!userChannel) {
+         return interaction.reply({ content: `O canal de perfil para ${user.tag} não foi encontrado. Use /atualizar-perfil para criar.`, ephemeral: true });
+    }
+    
+    const existingThreads = await userChannel.threads.fetch();
+    let notificationThread = existingThreads.threads.find(t => t.name === 'notificações');
+
+    if (!notificationThread) {
+         notificationThread = await userChannel.threads.create({
+            name: 'notificações',
+            autoArchiveDuration: 10080,
+            reason: `Tópico de notificações para ${user.tag}`
+        });
+    }
+    
+    let message;
+    switch(status) {
+        case 'seen':
+            message = 'Seu feedback foi visto por um moderador, obrigado!';
+            break;
+        case 'solving':
+             message = 'Seu feedback foi visto por um moderador e está em desenvolvimento, obrigado!';
+            break;
+        case 'solved':
+             message = 'Seu feedback resolveu um problema, obrigado!';
+            break;
+        default:
+            return;
+    }
+
+    await notificationThread.send(`<@${userId}>, ${message}`);
+    await interaction.reply({ content: `Notificação de status '${status}' enviada para ${user.tag}.`, ephemeral: true });
+    
+    const originalMessage = interaction.message;
+    const disabledRow = new ActionRowBuilder();
+    originalMessage.components[0].components.forEach(component => {
+        disabledRow.addComponents(ButtonBuilder.from(component).setDisabled(true));
+    });
+    await originalMessage.edit({ components: [disabledRow] });
+}
+
 
 const ALL_RAIDS_ROLE_ID = '1429360300594958397';
 const RAID_NOTIFICATION_ROLES = [

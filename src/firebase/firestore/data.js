@@ -1,6 +1,6 @@
 // src/firebase/firestore/data.js
 import { initializeFirebaseServer } from '../server/index.js';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, getDocs, query, where, getDoc, doc } from 'firebase/firestore';
 
 // Helper function to parse multiplier string to a number
 function parseMultiplier(multiplier) {
@@ -82,4 +82,25 @@ export async function getGameData(worldName, category, itemName) {
     console.error('Error fetching game data:', error);
     return { error: 'An error occurred while fetching data from Firestore.' };
   }
+}
+
+
+export async function getUpdateLog() {
+    const { firestore } = initializeFirebaseServer();
+    try {
+        const logRef = doc(firestore, 'bot_config', 'latestUpdateLog');
+        const docSnap = await getDoc(logRef);
+
+        if (!docSnap.exists()) {
+            return { error: 'Nenhum log de atualização encontrado.' };
+        }
+        const data = docSnap.data();
+        return {
+            title: data.title,
+            content: data.content
+        };
+    } catch (error) {
+        console.error('Error fetching update log:', error);
+        return { error: 'An error occurred while fetching the update log.' };
+    }
 }
