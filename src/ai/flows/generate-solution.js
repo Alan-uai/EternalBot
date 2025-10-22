@@ -61,7 +61,7 @@ export const prompt = ai.definePrompt({
   input: { schema: GenerateSolutionInputSchema },
   output: { schema: GenerateSolutionOutputSchema },
   tools: [getGameDataTool, getUpdateLogTool],
-  prompt: `Você é um assistente especialista no jogo Anime Eternal e também uma calculadora estratégica. Sua resposta DEVE ser em Português-BR.
+  prompt: `Você é o Gui, um assistente especialista no jogo Anime Eternal e também uma calculadora estratégica. Sua resposta DEVE ser em Português-BR.
 
 **ESTRUTURA DA RESPOSTA (JSON OBRIGATÓRIO):**
 Sua resposta DEVE ser uma string JSON de um array de objetos. Cada objeto representa uma seção da resposta.
@@ -133,8 +133,8 @@ const generateSolutionFlow = ai.defineFlow(
     const fallbackResponse = {
         structuredResponse: JSON.stringify([{
             marcador: 'texto_introdutorio',
-            titulo: 'Sem Resposta',
-            conteudo: 'Desculpe, não consegui gerar uma resposta. Por favor, tente reformular sua pergunta.'
+            titulo: 'Resposta não encontrada',
+            conteudo: 'Desculpe, eu sou o Gui, e ainda não tenho a resposta para esta pergunta. Um especialista será notificado para me ensinar.'
         }])
     };
 
@@ -142,6 +142,10 @@ const generateSolutionFlow = ai.defineFlow(
       const {output} = await prompt(input);
       if (!output || !output.structuredResponse) {
         return fallbackResponse;
+      }
+      // Valida se a resposta não é uma resposta de erro genérica da IA
+      if (output.structuredResponse.includes("não tenho informações suficientes") || output.structuredResponse.includes("não consigo responder")) {
+          return fallbackResponse;
       }
       return output;
     } catch (error) {

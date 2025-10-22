@@ -166,10 +166,45 @@ client.once(Events.ClientReady, async (readyClient) => {
 // Evento para responder a menções
 client.on(Events.MessageCreate, async (message) => {
     const CHAT_CHANNEL_ID = '1429309293076680744';
+    const MOD_CURATION_CHANNEL_ID = '1426968477482225716';
+    const COMMUNITY_HELP_CHANNEL_ID = '1426957344897761282';
 
-    if (message.channel.id !== CHAT_CHANNEL_ID || message.author.bot || !message.mentions.has(client.user.id) || message.mentions.everyone) {
+    if (message.author.bot || !message.mentions.has(client.user.id) || message.mentions.everyone) {
         return;
     }
+    
+    // Verificação de canal movida para cá para permitir outros fluxos
+    if (message.channel.id !== CHAT_CHANNEL_ID) {
+        // Se a mensagem for um reply a uma pergunta do Gui no canal de ajuda
+        if (message.channel.id === COMMUNITY_HELP_CHANNEL_ID && message.reference) {
+            const repliedToMessage = await message.channel.messages.fetch(message.reference.messageId);
+            const originalQuestionMessageId = client.interactions.get(`original_question_id_${repliedToMessage.id}`);
+            
+            if (repliedToMessage.author.id === client.user.id && originalQuestionMessageId) {
+                const modChannel = await client.channels.fetch(MOD_CURATION_CHANNEL_ID);
+                const questionMessageInModChannel = await modChannel.messages.fetch(originalQuestionMessageId);
+
+                if (questionMessageInModChannel) {
+                    const originalEmbed = questionMessageInModChannel.embeds[0];
+                    const updatedEmbed = EmbedBuilder.from(originalEmbed)
+                        .addFields({ name: 'Resposta Sugerida pela Comunidade', value: message.content.substring(0, 1024) })
+                        .setColor(0xFFA500); // Orange color for "pending review"
+
+                    // Re-enable buttons for mod action
+                    const modActionsRow = new ActionRowBuilder()
+                        .addComponents(
+                            new ButtonBuilder().setCustomId(`curate_approve_${message.id}`).setLabel('✅ Aprovar').setStyle(ButtonStyle.Success),
+                            new ButtonBuilder().setCustomId(`curate_reject_${message.id}`).setLabel('❌ Rejeitar').setStyle(ButtonStyle.Danger)
+                        );
+                    
+                    await questionMessageInModChannel.edit({ embeds: [updatedEmbed], components: [modActionsRow] });
+                    client.interactions.set(`suggested_answer_${originalQuestionMessageId}`, message.content);
+                }
+            }
+        }
+        return; // Ignora outras mensagens fora do canal de chat principal
+    }
+
 
     const question = message.content.replace(/<@!?(\d+)>/g, '').trim();
     const imageAttachment = message.attachments.find(att => att.contentType?.startsWith('image/'));
@@ -189,32 +224,24 @@ client.on(Events.MessageCreate, async (message) => {
             imageDataUri = `data:${imageAttachment.contentType};base64,${base64}`;
         } catch (error) {
             console.error("Erro ao processar a imagem anexada:", error);
-            // Continua sem a imagem se o download falhar
         }
     }
 
-
     const history = [];
     let currentMessage = message;
-    const historyLimit = 10; // Limite de 5 trocas (5 user, 5 assistant)
+    const historyLimit = 10;
 
     try {
-        // Loop para construir o histórico da conversa, subindo pelas respostas.
         while (currentMessage.reference && history.length < historyLimit) {
             const repliedToMessage = await message.channel.messages.fetch(currentMessage.reference.messageId);
-            
             const role = repliedToMessage.author.id === client.user.id ? 'assistant' : 'user';
             const content = repliedToMessage.content.replace(/<@!?(\d+)>/g, '').trim();
-            
-            // Adiciona a mensagem anterior no início do array de histórico
             history.unshift({ role, content });
-            
-            currentMessage = repliedToMessage; // Move para a próxima mensagem na cadeia de respostas
+            currentMessage = repliedToMessage;
         }
     } catch (error) {
         console.warn("Não foi possível buscar o histórico completo da conversa:", error);
     }
-
 
     try {
         const result = await generateSolution({
@@ -223,10 +250,42 @@ client.on(Events.MessageCreate, async (message) => {
             wikiContext: client.wikiContext,
             history: history.length > 0 ? history : undefined,
         });
+        
+        const parsedResponse = JSON.parse(result.structuredResponse);
+        const firstSection = parsedResponse[0];
 
-        if (result && result.structuredResponse) {
-            const parsedResponse = JSON.parse(result.structuredResponse);
+        // Se a IA não encontrou uma resposta
+        if (firstSection.titulo === 'Resposta não encontrada') {
+            const unansweredQuestionEmbed = new EmbedBuilder()
+                .setColor(0xFF0000)
+                .setTitle('❓ Pergunta Sem Resposta')
+                .setDescription(`**Usuário:** <@${message.author.id}>\n**Pergunta:**\n\`\`\`${question}\`\`\``)
+                .setTimestamp();
             
+            if (imageAttachment) {
+                unansweredQuestionEmbed.setImage(imageAttachment.url);
+            }
+
+            // Enviar para o canal de curadoria dos moderadores
+            const modChannel = await client.channels.fetch(MOD_CURATION_CHANNEL_ID);
+            const curationMessage = await modChannel.send({
+                embeds: [unansweredQuestionEmbed]
+            });
+
+            // Enviar para o canal de ajuda da comunidade
+            const helpChannel = await client.channels.fetch(COMMUNITY_HELP_CHANNEL_ID);
+            const helpMessage = await helpChannel.send({
+                content: `Alguém consegue responder a esta pergunta de <@${message.author.id}>?\n> ${question}`,
+                files: imageAttachment ? [imageAttachment.url] : []
+            });
+            
+            // Link a mensagem de ajuda à mensagem de curadoria para futura edição
+            client.interactions.set(`original_question_id_${helpMessage.id}`, curationMessage.id);
+
+            // Responder ao usuário
+            await message.reply(firstSection.conteudo);
+
+        } else { // Se a IA encontrou uma resposta
             let replyContent = '';
             parsedResponse.forEach((section) => {
                 replyContent += `**${section.titulo}**\n${section.conteudo}\n\n`;
@@ -238,25 +297,16 @@ client.on(Events.MessageCreate, async (message) => {
 
             const feedbackRow = new ActionRowBuilder()
                 .addComponents(
-                    new ButtonBuilder()
-                        .setCustomId(`feedback_like_${message.id}`)
-                        .setLabel('👍')
-                        .setStyle(ButtonStyle.Success),
-                    new ButtonBuilder()
-                        .setCustomId(`feedback_dislike_${message.author.id}_${message.id}`)
-                        .setLabel('👎')
-                        .setStyle(ButtonStyle.Danger)
+                    new ButtonBuilder().setCustomId(`feedback_like_${message.id}`).setLabel('👍').setStyle(ButtonStyle.Success),
+                    new ButtonBuilder().setCustomId(`feedback_dislike_${message.author.id}_${message.id}`).setLabel('👎').setStyle(ButtonStyle.Danger)
                 );
 
             const replyMessage = await message.reply({ content: replyContent, components: [feedbackRow] });
 
             client.interactions.set(`question_${message.id}`, question);
             client.interactions.set(`answer_${message.id}`, replyContent);
-            client.interactions.set(`history_${message.id}`, history); // Armazena o histórico para re-geração
+            client.interactions.set(`history_${message.id}`, history);
             client.interactions.set(`replyMessageId_${message.id}`, replyMessage.id);
-
-        } else {
-            await message.reply('Desculpe, não consegui obter uma resposta. Meu sistema pode estar sobrecarregado. Tente novamente em alguns instantes.');
         }
     } catch (error) {
         console.error('Erro ao chamar o fluxo generateSolution via menção:', error);
@@ -277,12 +327,9 @@ client.on(Events.InteractionCreate, async (interaction) => {
         }
 
         try {
-            // A maioria dos comandos terá um 'execute'
             if (command.execute) {
               await command.execute(interaction, { client });
             }
-            // Comandos com lógica de interação mais complexa (botões, modais) usam 'handleInteraction'
-            // O próprio comando `updlog` chama seu handleInteraction, então não precisamos chamar aqui.
         } catch (error) {
             console.error(error);
             const errorMessage = 'Ocorreu um erro ao executar este comando!';
@@ -316,6 +363,23 @@ client.on(Events.InteractionCreate, async (interaction) => {
              await handleFeedbackButton(interaction);
         } else if (interaction.isButton() && interaction.customId.startsWith('mod_')) {
              await handleModButton(interaction);
+        } else if (interaction.isButton() && interaction.customId.startsWith('curate_')) {
+            // Lógica para curadoria de respostas (a ser implementada)
+            const [_, action, originalMessageId] = customIdParts;
+            await interaction.deferUpdate();
+            if (action === 'approve') {
+                const suggestedAnswer = client.interactions.get(`suggested_answer_${interaction.message.id}`);
+                // TODO: Adicionar lógica para analisar a resposta e atualizar/criar artigo na wiki
+                await interaction.followUp({ content: `Resposta aprovada. Lógica de atualização da wiki a ser implementada. Resposta: "${suggestedAnswer}"`, ephemeral: true });
+                const originalMessage = interaction.message;
+                const disabledRow = new ActionRowBuilder();
+                originalMessage.components[0].components.forEach(component => {
+                    disabledRow.addComponents(ButtonBuilder.from(component).setDisabled(true));
+                });
+                await originalMessage.edit({ components: [disabledRow] });
+            } else {
+                 await interaction.followUp({ content: 'Resposta rejeitada.', ephemeral: true });
+            }
         }
     }
 });
@@ -547,5 +611,3 @@ http.createServer((req, res) => {
 }).listen(port, () => {
   console.log(`Servidor web ouvindo na porta ${port}`);
 });
-
-    
