@@ -39,7 +39,7 @@ const MessageSchema = z.object({
 });
 
 const GenerateSolutionInputSchema = z.object({
-  problemDescription: z.string().describe('A description of the problem the player is encountering in Anime Eternal.'),
+  problemDescription: z.string().describe('A description of the player is encountering in Anime Eternal.'),
   imageDataUri: z.string().optional().describe("A photo related to the problem, as a data URI. Expected format: 'data:<mimetype>;base64,<encoded_data>'."),
   wikiContext: z.string().describe('A compilation of all wiki articles to be used as a knowledge base.'),
   history: z.array(MessageSchema).optional().describe('The previous messages in the conversation.'),
@@ -104,11 +104,11 @@ Sua resposta DEVE ser um objeto JSON contendo a chave "structuredResponse", que 
 - "W1", "W2", etc: abreviação para Mundo 1, Mundo 2, etc.
 
 ### Estratégia Principal de Raciocínio
-1.  **PRIMEIRO, ANALISE A IMAGEM (se fornecida).** A imagem é a fonte primária de contexto. Identifique itens, status, personagens ou qualquer elemento visual relevante. Use a imagem para entender a pergunta do usuário, mesmo que a pergunta seja vaga como "o que é isso?".
-2.  **DEPOIS, analise o CONTEÚDO DO WIKI abaixo para entender profundamente a pergunta do usuário.** Sua tarefa é pesquisar e sintetizar informações de todos os artigos relevantes, não apenas o primeiro que encontrar. Use os resumos (summary) e o conteúdo para fazer conexões entre os termos do usuário (ou o que você viu na imagem) e os nomes oficiais no jogo (ex: "Raid Green" é a "Green Planet Raid", "mundo de nanatsu" é o Mundo 13, "Windmill Island" é o "Mundo 2"). Preste atenção especial aos dados nas tabelas ('tables'), pois elas contêm estatísticas detalhadas.
-3.  **USE AS FERRAMENTAS ('getGameData' e 'getUpdateLog') SEMPRE QUE POSSÍVEL.** Se a pergunta for sobre a última atualização, use 'getUpdateLog'. Para outros dados do jogo (poderes, NPCs, etc.), use 'getGameData' para buscar estatísticas detalhadas. Não dê sugestões genéricas como "pegue poderes melhores". Em vez disso, use as ferramentas para listar OS NOMES ESPECÍFICOS dos itens.
-4.  **SEJA PRECISO SOBRE CHEFES:** Se a pergunta for sobre um "chefe", PRIORIZE buscar por um NPC com rank 'SS' ou 'SSS'. Se o resultado da ferramenta 'getGameData' para esse NPC incluir um campo 'videoUrl', você DEVE incluir a URL do vídeo diretamente na sua resposta, sem formatação de link. Por exemplo: "A localização dele está neste vídeo:\\n{videoUrl}".
-5.  **Use o histórico da conversa (history) para entender o contexto principal (como o mundo em que o jogador está) e para resolver pronomes (como "ela" ou "isso").** No entanto, sua resposta deve focar-se estritamente na pergunta mais recente do usuário. Não repita dicas de perguntas anteriores, a menos que sejam diretamente relevantes para a nova pergunta.
+1.  **PRIMEIRO, USE O HISTÓRICO DA CONVERSA (se fornecido) para entender o contexto principal (como o mundo em que o jogador está) e para resolver pronomes (como "ela" ou "isso").** Sua resposta deve focar-se estritamente na pergunta mais recente do usuário, mas usando o contexto anterior. Não repita dicas de perguntas anteriores, a menos que sejam diretamente relevantes para a nova pergunta.
+2.  **SEGUNDO, ANALISE A IMAGEM (se fornecida).** A imagem é uma fonte primária de contexto. Identifique itens, status, personagens ou qualquer elemento visual relevante. Use a imagem para entender a pergunta do usuário, mesmo que a pergunta seja vaga como "o que é isso?".
+3.  **DEPOIS, analise o CONTEÚDO DO WIKI abaixo para entender profundamente a pergunta do usuário.** Sua tarefa é pesquisar e sintetizar informações de todos os artigos relevantes, não apenas o primeiro que encontrar. Use os resumos (summary) e o conteúdo para fazer conexões entre os termos do usuário (ou o que você viu na imagem) e os nomes oficiais no jogo (ex: "Raid Green" é a "Green Planet Raid", "mundo de nanatsu" é o Mundo 13, "Windmill Island" é o "Mundo 2"). Preste atenção especial aos dados nas tabelas ('tables'), pois elas contêm estatísticas detalhadas.
+4.  **USE AS FERRAMENTAS ('getGameData' e 'getUpdateLog') SEMPRE QUE POSSÍVEL.** Se a pergunta for sobre a última atualização, use 'getUpdateLog'. Para outros dados do jogo (poderes, NPCs, etc.), use 'getGameData' para buscar estatísticas detalhadas. Não dê sugestões genéricas como "pegue poderes melhores". Em vez disso, use as ferramentas para listar OS NOMES ESPECÍFICOS dos itens.
+5.  **SEJA PRECISO SOBRE CHEFES:** Se a pergunta for sobre um "chefe", PRIORIZE buscar por um NPC com rank 'SS' ou 'SSS'. Se o resultado da ferramenta 'getGameData' para esse NPC incluir um campo 'videoUrl', você DEVE incluir a URL do vídeo diretamente na sua resposta, sem formatação de link. Por exemplo: "A localização dele está neste vídeo:\\n{videoUrl}".
 6.  **Pense Estrategicamente:** Ao responder a uma pergunta sobre a "melhor" maneira de fazer algo (ex: "melhor poder para o Mundo 4"), não se limite apenas às opções desse mundo. Se houver um poder, arma, gamepass ou item significativamente superior no mundo seguinte (ex: Mundo 5) e o jogador estiver próximo de avançar, ofereça uma dica estratégica. Sugira que pode valer a pena focar em avançar de mundo para obter esse item melhor, explicando o porquê.
 7.  **Análise de Farm de Tokens:** Se a pergunta for sobre o "melhor método para farmar tokens", você DEVE consultar o artigo "Guia do Melhor Método para Farm de Tokens". Sua resposta deve incluir a análise matemática de "Tokens Esperados por Sala" para comparar diferentes raids e dungeons. Justifique qual local é matematicamente mais eficiente com base na fórmula: \`(Nº de NPCs) * (Nº de Tokens) * (Chance de Drop)\`. Considere também os multiplicadores de chave (2x/3x) para raids como Restaurante e Cursed. Se relevante, apresente a análise em cenários (ex: "Comparando Dungeons do Lobby", "Comparando Raids de Mundo").
 8.  **Regra da Comunidade para Avançar de Mundo:** Se o usuário perguntar sobre o "DPS para sair do mundo" ou algo similar, entenda que ele quer saber o dano necessário para avançar para o próximo mundo. A regra da comunidade é: **pegar a vida (HP) do NPC de Rank S do mundo atual e dividir por 10**. Explique essa regra ao usuário. Como você não tem o HP dos NPCs na sua base de dados, instrua o usuário a encontrar o NPC de Rank S no jogo, verificar o HP dele e fazer o cálculo.
@@ -134,6 +134,13 @@ Sua resposta DEVE ser um objeto JSON contendo a chave "structuredResponse", que 
 
 Se a resposta não estiver nas ferramentas ou no wiki, gere um JSON com um único objeto de erro.
 
+{{#if history}}
+HISTÓRICO DA CONVERSA:
+{{#each history}}
+- {{role}}: {{content}}
+{{/each}}
+{{/if}}
+
 {{#if imageDataUri}}
 IMAGEM DO USUÁRIO:
 {{media url=imageDataUri}}
@@ -142,13 +149,6 @@ IMAGEM DO USUÁRIO:
 INÍCIO DO CONTEÚDO DO WIKI
 {{{wikiContext}}}
 FIM DO CONTEÚDO DO WIKI
-
-{{#if history}}
-HISTÓRICO DA CONVERSA:
-{{#each history}}
-- {{role}}: {{content}}
-{{/each}}
-{{/if}}
 
 Descrição do Problema: {{{problemDescription}}}`,
 });

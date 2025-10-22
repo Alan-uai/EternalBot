@@ -257,11 +257,12 @@ client.on(Events.MessageCreate, async (message) => {
 
     try {
         while (currentMessage.reference && history.length < historyLimit) {
-            const repliedToMessage = await message.channel.messages.fetch(currentMessage.reference.messageId);
+            // Correctly fetch from the channel of the message being referenced
+            const repliedToMessage = await currentMessage.channel.messages.fetch(currentMessage.reference.messageId);
             const role = repliedToMessage.author.id === client.user.id ? 'assistant' : 'user';
             const content = repliedToMessage.content.replace(/<@!?(\d+)>/g, '').trim();
             history.unshift({ role, content });
-            currentMessage = repliedToMessage;
+            currentMessage = repliedToMessage; // Move to the previous message in the chain
         }
     } catch (error) {
         console.warn("Não foi possível buscar o histórico completo da conversa:", error);
@@ -270,7 +271,7 @@ client.on(Events.MessageCreate, async (message) => {
     try {
         const result = await generateSolution({
             problemDescription: question,
-            imageDataUri: imageDataUri || undefined, // Correção: Passar undefined em vez de null
+            imageDataUri: imageDataUri || undefined,
             wikiContext: client.wikiContext,
             history: history.length > 0 ? history : undefined,
         });
