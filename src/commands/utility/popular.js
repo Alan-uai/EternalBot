@@ -34,7 +34,8 @@ export async function execute(interaction) {
             // Se o 'article' é um dado de mundo (tem 'npcs', 'pets', etc.)
             if (articleId.startsWith('world-')) {
                 const worldNumber = articleId.split('-')[1];
-                const worldRef = doc(firestore, 'worlds', worldNumber);
+                const paddedWorldId = worldNumber.padStart(3, '0'); // Correção: Adiciona zeros à esquerda
+                const worldRef = doc(firestore, 'worlds', paddedWorldId);
 
                 // Separa os dados do documento principal das sub-coleções
                 const { npcs, pets, powers, accessories, dungeons, shadows, stands, ghouls, obelisks, ...worldData } = article;
@@ -54,7 +55,7 @@ export async function execute(interaction) {
                             const itemId = item.id || item.name.toLowerCase().replace(/ /g, '-').replace(/[^a-z0-9-]/g, '');
                             if (!itemId) continue;
 
-                            const itemRef = doc(firestore, `worlds/${worldNumber}/${key}`, itemId);
+                            const itemRef = doc(firestore, `worlds/${paddedWorldId}/${key}`, itemId);
                             const { stats, ...itemData } = item;
                             batch.set(itemRef, itemData);
                             count++;
@@ -65,7 +66,7 @@ export async function execute(interaction) {
                                     const statId = stat.id || stat.name.toLowerCase().replace(/ /g, '-').replace(/[^a-z0-9-]/g, '');
                                     if (!statId) continue;
 
-                                    const statRef = doc(firestore, `worlds/${worldNumber}/powers/${itemId}/stats`, statId);
+                                    const statRef = doc(firestore, `worlds/${paddedWorldId}/powers/${itemId}/stats`, statId);
                                     batch.set(statRef, stat);
                                     count++;
                                 }

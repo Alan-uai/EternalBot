@@ -270,7 +270,7 @@ client.on(Events.MessageCreate, async (message) => {
     try {
         const result = await generateSolution({
             problemDescription: question,
-            imageDataUri: imageDataUri,
+            imageDataUri: imageDataUri || undefined, // Correção: Passar undefined em vez de null
             wikiContext: client.wikiContext,
             history: history.length > 0 ? history : undefined,
         });
@@ -1024,5 +1024,3 @@ http.createServer((req, res) => {
 }).listen(port, () => {
   console.log(`Servidor web ouvindo na porta ${port}`);
 });
-
-    
