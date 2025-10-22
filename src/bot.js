@@ -234,7 +234,7 @@ client.on(Events.MessageCreate, async (message) => {
     const imageAttachment = message.attachments.find(att => att.contentType?.startsWith('image/'));
 
     if (!question && !imageAttachment) {
-        await message.reply('Olá! Meu nome é Gui. Em que posso ajudar sobre o Anime Eternal?');
+        await message.reply(`Olá! Meu nome é Gui. Em que posso ajudar sobre o Anime Eternal?`);
         return;
     }
 
@@ -423,8 +423,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
             } else if (action === 'final_approve') {
                 await handleFinalApprove(interaction, id);
             } else if (action === 'final_reject') {
-                await interaction.message.delete().catch(console.error);
-                await interaction.reply({ content: 'Sugestão da IA rejeitada e removida.', ephemeral: true });
+                await handleFinalReject(interaction, id);
             }
         }
     }
@@ -581,7 +580,7 @@ async function handleModButton(interaction) {
 
 // Curation flow handlers
 async function handleCurationFixed(interaction, helpMessageId) {
-    await interaction.reply({ content: 'Ação registrada. Compilando respostas aprovadas para ensinar a IA...', ephemeral: true });
+    await interaction.update({ content: 'Compilando respostas aprovadas para ensinar a IA...', embeds: [], components: [] });
     const curationMessage = interaction.message;
     const curationMessageId = curationMessage.id;
     
@@ -589,7 +588,11 @@ async function handleCurationFixed(interaction, helpMessageId) {
     const approvedAnswers = suggestedAnswers.filter(a => a.approved);
 
     if (approvedAnswers.length > 0) {
-         const originalQuestion = curationMessage.embeds[0].description.split('```')[1];
+         const originalQuestionEmbed = await findOriginalQuestionEmbed(curationMessage, curationMessageId);
+         if (!originalQuestionEmbed) {
+            return interaction.followUp({ content: 'Não foi possível encontrar a pergunta original para ensinar a IA.', ephemeral: true });
+         }
+         const originalQuestion = originalQuestionEmbed.description.split('```')[1];
          
          await curationMessage.edit({
             content: '🧠 Compilando respostas e ensinando a IA...',
@@ -606,6 +609,8 @@ async function handleCurationFixed(interaction, helpMessageId) {
 
             // Store the AI suggestion for the final approval step
             client.interactions.set(`ai_suggestion_${curationMessageId}`, knowledgeUpdate);
+            client.interactions.set(`help_message_id_for_curation_${curationMessageId}`, helpMessageId);
+
 
             const finalEmbed = new EmbedBuilder()
                 .setColor(0x00BFFF) // DeepSkyBlue
@@ -625,8 +630,6 @@ async function handleCurationFixed(interaction, helpMessageId) {
 
             await curationMessage.edit({ content: '', embeds: [finalEmbed], components: [finalActions] });
             
-            // Do not delete the help message yet
-            
          } catch (e) {
              console.error("Erro ao chamar o fluxo de updateKnowledgeBase:", e);
              await curationMessage.edit({ content: 'Ocorreu um erro ao tentar ensinar a IA. A mensagem será removida em 10s.', embeds: [], components: [] });
@@ -636,17 +639,13 @@ async function handleCurationFixed(interaction, helpMessageId) {
         // Se não houver respostas aprovadas, apenas limpa
         const helpChannel = await client.channels.fetch('1426957344897761282');
         try {
-            const helpMessage = await helpChannel.messages.fetch(helpMessageId);
-            await helpMessage.delete().catch(err => console.error("Falha ao deletar msg de ajuda:", err));
+            await helpChannel.messages.delete(helpMessageId);
         } catch(error) {
             console.warn("Não foi possível encontrar/deletar a mensagem no canal de ajuda:", error.message);
         }
         await interaction.message.delete().catch(console.error);
         await interaction.followUp({ content: 'Nenhuma resposta foi aprovada. As mensagens foram limpas.', ephemeral: true });
     }
-     // Limpar dados da memória após o uso
-    // client.interactions.delete(`curation_id_for_help_${helpMessageId}`);
-    // client.interactions.delete(`suggested_answers_${curationMessageId}`);
 }
 
 async function handleCurationApprove(interaction, id) {
@@ -846,7 +845,7 @@ async function handleFinalApprove(interaction, curationMessageId) {
         // Limpa as mensagens após 10 segundos
         setTimeout(() => interaction.message.delete().catch(console.error), 10000);
 
-        const helpMessageId = Array.from(client.interactions.keys()).find(key => client.interactions.get(key) === curationMessageId)?.split('_').pop();
+        const helpMessageId = client.interactions.get(`help_message_id_for_curation_${curationMessageId}`);
         if(helpMessageId) {
             const helpChannel = await client.channels.fetch('1426957344897761282');
             helpChannel.messages.delete(helpMessageId).catch(console.error);
@@ -858,16 +857,41 @@ async function handleFinalApprove(interaction, curationMessageId) {
      // Limpeza final
     client.interactions.delete(`ai_suggestion_${curationMessageId}`);
     client.interactions.delete(`suggested_answers_${curationMessageId}`);
+    client.interactions.delete(`help_message_id_for_curation_${curationMessageId}`);
 }
+
+async function handleFinalReject(interaction, curationMessageId) {
+    await interaction.message.delete().catch(console.error);
+    await interaction.reply({ content: 'Sugestão da IA rejeitada e removida.', ephemeral: true });
+
+    const helpMessageId = client.interactions.get(`help_message_id_for_curation_${curationMessageId}`);
+    if (helpMessageId) {
+        const helpChannel = await client.channels.fetch('1426957344897761282');
+        helpChannel.messages.delete(helpMessageId).catch(err => console.warn(`Não foi possível deletar msg de ajuda ${helpMessageId}: ${err.message}`));
+    }
+    
+    // Limpeza final
+    client.interactions.delete(`ai_suggestion_${curationMessageId}`);
+    client.interactions.delete(`suggested_answers_${curationMessageId}`);
+    client.interactions.delete(`help_message_id_for_curation_${curationMessageId}`);
+}
+
 
 async function findOriginalQuestionEmbed(curationMessage, curationMessageId) {
      if (curationMessage.embeds[0] && curationMessage.embeds[0].title === '❓ Pergunta Sem Resposta') {
         return curationMessage.embeds[0];
     }
-    // Fallback se o embed foi editado - precisamos buscar a mensagem original
-    const modChannel = await client.channels.fetch('1426968477482225716');
-    const originalCurationMessage = await modChannel.messages.fetch(curationMessageId);
-    return originalCurationMessage.embeds[0];
+    // Fallback se o embed foi editado - precisamos buscar a mensagem original no canal de curadoria
+    try {
+        const modChannel = await client.channels.fetch('1426968477482225716');
+        // A mensagem atual da interação PODE ser a mensagem original, mas se ela foi editada várias vezes,
+        // o embed pode ter mudado. Então buscamos o ID direto.
+        const originalCurationMessage = await modChannel.messages.fetch(curationMessageId);
+        return originalCurationMessage.embeds[0];
+    } catch (error) {
+        console.error(`Erro ao buscar o embed da pergunta original no canal de curadoria para a msg ${curationMessageId}:`, error);
+        return null;
+    }
 }
 
 
