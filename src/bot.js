@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import http from 'node:http';
 import { fileURLToPath } from 'node:url';
-import { Client, Collection, Events, GatewayIntentBits, REST, Routes, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType } from 'discord.js';
+import { Client, Collection, Events, GatewayIntentBits, REST, Routes, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, StringSelectMenuBuilder } from 'discord.js';
 import { initializeFirebase } from './firebase/index.js';
 import { loadKnowledgeBase } from './knowledge-base.js';
 import { doc, getDoc, setDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
@@ -182,20 +182,36 @@ client.on(Events.MessageCreate, async (message) => {
                 const questionMessageInModChannel = await modChannel.messages.fetch(originalCurationMessageId);
 
                 if (questionMessageInModChannel) {
+                    // Armazena múltiplas respostas sugeridas
+                    let suggestedAnswers = client.interactions.get(`suggested_answers_${originalCurationMessageId}`) || [];
+                    suggestedAnswers.push({
+                        user: message.author.username,
+                        userId: message.author.id,
+                        content: message.content
+                    });
+                    client.interactions.set(`suggested_answers_${originalCurationMessageId}`, suggestedAnswers);
+
+                    // Cria ou atualiza o menu de seleção
+                    const selectMenu = new StringSelectMenuBuilder()
+                        .setCustomId(`curate_select_${originalCurationMessageId}`)
+                        .setPlaceholder('Analisar uma resposta sugerida...')
+                        .addOptions(suggestedAnswers.map((answer, index) => ({
+                            label: `Resposta de: ${answer.user}`,
+                            description: answer.content.substring(0, 50) + '...',
+                            value: `answer_${index}`
+                        })));
+                    
+                    const menuRow = new ActionRowBuilder().addComponents(selectMenu);
+                    
                     const originalEmbed = questionMessageInModChannel.embeds[0];
                     const updatedEmbed = EmbedBuilder.from(originalEmbed)
-                        .addFields({ name: 'Resposta Sugerida pela Comunidade', value: message.content.substring(0, 1024) })
-                        .setColor(0xFFA500); // Orange color for "pending review"
+                         .setColor(0xFFA500) // Laranja para "respostas pendentes"
+                         .setFooter({ text: `${suggestedAnswers.length} resposta(s) da comunidade aguardando análise.`});
 
-                    // Re-enable buttons for mod action
-                    const modActionsRow = new ActionRowBuilder()
-                        .addComponents(
-                            new ButtonBuilder().setCustomId(`curate_approve_${questionMessageInModChannel.id}`).setLabel('✅ Aprovar').setStyle(ButtonStyle.Success),
-                            new ButtonBuilder().setCustomId(`curate_reject_${questionMessageInModChannel.id}`).setLabel('❌ Rejeitar').setStyle(ButtonStyle.Danger)
-                        );
+                    // Remove botões de ação se já existirem, eles só aparecerão ao selecionar uma resposta
+                    const components = [menuRow];
                     
-                    await questionMessageInModChannel.edit({ embeds: [updatedEmbed], components: [modActionsRow] });
-                    client.interactions.set(`suggested_answer_${originalCurationMessageId}`, message.content);
+                    await questionMessageInModChannel.edit({ embeds: [updatedEmbed], components: components });
                     await message.react('👍'); // React to the helpful message
                 }
             }
@@ -377,7 +393,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
              await handleFeedbackButton(interaction);
         } else if (interaction.isButton() && interaction.customId.startsWith('mod_')) {
              await handleModButton(interaction);
-        } else if (interaction.isButton() && interaction.customId.startsWith('curate_')) {
+        } else if (interaction.customId.startsWith('curate_')) {
             const [_, action, id] = customIdParts;
             await interaction.deferUpdate();
 
@@ -388,12 +404,12 @@ client.on(Events.InteractionCreate, async (interaction) => {
                 
                 try {
                     const helpMessage = await helpChannel.messages.fetch(helpMessageId);
+                    await helpMessage.delete().catch(err => console.error("Falha ao deletar msg de ajuda:", err));
                     
-                    await interaction.followUp({ content: 'Ação registrada. As mensagens serão excluídas em 5 segundos.', ephemeral: true });
+                    await interaction.followUp({ content: 'Ação registrada. A mensagem de ajuda foi removida e esta será excluída em 5 segundos.', ephemeral: true });
                     
                     setTimeout(async () => {
                         await curationMessage.delete().catch(err => console.error("Falha ao deletar msg de curadoria:", err));
-                        await helpMessage.delete().catch(err => console.error("Falha ao deletar msg de ajuda:", err));
                     }, 5000);
 
                 } catch(error) {
@@ -406,25 +422,61 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
 
             } else if (action === 'approve') {
-                const originalCurationMessageId = id;
-                const suggestedAnswer = client.interactions.get(`suggested_answer_${originalCurationMessageId}`);
+                const [curationMessageId, answerIndex] = id.split('-');
+                const suggestedAnswers = client.interactions.get(`suggested_answers_${curationMessageId}`) || [];
+                const selectedAnswer = suggestedAnswers[parseInt(answerIndex, 10)];
+                
                 // TODO: Adicionar lógica para analisar a resposta e atualizar/criar artigo na wiki
-                await interaction.followUp({ content: `Resposta aprovada. A IA irá agora analisar o conteúdo para adicionar à base de conhecimento. Resposta: "${suggestedAnswer}"`, ephemeral: true });
+                await interaction.followUp({ content: `Resposta aprovada. A IA irá agora analisar o conteúdo para adicionar à base de conhecimento. Resposta: "${selectedAnswer.content}"`, ephemeral: true });
                 const originalMessage = interaction.message;
-                const disabledRow = new ActionRowBuilder();
-                originalMessage.components[0].components.forEach(component => {
-                    disabledRow.addComponents(ButtonBuilder.from(component).setDisabled(true));
+                const disabledRows = [];
+                 originalMessage.components.forEach(row => {
+                    const newRow = new ActionRowBuilder();
+                    row.components.forEach(component => {
+                         newRow.addComponents(ButtonBuilder.from(component).setDisabled(true));
+                    });
+                    disabledRows.push(newRow);
                 });
-                await originalMessage.edit({ components: [disabledRow] });
+                await originalMessage.edit({ components: disabledRows });
 
             } else if (action === 'reject') {
                  await interaction.followUp({ content: 'Resposta rejeitada. Nenhuma ação será tomada.', ephemeral: true });
                  const originalMessage = interaction.message;
-                 const disabledRow = new ActionRowBuilder();
-                 originalMessage.components[0].components.forEach(component => {
-                    disabledRow.addComponents(ButtonBuilder.from(component).setDisabled(true));
+                 const disabledRows = [];
+                 originalMessage.components.forEach(row => {
+                    const newRow = new ActionRowBuilder();
+                    row.components.forEach(component => {
+                         newRow.addComponents(ButtonBuilder.from(component).setDisabled(true));
+                    });
+                    disabledRows.push(newRow);
                 });
-                await originalMessage.edit({ components: [disabledRow] });
+                await originalMessage.edit({ components: disabledRows });
+            } else if (action === 'select' && interaction.isStringSelectMenu()) {
+                 const curationMessageId = id;
+                 const selectedAnswerIndex = parseInt(interaction.values[0].split('_')[1], 10);
+                 const suggestedAnswers = client.interactions.get(`suggested_answers_${curationMessageId}`) || [];
+                 const selectedAnswer = suggestedAnswers[selectedAnswerIndex];
+
+                 if (selectedAnswer) {
+                     const originalEmbed = interaction.message.embeds[0];
+                     const updatedEmbed = EmbedBuilder.from(originalEmbed)
+                        .setFields(
+                             { name: 'Usuário Original', value: originalEmbed.description.split('\n')[0].match(/<@\d+>/)[0], inline: true },
+                             { name: 'Pergunta Original', value: originalEmbed.description.split('```')[1], inline: false },
+                             { name: `Resposta Sugerida por: ${selectedAnswer.user}`, value: selectedAnswer.content.substring(0, 1024), inline: false }
+                         );
+
+                    const modActionsRow = new ActionRowBuilder()
+                        .addComponents(
+                            new ButtonBuilder().setCustomId(`curate_approve_${curationMessageId}-${selectedAnswerIndex}`).setLabel('✅ Aprovar').setStyle(ButtonStyle.Success),
+                            new ButtonBuilder().setCustomId(`curate_reject_${curationMessageId}-${selectedAnswerIndex}`).setLabel('❌ Rejeitar').setStyle(ButtonStyle.Danger)
+                        );
+                    
+                    // Manter o menu de seleção
+                    const menuRow = interaction.message.components[0];
+
+                    await interaction.message.edit({ embeds: [updatedEmbed], components: [menuRow, modActionsRow] });
+                 }
             }
         }
     }
