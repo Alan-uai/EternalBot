@@ -27,6 +27,7 @@ import { world24Data } from './worlds/world-24-data.js';
 
 import { achievementsGuideArticle } from './wiki-articles/achievements-guide.js';
 import { auraArticle } from './wiki-articles/aura-system.js';
+import { avatarIndexArticle } from './wiki-articles/avatar-index.js';
 import { championsIndexArticle } from './wiki-articles/champions-index.js';
 import { damageSwordsArticle } from './wiki-articles/damage-swords.js';
 import { energyGainPerRankArticle } from './wiki-articles/energy-gain.js';
@@ -116,6 +117,7 @@ export const allWikiArticles = [
     championsIndexArticle,
     shadowsGuideArticle,
     limitedPacksGuideArticle,
+    avatarIndexArticle,
 ];
 
     
