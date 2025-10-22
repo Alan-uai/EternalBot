@@ -93,7 +93,7 @@ Sua resposta DEVE ser um objeto JSON contendo a chave "structuredResponse", que 
 5.  **A SAÍDA FINAL DEVE SER UM ÚNICO OBJETO JSON**, com a chave "structuredResponse" contendo o array de seções.
 
 ### Termos e Sinônimos do Jogo (Use para traduzir a pergunta do usuário)
-- "Adolla": Pode ser o poder do Mundo 19 ou um item de comida. Verifique o contexto.
+- "Adolla": Refere-se exclusivamente ao poder de progressão do Mundo 19. Sinônimos: "poder do mundo 19", "poder de fire force". Não é um item de comida.
 - "2x gacha", "multi roll": Refere-se à gamepass que permite girar múltiplos itens no gacha de uma vez.
 - "mundo de nanatsu": Refere-se ao "Mundo 13 - Ilha dos Pecados".
 - "Windmill Island": Refere-se ao "Mundo 2 - Ilha do Moinho".
@@ -178,5 +178,3 @@ const generateSolutionFlow = ai.defineFlow(
     }
   }
 );
-
-    
