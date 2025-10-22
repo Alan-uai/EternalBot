@@ -332,9 +332,10 @@ async function handleFeedbackButton(interaction) {
         const replyMessageId = client.interactions.get(`replyMessageId_${originalMessageId}`);
         const conversationHistory = client.interactions.get(`history_${originalMessageId}`);
         
-        const MOD_CHANNEL_ID = '1429314152928641118';
+        const MOD_CHANNEL_ID = '1429314152928641118'; // Canal de moderação
         const modChannel = await client.channels.fetch(MOD_CHANNEL_ID);
 
+        // Envia para o canal de moderação
         if (modChannel && originalQuestion && badResponse) {
             const feedbackEmbed = new EmbedBuilder()
                 .setColor(0xFF4B4B)
@@ -355,7 +356,7 @@ async function handleFeedbackButton(interaction) {
                         .setStyle(ButtonStyle.Secondary),
                     new ButtonBuilder()
                         .setCustomId(`mod_solving_${userId}`)
-                        .setLabel('Visto e Resolvendo')
+                        .setLabel('Resolvendo')
                         .setStyle(ButtonStyle.Primary),
                     new ButtonBuilder()
                         .setCustomId(`mod_solved_${userId}`)
@@ -365,12 +366,13 @@ async function handleFeedbackButton(interaction) {
 
             await modChannel.send({ embeds: [feedbackEmbed], components: [modActionsRow] });
         }
-
+        
+        // Tenta regenerar a resposta para o usuário
         try {
             const newResult = await generateSolution({
                 problemDescription: originalQuestion,
                 wikiContext: client.wikiContext,
-                history: conversationHistory, // Usa o histórico armazenado
+                history: conversationHistory,
             });
             
             if (newResult && newResult.structuredResponse) {
@@ -392,7 +394,6 @@ async function handleFeedbackButton(interaction) {
                     client.interactions.set(`answer_${originalMessageId}`, newReplyContent);
                 }
             }
-
         } catch (error) {
              console.error('Erro ao regenerar resposta:', error);
         }
@@ -417,15 +418,21 @@ async function handleModButton(interaction) {
          return interaction.reply({ content: `O canal de perfil para ${user.tag} não foi encontrado. Use /atualizar-perfil para criar.`, ephemeral: true });
     }
     
-    const existingThreads = await userChannel.threads.fetch();
+    // Tenta encontrar o tópico de notificações, e se não existir, cria um.
+    const existingThreads = await userChannel.threads.fetch().catch(() => ({ threads: new Collection() }));
     let notificationThread = existingThreads.threads.find(t => t.name === 'notificações');
 
     if (!notificationThread) {
-         notificationThread = await userChannel.threads.create({
-            name: 'notificações',
-            autoArchiveDuration: 10080,
-            reason: `Tópico de notificações para ${user.tag}`
-        });
+         try {
+            notificationThread = await userChannel.threads.create({
+                name: 'notificações',
+                autoArchiveDuration: 10080,
+                reason: `Tópico de notificações para ${user.tag}`
+            });
+         } catch(error) {
+             console.error(`Não foi possível criar o tópico de notificações para ${user.tag}:`, error);
+             return interaction.reply({ content: 'Não foi possível criar o tópico de notificações no canal do usuário.', ephemeral: true });
+         }
     }
     
     let message;
@@ -437,21 +444,29 @@ async function handleModButton(interaction) {
              message = 'Seu feedback foi visto por um moderador e está em desenvolvimento, obrigado!';
             break;
         case 'solved':
-             message = 'Seu feedback resolveu um problema, obrigado!';
+             message = 'Seu feedback ajudou a resolver um problema, obrigado! Você recebeu pontos de reputação.';
+             // Lógica para dar pontos de reputação ao usuário aqui
             break;
         default:
             return;
     }
 
-    await notificationThread.send(`<@${userId}>, ${message}`);
-    await interaction.reply({ content: `Notificação de status '${status}' enviada para ${user.tag}.`, ephemeral: true });
-    
-    const originalMessage = interaction.message;
-    const disabledRow = new ActionRowBuilder();
-    originalMessage.components[0].components.forEach(component => {
-        disabledRow.addComponents(ButtonBuilder.from(component).setDisabled(true));
-    });
-    await originalMessage.edit({ components: [disabledRow] });
+    try {
+        await notificationThread.send(`<@${userId}>, ${message}`);
+        await interaction.reply({ content: `Notificação de status '${status}' enviada para ${user.tag}.`, ephemeral: true });
+        
+        // Desabilitar botões na mensagem original do moderador
+        const originalMessage = interaction.message;
+        const disabledRow = new ActionRowBuilder();
+        originalMessage.components[0].components.forEach(component => {
+            disabledRow.addComponents(ButtonBuilder.from(component).setDisabled(true));
+        });
+        await originalMessage.edit({ components: [disabledRow] });
+
+    } catch (error) {
+        console.error(`Falha ao enviar notificação ou editar mensagem do mod:`, error);
+        await interaction.followUp({ content: 'Houve um erro ao processar a ação.', ephemeral: true });
+    }
 }
 
 
@@ -532,3 +547,5 @@ http.createServer((req, res) => {
 }).listen(port, () => {
   console.log(`Servidor web ouvindo na porta ${port}`);
 });
+
+    
