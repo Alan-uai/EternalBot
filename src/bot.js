@@ -668,12 +668,7 @@ async function handleCurationFixed(interaction, helpMessageId) {
          }
     } else {
         // Se não houver respostas aprovadas, apenas limpa
-        const helpChannel = await client.channels.fetch('1426957344897761282');
-        try {
-            await helpChannel.messages.delete(helpMessageId);
-        } catch(error) {
-            console.warn("Não foi possível encontrar/deletar a mensagem no canal de ajuda:", error.message);
-        }
+        await cleanUpHelpMessage(client, helpMessageId);
         await interaction.message.delete().catch(console.error);
         await interaction.reply({ content: 'Nenhuma resposta foi aprovada. As mensagens foram limpas.', ephemeral: true });
     }
@@ -895,12 +890,9 @@ async function handleFinalApprove(interaction, curationMessageId) {
         // Limpa a mensagem de curadoria após 10 segundos
         setTimeout(() => interaction.message.delete().catch(console.error), 10000);
 
-        // Limpa a mensagem do canal de ajuda imediatamente
+        // Limpa a mensagem e as respostas do canal de ajuda
         const helpMessageId = client.interactions.get(`help_message_id_for_curation_${curationMessageId}`);
-        if(helpMessageId) {
-            const helpChannel = await client.channels.fetch('1426957344897761282');
-            helpChannel.messages.delete(helpMessageId).catch(err => console.warn(`Não foi possível deletar msg de ajuda ${helpMessageId}: ${err.message}`));
-        }
+        await cleanUpHelpMessage(client, helpMessageId);
 
     } else {
          await interaction.followUp({ content: 'Erro: Não foi possível encontrar a sugestão da IA para aprovar.', ephemeral: true });
@@ -915,12 +907,9 @@ async function handleFinalReject(interaction, curationMessageId) {
     await interaction.message.delete().catch(console.error);
     await interaction.reply({ content: 'Sugestão da IA rejeitada e removida.', ephemeral: true });
 
-    // Limpa a mensagem do canal de ajuda imediatamente
+    // Limpa a mensagem e as respostas do canal de ajuda
     const helpMessageId = client.interactions.get(`help_message_id_for_curation_${curationMessageId}`);
-    if (helpMessageId) {
-        const helpChannel = await client.channels.fetch('1426957344897761282');
-        helpChannel.messages.delete(helpMessageId).catch(err => console.warn(`Não foi possível deletar msg de ajuda ${helpMessageId}: ${err.message}`));
-    }
+    await cleanUpHelpMessage(client, helpMessageId);
     
     // Limpeza final dos dados em memória
     client.interactions.delete(`ai_suggestion_${curationMessageId}`);
@@ -943,6 +932,33 @@ async function findOriginalQuestionEmbed(curationMessage, curationMessageId) {
     } catch (error) {
         console.error(`Erro ao buscar o embed da pergunta original no canal de curadoria para a msg ${curationMessageId}:`, error);
         return null;
+    }
+}
+
+async function cleanUpHelpMessage(client, helpMessageId) {
+    if (!helpMessageId) return;
+
+    try {
+        const helpChannel = await client.channels.fetch('1426957344897761282');
+        const mainMessage = await helpChannel.messages.fetch(helpMessageId);
+
+        // Fetch all messages in the channel and filter for replies to the main message
+        const channelMessages = await helpChannel.messages.fetch({ limit: 100 });
+        const replies = channelMessages.filter(m => m.reference && m.reference.messageId === helpMessageId);
+
+        // Delete all replies
+        if (replies.size > 0) {
+            await helpChannel.bulkDelete(replies, true).catch(err => {
+                 console.warn(`Não foi possível apagar todas as respostas em massa, tentando individualmente: ${err.message}`);
+                 replies.forEach(msg => msg.delete().catch(e => console.warn(`Falha ao deletar resposta individual: ${e.message}`)));
+            });
+        }
+        
+        // Delete the original question message
+        await mainMessage.delete();
+
+    } catch (err) {
+        console.warn(`Não foi possível limpar a mensagem de ajuda e/ou suas respostas (ID: ${helpMessageId}): ${err.message}`);
     }
 }
 
