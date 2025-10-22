@@ -10,7 +10,7 @@ export const scientificNotationArticle = {
     notation1: {
       headers: ['Abreviação', 'Nome', 'Notação Científica'],
       rows: [
-        { Abreviação: 'k', Nome: 'Thousand', 'Notação Científica': '1.00E+003' },
+        { Abreviação: 'k', Nome: 'Thousand', 'Notação Científica': '1.00E+03' },
         { Abreviação: 'M', Nome: 'Million', 'Notação Científica': '1.00E+006' },
         { Abreviação: 'B', Nome: 'Billion', 'Notação Científica': '1.00E+009' },
         { Abreviação: 'T', Nome: 'Trillion', 'Notação Científica': '1.00E+012' },
@@ -79,7 +79,22 @@ export const scientificNotationArticle = {
             { Abreviação: 'sxQDR', Nome: 'Sesquadragintillion', 'Notação Científica': '1.00E+141' },
             { Abreviação: 'SpQDR', Nome: 'Septenquadragintillion', 'Notação Científica': '1.00E+144' },
             { Abreviação: 'OQQDR', Nome: 'Octoquadragintillion', 'Notação Científica': '1.00E+147' },
-            { Abreviação: 'NQQDR', Nome: 'Novemquadragintillion', 'Notação Científica': '1soo.E+150' },
+            { Abreviação: 'NQQDR', Nome: 'Novemquadragintillion', 'Notação Científica': '1.00E+150' },
+        ]
+    },
+    notation6: {
+        headers: ['Abreviação', 'Nome (Quinquagintillion)', 'Notação Científica'],
+        rows: [
+          { Abreviação: 'qQGNT', 'Nome': 'Quinquagintillion', 'Notação Científica': '1.00E+153' },
+          { Abreviação: 'uQGNT', 'Nome': 'Unquinquagintillion', 'Notação Científica': '1.00E+156' },
+          { Abreviação: 'dQGNT', 'Nome': 'Duoquinquagintillion', 'Notação Científica': '1.00E+159' },
+          { Abreviação: 'tQGNT', 'Nome': 'Trequinquagintillion', 'Notação Científica': '1.00E+162' },
+          { Abreviação: 'qdQGNT', 'Nome': 'Quattuorquinquagintillion', 'Notação Científica': '1.00E+165' },
+          { Abreviação: 'QnQGNT', 'Nome': 'Quinquinquagintillion', 'Notação Científica': '1.00E+168' },
+          { Abreviação: 'sxQGNT', 'Nome': 'Sexquinquagintillion', 'Notação Científica': '1.00E+171' },
+          { Abreviação: 'SpQGNT', 'Nome': 'Septenquinquagintillion', 'Notação Científica': '1.00E+174' },
+          { Abreviação: 'OQQGNT', 'Nome': 'Octoquinquagintillion', 'Notação Científica': '1.00E+177' },
+          { Abreviação: 'NQQGNT', 'Nome': 'Novemquinquagintillion', 'Notação Científica': '1.00E+180' }
         ]
     }
   }

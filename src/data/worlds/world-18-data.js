@@ -10,7 +10,8 @@ export const world18Data = {
     { name: 'Eternity Devil', rank: 'B', exp: 9.5e13, hp: '1OcTG' },
     { name: 'Katana Man', rank: 'A', exp: 1.4e14, hp: '10OcTG' },
     { name: 'Bomb Devil', rank: 'S', exp: 2e14, hp: '750TGN' },
-    { name: 'Mr. Chainsaw', rank: 'SS', exp: 4e14, hp: '1.5qTG', drops: {} },
+    { name: 'Mr Chainsaw', rank: 'SS', exp: 4e14, hp: '5.09tsTG', drops: {} },
+    { name: 'Hero of Hell', rank: 'SSS', exp: 4e14, hp: '50.9qTG', drops: {} },
   ],
   pets: [
     { name: 'Pochita', rank: 'Comum', rarity: 'Comum', energy_bonus: '0.18x' },

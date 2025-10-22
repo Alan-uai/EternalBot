@@ -9,7 +9,7 @@ export const world7Data = {
     { name: 'Mestre do Tempo', rank: 'B', exp: 1800000, hp: '1sxD' },
     { name: 'Senhor do Tempo', rank: 'A', exp: 2500000, hp: '10sxD' },
     { name: 'Chronomancer', rank: 'S', exp: 3500000, hp: '50.5tD' },
-    { name: 'Novi Chroni', rank: 'SS', exp: 7000000, hp: '101tD', drops: {} },
+    { name: 'Novi Chroni', rank: 'SS', exp: 7000000, hp: '101tdD', drops: {} },
   ],
   pets: [
     { name: 'Ampulheta', rank: 'Comum', rarity: 'Comum', energy_bonus: '0.07x' },

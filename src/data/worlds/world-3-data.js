@@ -9,7 +9,7 @@ export const world3Data = {
     { name: 'Tenente Shinigami', rank: 'B', exp: 3500, hp: '1qd' },
     { name: 'Capitão Shinigami', rank: 'A', exp: 5000, hp: '10qd' },
     { name: 'Ichigo', rank: 'S', exp: 7500, hp: '1.2Sp' },
-    { name: 'Eizen', rank: 'SS', exp: 15000, hp: '2.5Sp', drops: { aura: { name: 'Aura do Traidor Roxo', probability: 0.05 } } },
+    { name: 'Eizen', rank: 'SS', exp: 15000, hp: '2.2Sp', drops: { aura: { name: 'Aura do Traidor Roxo', probability: 0.05 } } },
   ],
   pets: [
     { name: 'Borboleta Infernal', rank: 'Comum', rarity: 'Comum', energy_bonus: '0.03x' },

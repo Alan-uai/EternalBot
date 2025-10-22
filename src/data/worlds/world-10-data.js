@@ -10,7 +10,7 @@ export const world10Data = {
     { name: 'Ciborgue Nv.4', rank: 'B', exp: 220000000, hp: '1DVg' },
     { name: 'Ciborgue Nv.5', rank: 'A', exp: 320000000, hp: '10DVg' },
     { name: 'Android 18', rank: 'S', exp: 450000000, hp: '247sxD' },
-    { name: 'Ken Turbo', rank: 'SS', exp: 900000000, hp: '494sxD', drops: { aura: { name: 'Aura Energética', probability: 0.05 } } },
+    { name: 'Killas Godspeed', rank: 'SS', exp: 900000000, hp: '296OcD', drops: { aura: { name: 'Aura Energética', probability: 0.05 } } },
   ],
   pets: [
     { name: 'Drone', rank: 'Comum', rarity: 'Comum', energy_bonus: '0.10x' },

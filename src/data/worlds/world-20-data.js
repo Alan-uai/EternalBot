@@ -8,9 +8,8 @@ export const world20Data = {
     { name: 'Freeza (Forma 1)', rank: 'C', exp: 1.8e16, hp: '100dQDR' },
     { name: 'Freeza (Forma Final)', rank: 'B', exp: 2.6e16, hp: '1tQDR' },
     { name: 'Koku (Super Saiyajin)', rank: 'A', exp: 3.8e16, hp: '10tQDR' },
-    { name: 'Koku SSJ Blue', rank: 'S', exp: 5.5e16, hp: '4.7qTG' },
-    { name: 'Frezi Final Form', rank: 'SSS', exp: 1.1e17, hp: '47qTG', drops: {} },
-    { name: 'Koku SSJ', rank: 'SS', exp: 5.5e16, hp: '9.4tsTG', drops: {} },
+    { name: 'Koku SSJ', rank: 'SS', exp: 5.5e16, hp: '1.52NoTG' },
+    { name: 'Frezi Final Form', rank: 'SSS', exp: 1.1e17, hp: '15.2QdDR', drops: {} },
   ],
   pets: [
     { name: 'Porunga Mini', rank: 'Raro', rarity: 'Raro', energy_bonus: '0.60x' },

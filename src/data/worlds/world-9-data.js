@@ -10,6 +10,7 @@ export const world9Data = {
     { name: 'Freeza', rank: 'A', exp: 65000000, hp: '10Vgn' },
     { name: 'Koku', rank: 'S', exp: 90000000, hp: '1.23OcD' },
     { name: 'Veggita', rank: 'SS', exp: 180000000, hp: '2.46OcD', drops: {} },
+    { name: 'Ken Turbo', rank: 'SS', exp: 180000000, hp: '494sxD', drops: {} }
   ],
   pets: [
     { name: 'Pual', rank: 'Comum', rarity: 'Comum', energy_bonus: '0.09x' },

@@ -8,8 +8,8 @@ export const world21Data = {
     { name: 'Espada', rank: 'C', exp: 9e16, hp: '100QnQDR' },
     { name: 'Coyote Starrk', rank: 'B', exp: 1.3e17, hp: '1sxQDR' },
     { name: 'Barragan', rank: 'A', exp: 1.9e17, hp: '10sxQDR' },
-    { name: 'Cifer', rank: 'SSS', exp: 3.8e17, hp: '744QnTG', drops: {} },
-    { name: 'Vasto Ichge', rank: 'SSS', exp: 1e18, hp: '3.7ssTG', drops: {} },
+    { name: 'Cifer', rank: 'SS', exp: 3.8e17, hp: '87.2uQDR', drops: {} },
+    { name: 'Vasto Ichige', rank: 'SSS', exp: 1e18, hp: '872dQDR', drops: {} },
   ],
   pets: [
     { name: 'Hollow Mask Fragment', rank: 'Raro', rarity: 'Raro', energy_bonus: '0.63x' },

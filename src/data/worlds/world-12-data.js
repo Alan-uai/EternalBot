@@ -11,6 +11,7 @@ export const world12Data = {
     { name: 'Ameaça Nível Deus', rank: 'A', exp: 8e9, hp: '10SeV' },
     { name: 'Herói Careca', rank: 'S', exp: 1.2e10, hp: '1.48DVg' },
     { name: 'Garou Cósmico', rank: 'SS', exp: 2.4e10, hp: '2.96DVg', drops: {} },
+    { name: 'Escanor', rank: 'SS', exp: 2.4e10, hp: '9.77DVg', drops: {} },
   ],
   pets: [
     { name: 'Cão de Guarda', rank: 'Comum', rarity: 'Comum', energy_bonus: '0.12x' },

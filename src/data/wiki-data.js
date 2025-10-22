@@ -22,6 +22,7 @@ import { world19Data } from './worlds/world-19-data.js';
 import { world20Data } from './worlds/world-20-data.js';
 import { world21Data } from './worlds/world-21-data.js';
 import { world22Data } from './worlds/world-22-data.js';
+import { world23Data } from './worlds/world-23-data.js';
 import { world24Data } from './worlds/world-24-data.js';
 
 import { achievementsGuideArticle } from './wiki-articles/achievements-guide.js';
@@ -78,6 +79,7 @@ export const allWikiArticles = [
     world20Data,
     world21Data,
     world22Data,
+    world23Data,
     world24Data,
 
     // Wiki Articles
