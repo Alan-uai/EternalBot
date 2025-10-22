@@ -10,6 +10,7 @@ import { loadKnowledgeBase } from './knowledge-base.js';
 import { doc, getDoc, setDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { lobbyDungeonsArticle } from './data/wiki-articles/lobby-dungeons.js';
 import { generateSolution } from './ai/flows/generate-solution.js';
+import axios from 'axios';
 
 // Resolve __dirname for ES Modules
 const __filename = fileURLToPath(import.meta.url);
@@ -171,12 +172,27 @@ client.on(Events.MessageCreate, async (message) => {
     }
 
     const question = message.content.replace(/<@!?(\d+)>/g, '').trim();
-    if (!question) {
+    const imageAttachment = message.attachments.find(att => att.contentType?.startsWith('image/'));
+
+    if (!question && !imageAttachment) {
         await message.reply('Olá! Em que posso ajudar sobre o Anime Eternal?');
         return;
     }
 
     await message.channel.sendTyping();
+    
+    let imageDataUri = null;
+    if (imageAttachment) {
+        try {
+            const response = await axios.get(imageAttachment.url, { responseType: 'arraybuffer' });
+            const base64 = Buffer.from(response.data, 'binary').toString('base64');
+            imageDataUri = `data:${imageAttachment.contentType};base64,${base64}`;
+        } catch (error) {
+            console.error("Erro ao processar a imagem anexada:", error);
+            // Continua sem a imagem se o download falhar
+        }
+    }
+
 
     const history = [];
     let currentMessage = message;
@@ -203,6 +219,7 @@ client.on(Events.MessageCreate, async (message) => {
     try {
         const result = await generateSolution({
             problemDescription: question,
+            imageDataUri: imageDataUri,
             wikiContext: client.wikiContext,
             history: history.length > 0 ? history : undefined,
         });
@@ -515,5 +532,3 @@ http.createServer((req, res) => {
 }).listen(port, () => {
   console.log(`Servidor web ouvindo na porta ${port}`);
 });
-
-    
