@@ -10,7 +10,7 @@ export const world1Data = {
     { name: 'Krilin', rank: 'B', exp: 75, hp: '2k' },
     { name: 'Tartaruga', rank: 'A', exp: 100, hp: '2.5k' },
     { name: 'Mestre Kame', rank: 'S', exp: 150, hp: '3.5k' },
-    { name: 'Kid Kohan', rank: 'SS', exp: 300, hp: '2.5Qd', drops: { aura: { name: 'Aura da Sorte', probability: 0.05 } } },
+    { name: 'Kid Kohan', rank: 'SS', exp: 300, hp: '2.5Qd', drops: { aura: { name: 'Aura da Sorte', probability: 0.05 } }, videoUrl: 'https://cdn.discordapp.com/attachments/1430337273794265250/1430337506850902126/ScreenRecording_10-21-2025_10-29-41_1.mov?ex=68fa11dc&is=68f8c05c&hm=427738471ba4c03c65ded4771f410444eb190deb54be08eecc33c0ff00286c7f&' },
   ],
   pets: [
     { name: 'Monstrinho', rank: 'Comum', rarity: 'Comum', energy_bonus: '0.01x' },

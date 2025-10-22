@@ -1,3 +1,4 @@
+
 export const world2Data = {
   id: 'world-2',
   title: 'Mundo 2 - Ilha do Moinho',
@@ -9,7 +10,7 @@ export const world2Data = {
     { name: 'Imediato Pirata', rank: 'B', exp: 600, hp: '10B' },
     { name: 'Capitão Pirata', rank: 'A', exp: 850, hp: '50B' },
     { name: 'Luffy', rank: 'S', exp: 1200, hp: '2.5sx' },
-    { name: 'Shanks', rank: 'SS', exp: 2500, hp: '5sx', drops: { aura: { name: 'Aura do Imperador Vermelho', probability: 0.05 } } },
+    { name: 'Shanks', rank: 'SS', exp: 2500, hp: '5sx', drops: { aura: { name: 'Aura do Imperador Vermelho', probability: 0.05 } }, videoUrl: 'https://cdn.discordapp.com/attachments/1430337273794265250/1430337623989157898/ScreenRecording_10-21-2025_10-30-18_1.mov?ex=68fa11f7&is=68f8c077&hm=545bf96550f91648d3cb19976024f9177520781ec5a21df3210a4c85af955e54&' },
   ],
   pets: [
     { name: 'Papagaio', rank: 'Comum', rarity: 'Comum', energy_bonus: '0.02x' },

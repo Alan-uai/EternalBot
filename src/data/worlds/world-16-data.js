@@ -1,3 +1,4 @@
+
 export const world16Data = {
   id: 'world-16',
   title: 'Mundo 16 - Ilha Bizarra',
@@ -9,7 +10,7 @@ export const world16Data = {
     { name: 'Assassino', rank: 'B', exp: 3.8e12, hp: '1qTG' },
     { name: 'Mafioso', rank: 'A', exp: 5.5e12, hp: '10qTG' },
     { name: 'Jotaro', rank: 'S', exp: 8e12, hp: '97.5NVG' },
-    { name: 'Dio', rank: 'SS', exp: 1.6e13, hp: '195NVG', drops: { aura: { name: 'Aura de Hamon', probability: 0.05 } } },
+    { name: 'Dio', rank: 'SS', exp: 1.6e13, hp: '195NVG', drops: { aura: { name: 'Aura de Hamon', probability: 0.05 } }, videoUrl: 'https://cdn.discordapp.com/attachments/1430337273794265250/1430338835434307604/ScreenRecording_10-21-2025_10-58-06_1.mov?ex=68fa1318&is=68f8c198&hm=5886dcf04075eb1e8fd3d755fa80bb154d71d1277dfc162040a705339c6d1fe5&' },
   ],
   pets: [
     { name: 'Iggy', rank: 'Comum', rarity: 'Comum', energy_bonus: '0.16x' },

@@ -1,3 +1,4 @@
+
 export const world13Data = {
   id: 'world-13',
   title: 'Mundo 13 - Ilha dos Pecados',
@@ -9,7 +10,7 @@ export const world13Data = {
     { name: 'Albion', rank: 'B', exp: 2.8e10, hp: '1OVG' },
     { name: 'Mandamento', rank: 'A', exp: 4e10, hp: '10OVG' },
     { name: 'Meliodas', rank: 'S', exp: 6e10, hp: '4.88DVg' },
-    { name: 'Esanor', rank: 'SS', exp: 1.2e11, hp: '9.77DVg', drops: { aura: { name: 'Aura Monstruosa', probability: 0.05 } } },
+    { name: 'Esanor', rank: 'SS', exp: 1.2e11, hp: '9.77DVg', videoUrl: 'https://cdn.discordapp.com/attachments/1430337273794265250/1430338725602394213/ScreenRecording_10-21-2025_10-55-51_1.mov?ex=68fa12fe&is=68f8c17e&hm=375f983f81a944d7cbfa3a5cd0a434035e8b6ef58fc3a730dd4f73e9947242f8&', drops: { aura: { name: 'Aura Monstruosa', probability: 0.05 } } },
     { name: 'Number 8', rank: 'SS', exp: 1.5e11, hp: '5.55qtV', drops: {} },
   ],
   pets: [

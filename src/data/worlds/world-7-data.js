@@ -1,3 +1,4 @@
+
 export const world7Data = {
   id: 'world-7',
   title: 'Mundo 7 - Ilha dos Viajantes',
@@ -9,7 +10,7 @@ export const world7Data = {
     { name: 'Mestre do Tempo', rank: 'B', exp: 1800000, hp: '1sxD' },
     { name: 'Senhor do Tempo', rank: 'A', exp: 2500000, hp: '10sxD' },
     { name: 'Chronomancer', rank: 'S', exp: 3500000, hp: '50.5tD' },
-    { name: 'Novi Chroni', rank: 'SS', exp: 7000000, hp: '101tdD', drops: {} },
+    { name: 'Novi Chroni', rank: 'SS', exp: 7000000, hp: '101tdD', videoUrl: 'https://cdn.discordapp.com/attachments/1430337273794265250/1430338227725664287/ScreenRecording_10-21-2025_10-35-22_1.mov?ex=68fa1287&is=68f8c107&hm=6ce1e4abfb80c01df86b05dc364cc1e0f45515182d53142c7d75fe9ffad47f3b&', drops: {} },
   ],
   pets: [
     { name: 'Ampulheta', rank: 'Comum', rarity: 'Comum', energy_bonus: '0.07x' },

@@ -1,3 +1,4 @@
+
 export const world11Data = {
   id: 'world-11',
   title: 'Mundo 11 - Ilha dos Titãs',
@@ -9,7 +10,7 @@ export const world11Data = {
     { name: 'Titã Bestial', rank: 'B', exp: 1100000000, hp: '1qtV' },
     { name: 'Titã de Ataque', rank: 'A', exp: 1600000000, hp: '10qtV' },
     { name: 'Eran', rank: 'S', exp: 2300000000, hp: '24.7Vgn' },
-    { name: 'Killas Godspeed', rank: 'SS', exp: 4500000000, hp: '49.4Vgn', drops: {} },
+    { name: 'Killas Godspeed', rank: 'SS', exp: 4500000000, hp: '49.4Vgn', videoUrl: 'https://cdn.discordapp.com/attachments/1430337273794265250/1430338644438421535/ScreenRecording_10-21-2025_10-54-38_1.mov?ex=68fa12eb&is=68f8c16b&hm=4434db7c13223af1fa8e998b48f6c3a0c7fca219d7f4a831e47359e13ba74da4&', drops: {} },
   ],
   pets: [
     { name: 'Soldado de Paradis', rank: 'Comum', rarity: 'Comum', energy_bonus: '0.11x' },

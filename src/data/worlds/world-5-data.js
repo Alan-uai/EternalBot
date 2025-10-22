@@ -10,7 +10,7 @@ export const world5Data = {
     { name: 'Kanoto', rank: 'B', exp: 70000, hp: '10de' },
     { name: 'Kanoe', rank: 'A', exp: 100000, hp: '50de' },
     { name: 'Hashira', rank: 'S', exp: 150000, hp: '15.6de' },
-    { name: 'Rangoki', rank: 'SS', exp: 300000, hp: '31.2de', drops: { aura: { name: 'Aura Flamejante', probability: 0.05 } } },
+    { name: 'Rangoki', rank: 'SS', exp: 300000, hp: '31.2de', drops: { aura: { name: 'Aura Flamejante', probability: 0.05 } }, videoUrl: 'https://cdn.discordapp.com/attachments/1430337273794265250/1430337846912221314/ScreenRecording_10-21-2025_10-31-41_1.mov?ex=68fa122d&is=68f8c0ad&hm=8c251843f5a6cef356551f7f8e66c564aaf4dab8be019d1c30e824ac3fdb40a7&' },
   ],
   pets: [
     { name: 'Corvo Kasugai', rank: 'Comum', rarity: 'Comum', energy_bonus: '0.05x' },
@@ -37,5 +37,3 @@ export const world5Data = {
     }
   ]
 };
-
-

@@ -1,3 +1,4 @@
+
 export const world3Data = {
   id: 'world-3',
   title: 'Mundo 3 - Ilha da Soul Society',
@@ -9,7 +10,7 @@ export const world3Data = {
     { name: 'Tenente Shinigami', rank: 'B', exp: 3500, hp: '1qd' },
     { name: 'Capitão Shinigami', rank: 'A', exp: 5000, hp: '10qd' },
     { name: 'Ichigo', rank: 'S', exp: 7500, hp: '1.2Sp' },
-    { name: 'Eizen', rank: 'SS', exp: 15000, hp: '2.2Sp', drops: { aura: { name: 'Aura do Traidor Roxo', probability: 0.05 } } },
+    { name: 'Eizen', rank: 'SS', exp: 15000, hp: '2.2Sp', drops: { aura: { name: 'Aura do Traidor Roxo', probability: 0.05 } }, videoUrl: 'https://cdn.discordapp.com/attachments/1430337273794265250/1430337718872965202/ScreenRecording_10-21-2025_10-30-50_1.mov?ex=68fa120e&is=68f8c08e&hm=8f03a2541a21bf69091297a2f4aa56de4f9b8615118efcb767705ff29e4fc60f&' },
   ],
   pets: [
     { name: 'Borboleta Infernal', rank: 'Comum', rarity: 'Comum', energy_bonus: '0.03x' },

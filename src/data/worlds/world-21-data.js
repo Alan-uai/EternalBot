@@ -1,3 +1,4 @@
+
 export const world21Data = {
   id: 'world-21',
   title: 'Mundo 21 - Hueco Mundo',
@@ -8,8 +9,8 @@ export const world21Data = {
     { name: 'Espada', rank: 'C', exp: 9e16, hp: '100QnQDR' },
     { name: 'Coyote Starrk', rank: 'B', exp: 1.3e17, hp: '1sxQDR' },
     { name: 'Barragan', rank: 'A', exp: 1.9e17, hp: '10sxQDR' },
-    { name: 'Cifer', rank: 'SS', exp: 3.8e17, hp: '87.2uQDR', drops: {} },
-    { name: 'Vasto Ichige', rank: 'SSS', exp: 1e18, hp: '872dQDR', drops: {} },
+    { name: 'Cifer', rank: 'SS', exp: 3.8e17, hp: '87.2uQDR', videoUrl: 'https://cdn.discordapp.com/attachments/1430337273794265250/1430339339652698152/ScreenRecording_10-21-2025_11-08-27_1.mov?ex=68fa1390&is=68f8c210&hm=bea5cf0f60cb6e55422dffab681474672344a4ab7c9dfb3a9e893ed2592ecda7&', drops: {} },
+    { name: 'Vasto Ichige', rank: 'SSS', exp: 1e18, hp: '872dQDR', videoUrl: 'https://cdn.discordapp.com/attachments/1430337273794265250/1430339400604188796/ScreenRecording_10-21-2025_11-09-04_1.mov?ex=68fa139f&is=68f8c21f&hm=f6e29f450c1d94659cb6a0bf001f9d8ace1e3da2401b90e37e6e08847b5a9bf7&', drops: {} },
   ],
   pets: [
     { name: 'Hollow Mask Fragment', rank: 'Raro', rarity: 'Raro', energy_bonus: '0.63x' },

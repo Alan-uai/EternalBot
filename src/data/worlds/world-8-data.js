@@ -1,3 +1,4 @@
+
 export const world8Data = {
   id: 'world-8',
   title: 'Mundo 8 - Ilha Shinobi',
@@ -9,8 +10,8 @@ export const world8Data = {
     { name: 'Anbu', rank: 'B', exp: 9000000, hp: '1OcD' },
     { name: 'Kage', rank: 'A', exp: 13000000, hp: '10OcD' },
     { name: 'Naruto', rank: 'S', exp: 18000000, hp: '1.41QnD' },
-    { name: 'Itechi', rank: 'SS', exp: 35000000, hp: '2.82QnD', drops: { aura: { name: 'Aura da Folha', probability: 0.05 } } },
-    { name: 'Madera', rank: 'SS', exp: 40000000, hp: '5.64QnD', drops: { aura: { name: 'Aura da Folha', probability: 0.05 } } },
+    { name: 'Itechi', rank: 'SS', exp: 35000000, hp: '2.82QnD', drops: { aura: { name: 'Aura da Folha', probability: 0.05 } }, videoUrl: 'https://cdn.discordapp.com/attachments/1430337273794265250/1430338276535046155/ScreenRecording_10-21-2025_10-36-25_1.mov?ex=68fa1293&is=68f8c113&hm=429938bb3f8f6e74c5a5d5aa424f68a3eab8aeb7f3822abc25bc049bb5e058a7&' },
+    { name: 'Madera', rank: 'SS', exp: 40000000, hp: '5.64QnD', drops: { aura: { name: 'Aura da Folha', probability: 0.05 } }, videoUrl: 'https://cdn.discordapp.com/attachments/1430337273794265250/1430338462162092093/ScreenRecording_10-21-2025_10-36-50_1.mov?ex=68fa12bf&is=68f8c13f&hm=6608bd1a66e65473faf5d3e05f279e8187d991512894aa533f07cf185ee2525e&' },
   ],
   pets: [
     { name: 'Sapo', rank: 'Comum', rarity: 'Comum', energy_bonus: '0.08x' },

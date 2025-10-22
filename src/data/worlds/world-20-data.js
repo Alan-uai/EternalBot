@@ -1,3 +1,4 @@
+
 export const world20Data = {
   id: 'world-20',
   title: 'Mundo 20 - Planeta Namekusei',
@@ -8,8 +9,8 @@ export const world20Data = {
     { name: 'Freeza (Forma 1)', rank: 'C', exp: 1.8e16, hp: '100dQDR' },
     { name: 'Freeza (Forma Final)', rank: 'B', exp: 2.6e16, hp: '1tQDR' },
     { name: 'Koku (Super Saiyajin)', rank: 'A', exp: 3.8e16, hp: '10tQDR' },
-    { name: 'Koku SSJ', rank: 'SS', exp: 5.5e16, hp: '1.52NoTG' },
-    { name: 'Frezi Final Form', rank: 'SSS', exp: 1.1e17, hp: '15.2QdDR', drops: {} },
+    { name: 'Koku SSJ', rank: 'SS', exp: 5.5e16, hp: '1.52NoTG', videoUrl: 'https://cdn.discordapp.com/attachments/1430337273794265250/1430339247122026546/ScreenRecording_10-21-2025_11-06-40_1.mov?ex=68fa137a&is=68f8c1fa&hm=42096a1a9cd93e3a83be6bd157f5a923a7fd467293a736127462c26f217102fa&' },
+    { name: 'Frezi Final Form', rank: 'SSS', exp: 1.1e17, hp: '15.2QdDR', videoUrl: 'https://cdn.discordapp.com/attachments/1430337273794265250/1430339308862312568/ScreenRecording_10-21-2025_11-07-45_1.mov?ex=68fa1389&is=68f8c209&hm=31f0464acc8164d46a89020eb87f1756e22e10994049b4f7a4720feed25b1387&', drops: {} },
   ],
   pets: [
     { name: 'Porunga Mini', rank: 'Raro', rarity: 'Raro', energy_bonus: '0.60x' },

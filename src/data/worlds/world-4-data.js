@@ -1,3 +1,4 @@
+
 export const world4Data = {
   id: 'world-4',
   title: 'Mundo 4 - Ilha dos Demônios de Fogo',
@@ -9,7 +10,7 @@ export const world4Data = {
     { name: 'Demônio Maior', rank: 'B', exp: 15000, hp: '250Qn' },
     { name: 'Lorde Demônio', rank: 'A', exp: 22000, hp: '500Qn' },
     { name: 'Akaza', rank: 'S', exp: 30000, hp: '60O' },
-    { name: 'Sakuni', rank: 'SS', exp: 60000, hp: '120Sp', drops: { aura: { name: 'Aura do Rei do Fogo', probability: 0.05 } } },
+    { name: 'Sakuni', rank: 'SS', exp: 60000, hp: '120Sp', drops: { aura: { name: 'Aura do Rei do Fogo', probability: 0.05 } }, videoUrl: 'https://cdn.discordapp.com/attachments/1430337273794265250/1430337777840554126/ScreenRecording_10-21-2025_10-31-17_1.mov?ex=68fa121c&is=68f8c09c&hm=4701c56efe6c8b63f39d235ca2353f417c474b290038f6c2874b44537ce6ead1&' },
   ],
   pets: [
     { name: 'Salamandra', rank: 'Comum', rarity: 'Comum', energy_bonus: '0.04x' },

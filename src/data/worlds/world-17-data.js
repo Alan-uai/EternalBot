@@ -1,3 +1,4 @@
+
 export const world17Data = {
   id: 'world-17',
   title: 'Mundo 17 - Ilha Ghoul',
@@ -9,7 +10,7 @@ export const world17Data = {
     { name: 'Ghoul Rank S', rank: 'B', exp: 1.9e13, hp: '1ssTG' },
     { name: 'Ghoul Rank SS', rank: 'A', exp: 2.8e13, hp: '10ssTG' },
     { name: 'Kaneki', rank: 'S', exp: 4.2e13, hp: '343UTG' },
-    { name: 'Arama', rank: 'SS', exp: 8.4e13, hp: '686UTG', drops: { aura: { name: 'Aura de Ghoul', probability: 0.05 } } },
+    { name: 'Arama', rank: 'SS', exp: 8.4e13, hp: '686UTG', drops: { aura: { name: 'Aura de Ghoul', probability: 0.05 } }, videoUrl: 'https://cdn.discordapp.com/attachments/1430337273794265250/1430338887196213278/ScreenRecording_10-21-2025_10-58-38_1.mov?ex=68fa1325&is=68f8c1a5&hm=9a34e7f09b898166e0819f706849d7fe410364eac27e09760790a9052a9042c3&' },
   ],
   pets: [
     { name: 'Máscara Ghoul', rank: 'Comum', rarity: 'Comum', energy_bonus: '0.17x' },
