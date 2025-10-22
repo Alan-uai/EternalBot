@@ -1,3 +1,4 @@
+
 export const world1Data = {
   id: 'world-1',
   title: 'Mundo 1 - Ilha dos Monstros',
@@ -44,3 +45,5 @@ export const world1Data = {
       { name: 'Halloween Raid', boss: 'Pumpkin King', description: 'Uma raid de evento com temática de Halloween.'}
   ]
 };
+
+    

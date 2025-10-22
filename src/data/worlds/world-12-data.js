@@ -1,3 +1,4 @@
+
 export const world12Data = {
   id: 'world-12',
   title: 'Mundo 12 - Ilha dos Heróis',
@@ -55,3 +56,5 @@ export const world12Data = {
       { name: 'Raid Sins', boss: 'Demon King', description: 'Uma raid de desafio individual onde se obtém tokens para os Sin Upgrades.'}
   ]
 };
+
+    
