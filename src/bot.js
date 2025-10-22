@@ -175,7 +175,7 @@ client.on(Events.MessageCreate, async (message) => {
     const imageAttachment = message.attachments.find(att => att.contentType?.startsWith('image/'));
 
     if (!question && !imageAttachment) {
-        await message.reply('Olá! Em que posso ajudar sobre o Anime Eternal?');
+        await message.reply('Olá! Meu nome é Gui. Em que posso ajudar sobre o Anime Eternal?');
         return;
     }
 
@@ -256,11 +256,11 @@ client.on(Events.MessageCreate, async (message) => {
             client.interactions.set(`replyMessageId_${message.id}`, replyMessage.id);
 
         } else {
-            await message.reply('Desculpe, não consegui obter uma resposta.');
+            await message.reply('Desculpe, não consegui obter uma resposta. Meu sistema pode estar sobrecarregado. Tente novamente em alguns instantes.');
         }
     } catch (error) {
         console.error('Erro ao chamar o fluxo generateSolution via menção:', error);
-        await message.reply('Ocorreu um erro ao processar sua pergunta.');
+        await message.reply('Ocorreu um erro ao processar sua pergunta. A equipe já foi notificada.');
     }
 });
 
