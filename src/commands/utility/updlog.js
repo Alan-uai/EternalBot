@@ -2,6 +2,7 @@
 import { SlashCommandBuilder, PermissionsBitField, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, EmbedBuilder } from 'discord.js';
 import { initializeFirebase } from '../../firebase/index.js';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { ai } from '../../ai/genkit.js';
 
 const ADMIN_ROLE_ID = '1429318984716521483';
 const UPDLOG_CHANNEL_ID = '1426958336057675857';
@@ -22,20 +23,20 @@ export async function execute(interaction) {
 
     const modal = new ModalBuilder()
         .setCustomId('updlog_modal')
-        .setTitle('Novo Log de Atualização');
+        .setTitle('Novo Log de Atualização (Em Inglês)');
 
     const titleInput = new TextInputBuilder()
         .setCustomId('updlog_title')
-        .setLabel("Título da Atualização")
+        .setLabel("Título da Atualização (em Inglês)")
         .setStyle(TextInputStyle.Short)
-        .setPlaceholder("Ex: ATUALIZAÇÃO 19.3!")
+        .setPlaceholder("Ex: Update 20, Part 3")
         .setRequired(true);
 
     const contentInput = new TextInputBuilder()
         .setCustomId('updlog_content')
-        .setLabel("Conteúdo do Log (Markdown)")
+        .setLabel("Conteúdo do Log (Markdown, em Inglês)")
         .setStyle(TextInputStyle.Paragraph)
-        .setPlaceholder("Liste as mudanças aqui. Use - para listas e ** ** para negrito.")
+        .setPlaceholder("Cole o log de atualização aqui. Ele será traduzido.")
         .setRequired(true);
 
     modal.addComponents(
@@ -51,13 +52,23 @@ async function handleInteraction(interaction) {
 
     await interaction.deferReply({ ephemeral: true });
 
-    const title = interaction.fields.getTextInputValue('updlog_title');
-    const content = interaction.fields.getTextInputValue('updlog_content');
+    const titleEn = interaction.fields.getTextInputValue('updlog_title');
+    const contentEn = interaction.fields.getTextInputValue('updlog_content');
 
     const { firestore } = initializeFirebase();
     const updlogRef = doc(firestore, 'bot_config', FIRESTORE_DOC_ID);
 
     try {
+        // Tradução com Genkit
+        const { text: translatedTitle } = await ai.generate({
+            prompt: `Traduza o seguinte título de log de atualização para Português-BR, mantendo a formatação e os números: "${titleEn}"`,
+        });
+
+        const { text: translatedContent } = await ai.generate({
+            prompt: `Traduza o seguinte log de atualização para Português-BR. Mantenha toda a formatação original do Markdown (títulos, listas com marcadores como •, negrito, etc.), nomes próprios de itens, mundos e códigos. Traduza apenas as descrições e títulos de seção como 'NEW CONTENT', 'FIXES', 'NEW CODES', etc. Texto a ser traduzido:\n\n${contentEn}`,
+        });
+
+
         const updlogChannel = await interaction.client.channels.fetch(UPDLOG_CHANNEL_ID);
         if (!updlogChannel) {
             return interaction.editReply('ERRO: Canal de logs de atualização não encontrado.');
@@ -77,30 +88,30 @@ async function handleInteraction(interaction) {
             }
         }
 
-        // 2. Enviar a nova mensagem
+        // 2. Enviar a nova mensagem traduzida
         const embed = new EmbedBuilder()
             .setColor(0x3498DB)
-            .setTitle(title)
-            .setDescription(content)
+            .setTitle(translatedTitle)
+            .setDescription(translatedContent)
             .setTimestamp()
             .setFooter({ text: `Lançado por: ${interaction.user.tag}` });
 
-        const newMessage = await updlogChannel.send({ embeds: [embed] });
+        const newMessage = await updlogChannel.send({ content: '@everyone', embeds: [embed] });
 
-        // 3. Salvar a nova referência no Firestore
+        // 3. Salvar a nova referência no Firestore (conteúdo traduzido)
         await setDoc(updlogRef, {
-            title: title,
-            content: content,
+            title: translatedTitle,
+            content: translatedContent,
             messageId: newMessage.id,
             channelId: newMessage.channel.id,
             updatedAt: new Date(),
         });
 
-        await interaction.editReply('Log de atualização lançado e salvo com sucesso!');
+        await interaction.editReply('Log de atualização traduzido, lançado e salvo com sucesso!');
 
     } catch (error) {
         console.error('Erro ao processar o /updlog:', error);
-        await interaction.editReply('Ocorreu um erro ao tentar lançar o log de atualização.');
+        await interaction.editReply('Ocorreu um erro ao tentar traduzir e lançar o log de atualização.');
     }
 }
 
