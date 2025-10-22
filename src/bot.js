@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import http from 'node:http';
 import { fileURLToPath } from 'node:url';
-import { Client, Collection, Events, GatewayIntentBits, REST, Routes, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
+import { Client, Collection, Events, GatewayIntentBits, REST, Routes, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, AttachmentBuilder } from 'discord.js';
 import { initializeFirebase } from './firebase/index.js';
 import { loadKnowledgeBase } from './knowledge-base.js';
 import { doc, getDoc, setDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
@@ -12,6 +12,7 @@ import { lobbyDungeonsArticle } from './data/wiki-articles/lobby-dungeons.js';
 import { generateSolution } from './ai/flows/generate-solution.js';
 import { updateKnowledgeBase } from './ai/flows/update-knowledge-base.js';
 import axios from 'axios';
+import { createTableImage } from './utils/createTableImage.js';
 
 // Resolve __dirname for ES Modules
 const __filename = fileURLToPath(import.meta.url);
@@ -275,7 +276,7 @@ client.on(Events.MessageCreate, async (message) => {
             history: history.length > 0 ? history : undefined,
         });
         
-        const parsedResponse = JSON.parse(result.structuredResponse);
+        const parsedResponse = result.structuredResponse;
         const firstSection = parsedResponse[0];
 
         // Se a IA não encontrou uma resposta
@@ -319,9 +320,20 @@ client.on(Events.MessageCreate, async (message) => {
 
         } else { // Se a IA encontrou uma resposta
             let replyContent = '';
-            parsedResponse.forEach((section) => {
+            let attachments = [];
+
+            for (const section of parsedResponse) {
                 replyContent += `**${section.titulo}**\n${section.conteudo}\n\n`;
-            });
+                if (section.table) {
+                    try {
+                        const tableImage = await createTableImage(section.table.headers, section.table.rows);
+                        attachments.push(new AttachmentBuilder(tableImage, { name: `table-${section.titulo.toLowerCase().replace(/ /g, '-')}.png` }));
+                    } catch (tableError) {
+                        console.error("Erro ao gerar imagem da tabela:", tableError);
+                        replyContent += `\n*(Erro ao renderizar a tabela como imagem.)*`;
+                    }
+                }
+            }
             
             if (replyContent.length > 2000) {
                 replyContent = replyContent.substring(0, 1997) + '...';
@@ -333,7 +345,7 @@ client.on(Events.MessageCreate, async (message) => {
                     new ButtonBuilder().setCustomId(`feedback_dislike_${message.author.id}_${message.id}`).setLabel('👎').setStyle(ButtonStyle.Danger)
                 );
 
-            const replyMessage = await message.reply({ content: replyContent, components: [feedbackRow] });
+            const replyMessage = await message.reply({ content: replyContent, components: [feedbackRow], files: attachments });
 
             client.interactions.set(`question_${message.id}`, question);
             client.interactions.set(`answer_${message.id}`, replyContent);
@@ -485,11 +497,21 @@ async function handleFeedbackButton(interaction) {
             });
             
             if (newResult && newResult.structuredResponse) {
-                const newParsedResponse = JSON.parse(newResult.structuredResponse);
+                const newParsedResponse = newResult.structuredResponse;
                 let newReplyContent = '🔄 **Resposta regenerada:**\n\n';
-                newParsedResponse.forEach((section) => {
+                let attachments = [];
+    
+                for (const section of newParsedResponse) {
                     newReplyContent += `**${section.titulo}**\n${section.conteudo}\n\n`;
-                });
+                    if (section.table) {
+                         try {
+                            const tableImage = await createTableImage(section.table.headers, section.table.rows);
+                            attachments.push(new AttachmentBuilder(tableImage, { name: `table-regen-${section.titulo.toLowerCase().replace(/ /g, '-')}.png` }));
+                        } catch (tableError) {
+                            console.error("Erro ao gerar imagem da tabela (regeneração):", tableError);
+                        }
+                    }
+                }
 
                 if (newReplyContent.length > 2000) {
                     newReplyContent = newReplyContent.substring(0, 1997) + '...';
@@ -499,7 +521,7 @@ async function handleFeedbackButton(interaction) {
                 const replyMessage = await originalChannel.messages.fetch(replyMessageId);
 
                 if(replyMessage) {
-                    await replyMessage.edit({ content: newReplyContent });
+                    await replyMessage.edit({ content: newReplyContent, files: attachments });
                     client.interactions.set(`answer_${originalMessageId}`, newReplyContent);
                 }
             }

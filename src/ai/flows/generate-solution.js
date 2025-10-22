@@ -44,13 +44,23 @@ const GenerateSolutionInputSchema = z.object({
   history: z.array(MessageSchema).optional().describe('The previous messages in the conversation.'),
 });
 
-const GenerateSolutionOutputSchema = z.object({
-  structuredResponse: z
-    .string()
-    .describe(
-      'Uma string JSON de um array de objetos. Cada objeto deve ter: `marcador` ("texto_introdutorio", "meio", "fim"), `titulo` (string), e `conteudo` (string, formatado em Markdown).'
-    ),
+// NOVO SCHEMA DE SAÍDA PARA SUPORTAR TABELAS
+const TableSchema = z.object({
+  headers: z.array(z.string()).describe("Um array com os nomes das colunas da tabela."),
+  rows: z.array(z.record(z.string())).describe("Um array de objetos, onde cada objeto representa uma linha e as chaves correspondem aos cabeçalhos."),
 });
+
+const SectionSchema = z.object({
+  marcador: z.enum(["texto_introdutorio", "meio", "fim"]).describe("O marcador da seção."),
+  titulo: z.string().describe("O título da seção."),
+  conteudo: z.string().describe("O conteúdo em texto da seção, formatado em Markdown."),
+  table: TableSchema.optional().describe("Se esta seção contiver uma tabela, forneça os dados estruturados aqui."),
+});
+
+const GenerateSolutionOutputSchema = z.object({
+  structuredResponse: z.array(SectionSchema).describe("Um array de objetos de seção que compõem a resposta completa."),
+});
+
 
 export async function generateSolution(input) {
   return generateSolutionFlow(input);
@@ -64,19 +74,23 @@ export const prompt = ai.definePrompt({
   prompt: `Você é o Gui, um assistente especialista no jogo Anime Eternal e também uma calculadora estratégica. Sua resposta DEVE ser em Português-BR.
 
 **ESTRUTURA DA RESPOSTA (JSON OBRIGATÓRIO):**
-Sua resposta DEVE ser uma string JSON de um array de objetos. Cada objeto representa uma seção da resposta.
+Sua resposta DEVE ser um objeto JSON contendo a chave "structuredResponse", que é um array de objetos de seção.
 
-**Estrutura de cada objeto JSON:**
+**Estrutura de cada objeto de seção JSON:**
 - \`marcador\`: Use "texto_introdutorio", "meio", ou "fim".
-- \`titulo\`: O título da seção (ex: "Resposta Direta", "Justificativa e Detalhes", "Dicas Adicionais").
-- \`conteudo\`: O conteúdo da seção em formato Markdown.
+- \`titulo\`: O título da seção (ex: "Solução Direta", "Análise de Farm").
+- \`conteudo\`: O conteúdo textual da seção em formato Markdown.
+- \`table\`: (Opcional) Se a seção contiver dados tabulares, você DEVE estruturá-los aqui. O objeto \`table\` deve ter duas chaves:
+    - \`headers\`: Um array de strings com os nomes das colunas (ex: ["Mundo", "Chefe", "HP"]).
+    - \`rows\`: Um array de objetos, onde cada objeto é uma linha e as chaves correspondem aos cabeçalhos (ex: [{"Mundo": 1, "Chefe": "Kid Kohan", "HP": "2.5Qd"}]).
+    - **IMPORTANTE:** Não inclua tabelas formatadas em Markdown no campo \`conteudo\`. Use o objeto \`table\` para isso.
 
 **REGRAS DE ESTRUTURAÇÃO DO JSON:**
 1.  **SEMPRE** comece com um objeto com \`marcador: "texto_introdutorio"\`. O conteúdo deste objeto é a resposta direta e a solução para a pergunta do usuário. O título pode ser "Solução Direta".
-2.  A seguir, crie um ou mais objetos com \`marcador: "meio"\`. Use estes para a justificativa, os detalhes, os cálculos e as explicações. Dê a eles títulos claros como "Justificativa e Detalhes" ou "Análise Matemática de Farm".
-3.  Se aplicável, termine com um ou mais objetos com \`marcador: "fim"\`. Use para dicas extras, estratégias de longo prazo, etc. Dê a eles títulos como "Dicas Adicionais".
-4.  **NÃO USE "INICIO" COMO MARCADOR.** A resposta direta agora está no "texto_introdutorio".
-5.  **A SAÍDA FINAL DEVE SER UM ÚNICO OBJETO JSON**, com uma única chave "structuredResponse" contendo a string JSON do array. **EXEMPLO DE SAÍDA FINAL:** {"structuredResponse": "[{\\"marcador\\":\\"texto_introdutorio\\",\\"titulo\\":\\"Solução Direta\\",\\"conteudo\\":\\"Conteúdo...\\"}]"}
+2.  A seguir, crie um ou mais objetos com \`marcador: "meio"\`. Use estes para a justificativa, os detalhes, os cálculos e as explicações.
+3.  **SE** uma seção precisar mostrar uma tabela (ex: requisitos de rank, bônus de itens, etc.), adicione o objeto \`table\` a essa seção com os dados estruturados.
+4.  Se aplicável, termine com um ou mais objetos com \`marcador: "fim"\` para dicas extras.
+5.  **A SAÍDA FINAL DEVE SER UM ÚNICO OBJETO JSON**, com a chave "structuredResponse" contendo o array de seções.
 
 ### Estratégia Principal de Raciocínio
 1.  **PRIMEIRO, ANALISE A IMAGEM (se fornecida).** A imagem é a fonte primária de contexto. Identifique itens, status, personagens ou qualquer elemento visual relevante. Use a imagem para entender a pergunta do usuário, mesmo que a pergunta seja vaga como "o que é isso?".
@@ -131,11 +145,11 @@ const generateSolutionFlow = ai.defineFlow(
   },
   async input => {
     const fallbackResponse = {
-        structuredResponse: JSON.stringify([{
+        structuredResponse: [{
             marcador: 'texto_introdutorio',
             titulo: 'Resposta não encontrada',
             conteudo: 'Desculpe, eu sou o Gui, e ainda não tenho a resposta para esta pergunta. Um especialista será notificado para me ensinar.'
-        }])
+        }]
     };
 
     try {
@@ -144,7 +158,7 @@ const generateSolutionFlow = ai.defineFlow(
         return fallbackResponse;
       }
       // Valida se a resposta não é uma resposta de erro genérica da IA
-      if (output.structuredResponse.includes("não tenho informações suficientes") || output.structuredResponse.includes("não consigo responder")) {
+      if (output.structuredResponse[0]?.titulo === "Resposta não encontrada") {
           return fallbackResponse;
       }
       return output;
