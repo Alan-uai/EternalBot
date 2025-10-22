@@ -1,3 +1,4 @@
+
 export const world15Data = {
   id: 'world-15',
   title: 'Mundo 15 - Ilha Virtual',
@@ -28,6 +29,12 @@ export const world15Data = {
         { name: 'Vontade Encarnada', multiplier: '10x', rarity: 'Phantom', probability: 0.05, statType: 'energy' },
       ],
     },
+     {
+      name: 'Hero License Quest',
+      type: 'progression',
+      statType: 'mixed',
+      description: "Missão de Licença de Herói, com tarefas neste mundo."
+    }
   ],
   dungeons: [
       { name: 'Gleam Raid', boss: 'The Gleam Eyes', description: 'Uma raid de desafio individual com 10 ondas.'}

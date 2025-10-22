@@ -1,3 +1,4 @@
+
 export const world5Data = {
   id: 'world-5',
   title: 'Mundo 5 - Ilha dos Caçadores',
@@ -28,5 +29,12 @@ export const world5Data = {
         { name: 'Respiração do Sol', multiplier: '5x', rarity: 'Phantom', probability: 0.2, energy_crit_bonus: '1.50%' },
       ],
     },
+    {
+      name: 'Hero License Quest',
+      type: 'progression',
+      statType: 'mixed',
+      description: "Missão de Licença de Herói, com tarefas neste mundo."
+    }
   ]
 };
+

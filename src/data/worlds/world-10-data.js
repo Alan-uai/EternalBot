@@ -1,3 +1,4 @@
+
 export const world10Data = {
   id: 'world-10',
   title: 'Mundo 10 - Ilha Turbo',
@@ -35,5 +36,11 @@ export const world10Data = {
       maxBoost: '50% Energy',
       unlockCost: '10M',
     },
+    {
+      name: 'Hero License Quest',
+      type: 'progression',
+      statType: 'mixed',
+      description: "Missão de Licença de Herói, com tarefas neste mundo."
+    }
   ],
 };

@@ -37,6 +37,12 @@ export const world1Data = {
       maxBoost: '10% Star Luck',
       unlockCost: '500',
     },
+     {
+      name: 'Hero License Quest',
+      type: 'progression',
+      statType: 'mixed',
+      description: "Missão de Licença de Herói, com tarefas neste mundo."
+    }
   ],
   accessories: [
       { id: 'imp-tail', name: 'Imp Tail', world: 'Mundo 1', boss: 'Halloween Raid', rarity: 'Evento', coins_bonus: '0.2', energy_bonus: '0.2x', damage_bonus: '0.2x' }
