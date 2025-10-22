@@ -94,7 +94,10 @@ function getItemsForCategory(categoryId) {
                 if (article.tables) {
                     Object.values(article.tables).forEach(table => {
                         table.rows.forEach(row => {
-                           if(row.name && row.type) items.push({ name: row.name, id: row.name.toLowerCase().replace(/ /g, '-'), type: row.type });
+                           if(row.name && row.type) {
+                               const baseName = row.name.split(' (')[0];
+                               items.push({ name: baseName, id: baseName.toLowerCase().replace(/ /g, '-'), type: row.type });
+                           }
                         });
                     });
                 }
@@ -157,7 +160,7 @@ function getItemDetails(categoryId, itemId) {
             for (const article of swordArticles) {
                 if (article.tables) {
                     for (const table of Object.values(article.tables)) {
-                        const foundRow = table.rows.find(row => row.name.toLowerCase().replace(/ /g, '-') === itemId);
+                        const foundRow = table.rows.find(row => row.name.toLowerCase().replace(/ \(.+\)/, '').replace(/ /g, '-') === itemId);
                         if (foundRow) {
                              itemData = { ...foundRow };
                              articleSource = article;
@@ -267,7 +270,8 @@ async function handleEquipAction(interaction, categoryId) {
 }
 
 async function handleSelectItemAction(interaction, categoryId, itemId) {
-    const levels = getItemDetails(categoryId, itemId);
+    const selectedItemId = interaction.values[0];
+    const levels = getItemDetails(categoryId, selectedItemId);
 
     if (levels.length === 0) {
         // Se não há níveis (ex: item de progressão ou sem variações), equipa direto
@@ -275,14 +279,14 @@ async function handleSelectItemAction(interaction, categoryId, itemId) {
         const userRef = doc(firestore, 'users', interaction.user.id);
         
         await updateDoc(userRef, {
-            [`equipped.${categoryId}.${itemId.replace(/-/g, '_')}`]: { id: itemId, equippedAt: new Date() }
-        });
+            [`equipped.${categoryId}.${selectedItemId.replace(/-/g, '_')}`]: { id: selectedItemId, equippedAt: new Date() }
+        }, { merge: true });
 
-        return interaction.update({ content: `Item \`${itemId}\` equipado com sucesso!`, components: [] });
+        return interaction.update({ content: `Item \`${selectedItemId}\` equipado com sucesso!`, components: [] });
     }
     
     const selectMenu = new StringSelectMenuBuilder()
-        .setCustomId(`gerenciar_${categoryId}_selectlevel_${itemId}`)
+        .setCustomId(`gerenciar_${categoryId}_selectlevel_${selectedItemId}`)
         .setPlaceholder('Selecione o nível/raridade')
         .addOptions(
             levels.slice(0, 25).map(level => ({
@@ -313,7 +317,7 @@ async function handleSelectLevelAction(interaction, categoryId, itemId, levelId)
             level: selectedLevelId,
             equippedAt: new Date()
         }
-     });
+     }, { merge: true });
 
     await interaction.update({ content: `Item \`${itemId}\` (${selectedLevelId}) equipado com sucesso!`, components: [] });
 }
@@ -470,7 +474,7 @@ function findWeaponType(weaponId) {
     const allArticles = allWikiArticles.filter(a => a.id.includes('swords') || a.id.includes('scythes'));
     for (const article of allArticles) {
         for (const table of Object.values(article.tables || {})) {
-            const foundWeapon = table.rows.find(row => row.name.toLowerCase().replace(/ /g, '-') === weaponId);
+            const foundWeapon = table.rows.find(row => row.name.toLowerCase().replace(/ \(.+\)/, '').replace(/ /g, '-') === weaponId);
             if (foundWeapon) {
                 return foundWeapon.type; // 'damage', 'energy', or 'scythe'
             }
@@ -574,7 +578,7 @@ async function handleSetStarLevel(interaction, weaponId, starLevel) {
     const weaponPath = `equipped.armas.${weaponId.replace(/-/g, '_')}.evolutionLevel`;
     
     try {
-        await updateDoc(userRef, { [weaponPath]: parseInt(selectedStarLevel, 10) });
+        await updateDoc(userRef, { [weaponPath]: parseInt(selectedStarLevel, 10) }, { merge: true });
         await interaction.update({ content: `Arma \`${weaponId.replace(/-/g, ' ')}\` envolvida para ${selectedStarLevel} estrela(s) com sucesso!`, components: [] });
     } catch (error) {
         console.error("Erro ao atualizar o nível da estrela:", error);
@@ -603,7 +607,7 @@ async function handleSetEnchantment(interaction, weaponId, enchantType, enchantI
     const weaponPath = `equipped.armas.${weaponId.replace(/-/g, '_')}.${fieldToUpdate}`;
 
     try {
-        await updateDoc(userRef, { [weaponPath]: selectedEnchantId });
+        await updateDoc(userRef, { [weaponPath]: selectedEnchantId }, { merge: true });
         await interaction.update({ content: `Encantamento \`${enchantName}\` aplicado à arma \`${weaponId.replace(/-/g, ' ')}\` com sucesso!`, components: [] });
     } catch (error) {
         console.error("Erro ao definir encantamento:", error);

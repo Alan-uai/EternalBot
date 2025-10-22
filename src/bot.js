@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import http from 'node:http';
 import { fileURLToPath } from 'node:url';
-import { Client, Collection, Events, GatewayIntentBits, REST, Routes, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, StringSelectMenuBuilder } from 'discord.js';
+import { Client, Collection, Events, GatewayIntentBits, REST, Routes, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { initializeFirebase } from './firebase/index.js';
 import { loadKnowledgeBase } from './knowledge-base.js';
 import { doc, getDoc, setDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
@@ -27,8 +27,7 @@ const client = new Client({
 });
 
 // Carregar a base de conhecimento (artigos da wiki)
-const wikiContext = loadKnowledgeBase();
-client.wikiContext = wikiContext;
+client.wikiContext = loadKnowledgeBase();
 
 // Carregar comandos e manipuladores de interação
 client.commands = new Collection();
@@ -402,155 +401,30 @@ client.on(Events.InteractionCreate, async (interaction) => {
             const [_, action, ...idParts] = customIdParts;
             const id = idParts.join('_');
             
-            if (action !== 'approve' && action !== 'reject') {
-                await interaction.deferUpdate();
+            if (action !== 'approve' && action !== 'reject' && action !== 'regenerate_modal') {
+                // Apenas defer se não for abrir um modal ou se a resposta for demorar
+                if(action !== 'fixed') {
+                     await interaction.deferUpdate();
+                }
             }
 
             if (action === 'fixed') {
-                const helpMessageId = id;
-                const curationMessage = interaction.message;
-                const curationMessageId = curationMessage.id;
-                const helpChannel = await client.channels.fetch(COMMUNITY_HELP_CHANNEL_ID);
-
-                // Recupera as respostas aprovadas antes de limpar
-                const suggestedAnswers = client.interactions.get(`suggested_answers_${curationMessageId}`) || [];
-                const approvedAnswers = suggestedAnswers.filter(a => a.approved);
-
-                if (approvedAnswers.length > 0) {
-                     await interaction.followUp({ content: 'Compilando respostas aprovadas para atualizar a base de conhecimento...', ephemeral: true });
-                     const originalQuestion = curationMessage.embeds[0].description.split('```')[1];
-                     
-                     try {
-                        console.log(`Chamando a IA para processar ${approvedAnswers.length} respostas aprovadas.`);
-                        const knowledgeUpdate = await updateKnowledgeBase({
-                            question: originalQuestion,
-                            approvedAnswers: approvedAnswers.map(a => a.content),
-                            currentKnowledgeBase: client.wikiContext,
-                        });
-                        console.log("IA gerou a seguinte atualização:", knowledgeUpdate);
-                        // Ação futura: Salvar o `knowledgeUpdate.fileContent` em `knowledgeUpdate.filePath`
-                        await interaction.followUp({ content: `A IA processou as respostas!\n**Ação Sugerida:** Salvar conteúdo no arquivo \`${knowledgeUpdate.filePath}\`.`, ephemeral: true });
-
-                     } catch (e) {
-                         console.error("Erro ao chamar o fluxo de updateKnowledgeBase:", e);
-                         await interaction.followUp({ content: 'Ocorreu um erro ao tentar ensinar a IA.', ephemeral: true });
-                     }
-
-                }
-                
-                try {
-                    const helpMessage = await helpChannel.messages.fetch(helpMessageId);
-                    await helpMessage.delete().catch(err => console.error("Falha ao deletar msg de ajuda:", err));
-                } catch(error) {
-                    console.error("Não foi possível encontrar/deletar a mensagem no canal de ajuda:", error.message);
-                }
-
-                await interaction.followUp({ content: 'Ação registrada. A mensagem de curadoria será excluída em 5 segundos.', ephemeral: true });
-                setTimeout(async () => {
-                    await curationMessage.delete().catch(err => console.error("Falha ao deletar msg de curadoria:", err));
-                }, 5000);
-
-                 // Limpar dados da memória
-                client.interactions.delete(`curation_id_for_help_${helpMessageId}`);
-                client.interactions.delete(`suggested_answers_${curationMessageId}`);
-
-
+                await handleCurationFixed(interaction, id);
             } else if (action === 'approve') {
-                await interaction.deferUpdate();
-                const [curationMessageId, answerIndexStr] = id.split('-');
-                const answerIndex = parseInt(answerIndexStr, 10);
-                let suggestedAnswers = client.interactions.get(`suggested_answers_${curationMessageId}`) || [];
-                
-                if (suggestedAnswers[answerIndex]) {
-                    suggestedAnswers[answerIndex].approved = true;
-                    client.interactions.set(`suggested_answers_${curationMessageId}`, suggestedAnswers);
-
-                    await interaction.followUp({ content: `Resposta de ${suggestedAnswers[answerIndex].user} marcada como aprovada.`, ephemeral: true });
-                    
-                    // Desabilitar botões para esta resposta específica para evitar múltiplas ações
-                    const originalMessage = interaction.message;
-                    const disabledRows = [];
-                    originalMessage.components.forEach(row => {
-                        const newRow = new ActionRowBuilder();
-                        row.components.forEach(component => {
-                           if (component.customId === interaction.customId) {
-                                newRow.addComponents(ButtonBuilder.from(component).setDisabled(true).setLabel('✅ Aprovada'));
-                            } else if (component.customId.startsWith('curate_reject') && component.customId.endsWith(id)) {
-                                newRow.addComponents(ButtonBuilder.from(component).setDisabled(true));
-                            } else {
-                                newRow.addComponents(component.isStringSelectMenu() ? StringSelectMenuBuilder.from(component) : ButtonBuilder.from(component));
-                            }
-                        });
-                        disabledRows.push(newRow);
-                    });
-                    
-                    const originalEmbed = interaction.message.embeds[0];
-                    const footerText = originalEmbed.footer.text;
-                    const approvedCount = suggestedAnswers.filter(a => a.approved).length;
-                    const updatedEmbed = EmbedBuilder.from(originalEmbed)
-                        .setColor(0x00FF00) // Verde para indicar aprovação
-                        .setFooter({ text: `${footerText.split(' | ')[0]} | ${approvedCount} resposta(s) aprovada(s).`});
-
-                    await originalMessage.edit({ embeds: [updatedEmbed], components: disabledRows });
-                }
-
+                await handleCurationApprove(interaction, id);
             } else if (action === 'reject') {
-                 await interaction.deferUpdate();
-                 const [curationMessageId, answerIndex] = id.split('-');
-                 const suggestedAnswers = client.interactions.get(`suggested_answers_${curationMessageId}`) || [];
-                 const selectedAnswer = suggestedAnswers[parseInt(answerIndex, 10)];
-
-                 await interaction.followUp({ content: `Resposta de ${selectedAnswer.user} rejeitada. Nenhuma ação será tomada.`, ephemeral: true });
-                 
-                 const originalMessage = interaction.message;
-                 const disabledRows = [];
-                 originalMessage.components.forEach(row => {
-                    const newRow = new ActionRowBuilder();
-                    row.components.forEach(component => {
-                        if (component.customId === interaction.customId) {
-                             newRow.addComponents(ButtonBuilder.from(component).setDisabled(true).setLabel('❌ Rejeitada'));
-                        } else if (component.customId.startsWith('curate_approve') && component.customId.endsWith(id)) {
-                             newRow.addComponents(ButtonBuilder.from(component).setDisabled(true));
-                        } else {
-                            newRow.addComponents(component.isStringSelectMenu() ? StringSelectMenuBuilder.from(component) : ButtonBuilder.from(component));
-                        }
-                    });
-                    disabledRows.push(newRow);
-                });
-                await originalMessage.edit({ components: disabledRows });
-
+                await handleCurationReject(interaction, id);
+            } else if (action === 'regenerate_modal') {
+                await handleCurationRegenerateModal(interaction, id);
+            } else if (action === 'regenerate_submit') {
+                await handleCurationRegenerateSubmit(interaction, id);
             } else if (action === 'select' && interaction.isStringSelectMenu()) {
-                 const curationMessageId = id;
-                 const selectedAnswerIndex = parseInt(interaction.values[0].split('_')[1], 10);
-                 const suggestedAnswers = client.interactions.get(`suggested_answers_${curationMessageId}`) || [];
-                 const selectedAnswer = suggestedAnswers[selectedAnswerIndex];
-
-                 if (selectedAnswer) {
-                     const originalEmbed = interaction.message.embeds[0];
-                     const updatedEmbed = EmbedBuilder.from(originalEmbed)
-                        .setFields(
-                             { name: 'Usuário Original', value: originalEmbed.description.match(/<@\d+>/)[0], inline: true },
-                             { name: 'Pergunta Original', value: `\`\`\`${originalEmbed.description.split('```')[1]}\`\`\``, inline: false },
-                             { name: `Resposta Sugerida por: ${selectedAnswer.user}`, value: selectedAnswer.content.substring(0, 1024), inline: false }
-                         );
-
-                    const modActionsRow = new ActionRowBuilder()
-                        .addComponents(
-                            new ButtonBuilder().setCustomId(`curate_approve_${curationMessageId}-${selectedAnswerIndex}`).setLabel('✅ Aprovar').setStyle(ButtonStyle.Success),
-                            new ButtonBuilder().setCustomId(`curate_reject_${curationMessageId}-${selectedAnswerIndex}`).setLabel('❌ Rejeitar').setStyle(ButtonStyle.Danger)
-                        );
-                    
-                    // Manter o menu de seleção e o botão 'Corrigido'
-                    const menuRow = interaction.message.components[0];
-                    const fixedButtonRow = interaction.message.components.find(c => c.components[0]?.customId?.startsWith('curate_fixed'));
-
-                    const newComponents = [menuRow, modActionsRow];
-                    if (fixedButtonRow) {
-                        newComponents.push(fixedButtonRow);
-                    }
-
-                    await interaction.message.edit({ embeds: [updatedEmbed], components: newComponents });
-                 }
+                await handleCurationSelectAnswer(interaction, id);
+            } else if (action === 'final_approve') {
+                await handleFinalApprove(interaction, id);
+            } else if (action === 'final_reject') {
+                await interaction.message.delete().catch(console.error);
+                await interaction.reply({ content: 'Sugestão da IA rejeitada e removida.', ephemeral: true });
             }
         }
     }
@@ -705,6 +579,297 @@ async function handleModButton(interaction) {
     }
 }
 
+// Curation flow handlers
+async function handleCurationFixed(interaction, helpMessageId) {
+    await interaction.reply({ content: 'Ação registrada. Compilando respostas aprovadas para ensinar a IA...', ephemeral: true });
+    const curationMessage = interaction.message;
+    const curationMessageId = curationMessage.id;
+    
+    const suggestedAnswers = client.interactions.get(`suggested_answers_${curationMessageId}`) || [];
+    const approvedAnswers = suggestedAnswers.filter(a => a.approved);
+
+    if (approvedAnswers.length > 0) {
+         const originalQuestion = curationMessage.embeds[0].description.split('```')[1];
+         
+         await curationMessage.edit({
+            content: '🧠 Compilando respostas e ensinando a IA...',
+            embeds: [],
+            components: []
+         });
+         
+         try {
+            const knowledgeUpdate = await updateKnowledgeBase({
+                question: originalQuestion,
+                approvedAnswers: approvedAnswers.map(a => a.content),
+                currentKnowledgeBase: client.wikiContext,
+            });
+
+            // Store the AI suggestion for the final approval step
+            client.interactions.set(`ai_suggestion_${curationMessageId}`, knowledgeUpdate);
+
+            const finalEmbed = new EmbedBuilder()
+                .setColor(0x00BFFF) // DeepSkyBlue
+                .setTitle('🤖 Sugestão da IA para Atualização')
+                .setDescription(knowledgeUpdate.reasoning)
+                .addFields(
+                    { name: 'Arquivo a ser Modificado/Criado', value: `\`\`\`${knowledgeUpdate.filePath}\`\`\`` },
+                    { name: 'Conteúdo Sugerido (Trecho)', value: `\`\`\`javascript\n${knowledgeUpdate.fileContent.substring(0, 500)}...\`\`\``}
+                );
+            
+            const finalActions = new ActionRowBuilder()
+                .addComponents(
+                    new ButtonBuilder().setCustomId(`curate_final_approve_${curationMessageId}`).setLabel('Salvar na Wiki').setStyle(ButtonStyle.Success),
+                    new ButtonBuilder().setCustomId(`curate_final_reject_${curationMessageId}`).setLabel('Rejeitar').setStyle(ButtonStyle.Danger),
+                    new ButtonBuilder().setCustomId(`curate_regenerate_modal_${curationMessageId}`).setLabel('Gerar Novamente').setStyle(ButtonStyle.Primary)
+                );
+
+            await curationMessage.edit({ content: '', embeds: [finalEmbed], components: [finalActions] });
+            
+            // Do not delete the help message yet
+            
+         } catch (e) {
+             console.error("Erro ao chamar o fluxo de updateKnowledgeBase:", e);
+             await curationMessage.edit({ content: 'Ocorreu um erro ao tentar ensinar a IA. A mensagem será removida em 10s.', embeds: [], components: [] });
+              setTimeout(() => curationMessage.delete().catch(console.error), 10000);
+         }
+    } else {
+        // Se não houver respostas aprovadas, apenas limpa
+        const helpChannel = await client.channels.fetch('1426957344897761282');
+        try {
+            const helpMessage = await helpChannel.messages.fetch(helpMessageId);
+            await helpMessage.delete().catch(err => console.error("Falha ao deletar msg de ajuda:", err));
+        } catch(error) {
+            console.warn("Não foi possível encontrar/deletar a mensagem no canal de ajuda:", error.message);
+        }
+        await interaction.message.delete().catch(console.error);
+        await interaction.followUp({ content: 'Nenhuma resposta foi aprovada. As mensagens foram limpas.', ephemeral: true });
+    }
+     // Limpar dados da memória após o uso
+    // client.interactions.delete(`curation_id_for_help_${helpMessageId}`);
+    // client.interactions.delete(`suggested_answers_${curationMessageId}`);
+}
+
+async function handleCurationApprove(interaction, id) {
+    const [curationMessageId, answerIndexStr] = id.split('-');
+    const answerIndex = parseInt(answerIndexStr, 10);
+    let suggestedAnswers = client.interactions.get(`suggested_answers_${curationMessageId}`) || [];
+    
+    if (suggestedAnswers[answerIndex]) {
+        suggestedAnswers[answerIndex].approved = true;
+        client.interactions.set(`suggested_answers_${curationMessageId}`, suggestedAnswers);
+
+        await interaction.followUp({ content: `Resposta de ${suggestedAnswers[answerIndex].user} marcada como aprovada.`, ephemeral: true });
+        
+        // Atualiza a cor do embed para verde e o rodapé
+        const originalMessage = interaction.message;
+        const originalEmbed = originalMessage.embeds[0];
+        const approvedCount = suggestedAnswers.filter(a => a.approved).length;
+        const totalAnswers = suggestedAnswers.length;
+
+        const updatedEmbed = EmbedBuilder.from(originalEmbed)
+            .setColor(0x00FF00) // Verde para indicar aprovação
+            .setFooter({ text: `${totalAnswers} resposta(s) da comunidade | ${approvedCount} aprovada(s).`});
+        
+        // Desabilita os botões de ação para esta resposta específica
+        const newComponents = [];
+        originalMessage.components.forEach(row => {
+            const newRow = new ActionRowBuilder();
+            row.components.forEach(component => {
+                let newComponent = component;
+                 if (component.customId === interaction.customId || (component.customId.startsWith('curate_reject_') && component.customId.endsWith(id))) {
+                    newComponent = ButtonBuilder.from(component).setDisabled(true);
+                    if(component.customId === interaction.customId) {
+                       newComponent.setLabel('✅ Aprovada');
+                    }
+                }
+                newRow.addComponents(newComponent);
+            });
+            newComponents.push(newRow);
+        });
+
+        await originalMessage.edit({ embeds: [updatedEmbed], components: newComponents });
+    }
+}
+
+async function handleCurationReject(interaction, id) {
+     const [curationMessageId, answerIndex] = id.split('-');
+     const suggestedAnswers = client.interactions.get(`suggested_answers_${curationMessageId}`) || [];
+     const selectedAnswer = suggestedAnswers[parseInt(answerIndex, 10)];
+
+     await interaction.followUp({ content: `Resposta de ${selectedAnswer.user} rejeitada.`, ephemeral: true });
+     
+     // Desabilita os botões para evitar mais ações
+     const originalMessage = interaction.message;
+     const disabledRows = [];
+     originalMessage.components.forEach(row => {
+        const newRow = new ActionRowBuilder();
+        row.components.forEach(component => {
+            let newComponent = component;
+            if (component.customId === interaction.customId || (component.customId.startsWith('curate_approve_') && component.customId.endsWith(id))) {
+                 newComponent = ButtonBuilder.from(component).setDisabled(true);
+                 if(component.customId === interaction.customId) {
+                     newComponent.setLabel('❌ Rejeitada');
+                 }
+            }
+            newRow.addComponents(newComponent);
+        });
+        disabledRows.push(newRow);
+    });
+    await originalMessage.edit({ components: disabledRows });
+}
+
+async function handleCurationSelectAnswer(interaction, curationMessageId) {
+    const selectedAnswerIndex = parseInt(interaction.values[0].split('_')[1], 10);
+    const suggestedAnswers = client.interactions.get(`suggested_answers_${curationMessageId}`) || [];
+    const selectedAnswer = suggestedAnswers[selectedAnswerIndex];
+
+    if (selectedAnswer) {
+        const originalEmbed = interaction.message.embeds[0];
+        const fields = originalEmbed.fields.length > 0 ? originalEmbed.fields : [
+            { name: 'Usuário Original', value: originalEmbed.description.match(/<@\d+>/)[0], inline: true },
+            { name: 'Pergunta Original', value: `\`\`\`${originalEmbed.description.split('```')[1]}\`\`\``, inline: false },
+        ];
+        
+        const updatedEmbed = EmbedBuilder.from(originalEmbed)
+           .setFields(
+                ...fields,
+                { name: `Resposta Sugerida por: ${selectedAnswer.user}`, value: selectedAnswer.content.substring(0, 1024), inline: false }
+            );
+
+       const modActionsRow = new ActionRowBuilder()
+           .addComponents(
+               new ButtonBuilder().setCustomId(`curate_approve_${curationMessageId}-${selectedAnswerIndex}`).setLabel('✅ Aprovar').setStyle(ButtonStyle.Success),
+               new ButtonBuilder().setCustomId(`curate_reject_${curationMessageId}-${selectedAnswerIndex}`).setLabel('❌ Rejeitar').setStyle(ButtonStyle.Danger)
+           );
+       
+       // Manter o menu de seleção e o botão 'Corrigido'
+       const menuRow = interaction.message.components[0];
+       const fixedButtonRow = interaction.message.components.find(c => c.components[0]?.customId?.startsWith('curate_fixed'));
+
+       const newComponents = [menuRow, modActionsRow];
+       if (fixedButtonRow) {
+           newComponents.push(fixedButtonRow);
+       }
+
+       await interaction.message.edit({ embeds: [updatedEmbed], components: newComponents });
+    }
+}
+
+async function handleCurationRegenerateModal(interaction, curationMessageId) {
+    const modal = new ModalBuilder()
+        .setCustomId(`curate_regenerate_submit_${curationMessageId}`)
+        .setTitle('Instruções para a IA');
+    
+    const instructionsInput = new TextInputBuilder()
+        .setCustomId('moderator_instructions')
+        .setLabel('Instruções adicionais para a IA')
+        .setStyle(TextInputStyle.Paragraph)
+        .setPlaceholder('Ex: Crie um novo arquivo em src/data/wiki-articles/. O título deve ser "Guia de ...". Adicione a propriedade "dano" na tabela.')
+        .setRequired(true);
+        
+    modal.addComponents(new ActionRowBuilder().addComponents(instructionsInput));
+    await interaction.showModal(modal);
+}
+
+async function handleCurationRegenerateSubmit(interaction, curationMessageId) {
+    await interaction.deferUpdate();
+    const moderatorInstructions = interaction.fields.getTextInputValue('moderator_instructions');
+    const curationMessage = interaction.message;
+    
+    const suggestedAnswers = client.interactions.get(`suggested_answers_${curationMessageId}`) || [];
+    const approvedAnswers = suggestedAnswers.filter(a => a.approved);
+    
+    if (approvedAnswers.length === 0) {
+        await interaction.followUp({ content: 'Não há respostas aprovadas para usar como base para a regeneração.', ephemeral: true });
+        return;
+    }
+    
+    const originalQuestionEmbed = await findOriginalQuestionEmbed(curationMessage, curationMessageId);
+    if (!originalQuestionEmbed) {
+         await interaction.followUp({ content: 'Não foi possível encontrar a pergunta original.', ephemeral: true });
+         return;
+    }
+     const originalQuestion = originalQuestionEmbed.description.split('```')[1];
+
+    await curationMessage.edit({ content: '🧠 Regenerando sugestão com base nas novas instruções...', embeds: [], components: [] });
+    
+    try {
+        const knowledgeUpdate = await updateKnowledgeBase({
+            question: originalQuestion,
+            approvedAnswers: approvedAnswers.map(a => a.content),
+            currentKnowledgeBase: client.wikiContext,
+            moderatorInstructions: moderatorInstructions, // Passando as novas instruções
+        });
+
+        client.interactions.set(`ai_suggestion_${curationMessageId}`, knowledgeUpdate);
+
+        const finalEmbed = new EmbedBuilder()
+            .setColor(0x00BFFF)
+            .setTitle('🤖 Sugestão da IA para Atualização (Regenerada)')
+            .setDescription(knowledgeUpdate.reasoning)
+            .addFields(
+                { name: 'Arquivo a ser Modificado/Criado', value: `\`\`\`${knowledgeUpdate.filePath}\`\`\`` },
+                { name: 'Conteúdo Sugerido (Trecho)', value: `\`\`\`javascript\n${knowledgeUpdate.fileContent.substring(0, 500)}...\`\`\``}
+            );
+        
+        const finalActions = new ActionRowBuilder()
+            .addComponents(
+                new ButtonBuilder().setCustomId(`curate_final_approve_${curationMessageId}`).setLabel('Salvar na Wiki').setStyle(ButtonStyle.Success),
+                new ButtonBuilder().setCustomId(`curate_final_reject_${curationMessageId}`).setLabel('Rejeitar').setStyle(ButtonStyle.Danger),
+                new ButtonBuilder().setCustomId(`curate_regenerate_modal_${curationMessageId}`).setLabel('Gerar Novamente').setStyle(ButtonStyle.Primary)
+            );
+
+        await curationMessage.edit({ content: '', embeds: [finalEmbed], components: [finalActions] });
+    } catch (e) {
+        console.error("Erro ao regenerar a sugestão da IA:", e);
+        await curationMessage.edit({ content: 'Ocorreu um erro ao regenerar a sugestão. A mensagem será removida em 10s.', embeds: [], components: [] });
+        setTimeout(() => curationMessage.delete().catch(console.error), 10000);
+    }
+}
+
+async function handleFinalApprove(interaction, curationMessageId) {
+    const suggestion = client.interactions.get(`ai_suggestion_${curationMessageId}`);
+    if (suggestion) {
+        // Ação de salvar o arquivo (simulação)
+        console.log(`--- APROVADO ---`);
+        console.log(`Salvando arquivo em: ${suggestion.filePath}`);
+        // fs.writeFileSync(path.join(__dirname, '..', suggestion.filePath), suggestion.fileContent); // Lógica real de salvamento
+        console.log(`Arquivo salvo com sucesso.`);
+        console.log(`----------------`);
+        
+        await interaction.message.edit({
+            content: `✅ Ação aprovada! O arquivo \`${suggestion.filePath}\` foi salvo na base de conhecimento.`,
+            embeds: [],
+            components: []
+        });
+
+        // Limpa as mensagens após 10 segundos
+        setTimeout(() => interaction.message.delete().catch(console.error), 10000);
+
+        const helpMessageId = Array.from(client.interactions.keys()).find(key => client.interactions.get(key) === curationMessageId)?.split('_').pop();
+        if(helpMessageId) {
+            const helpChannel = await client.channels.fetch('1426957344897761282');
+            helpChannel.messages.delete(helpMessageId).catch(console.error);
+        }
+
+    } else {
+         await interaction.reply({ content: 'Erro: Não foi possível encontrar a sugestão da IA para aprovar.', ephemeral: true });
+    }
+     // Limpeza final
+    client.interactions.delete(`ai_suggestion_${curationMessageId}`);
+    client.interactions.delete(`suggested_answers_${curationMessageId}`);
+}
+
+async function findOriginalQuestionEmbed(curationMessage, curationMessageId) {
+     if (curationMessage.embeds[0] && curationMessage.embeds[0].title === '❓ Pergunta Sem Resposta') {
+        return curationMessage.embeds[0];
+    }
+    // Fallback se o embed foi editado - precisamos buscar a mensagem original
+    const modChannel = await client.channels.fetch('1426968477482225716');
+    const originalCurationMessage = await modChannel.messages.fetch(curationMessageId);
+    return originalCurationMessage.embeds[0];
+}
+
 
 const ALL_RAIDS_ROLE_ID = '1429360300594958397';
 const RAID_NOTIFICATION_ROLES = [
@@ -783,4 +948,3 @@ http.createServer((req, res) => {
 }).listen(port, () => {
   console.log(`Servidor web ouvindo na porta ${port}`);
 });
-

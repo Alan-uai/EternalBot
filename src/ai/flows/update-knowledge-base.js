@@ -6,6 +6,7 @@ const UpdateKnowledgeBaseInputSchema = z.object({
   question: z.string().describe('A pergunta original feita pelo usuário que a IA não conseguiu responder.'),
   approvedAnswers: z.array(z.string()).describe('Uma lista de respostas fornecidas pela comunidade que foram aprovadas por um moderador.'),
   currentKnowledgeBase: z.string().describe('O conteúdo completo de todos os arquivos da wiki atual, para ser usado como contexto sobre a estrutura e os dados existentes.'),
+  moderatorInstructions: z.string().optional().describe('Instruções adicionais do moderador para guiar a criação ou atualização do conteúdo.'),
 });
 
 const UpdateKnowledgeBaseOutputSchema = z.object({
@@ -21,7 +22,7 @@ export async function updateKnowledgeBase(input) {
 const prompt = ai.definePrompt({
   name: 'updateKnowledgeBasePrompt',
   input: { schema: UpdateKnowledgeBaseInputSchema },
-  output: { schema: UpdateKnowledgebAseOutputSchema },
+  output: { schema: UpdateKnowledgeBaseOutputSchema },
   prompt: `Você é um desenvolvedor especialista em JavaScript e um arquiteto de dados para o bot "Gui" do jogo Anime Eternal. Sua tarefa é analisar uma pergunta não respondida e as respostas aprovadas pela comunidade para atualizar a base de conhecimento do bot.
 
 **OBJETIVO PRINCIPAL:**
@@ -58,7 +59,9 @@ Sintetizar as informações da comunidade em um novo artigo da wiki ou atualizar
         *   Crie um \`id\`, \`title\`, \`summary\`, e \`tags\` apropriados.
         *   Estruture as informações da comunidade no formato correto (texto, tabelas, listas de objetos, etc.).
 
-3.  **Gerar o Código JavaScript (\`fileContent\`):**
+3.  **SE HOUVER INSTRUÇÕES DO MODERADOR, SIGA-AS ESTRITAMENTE.** Elas têm prioridade sobre sua análise automática. Use-as para corrigir o caminho do arquivo, adicionar campos específicos ou alterar a estrutura.
+
+4.  **Gerar o Código JavaScript (\`fileContent\`):**
     *   Escreva o código JavaScript completo para o arquivo.
     *   Siga TODAS as convenções de estilo e formatação dos arquivos existentes. Use indentação correta, vírgulas, etc.
     *   O código gerado deve ser imediatamente executável e sem erros de sintaxe.
@@ -89,6 +92,11 @@ Sintetizar as informações da comunidade em um novo artigo da wiki ou atualizar
 - {{{this}}}
 {{/each}}
 
+{{#if moderatorInstructions}}
+**Instruções do Moderador (Prioridade Máxima):**
+{{{moderatorInstructions}}}
+{{/if}}
+
 Gere o objeto JSON com \`filePath\`, \`fileContent\`, e \`reasoning\` para atualizar a base de conhecimento.`,
 });
 
@@ -118,4 +126,3 @@ const updateKnowledgeBaseFlow = ai.defineFlow(
     }
   }
 );
-
