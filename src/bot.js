@@ -169,14 +169,11 @@ client.on(Events.MessageCreate, async (message) => {
     const MOD_CURATION_CHANNEL_ID = '1426968477482225716';
     const COMMUNITY_HELP_CHANNEL_ID = '1426957344897761282';
 
-    if (message.author.bot || !message.mentions.has(client.user.id) || message.mentions.everyone) {
-        return;
-    }
-    
-    // Verificação de canal movida para cá para permitir outros fluxos
-    if (message.channel.id !== CHAT_CHANNEL_ID) {
-        // Se a mensagem for um reply a uma pergunta do Gui no canal de ajuda
-        if (message.channel.id === COMMUNITY_HELP_CHANNEL_ID && message.reference) {
+    if (message.author.bot) return;
+
+    // Se a mensagem for um reply a uma pergunta do Gui no canal de ajuda
+    if (message.channel.id === COMMUNITY_HELP_CHANNEL_ID && message.reference) {
+        try {
             const repliedToMessage = await message.channel.messages.fetch(message.reference.messageId);
             const originalQuestionMessageId = client.interactions.get(`original_question_id_${repliedToMessage.id}`);
             
@@ -193,16 +190,24 @@ client.on(Events.MessageCreate, async (message) => {
                     // Re-enable buttons for mod action
                     const modActionsRow = new ActionRowBuilder()
                         .addComponents(
-                            new ButtonBuilder().setCustomId(`curate_approve_${message.id}`).setLabel('✅ Aprovar').setStyle(ButtonStyle.Success),
-                            new ButtonBuilder().setCustomId(`curate_reject_${message.id}`).setLabel('❌ Rejeitar').setStyle(ButtonStyle.Danger)
+                            new ButtonBuilder().setCustomId(`curate_approve_${questionMessageInModChannel.id}`).setLabel('✅ Aprovar').setStyle(ButtonStyle.Success),
+                            new ButtonBuilder().setCustomId(`curate_reject_${questionMessageInModChannel.id}`).setLabel('❌ Rejeitar').setStyle(ButtonStyle.Danger)
                         );
                     
                     await questionMessageInModChannel.edit({ embeds: [updatedEmbed], components: [modActionsRow] });
                     client.interactions.set(`suggested_answer_${originalQuestionMessageId}`, message.content);
+                    await message.react('👍'); // React to the helpful message
                 }
             }
+        } catch (error) {
+            console.error("Erro ao processar resposta da comunidade:", error);
         }
-        return; // Ignora outras mensagens fora do canal de chat principal
+        return; 
+    }
+    
+    // Continuar apenas se for no canal de chat e mencionar o bot
+    if (message.channel.id !== CHAT_CHANNEL_ID || !message.mentions.has(client.user.id) || message.mentions.everyone) {
+        return;
     }
 
 
@@ -266,7 +271,7 @@ client.on(Events.MessageCreate, async (message) => {
                 unansweredQuestionEmbed.setImage(imageAttachment.url);
             }
 
-            // Enviar para o canal de curadoria dos moderadores
+            // Enviar para o canal de curadoria dos moderadores (sem botões ainda)
             const modChannel = await client.channels.fetch(MOD_CURATION_CHANNEL_ID);
             const curationMessage = await modChannel.send({
                 embeds: [unansweredQuestionEmbed]
@@ -364,13 +369,12 @@ client.on(Events.InteractionCreate, async (interaction) => {
         } else if (interaction.isButton() && interaction.customId.startsWith('mod_')) {
              await handleModButton(interaction);
         } else if (interaction.isButton() && interaction.customId.startsWith('curate_')) {
-            // Lógica para curadoria de respostas (a ser implementada)
-            const [_, action, originalMessageId] = customIdParts;
+            const [_, action, originalCurationMessageId] = customIdParts;
             await interaction.deferUpdate();
             if (action === 'approve') {
-                const suggestedAnswer = client.interactions.get(`suggested_answer_${interaction.message.id}`);
+                const suggestedAnswer = client.interactions.get(`suggested_answer_${originalCurationMessageId}`);
                 // TODO: Adicionar lógica para analisar a resposta e atualizar/criar artigo na wiki
-                await interaction.followUp({ content: `Resposta aprovada. Lógica de atualização da wiki a ser implementada. Resposta: "${suggestedAnswer}"`, ephemeral: true });
+                await interaction.followUp({ content: `Resposta aprovada. A IA irá agora analisar o conteúdo para adicionar à base de conhecimento. Resposta: "${suggestedAnswer}"`, ephemeral: true });
                 const originalMessage = interaction.message;
                 const disabledRow = new ActionRowBuilder();
                 originalMessage.components[0].components.forEach(component => {
@@ -378,7 +382,13 @@ client.on(Events.InteractionCreate, async (interaction) => {
                 });
                 await originalMessage.edit({ components: [disabledRow] });
             } else {
-                 await interaction.followUp({ content: 'Resposta rejeitada.', ephemeral: true });
+                 await interaction.followUp({ content: 'Resposta rejeitada. Nenhuma ação será tomada.', ephemeral: true });
+                 const originalMessage = interaction.message;
+                 const disabledRow = new ActionRowBuilder();
+                 originalMessage.components[0].components.forEach(component => {
+                    disabledRow.addComponents(ButtonBuilder.from(component).setDisabled(true));
+                });
+                await originalMessage.edit({ components: [disabledRow] });
             }
         }
     }
@@ -611,3 +621,5 @@ http.createServer((req, res) => {
 }).listen(port, () => {
   console.log(`Servidor web ouvindo na porta ${port}`);
 });
+
+    
