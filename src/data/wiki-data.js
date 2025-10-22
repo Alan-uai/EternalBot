@@ -39,6 +39,7 @@ import { idealRankPerWorldArticle } from './wiki-articles/ideal-rank-per-world.j
 import { jewelryCraftingArticle } from './wiki-articles/jewelry-crafting.js';
 import { legendaryWeaponsArticle } from './wiki-articles/legendary-weapons.js';
 import { levelExpArticle } from './wiki-articles/level-exp.js';
+import { limitedPacksGuideArticle } from './wiki-articles/limited-packs-guide.js';
 import { lobbyDungeonsArticle } from './wiki-articles/lobby-dungeons.js';
 import { prestigeArticle } from './wiki-articles/prestige-system.js';
 import { raidRequirementsArticle } from './wiki-articles/raid-requirements.js';
@@ -114,6 +115,7 @@ export const allWikiArticles = [
     halloweenEventGuideArticle,
     championsIndexArticle,
     shadowsGuideArticle,
+    limitedPacksGuideArticle,
 ];
 
     
