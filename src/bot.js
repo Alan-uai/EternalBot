@@ -230,7 +230,6 @@ client.on(Events.MessageCreate, async (message) => {
         return;
     }
 
-
     const question = message.content.replace(/<@!?(\d+)>/g, '').trim();
     const imageAttachment = message.attachments.find(att => att.contentType?.startsWith('image/'));
 
@@ -276,53 +275,21 @@ client.on(Events.MessageCreate, async (message) => {
             history: history.length > 0 ? history : undefined,
         });
         
-        const parsedResponse = result.structuredResponse;
-        const firstSection = parsedResponse[0];
+        // Verifica se a resposta é nula ou se não tem o formato esperado
+        if (!result || !result.structuredResponse || result.structuredResponse.length === 0) {
+            throw new Error("Resposta da IA inválida ou vazia.");
+        }
 
-        // Se a IA não encontrou uma resposta
+        const firstSection = result.structuredResponse[0];
+
+        // Se a IA não encontrou uma resposta, inicia o fluxo de curadoria
         if (firstSection.titulo === 'Resposta não encontrada') {
-            const unansweredQuestionEmbed = new EmbedBuilder()
-                .setColor(0xFF0000)
-                .setTitle('❓ Pergunta Sem Resposta')
-                .setDescription(`**Usuário:** <@${message.author.id}>\n**Pergunta:**\n\`\`\`${question}\`\`\``)
-                .setTimestamp();
-            
-            if (imageAttachment) {
-                unansweredQuestionEmbed.setImage(imageAttachment.url);
-            }
-             
-            // Enviar para o canal de ajuda da comunidade
-            const helpChannel = await client.channels.fetch(COMMUNITY_HELP_CHANNEL_ID);
-            const helpMessage = await helpChannel.send({
-                content: `Alguém consegue responder a esta pergunta de <@${message.author.id}>?\n> ${question}`,
-                files: imageAttachment ? [imageAttachment.url] : []
-            });
-
-            // Enviar para o canal de curadoria dos moderadores
-            const modChannel = await client.channels.fetch(MOD_CURATION_CHANNEL_ID);
-             const curationActions = new ActionRowBuilder()
-                .addComponents(
-                    new ButtonBuilder()
-                        .setCustomId(`curate_fixed_${helpMessage.id}`) // Link com o ID da mensagem de ajuda
-                        .setLabel('Corrigido')
-                        .setStyle(ButtonStyle.Secondary)
-                );
-            const curationMessage = await modChannel.send({
-                embeds: [unansweredQuestionEmbed],
-                components: [curationActions]
-            });
-
-            // Linkar as mensagens para futuras interações
-            client.interactions.set(`curation_id_for_help_${helpMessage.id}`, curationMessage.id);
-
-            // Responder ao usuário
-            await message.reply(firstSection.conteudo);
-
+            await handleUnansweredQuestion(message, question, imageAttachment);
         } else { // Se a IA encontrou uma resposta
             let replyContent = '';
             let attachments = [];
 
-            for (const section of parsedResponse) {
+            for (const section of result.structuredResponse) {
                 replyContent += `**${section.titulo}**\n${section.conteudo}\n\n`;
                 if (section.table) {
                     try {
@@ -353,10 +320,54 @@ client.on(Events.MessageCreate, async (message) => {
             client.interactions.set(`replyMessageId_${message.id}`, replyMessage.id);
         }
     } catch (error) {
-        console.error('Erro ao chamar o fluxo generateSolution via menção:', error);
-        await message.reply('Ocorreu um erro ao processar sua pergunta. A equipe já foi notificada.');
+        console.error('Erro no fluxo de menção (generateSolution):', error);
+        // Em caso de erro, também aciona o fluxo de pergunta não respondida
+        await handleUnansweredQuestion(message, question, imageAttachment);
     }
 });
+
+async function handleUnansweredQuestion(message, question, imageAttachment) {
+    const MOD_CURATION_CHANNEL_ID = '1426968477482225716';
+    const COMMUNITY_HELP_CHANNEL_ID = '1426957344897761282';
+
+    const unansweredQuestionEmbed = new EmbedBuilder()
+        .setColor(0xFF0000)
+        .setTitle('❓ Pergunta Sem Resposta')
+        .setDescription(`**Usuário:** <@${message.author.id}>\n**Pergunta:**\n\`\`\`${question}\`\`\``)
+        .setTimestamp();
+    
+    if (imageAttachment) {
+        unansweredQuestionEmbed.setImage(imageAttachment.url);
+    }
+     
+    // Enviar para o canal de ajuda da comunidade
+    const helpChannel = await client.channels.fetch(COMMUNITY_HELP_CHANNEL_ID);
+    const helpMessage = await helpChannel.send({
+        content: `Alguém consegue responder a esta pergunta de <@${message.author.id}>?\n> ${question}`,
+        files: imageAttachment ? [new AttachmentBuilder(imageAttachment.url)] : []
+    });
+
+    // Enviar para o canal de curadoria dos moderadores
+    const modChannel = await client.channels.fetch(MOD_CURATION_CHANNEL_ID);
+     const curationActions = new ActionRowBuilder()
+        .addComponents(
+            new ButtonBuilder()
+                .setCustomId(`curate_fixed_${helpMessage.id}`) // Link com o ID da mensagem de ajuda
+                .setLabel('Corrigido')
+                .setStyle(ButtonStyle.Secondary)
+        );
+    const curationMessage = await modChannel.send({
+        embeds: [unansweredQuestionEmbed],
+        components: [curationActions]
+    });
+
+    // Linkar as mensagens para futuras interações
+    client.interactions.set(`curation_id_for_help_${helpMessage.id}`, curationMessage.id);
+
+    // Responder ao usuário
+    const fallbackContent = 'Desculpe, eu sou o Gui, e ainda não tenho a resposta para esta pergunta. Um especialista foi notificado para me ensinar.';
+    await message.reply(fallbackContent);
+}
 
 
 // Evento de interação para executar comandos e interações
@@ -413,8 +424,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
             const [_, action, ...idParts] = customIdParts;
             const id = idParts.join('_');
             
-            if (action !== 'approve' && action !== 'reject' && action !== 'regenerate_modal') {
-                // Apenas defer se não for abrir um modal ou se a resposta for demorar
+            if (action !== 'approve' && action !== 'reject' && action !== 'regenerate_modal' && action !== 'final_approve') {
                 if(action !== 'fixed') {
                      await interaction.deferUpdate();
                 }
@@ -848,6 +858,7 @@ async function handleCurationRegenerateSubmit(interaction, curationMessageId) {
 }
 
 async function handleFinalApprove(interaction, curationMessageId) {
+    await interaction.deferUpdate();
     const suggestion = client.interactions.get(`ai_suggestion_${curationMessageId}`);
     if (suggestion) {
         try {
@@ -892,7 +903,7 @@ async function handleFinalApprove(interaction, curationMessageId) {
         }
 
     } else {
-         await interaction.reply({ content: 'Erro: Não foi possível encontrar a sugestão da IA para aprovar.', ephemeral: true });
+         await interaction.followUp({ content: 'Erro: Não foi possível encontrar a sugestão da IA para aprovar.', ephemeral: true });
     }
      // Limpeza final dos dados em memória
     client.interactions.delete(`ai_suggestion_${curationMessageId}`);
@@ -1013,3 +1024,5 @@ http.createServer((req, res) => {
 }).listen(port, () => {
   console.log(`Servidor web ouvindo na porta ${port}`);
 });
+
+    

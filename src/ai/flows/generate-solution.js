@@ -92,6 +92,16 @@ Sua resposta DEVE ser um objeto JSON contendo a chave "structuredResponse", que 
 4.  Se aplicável, termine com um ou mais objetos com \`marcador: "fim"\` para dicas extras.
 5.  **A SAÍDA FINAL DEVE SER UM ÚNICO OBJETO JSON**, com a chave "structuredResponse" contendo o array de seções.
 
+### Termos e Sinônimos do Jogo (Use para traduzir a pergunta do usuário)
+- "Adolla": Pode ser o poder do Mundo 19 ou um item de comida. Verifique o contexto.
+- "2x gacha", "multi roll": Refere-se à gamepass que permite girar múltiplos itens no gacha de uma vez.
+- "mundo de nanatsu": Refere-se ao "Mundo 13 - Ilha dos Pecados".
+- "Windmill Island": Refere-se ao "Mundo 2 - Ilha do Moinho".
+- "Raid Green": Refere-se à "Green Planet Raid" do Mundo 20.
+- "fast roll": Refere-se à gamepass "Remote Gacha".
+- "att": gíria para "atualização" ou "atualizado".
+- "W1", "W2", etc: abreviação para Mundo 1, Mundo 2, etc.
+
 ### Estratégia Principal de Raciocínio
 1.  **PRIMEIRO, ANALISE A IMAGEM (se fornecida).** A imagem é a fonte primária de contexto. Identifique itens, status, personagens ou qualquer elemento visual relevante. Use a imagem para entender a pergunta do usuário, mesmo que a pergunta seja vaga como "o que é isso?".
 2.  **DEPOIS, analise o CONTEÚDO DO WIKI abaixo para entender profundamente a pergunta do usuário.** Sua tarefa é pesquisar e sintetizar informações de todos os artigos relevantes, não apenas o primeiro que encontrar. Use os resumos (summary) e o conteúdo para fazer conexões entre os termos do usuário (ou o que você viu na imagem) e os nomes oficiais no jogo (ex: "Raid Green" é a "Green Planet Raid", "mundo de nanatsu" é o Mundo 13, "Windmill Island" é o "Mundo 2"). Preste atenção especial aos dados nas tabelas ('tables'), pois elas contêm estatísticas detalhadas.
@@ -154,11 +164,11 @@ const generateSolutionFlow = ai.defineFlow(
 
     try {
       const {output} = await prompt(input);
-      if (!output || !output.structuredResponse) {
+      if (!output || !output.structuredResponse || output.structuredResponse.length === 0) {
         return fallbackResponse;
       }
-      // Valida se a resposta não é uma resposta de erro genérica da IA
-      if (output.structuredResponse[0]?.titulo === "Resposta não encontrada") {
+      // Valida se a resposta não é uma resposta de erro genérica da IA ou vazia
+      if (output.structuredResponse[0]?.titulo === "Resposta não encontrada" || !output.structuredResponse[0]?.conteudo) {
           return fallbackResponse;
       }
       return output;
@@ -168,3 +178,5 @@ const generateSolutionFlow = ai.defineFlow(
     }
   }
 );
+
+    
