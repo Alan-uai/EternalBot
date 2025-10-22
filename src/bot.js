@@ -580,7 +580,6 @@ async function handleModButton(interaction) {
 
 // Curation flow handlers
 async function handleCurationFixed(interaction, helpMessageId) {
-    await interaction.update({ content: 'Compilando respostas aprovadas para ensinar a IA...', embeds: [], components: [] });
     const curationMessage = interaction.message;
     const curationMessageId = curationMessage.id;
     
@@ -590,11 +589,11 @@ async function handleCurationFixed(interaction, helpMessageId) {
     if (approvedAnswers.length > 0) {
          const originalQuestionEmbed = await findOriginalQuestionEmbed(curationMessage, curationMessageId);
          if (!originalQuestionEmbed) {
-            return interaction.followUp({ content: 'Não foi possível encontrar a pergunta original para ensinar a IA.', ephemeral: true });
+            return interaction.reply({ content: 'Não foi possível encontrar a pergunta original para ensinar a IA.', ephemeral: true });
          }
          const originalQuestion = originalQuestionEmbed.description.split('```')[1];
          
-         await curationMessage.edit({
+         await interaction.update({
             content: '🧠 Compilando respostas e ensinando a IA...',
             embeds: [],
             components: []
@@ -644,7 +643,7 @@ async function handleCurationFixed(interaction, helpMessageId) {
             console.warn("Não foi possível encontrar/deletar a mensagem no canal de ajuda:", error.message);
         }
         await interaction.message.delete().catch(console.error);
-        await interaction.followUp({ content: 'Nenhuma resposta foi aprovada. As mensagens foram limpas.', ephemeral: true });
+        await interaction.reply({ content: 'Nenhuma resposta foi aprovada. As mensagens foram limpas.', ephemeral: true });
     }
 }
 
@@ -829,32 +828,51 @@ async function handleCurationRegenerateSubmit(interaction, curationMessageId) {
 async function handleFinalApprove(interaction, curationMessageId) {
     const suggestion = client.interactions.get(`ai_suggestion_${curationMessageId}`);
     if (suggestion) {
-        // Ação de salvar o arquivo (simulação)
-        console.log(`--- APROVADO ---`);
-        console.log(`Salvando arquivo em: ${suggestion.filePath}`);
-        // fs.writeFileSync(path.join(__dirname, '..', suggestion.filePath), suggestion.fileContent); // Lógica real de salvamento
-        console.log(`Arquivo salvo com sucesso.`);
-        console.log(`----------------`);
-        
-        await interaction.message.edit({
-            content: `✅ Ação aprovada! O arquivo \`${suggestion.filePath}\` foi salvo na base de conhecimento.`,
-            embeds: [],
-            components: []
-        });
+        try {
+            // Ação de salvar o arquivo (REAL)
+            const targetPath = path.resolve(__dirname, '..', suggestion.filePath);
+            
+            // Garante que o diretório exista
+            const dir = path.dirname(targetPath);
+            if (!fs.existsSync(dir)) {
+                fs.mkdirSync(dir, { recursive: true });
+            }
 
-        // Limpa as mensagens após 10 segundos
+            fs.writeFileSync(targetPath, suggestion.fileContent);
+            console.log(`[INFO] Arquivo salvo com sucesso em: ${targetPath}`);
+            
+            await interaction.message.edit({
+                content: `✅ Ação aprovada! O arquivo \`${suggestion.filePath}\` foi salvo na base de conhecimento.\n\n**Aviso:** O bot precisará ser reiniciado para carregar a nova informação.`,
+                embeds: [],
+                components: []
+            });
+
+        } catch (error) {
+            console.error(`[ERRO] Falha ao salvar arquivo em ${suggestion.filePath}:`, error);
+            await interaction.message.edit({
+                content: `❌ Ocorreu um erro ao salvar o arquivo. Verifique os logs.`,
+                embeds: [],
+                components: []
+            });
+             // Limpeza da mensagem de erro após 10 segundos
+            setTimeout(() => interaction.message.delete().catch(console.error), 10000);
+            return;
+        }
+
+        // Limpa a mensagem de curadoria após 10 segundos
         setTimeout(() => interaction.message.delete().catch(console.error), 10000);
 
+        // Limpa a mensagem do canal de ajuda imediatamente
         const helpMessageId = client.interactions.get(`help_message_id_for_curation_${curationMessageId}`);
         if(helpMessageId) {
             const helpChannel = await client.channels.fetch('1426957344897761282');
-            helpChannel.messages.delete(helpMessageId).catch(console.error);
+            helpChannel.messages.delete(helpMessageId).catch(err => console.warn(`Não foi possível deletar msg de ajuda ${helpMessageId}: ${err.message}`));
         }
 
     } else {
          await interaction.reply({ content: 'Erro: Não foi possível encontrar a sugestão da IA para aprovar.', ephemeral: true });
     }
-     // Limpeza final
+     // Limpeza final dos dados em memória
     client.interactions.delete(`ai_suggestion_${curationMessageId}`);
     client.interactions.delete(`suggested_answers_${curationMessageId}`);
     client.interactions.delete(`help_message_id_for_curation_${curationMessageId}`);
@@ -864,13 +882,14 @@ async function handleFinalReject(interaction, curationMessageId) {
     await interaction.message.delete().catch(console.error);
     await interaction.reply({ content: 'Sugestão da IA rejeitada e removida.', ephemeral: true });
 
+    // Limpa a mensagem do canal de ajuda imediatamente
     const helpMessageId = client.interactions.get(`help_message_id_for_curation_${curationMessageId}`);
     if (helpMessageId) {
         const helpChannel = await client.channels.fetch('1426957344897761282');
         helpChannel.messages.delete(helpMessageId).catch(err => console.warn(`Não foi possível deletar msg de ajuda ${helpMessageId}: ${err.message}`));
     }
     
-    // Limpeza final
+    // Limpeza final dos dados em memória
     client.interactions.delete(`ai_suggestion_${curationMessageId}`);
     client.interactions.delete(`suggested_answers_${curationMessageId}`);
     client.interactions.delete(`help_message_id_for_curation_${curationMessageId}`);
