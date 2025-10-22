@@ -1,7 +1,7 @@
 // src/commands/utility/updcodes.js
 import { SlashCommandBuilder, PermissionsBitField, EmbedBuilder } from 'discord.js';
 import { initializeFirebase } from '../../firebase/index.js';
-import { doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 const ADMIN_ROLE_ID = '1429318984716521483';
 const CODES_CHANNEL_ID = '1429346813919494214';
@@ -34,9 +34,9 @@ export async function execute(interaction) {
     const shouldRemove = interaction.options.getBoolean('remover') || false;
 
     // Trata códigos separados por espaço, vírgula, ou nova linha e remove itens vazios
-    const newCodes = codesInput.split(/[\s,]+/).filter(code => code.length > 0);
+    const codesToProcess = codesInput.split(/[\s,]+/).filter(code => code.length > 0);
 
-    if (newCodes.length === 0) {
+    if (codesToProcess.length === 0) {
         return interaction.editReply('Nenhum código válido foi fornecido.');
     }
 
@@ -57,23 +57,18 @@ export async function execute(interaction) {
 
         let updatedCodes;
         let replyMessage;
-        let embedTitle;
-
+        
         if (shouldRemove) {
-            updatedCodes = currentCodes.filter(code => !newCodes.includes(code));
-            await setDoc(codesRef, { codes: updatedCodes, messageId: docSnap.data()?.messageId || null });
-            replyMessage = `Códigos removidos com sucesso: \`${newCodes.join(', ')}\``;
-            embedTitle = 'Códigos Removidos';
+            updatedCodes = currentCodes.filter(code => !codesToProcess.includes(code));
+            replyMessage = `Códigos removidos com sucesso: \`${codesToProcess.join(', ')}\``;
         } else {
             // Evita adicionar códigos duplicados
-            const uniqueNewCodes = newCodes.filter(code => !currentCodes.includes(code));
+            const uniqueNewCodes = codesToProcess.filter(code => !currentCodes.includes(code));
             if (uniqueNewCodes.length === 0) {
                 return interaction.editReply('Todos os códigos fornecidos já existem na lista.');
             }
             updatedCodes = [...currentCodes, ...uniqueNewCodes];
-            await setDoc(codesRef, { codes: updatedCodes, messageId: docSnap.data()?.messageId || null }, { merge: true });
             replyMessage = `Códigos adicionados com sucesso: \`${uniqueNewCodes.join(', ')}\``;
-            embedTitle = 'Novos Códigos Adicionados!';
         }
 
         // Atualizar a mensagem no canal
@@ -82,7 +77,7 @@ export async function execute(interaction) {
         
         const embed = new EmbedBuilder()
             .setColor(0x3498DB)
-            .setTitle(shouldRemove ? 'Lista de Códigos Atualizada' : 'Novos Códigos Disponíveis!')
+            .setTitle(' Códigos Ativos do Jogo')
             .setDescription(formattedCodesList.length > 0 ? formattedCodesList : 'Nenhum código ativo no momento.')
             .setTimestamp()
             .setFooter({ text: 'Use /codes para ver esta lista a qualquer momento.' });
@@ -100,8 +95,11 @@ export async function execute(interaction) {
             newMessage = await codesChannel.send({ embeds: [embed] });
         }
         
-        // Salva o ID da nova/editada mensagem no Firestore
-        await setDoc(codesRef, { messageId: newMessage.id }, { merge: true });
+        // Salva o ID da nova/editada mensagem e os códigos no Firestore
+        await setDoc(codesRef, { 
+            codes: updatedCodes,
+            messageId: newMessage.id 
+        });
 
         await interaction.editReply(replyMessage);
 
@@ -110,5 +108,3 @@ export async function execute(interaction) {
         await interaction.editReply('Ocorreu um erro ao tentar atualizar os códigos.');
     }
 }
-
-    
