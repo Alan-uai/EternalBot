@@ -175,11 +175,11 @@ client.on(Events.MessageCreate, async (message) => {
     if (message.channel.id === COMMUNITY_HELP_CHANNEL_ID && message.reference) {
         try {
             const repliedToMessage = await message.channel.messages.fetch(message.reference.messageId);
-            const originalQuestionMessageId = client.interactions.get(`original_question_id_${repliedToMessage.id}`);
+            const originalCurationMessageId = client.interactions.get(`curation_id_for_help_${repliedToMessage.id}`);
             
-            if (repliedToMessage.author.id === client.user.id && originalQuestionMessageId) {
+            if (repliedToMessage.author.id === client.user.id && originalCurationMessageId) {
                 const modChannel = await client.channels.fetch(MOD_CURATION_CHANNEL_ID);
-                const questionMessageInModChannel = await modChannel.messages.fetch(originalQuestionMessageId);
+                const questionMessageInModChannel = await modChannel.messages.fetch(originalCurationMessageId);
 
                 if (questionMessageInModChannel) {
                     const originalEmbed = questionMessageInModChannel.embeds[0];
@@ -195,7 +195,7 @@ client.on(Events.MessageCreate, async (message) => {
                         );
                     
                     await questionMessageInModChannel.edit({ embeds: [updatedEmbed], components: [modActionsRow] });
-                    client.interactions.set(`suggested_answer_${originalQuestionMessageId}`, message.content);
+                    client.interactions.set(`suggested_answer_${originalCurationMessageId}`, message.content);
                     await message.react('👍'); // React to the helpful message
                 }
             }
@@ -270,22 +270,30 @@ client.on(Events.MessageCreate, async (message) => {
             if (imageAttachment) {
                 unansweredQuestionEmbed.setImage(imageAttachment.url);
             }
-
-            // Enviar para o canal de curadoria dos moderadores (sem botões ainda)
-            const modChannel = await client.channels.fetch(MOD_CURATION_CHANNEL_ID);
-            const curationMessage = await modChannel.send({
-                embeds: [unansweredQuestionEmbed]
-            });
-
+             
             // Enviar para o canal de ajuda da comunidade
             const helpChannel = await client.channels.fetch(COMMUNITY_HELP_CHANNEL_ID);
             const helpMessage = await helpChannel.send({
                 content: `Alguém consegue responder a esta pergunta de <@${message.author.id}>?\n> ${question}`,
                 files: imageAttachment ? [imageAttachment.url] : []
             });
-            
-            // Link a mensagem de ajuda à mensagem de curadoria para futura edição
-            client.interactions.set(`original_question_id_${helpMessage.id}`, curationMessage.id);
+
+            // Enviar para o canal de curadoria dos moderadores
+            const modChannel = await client.channels.fetch(MOD_CURATION_CHANNEL_ID);
+             const curationActions = new ActionRowBuilder()
+                .addComponents(
+                    new ButtonBuilder()
+                        .setCustomId(`curate_fixed_${helpMessage.id}`) // Link com o ID da mensagem de ajuda
+                        .setLabel('Corrigido')
+                        .setStyle(ButtonStyle.Secondary)
+                );
+            const curationMessage = await modChannel.send({
+                embeds: [unansweredQuestionEmbed],
+                components: [curationActions]
+            });
+
+            // Linkar as mensagens para futuras interações
+            client.interactions.set(`curation_id_for_help_${helpMessage.id}`, curationMessage.id);
 
             // Responder ao usuário
             await message.reply(firstSection.conteudo);
@@ -322,6 +330,7 @@ client.on(Events.MessageCreate, async (message) => {
 
 // Evento de interação para executar comandos e interações
 client.on(Events.InteractionCreate, async (interaction) => {
+    const COMMUNITY_HELP_CHANNEL_ID = '1426957344897761282';
 
     if (interaction.isChatInputCommand()) {
         const command = client.commands.get(interaction.commandName);
@@ -369,9 +378,35 @@ client.on(Events.InteractionCreate, async (interaction) => {
         } else if (interaction.isButton() && interaction.customId.startsWith('mod_')) {
              await handleModButton(interaction);
         } else if (interaction.isButton() && interaction.customId.startsWith('curate_')) {
-            const [_, action, originalCurationMessageId] = customIdParts;
+            const [_, action, id] = customIdParts;
             await interaction.deferUpdate();
-            if (action === 'approve') {
+
+            if (action === 'fixed') {
+                const helpMessageId = id;
+                const curationMessage = interaction.message;
+                const helpChannel = await client.channels.fetch(COMMUNITY_HELP_CHANNEL_ID);
+                
+                try {
+                    const helpMessage = await helpChannel.messages.fetch(helpMessageId);
+                    
+                    await interaction.followUp({ content: 'Ação registrada. As mensagens serão excluídas em 5 segundos.', ephemeral: true });
+                    
+                    setTimeout(async () => {
+                        await curationMessage.delete().catch(err => console.error("Falha ao deletar msg de curadoria:", err));
+                        await helpMessage.delete().catch(err => console.error("Falha ao deletar msg de ajuda:", err));
+                    }, 5000);
+
+                } catch(error) {
+                    console.error("Erro ao tentar limpar mensagens de curadoria:", error);
+                    await interaction.followUp({ content: 'Não foi possível encontrar a mensagem original no canal de ajuda para limpar.', ephemeral: true });
+                     setTimeout(async () => {
+                        await curationMessage.delete().catch(err => console.error("Falha ao deletar msg de curadoria:", err));
+                    }, 5000);
+                }
+
+
+            } else if (action === 'approve') {
+                const originalCurationMessageId = id;
                 const suggestedAnswer = client.interactions.get(`suggested_answer_${originalCurationMessageId}`);
                 // TODO: Adicionar lógica para analisar a resposta e atualizar/criar artigo na wiki
                 await interaction.followUp({ content: `Resposta aprovada. A IA irá agora analisar o conteúdo para adicionar à base de conhecimento. Resposta: "${suggestedAnswer}"`, ephemeral: true });
@@ -381,7 +416,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
                     disabledRow.addComponents(ButtonBuilder.from(component).setDisabled(true));
                 });
                 await originalMessage.edit({ components: [disabledRow] });
-            } else {
+
+            } else if (action === 'reject') {
                  await interaction.followUp({ content: 'Resposta rejeitada. Nenhuma ação será tomada.', ephemeral: true });
                  const originalMessage = interaction.message;
                  const disabledRow = new ActionRowBuilder();
@@ -621,5 +657,3 @@ http.createServer((req, res) => {
 }).listen(port, () => {
   console.log(`Servidor web ouvindo na porta ${port}`);
 });
-
-    
