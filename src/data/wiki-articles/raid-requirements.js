@@ -14,6 +14,9 @@ export const raidRequirementsArticle = {
 
 Abaixo estão as tabelas com os requisitos de HP e DPS para as novas raids, e a tabela consolidada para as raids mais antigas.
 
+### Novos Avatares de Dano (Damage Avatars)
+Recentemente, as raids Gleam e Mundo foram estendidas e agora recompensam os jogadores com **avatares de dano exclusivos**, os únicos do tipo no jogo.
+
 ### Cálculo de HP Exponencial para Raids
 
 Para raids como **Titan Defense** e **Progression Raid**, o HP dos inimigos aumenta exponencialmente a cada sala. Em vez de uma tabela gigante, use a seguinte fórmula para estimar o HP:
@@ -31,9 +34,16 @@ Para raids como **Titan Defense** e **Progression Raid**, o HP dos inimigos aume
 **Exemplo de Uso:** Para calcular o DPS necessário para a sala 500 da Titan Defense, a IA primeiro calcularia o HP dessa sala usando a fórmula e depois dividiria o resultado por 30 para obter uma estimativa de DPS para uma luta de 30 segundos.
 
 A **Mundo Raid**, localizada no Lobby 2, é desbloqueada junto com o Mundo 21. Sua mecânica é similar à da Gleam Raid: cada onda completada é uma conquista que concede um nível de um poder exclusivo da raid (do comum ao supremo), além de uma conquista final que recompensa com créditos.`,
-  tags: ['raid', 'dungeon', 'energia', 'guia', 'geral', 'solo'],
+  tags: ['raid', 'dungeon', 'energia', 'guia', 'geral', 'solo', 'damage avatar'],
   imageUrl: 'wiki-11',
   tables: {
+    damageAvatars: {
+        headers: ['Raid', 'Stats', 'Obtainment'],
+        rows: [
+            { 'Raid': 'Gleam', 'Stats': '5x', 'Obtainment': 'Reach Raid Wave 25' },
+            { 'Raid': 'Mundo', 'Stats': '10x', 'Obtainment': 'Reach Raid Wave 20' }
+        ]
+    },
     gleamRaidWorld15: {
       headers: ['Wave', 'HP', 'DPS'],
       rows: [
