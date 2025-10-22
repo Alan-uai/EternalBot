@@ -33,7 +33,7 @@ export const world15Data = {
       name: 'Hero License Quest',
       type: 'progression',
       statType: 'mixed',
-      description: "Missão de Licença de Herói, com tarefas neste mundo."
+      description: "Missão de Licença de Herói (Rank C), com tarefas neste mundo."
     }
   ],
   dungeons: [

@@ -10,11 +10,9 @@ export const world22Data = {
       name: 'Hero License Quest',
       type: 'progression',
       statType: 'mixed',
-      description: "Continuação da missão de Licença de Herói, com novas tarefas e recompensas."
+      description: "Continuação da missão de Licença de Herói (Rank A), com novas tarefas e recompensas."
     }
   ],
   dungeons: [],
   accessories: [],
 };
-
-    

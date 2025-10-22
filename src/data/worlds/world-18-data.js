@@ -1,3 +1,4 @@
+
 export const world18Data = {
   id: 'world-18',
   title: 'Mundo 18 - Ilha da Motosserra',
@@ -25,6 +26,14 @@ export const world18Data = {
         { rank: 'Rank SS', rarity: 'Phantom', bonus: '15% Damage', cooldown: '1s' },
       ],
     },
+  ],
+  powers: [
+    {
+      name: 'Hero License Quest',
+      type: 'progression',
+      statType: 'mixed',
+      description: "Missão de Licença de Herói (Rank B), com tarefas neste mundo."
+    }
   ],
   dungeons: [
       { name: 'Chainsaw Defense', boss: 'Gun Devil', description: 'Uma raid de defesa contra hordas de demônios.'}
