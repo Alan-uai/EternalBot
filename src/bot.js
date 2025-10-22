@@ -187,7 +187,8 @@ client.on(Events.MessageCreate, async (message) => {
                     suggestedAnswers.push({
                         user: message.author.username,
                         userId: message.author.id,
-                        content: message.content
+                        content: message.content,
+                        approved: false // Novo estado
                     });
                     client.interactions.set(`suggested_answers_${originalCurationMessageId}`, suggestedAnswers);
 
@@ -208,8 +209,10 @@ client.on(Events.MessageCreate, async (message) => {
                          .setColor(0xFFA500) // Laranja para "respostas pendentes"
                          .setFooter({ text: `${suggestedAnswers.length} resposta(s) da comunidade aguardando análise.`});
 
-                    // Remove botões de ação se já existirem, eles só aparecerão ao selecionar uma resposta
-                    const components = [menuRow];
+                    // Adiciona o botão de "Corrigido" se for a primeira resposta
+                    const components = questionMessageInModChannel.components.length > 1 
+                        ? [menuRow, questionMessageInModChannel.components[1]] 
+                        : [menuRow];
                     
                     await questionMessageInModChannel.edit({ embeds: [updatedEmbed], components: components });
                     await message.react('👍'); // React to the helpful message
@@ -347,6 +350,7 @@ client.on(Events.MessageCreate, async (message) => {
 // Evento de interação para executar comandos e interações
 client.on(Events.InteractionCreate, async (interaction) => {
     const COMMUNITY_HELP_CHANNEL_ID = '1426957344897761282';
+    const MOD_CURATION_CHANNEL_ID = '1426968477482225716';
 
     if (interaction.isChatInputCommand()) {
         const command = client.commands.get(interaction.commandName);
@@ -394,63 +398,103 @@ client.on(Events.InteractionCreate, async (interaction) => {
         } else if (interaction.isButton() && interaction.customId.startsWith('mod_')) {
              await handleModButton(interaction);
         } else if (interaction.customId.startsWith('curate_')) {
-            const [_, action, id] = customIdParts;
+            const [_, action, ...idParts] = customIdParts;
+            const id = idParts.join('_');
+            
             await interaction.deferUpdate();
 
             if (action === 'fixed') {
                 const helpMessageId = id;
                 const curationMessage = interaction.message;
+                const curationMessageId = curationMessage.id;
                 const helpChannel = await client.channels.fetch(COMMUNITY_HELP_CHANNEL_ID);
+
+                // Recupera as respostas aprovadas antes de limpar
+                const suggestedAnswers = client.interactions.get(`suggested_answers_${curationMessageId}`) || [];
+                const approvedAnswers = suggestedAnswers.filter(a => a.approved);
+
+                if (approvedAnswers.length > 0) {
+                     await interaction.followUp({ content: 'Compilando respostas aprovadas e atualizando a base de conhecimento...', ephemeral: true });
+                    // TODO: Chamar o novo fluxo de IA aqui com a pergunta e as 'approvedAnswers'
+                    // const originalQuestion = curationMessage.embeds[0].description.split('```')[1];
+                    // await updateKnowledgeBase({ question: originalQuestion, answers: approvedAnswers.map(a => a.content) });
+                    console.log(`IA seria chamada para processar ${approvedAnswers.length} respostas aprovadas.`);
+                }
                 
                 try {
                     const helpMessage = await helpChannel.messages.fetch(helpMessageId);
                     await helpMessage.delete().catch(err => console.error("Falha ao deletar msg de ajuda:", err));
-                    
-                    await interaction.followUp({ content: 'Ação registrada. A mensagem de ajuda foi removida e esta será excluída em 5 segundos.', ephemeral: true });
-                    
-                    setTimeout(async () => {
-                        await curationMessage.delete().catch(err => console.error("Falha ao deletar msg de curadoria:", err));
-                    }, 5000);
-
                 } catch(error) {
-                    console.error("Erro ao tentar limpar mensagens de curadoria:", error);
-                    await interaction.followUp({ content: 'Não foi possível encontrar a mensagem original no canal de ajuda para limpar.', ephemeral: true });
-                     setTimeout(async () => {
-                        await curationMessage.delete().catch(err => console.error("Falha ao deletar msg de curadoria:", err));
-                    }, 5000);
+                    console.error("Não foi possível encontrar/deletar a mensagem no canal de ajuda:", error.message);
                 }
+
+                await interaction.followUp({ content: 'Ação registrada. A mensagem de curadoria será excluída em 5 segundos.', ephemeral: true });
+                setTimeout(async () => {
+                    await curationMessage.delete().catch(err => console.error("Falha ao deletar msg de curadoria:", err));
+                }, 5000);
+
+                 // Limpar dados da memória
+                client.interactions.delete(`curation_id_for_help_${helpMessageId}`);
+                client.interactions.delete(`suggested_answers_${curationMessageId}`);
 
 
             } else if (action === 'approve') {
-                const [curationMessageId, answerIndex] = id.split('-');
-                const suggestedAnswers = client.interactions.get(`suggested_answers_${curationMessageId}`) || [];
-                const selectedAnswer = suggestedAnswers[parseInt(answerIndex, 10)];
+                const [curationMessageId, answerIndexStr] = id.split('-');
+                const answerIndex = parseInt(answerIndexStr, 10);
+                let suggestedAnswers = client.interactions.get(`suggested_answers_${curationMessageId}`) || [];
                 
-                // TODO: Adicionar lógica para analisar a resposta e atualizar/criar artigo na wiki
-                await interaction.followUp({ content: `Resposta aprovada. A IA irá agora analisar o conteúdo para adicionar à base de conhecimento. Resposta: "${selectedAnswer.content}"`, ephemeral: true });
-                const originalMessage = interaction.message;
-                const disabledRows = [];
-                 originalMessage.components.forEach(row => {
-                    const newRow = new ActionRowBuilder();
-                    row.components.forEach(component => {
-                         newRow.addComponents(ButtonBuilder.from(component).setDisabled(true));
+                if (suggestedAnswers[answerIndex]) {
+                    suggestedAnswers[answerIndex].approved = true;
+                    client.interactions.set(`suggested_answers_${curationMessageId}`, suggestedAnswers);
+
+                    await interaction.followUp({ content: `Resposta de ${suggestedAnswers[answerIndex].user} marcada como aprovada.`, ephemeral: true });
+                    
+                    // Desabilitar botões para esta resposta específica para evitar múltiplas ações
+                    const originalMessage = interaction.message;
+                    const disabledRows = [];
+                    originalMessage.components.forEach(row => {
+                        const newRow = new ActionRowBuilder();
+                        row.components.forEach(component => {
+                            if (component.customId === interaction.customId || (component.customId.startsWith('curate_reject') && component.customId.endsWith(id))) {
+                                newRow.addComponents(ButtonBuilder.from(component).setDisabled(true));
+                            } else {
+                                newRow.addComponents(component.isStringSelectMenu() ? StringSelectMenuBuilder.from(component) : ButtonBuilder.from(component));
+                            }
+                        });
+                        disabledRows.push(newRow);
                     });
-                    disabledRows.push(newRow);
-                });
-                await originalMessage.edit({ components: disabledRows });
+                    
+                    const originalEmbed = interaction.message.embeds[0];
+                    const footerText = originalEmbed.footer.text;
+                    const approvedCount = suggestedAnswers.filter(a => a.approved).length;
+                    const updatedEmbed = EmbedBuilder.from(originalEmbed)
+                        .setFooter({ text: `${footerText.split(' | ')[0]} | ${approvedCount} resposta(s) aprovada(s).`});
+
+                    await originalMessage.edit({ embeds: [updatedEmbed], components: disabledRows });
+                }
 
             } else if (action === 'reject') {
-                 await interaction.followUp({ content: 'Resposta rejeitada. Nenhuma ação será tomada.', ephemeral: true });
+                 const [curationMessageId, answerIndex] = id.split('-');
+                 const suggestedAnswers = client.interactions.get(`suggested_answers_${curationMessageId}`) || [];
+                 const selectedAnswer = suggestedAnswers[parseInt(answerIndex, 10)];
+
+                 await interaction.followUp({ content: `Resposta de ${selectedAnswer.user} rejeitada. Nenhuma ação será tomada.`, ephemeral: true });
+                 
                  const originalMessage = interaction.message;
                  const disabledRows = [];
                  originalMessage.components.forEach(row => {
                     const newRow = new ActionRowBuilder();
                     row.components.forEach(component => {
-                         newRow.addComponents(ButtonBuilder.from(component).setDisabled(true));
+                        if (component.customId === interaction.customId || (component.customId.startsWith('curate_approve') && component.customId.endsWith(id))) {
+                             newRow.addComponents(ButtonBuilder.from(component).setDisabled(true));
+                        } else {
+                            newRow.addComponents(component.isStringSelectMenu() ? StringSelectMenuBuilder.from(component) : ButtonBuilder.from(component));
+                        }
                     });
                     disabledRows.push(newRow);
                 });
                 await originalMessage.edit({ components: disabledRows });
+
             } else if (action === 'select' && interaction.isStringSelectMenu()) {
                  const curationMessageId = id;
                  const selectedAnswerIndex = parseInt(interaction.values[0].split('_')[1], 10);
@@ -461,8 +505,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
                      const originalEmbed = interaction.message.embeds[0];
                      const updatedEmbed = EmbedBuilder.from(originalEmbed)
                         .setFields(
-                             { name: 'Usuário Original', value: originalEmbed.description.split('\n')[0].match(/<@\d+>/)[0], inline: true },
-                             { name: 'Pergunta Original', value: originalEmbed.description.split('```')[1], inline: false },
+                             { name: 'Usuário Original', value: originalEmbed.description.match(/<@\d+>/)[0], inline: true },
+                             { name: 'Pergunta Original', value: `\`\`\`${originalEmbed.description.split('```')[1]}\`\`\``, inline: false },
                              { name: `Resposta Sugerida por: ${selectedAnswer.user}`, value: selectedAnswer.content.substring(0, 1024), inline: false }
                          );
 
@@ -472,10 +516,16 @@ client.on(Events.InteractionCreate, async (interaction) => {
                             new ButtonBuilder().setCustomId(`curate_reject_${curationMessageId}-${selectedAnswerIndex}`).setLabel('❌ Rejeitar').setStyle(ButtonStyle.Danger)
                         );
                     
-                    // Manter o menu de seleção
+                    // Manter o menu de seleção e o botão 'Corrigido'
                     const menuRow = interaction.message.components[0];
+                    const fixedButtonRow = interaction.message.components.find(c => c.components[0]?.customId?.startsWith('curate_fixed'));
 
-                    await interaction.message.edit({ embeds: [updatedEmbed], components: [menuRow, modActionsRow] });
+                    const newComponents = [menuRow, modActionsRow];
+                    if (fixedButtonRow) {
+                        newComponents.push(fixedButtonRow);
+                    }
+
+                    await interaction.message.edit({ embeds: [updatedEmbed], components: newComponents });
                  }
             }
         }
