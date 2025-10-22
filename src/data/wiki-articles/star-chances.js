@@ -1,36 +1,52 @@
 
 export const starChancesArticle = {
   id: 'star-chances',
-  title: 'Chances Base das Estrelas',
-  summary: 'Uma tabela de referência para as chances de obter cada raridade de pet em cada Estrela (caixa de pet).',
-  content: 'Esta tabela detalha o custo de cada Estrela e as chances base de obter um pet de uma raridade específica, de Comum a Supremo. Essas chances podem ser aumentadas com bônus de sorte.',
+  title: 'Chances Base das Estrelas por Mundo',
+  summary: 'Uma tabela de referência para os custos e chances de obter cada raridade de pet em cada Mundo.',
+  content: 'Esta tabela detalha o custo de cada Estrela (caixa de pet) por mundo e as chances base de obter um pet de uma raridade específica, de Comum a Supremo. Essas chances podem ser aumentadas com bônus de sorte.',
   tags: ['estrela', 'star', 'pet', 'chance', 'sorte', 'raridade', 'guia', 'geral'],
   imageUrl: 'wiki-5',
   tables: {
-    starChances: {
-      headers: ['Egg Name', 'Egg Cost', 'Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', 'Mythical', 'Phantom', 'Supreme'],
+    world1_8: {
+      headers: ['World', 'Cost', 'Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', 'Mythic', 'Phantom'],
       rows: [
-        { 'Egg Name': 'Star 1', 'Egg Cost': '2.50E+01', 'Common': '40.00000%', 'Uncommon': '39.63000%', 'Rare': '14.00000%', 'Epic': '6.00000%', 'Legendary': '0.35000%', 'Mythical': '0.0150%', 'Phantom': '0.0050%', 'Supreme': '0.0000%' },
-        { 'Egg Name': 'Star 2', 'Egg Cost': '2.50E+02', 'Common': '40.00000%', 'Uncommon': '39.63000%', 'Rare': '14.00000%', 'Epic': '6.00000%', 'Legendary': '0.35000%', 'Mythical': '0.0150%', 'Phantom': '0.0050%', 'Supreme': '0.0000%' },
-        { 'Egg Name': 'Star 3', 'Egg Cost': '2.50E+03', 'Common': '40.00000%', 'Uncommon': '39.63000%', 'Rare': '14.00000%', 'Epic': '6.00000%', 'Legendary': '0.35000%', 'Mythical': '0.0150%', 'Phantom': '0.0050%', 'Supreme': '0.0000%' },
-        { 'Egg Name': 'Star 4', 'Egg Cost': '2.50E+04', 'Common': '40.00000%', 'Uncommon': '39.63000%', 'Rare': '14.00000%', 'Epic': '6.00000%', 'Legendary': '0.35000%', 'Mythical': '0.0150%', 'Phantom': '0.0050%', 'Supreme': '0.0000%' },
-        { 'Egg Name': 'Star 5', 'Egg Cost': '3.13E+05', 'Common': '40.00000%', 'Uncommon': '39.63750%', 'Rare': '14.00000%', 'Epic': '6.00000%', 'Legendary': '0.35000%', 'Mythical': '0.0100%', 'Phantom': '0.0025%', 'Supreme': '0.0000%' },
-        { 'Egg Name': 'Star 6', 'Egg Cost': '3.91E+06', 'Common': '40.00000%', 'Uncommon': '39.63750%', 'Rare': '14.00000%', 'Epic': '6.00000%', 'Legendary': '0.35000%', 'Mythical': '0.0100%', 'Phantom': '0.0025%', 'Supreme': '0.0000%' },
-        { 'Egg Name': 'Star 7', 'Egg Cost': '2.15E+08', 'Common': '40.00000%', 'Uncommon': '39.63900%', 'Rare': '14.00000%', 'Epic': '6.00000%', 'Legendary': '0.35000%', 'Mythical': '0.0100%', 'Phantom': '0.0010%', 'Supreme': '0.0000%' },
-        { 'Egg Name': 'Star 8', 'Egg Cost': '1.07E+09', 'Common': '40.00000%', 'Uncommon': '39.63900%', 'Rare': '14.00000%', 'Epic': '6.00000%', 'Legendary': '0.35000%', 'Mythical': '0.0100%', 'Phantom': '0.0010%', 'Supreme': '0.0000%' },
-        { 'Egg Name': 'Star 9', 'Egg Cost': '2.15E+10', 'Common': '40.00000%', 'Uncommon': '39.63900%', 'Rare': '14.00000%', 'Epic': '6.00000%', 'Legendary': '0.35000%', 'Mythical': '0.0100%', 'Phantom': '0.0010%', 'Supreme': '0.0000%' },
-        { 'Egg Name': 'Star 10', 'Egg Cost': '1.07E+11', 'Common': '40.00000%', 'Uncommon': '39.63910%', 'Rare': '14.00000%', 'Epic': '6.00000%', 'Legendary': '0.35000%', 'Mythical': '0.0100%', 'Phantom': '0.0009%', 'Supreme': '0.0000%' },
-        { 'Egg Name': 'Star 11', 'Egg Cost': '5.37E+11', 'Common': '40.00000%', 'Uncommon': '39.63910%', 'Rare': '14.00000%', 'Epic': '6.00000%', 'Legendary': '0.35000%', 'Mythical': '0.0100%', 'Phantom': '0.0009%', 'Supreme': '0.0000%' },
-        { 'Egg Name': 'Star 12', 'Egg Cost': '5.66E+12', 'Common': '40.00000%', 'Uncommon': '39.63910%', 'Rare': '14.00000%', 'Epic': '6.00000%', 'Legendary': '0.35000%', 'Mythical': '0.0100%', 'Phantom': '0.0009%', 'Supreme': '0.0000%' },
-        { 'Egg Name': 'Star 13', 'Egg Cost': '6.43E+13', 'Common': '40.00000%', 'Uncommon': '39.63910%', 'Rare': '14.00000%', 'Epic': '6.00000%', 'Legendary': '0.35000%', 'Mythical': '0.0100%', 'Phantom': '0.0009%', 'Supreme': '0.0000%' },
-        { 'Egg Name': 'Star 14', 'Egg Cost': '1.29E+15', 'Common': '40.00000%', 'Uncommon': '39.63910%', 'Rare': '14.00000%', 'Epic': '6.00000%', 'Legendary': '0.35000%', 'Mythical': '0.0100%', 'Phantom': '0.0009%', 'Supreme': '0.0000%' },
-        { 'Egg Name': 'Star 15', 'Egg Cost': '2.57E+16', 'Common': '40.00000%', 'Uncommon': '39.63910%', 'Rare': '14.00000%', 'Epic': '6.00000%', 'Legendary': '0.35000%', 'Mythical': '0.0100%', 'Phantom': '0.0009%', 'Supreme': '0.0000%' },
-        { 'Egg Name': 'Star 16', 'Egg Cost': '7.72E+17', 'Common': '40.00000%', 'Uncommon': '39.63910%', 'Rare': '14.00000%', 'Epic': '6.00000%', 'Legendary': '0.35000%', 'Mythical': '0.0100%', 'Phantom': '0.0009%', 'Supreme': '0.0000%' },
-        { 'Egg Name': 'Star 17', 'Egg Cost': '7.72E+18', 'Common': '40.00000%', 'Uncommon': '39.63910%', 'Rare': '14.00000%', 'Epic': '6.00000%', 'Legendary': '0.35000%', 'Mythical': '0.0100%', 'Phantom': '0.0009%', 'Supreme': '0.0000%' },
-        { 'Egg Name': 'Star 18', 'Egg Cost': '1.16E+20', 'Common': '40.00000%', 'Uncommon': '39.63912%', 'Rare': '14.00000%', 'Epic': '6.00000%', 'Legendary': '0.35000%', 'Mythical': '0.0100%', 'Phantom': '0.0008%', 'Supreme': '0.00008%' },
-        { 'Egg Name': 'Star 19', 'Egg Cost': '1.74E+21', 'Common': '40.00000%', 'Uncommon': '39.63912%', 'Rare': '14.00000%', 'Epic': '6.00000%', 'Legendary': '0.35000%', 'Mythical': '0.0100%', 'Phantom': '0.0008%', 'Supreme': '0.00008%' },
-        { 'Egg Name': 'Star 20', 'Egg Cost': '2.60E+22', 'Common': '40.00000%', 'Uncommon': '39.63917%', 'Rare': '14.00000%', 'Epic': '6.00000%', 'Legendary': '0.35000%', 'Mythical': '0.0100%', 'Phantom': '0.0008%', 'Supreme': '0.00003%' }
-      ]
-    }
-  }
+        { 'World': 1, 'Cost': '25', 'Common': '40.00%', 'Uncommon': '39.63%', 'Rare': '14.00%', 'Epic': '6.00%', 'Legendary': '0.35%', 'Mythic': '0.015%', 'Phantom': '0.005%' },
+        { 'World': 2, 'Cost': '250', 'Common': '40.00%', 'Uncommon': '39.63%', 'Rare': '14.00%', 'Epic': '6.00%', 'Legendary': '0.35%', 'Mythic': '0.015%', 'Phantom': '0.005%' },
+        { 'World': 3, 'Cost': '2.5k', 'Common': '40.00%', 'Uncommon': '39.63%', 'Rare': '14.00%', 'Epic': '6.00%', 'Legendary': '0.35%', 'Mythic': '0.015%', 'Phantom': '0.005%' },
+        { 'World': 4, 'Cost': '25k', 'Common': '40.00%', 'Uncommon': '39.63%', 'Rare': '14.00%', 'Epic': '6.00%', 'Legendary': '0.35%', 'Mythic': '0.015%', 'Phantom': '0.005%' },
+        { 'World': 5, 'Cost': '312k', 'Common': '40.000%', 'Uncommon': '39.630%', 'Rare': '14.000%', 'Epic': '6.000%', 'Legendary': '0.350%', 'Mythic': '0.01%', 'Phantom': '0.0025%' },
+        { 'World': 6, 'Cost': '3.9M', 'Common': '40.000%', 'Uncommon': '39.630%', 'Rare': '14.000%', 'Epic': '6.000%', 'Legendary': '0.350%', 'Mythic': '0.01%', 'Phantom': '0.0025%' },
+        { 'World': 7, 'Cost': '214M', 'Common': '40.00%', 'Uncommon': '39.63%', 'Rare': '14.00%', 'Epic': '6.00%', 'Legendary': '0.35%', 'Mythic': '0.01%', 'Phantom': '0.001%' },
+        { 'World': 8, 'Cost': '1.07B', 'Common': '40.00%', 'Uncommon': '39.63%', 'Rare': '14.00%', 'Epic': '6.00%', 'Legendary': '0.35%', 'Mythic': '0.01%', 'Phantom': '0.001%' },
+      ],
+    },
+    world9_16: {
+      headers: ['World', 'Cost', 'Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', 'Mythic', 'Phantom'],
+      rows: [
+        { 'World': 9, 'Cost': '21.4B', 'Common': '40.00%', 'Uncommon': '39.64%', 'Rare': '14.00%', 'Epic': '6.00%', 'Legendary': '0.35%', 'Mythic': '0.01%', 'Phantom': '0.001%' },
+        { 'World': 10, 'Cost': '107B', 'Common': '40.00%', 'Uncommon': '39.64%', 'Rare': '14.00%', 'Epic': '6.00%', 'Legendary': '0.35%', 'Mythic': '0.01%', 'Phantom': '0.0009%' },
+        { 'World': 11, 'Cost': '537B', 'Common': '40.00%', 'Uncommon': '39.64%', 'Rare': '14.00%', 'Epic': '6.00%', 'Legendary': '0.35%', 'Mythic': '0.01%', 'Phantom': '0.0009%' },
+        { 'World': 12, 'Cost': '5.66T', 'Common': '40.00%', 'Uncommon': '39.64%', 'Rare': '14.00%', 'Epic': '6.00%', 'Legendary': '0.35%', 'Mythic': '0.01%', 'Phantom': '0.0009%' },
+        { 'World': 13, 'Cost': '64.3T', 'Common': '40.00%', 'Uncommon': '39.64%', 'Rare': '14.00%', 'Epic': '6.00%', 'Legendary': '0.35%', 'Mythic': '0.01%', 'Phantom': '0.0009%' },
+        { 'World': 14, 'Cost': '1.28qd', 'Common': '40.00%', 'Uncommon': '39.64%', 'Rare': '14.00%', 'Epic': '6.00%', 'Legendary': '0.35%', 'Mythic': '0.01%', 'Phantom': '0.0009%' },
+        { 'World': 15, 'Cost': '25.7qd', 'Common': '40.00%', 'Uncommon': '39.64%', 'Rare': '14.00%', 'Epic': '6.00%', 'Legendary': '0.35%', 'Mythic': '0.01%', 'Phantom': '0.0009%' },
+        { 'World': 16, 'Cost': '771qd', 'Common': '40.00%', 'Uncommon': '39.64%', 'Rare': '14.00%', 'Epic': '6.00%', 'Legendary': '0.35%', 'Mythic': '0.01%', 'Phantom': '0.0009%' },
+      ],
+    },
+    world17_24: {
+      headers: ['World', 'Cost', 'Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', 'Mythic', 'Phantom', 'Supreme'],
+      rows: [
+        { 'World': 17, 'Cost': '7.71Qn', 'Common': '40.00%', 'Uncommon': '39.64%', 'Rare': '14.00%', 'Epic': '6.00%', 'Legendary': '0.35%', 'Mythic': '0.01%', 'Phantom': '0.0009%', 'Supreme': 'N/A' },
+        { 'World': 18, 'Cost': '115Qn', 'Common': '40.00%', 'Uncommon': '39.64%', 'Rare': '14.00%', 'Epic': '6.00%', 'Legendary': '0.35%', 'Mythic': '0.01%', 'Phantom': '0.0008%', 'Supreme': '0.00008%' },
+        { 'World': 19, 'Cost': '1.73sx', 'Common': '40.00%', 'Uncommon': '39.64%', 'Rare': '14.00%', 'Epic': '6.00%', 'Legendary': '0.35%', 'Mythic': '0.01%', 'Phantom': '0.0008%', 'Supreme': '0.00008%' },
+        { 'World': 20, 'Cost': '26sx', 'Common': '40.00%', 'Uncommon': '39.64%', 'Rare': '14.00%', 'Epic': '6.00%', 'Legendary': '0.35%', 'Mythic': '0.01%', 'Phantom': '0.0008%', 'Supreme': '0.00003%' },
+        { 'World': 21, 'Cost': '390sx', 'Common': '40.00%', 'Uncommon': '39.64%', 'Rare': '14.00%', 'Epic': '6.00%', 'Legendary': '0.35%', 'Mythic': '0.01%', 'Phantom': '0.0008%', 'Supreme': '0.00003%' },
+        { 'World': 22, 'Cost': '5.86Sp', 'Common': '40.00%', 'Uncommon': '39.64%', 'Rare': '14.00%', 'Epic': '6.00%', 'Legendary': '0.35%', 'Mythic': '0.01%', 'Phantom': '0.0008%', 'Supreme': '0.00002%' },
+        { 'World': 23, 'Cost': '87.9sp', 'Common': '40.00%', 'Uncommon': '39.64%', 'Rare': '14.00%', 'Epic': '6.00%', 'Legendary': '0.35%', 'Mythic': '0.01%', 'Phantom': '0.0007%', 'Supreme': '0.00002%' },
+        { 'World': 24, 'Cost': '1.31o', 'Common': '40.00%', 'Uncommon': '39.64%', 'Rare': '14.00%', 'Epic': '6.00%', 'Legendary': '0.35%', 'Mythic': '0.01%', 'Phantom': '0.0007%', 'Supreme': '0.00002%' },
+      ],
+    },
+  },
 };
+
+    
