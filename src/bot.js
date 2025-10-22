@@ -10,6 +10,7 @@ import { loadKnowledgeBase } from './knowledge-base.js';
 import { doc, getDoc, setDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { lobbyDungeonsArticle } from './data/wiki-articles/lobby-dungeons.js';
 import { generateSolution } from './ai/flows/generate-solution.js';
+import { updateKnowledgeBase } from './ai/flows/update-knowledge-base.js';
 import axios from 'axios';
 
 // Resolve __dirname for ES Modules
@@ -212,7 +213,7 @@ client.on(Events.MessageCreate, async (message) => {
                     // Adiciona o botão de "Corrigido" se for a primeira resposta
                     const components = questionMessageInModChannel.components.length > 1 
                         ? [menuRow, questionMessageInModChannel.components[1]] 
-                        : [menuRow];
+                        : [menuRow, questionMessageInModChannel.components[0]]; // Mantém o botão 'Corrigido'
                     
                     await questionMessageInModChannel.edit({ embeds: [updatedEmbed], components: components });
                     await message.react('👍'); // React to the helpful message
@@ -401,7 +402,9 @@ client.on(Events.InteractionCreate, async (interaction) => {
             const [_, action, ...idParts] = customIdParts;
             const id = idParts.join('_');
             
-            await interaction.deferUpdate();
+            if (action !== 'approve' && action !== 'reject') {
+                await interaction.deferUpdate();
+            }
 
             if (action === 'fixed') {
                 const helpMessageId = id;
@@ -414,11 +417,25 @@ client.on(Events.InteractionCreate, async (interaction) => {
                 const approvedAnswers = suggestedAnswers.filter(a => a.approved);
 
                 if (approvedAnswers.length > 0) {
-                     await interaction.followUp({ content: 'Compilando respostas aprovadas e atualizando a base de conhecimento...', ephemeral: true });
-                    // TODO: Chamar o novo fluxo de IA aqui com a pergunta e as 'approvedAnswers'
-                    // const originalQuestion = curationMessage.embeds[0].description.split('```')[1];
-                    // await updateKnowledgeBase({ question: originalQuestion, answers: approvedAnswers.map(a => a.content) });
-                    console.log(`IA seria chamada para processar ${approvedAnswers.length} respostas aprovadas.`);
+                     await interaction.followUp({ content: 'Compilando respostas aprovadas para atualizar a base de conhecimento...', ephemeral: true });
+                     const originalQuestion = curationMessage.embeds[0].description.split('```')[1];
+                     
+                     try {
+                        console.log(`Chamando a IA para processar ${approvedAnswers.length} respostas aprovadas.`);
+                        const knowledgeUpdate = await updateKnowledgeBase({
+                            question: originalQuestion,
+                            approvedAnswers: approvedAnswers.map(a => a.content),
+                            currentKnowledgeBase: client.wikiContext,
+                        });
+                        console.log("IA gerou a seguinte atualização:", knowledgeUpdate);
+                        // Ação futura: Salvar o `knowledgeUpdate.fileContent` em `knowledgeUpdate.filePath`
+                        await interaction.followUp({ content: `A IA processou as respostas!\n**Ação Sugerida:** Salvar conteúdo no arquivo \`${knowledgeUpdate.filePath}\`.`, ephemeral: true });
+
+                     } catch (e) {
+                         console.error("Erro ao chamar o fluxo de updateKnowledgeBase:", e);
+                         await interaction.followUp({ content: 'Ocorreu um erro ao tentar ensinar a IA.', ephemeral: true });
+                     }
+
                 }
                 
                 try {
@@ -439,6 +456,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
 
             } else if (action === 'approve') {
+                await interaction.deferUpdate();
                 const [curationMessageId, answerIndexStr] = id.split('-');
                 const answerIndex = parseInt(answerIndexStr, 10);
                 let suggestedAnswers = client.interactions.get(`suggested_answers_${curationMessageId}`) || [];
@@ -455,7 +473,9 @@ client.on(Events.InteractionCreate, async (interaction) => {
                     originalMessage.components.forEach(row => {
                         const newRow = new ActionRowBuilder();
                         row.components.forEach(component => {
-                            if (component.customId === interaction.customId || (component.customId.startsWith('curate_reject') && component.customId.endsWith(id))) {
+                           if (component.customId === interaction.customId) {
+                                newRow.addComponents(ButtonBuilder.from(component).setDisabled(true).setLabel('✅ Aprovada'));
+                            } else if (component.customId.startsWith('curate_reject') && component.customId.endsWith(id)) {
                                 newRow.addComponents(ButtonBuilder.from(component).setDisabled(true));
                             } else {
                                 newRow.addComponents(component.isStringSelectMenu() ? StringSelectMenuBuilder.from(component) : ButtonBuilder.from(component));
@@ -468,12 +488,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
                     const footerText = originalEmbed.footer.text;
                     const approvedCount = suggestedAnswers.filter(a => a.approved).length;
                     const updatedEmbed = EmbedBuilder.from(originalEmbed)
+                        .setColor(0x00FF00) // Verde para indicar aprovação
                         .setFooter({ text: `${footerText.split(' | ')[0]} | ${approvedCount} resposta(s) aprovada(s).`});
 
                     await originalMessage.edit({ embeds: [updatedEmbed], components: disabledRows });
                 }
 
             } else if (action === 'reject') {
+                 await interaction.deferUpdate();
                  const [curationMessageId, answerIndex] = id.split('-');
                  const suggestedAnswers = client.interactions.get(`suggested_answers_${curationMessageId}`) || [];
                  const selectedAnswer = suggestedAnswers[parseInt(answerIndex, 10)];
@@ -485,7 +507,9 @@ client.on(Events.InteractionCreate, async (interaction) => {
                  originalMessage.components.forEach(row => {
                     const newRow = new ActionRowBuilder();
                     row.components.forEach(component => {
-                        if (component.customId === interaction.customId || (component.customId.startsWith('curate_approve') && component.customId.endsWith(id))) {
+                        if (component.customId === interaction.customId) {
+                             newRow.addComponents(ButtonBuilder.from(component).setDisabled(true).setLabel('❌ Rejeitada'));
+                        } else if (component.customId.startsWith('curate_approve') && component.customId.endsWith(id)) {
                              newRow.addComponents(ButtonBuilder.from(component).setDisabled(true));
                         } else {
                             newRow.addComponents(component.isStringSelectMenu() ? StringSelectMenuBuilder.from(component) : ButtonBuilder.from(component));
@@ -759,3 +783,4 @@ http.createServer((req, res) => {
 }).listen(port, () => {
   console.log(`Servidor web ouvindo na porta ${port}`);
 });
+
