@@ -6,6 +6,42 @@ export const avatarIndexArticle = {
   content: `Esta página serve como um índice para os bônus de energia de todos os Avatares no jogo, organizados por mundo e rank. Use estas tabelas para planejar qual avatar obter para maximizar seus ganhos de energia.`,
   tags: ['avatar', 'energia', 'index', 'guia', 'bônus', 'lvl 150'],
   tables: {
+    world1_3: {
+        headers: ['Rank', 'Stats (W1)', 'Stats (lvl 150, W1)', 'Stats (W2)', 'Stats (lvl 150, W2)', 'Stats (W3)', 'Stats (lvl 150, W3)'],
+        rows: [
+          { Rank: 'E', 'Stats (W1)': '115', 'Stats (lvl 150, W1)': '977', 'Stats (W2)': '280', 'Stats (lvl 150, W2)': '2.3k', 'Stats (W3)': '700', 'Stats (lvl 150, W3)': '5.9k' },
+          { Rank: 'D', 'Stats (W1)': '230', 'Stats (lvl 150, W1)': '1.9k', 'Stats (W2)': '560', 'Stats (lvl 150, W2)': '4.7k', 'Stats (W3)': '1.4k', 'Stats (lvl 150, W3)': '11.9k' },
+          { Rank: 'C', 'Stats (W1)': '345', 'Stats (lvl 150, W1)': '2.9k', 'Stats (W2)': '840', 'Stats (lvl 150, W2)': '7.1k', 'Stats (W3)': '2.1k', 'Stats (lvl 150, W3)': '17.8k' },
+          { Rank: 'B', 'Stats (W1)': '460', 'Stats (lvl 150, W1)': '3.9k', 'Stats (W2)': '1.1k', 'Stats (lvl 150, W2)': '9.5k', 'Stats (W3)': '2.8k', 'Stats (lvl 150, W3)': '23.8k' },
+          { Rank: 'A', 'Stats (W1)': '575', 'Stats (lvl 150, W1)': '4.8k', 'Stats (W2)': '1.4k', 'Stats (lvl 150, W2)': '11.9k', 'Stats (W3)': '3.5k', 'Stats (lvl 150, W3)': '29.7k' },
+          { Rank: 'S', 'Stats (W1)': '765', 'Stats (lvl 150, W1)': '6.5k', 'Stats (W2)': '1.8k', 'Stats (lvl 150, W2)': '15.8k', 'Stats (W3)': '4.7k', 'Stats (lvl 150, W3)': '39.6k' },
+          { Rank: 'SS', 'Stats (W1)': '2.2k', 'Stats (lvl 150, W1)': '19.5k', 'Stats (W2)': '5.6k', 'Stats (lvl 150, W2)': '47.5k', 'Stats (W3)': '14k', 'Stats (lvl 150, W3)': '119k' },
+        ],
+    },
+    world4_6: {
+        headers: ['Rank', 'Stats (W4)', 'Stats (lvl 150, W4)', 'Stats (W5)', 'Stats (lvl 150, W5)', 'Stats (W6)', 'Stats (lvl 150, W6)'],
+        rows: [
+          { Rank: 'E', 'Stats (W4)': '1.7k', 'Stats (lvl 150, W4)': '14.8k', 'Stats (W5)': '4.4k', 'Stats (lvl 150, W5)': '37k', 'Stats (W6)': '11k', 'Stats (lvl 150, W6)': '93k' },
+          { Rank: 'D', 'Stats (W4)': '3.5k', 'Stats (lvl 150, W4)': '29.7k', 'Stats (W5)': '8.8k', 'Stats (lvl 150, W5)': '74k', 'Stats (W6)': '22k', 'Stats (lvl 150, W6)': '186k' },
+          { Rank: 'C', 'Stats (W4)': '5.3k', 'Stats (lvl 150, W4)': '44.6k', 'Stats (W5)': '13.2k', 'Stats (lvl 150, W5)': '111k', 'Stats (W6)': '33k', 'Stats (lvl 150, W6)': '280k' },
+          { Rank: 'B', 'Stats (W4)': '7k', 'Stats (lvl 150, W4)': '59.5k', 'Stats (W5)': '17.6k', 'Stats (lvl 150, W5)': '148k', 'Stats (W6)': '44k', 'Stats (lvl 150, W6)': '374k' },
+          { Rank: 'A', 'Stats (W4)': '8.8k', 'Stats (lvl 150, W4)': '74.3k', 'Stats (W5)': '22k', 'Stats (lvl 150, W5)': '186k', 'Stats (W6)': '55k', 'Stats (lvl 150, W6)': '467k' },
+          { Rank: 'S', 'Stats (W4)': '11.8k', 'Stats (lvl 150, W4)': '99k', 'Stats (W5)': '29.3k', 'Stats (lvl 150, W5)': '249k', 'Stats (W6)': '73k', 'Stats (lvl 150, W6)': '622k' },
+          { Rank: 'SS', 'Stats (W4)': '35.4k', 'Stats (lvl 150, W4)': '300k', 'Stats (W5)': '88k', 'Stats (lvl 150, W5)': '748k', 'Stats (W6)': '220k', 'Stats (lvl 150, W6)': '1.87M' },
+        ],
+    },
+    world7_9: {
+        headers: ['Rank', 'Stats (W7)', 'Stats (lvl 150, W7)', 'Stats (W8)', 'Stats (lvl 150, W8)', 'Stats (W9)', 'Stats (lvl 150, W9)'],
+        rows: [
+          { Rank: 'E', 'Stats (W7)': '27.5k', 'Stats (lvl 150, W7)': '233k', 'Stats (W8)': '68k', 'Stats (lvl 150, W8)': '584k', 'Stats (W9)': '171k', 'Stats (lvl 150, W9)': '1.45M' },
+          { Rank: 'D', 'Stats (W7)': '55k', 'Stats (lvl 150, W7)': '467k', 'Stats (W8)': '137k', 'Stats (lvl 150, W8)': '1.16M', 'Stats (W9)': '343k', 'Stats (lvl 150, W9)': '2.91M' },
+          { Rank: 'C', 'Stats (W7)': '82.5k', 'Stats (lvl 150, W7)': '700k', 'Stats (W8)': '206k', 'Stats (lvl 150, W8)': '1.75M', 'Stats (W9)': '515k', 'Stats (lvl 150, W9)': '4.37M' },
+          { Rank: 'B', 'Stats (W7)': '110k', 'Stats (lvl 150, W7)': '935k', 'Stats (W8)': '275k', 'Stats (lvl 150, W8)': '2.33M', 'Stats (W9)': '687k', 'Stats (lvl 150, W9)': '5.84M' },
+          { Rank: 'A', 'Stats (W7)': '137k', 'Stats (lvl 150, W7)': '1.16M', 'Stats (W8)': '343k', 'Stats (lvl 150, W8)': '2.91M', 'Stats (W9)': '859k', 'Stats (lvl 150, W9)': '7.3M' },
+          { Rank: 'S', 'Stats (W7)': '183k', 'Stats (lvl 150, W7)': '1.55M', 'Stats (W8)': '458k', 'Stats (lvl 150, W8)': '3.89M', 'Stats (W9)': '1.14M', 'Stats (lvl 150, W9)': '9.72M' },
+          { Rank: 'SS', 'Stats (W7)': '550k', 'Stats (lvl 150, W7)': '4.67M', 'Stats (W8)': '1.37M', 'Stats (lvl 150, W8)': '11.6M', 'Stats (W9)': '3.43M', 'Stats (lvl 150, W9)': '29.1M' },
+        ],
+    },
     world10_12: {
       headers: ['Rank', 'Stats (W10)', 'Stats (lvl 150, W10)', 'Stats (W11)', 'Stats (lvl 150, W11)', 'Stats (W12)', 'Stats (lvl 150, W12)'],
       rows: [
@@ -71,5 +107,3 @@ export const avatarIndexArticle = {
     },
   },
 };
-
-    
