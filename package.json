@@ -5,8 +5,9 @@
   "main": "src/bot.js",
   "type": "module",
   "scripts": {
-    "start": "node src/bot.js",
-    "watch": "nodemon src/bot.js"
+    "start": "pm2 start src/bot.js --name bot --watch",
+    "stop": "pm2 stop bot",
+    "watch": "pm2 start src/bot.js --name bot --watch"
   },
   "dependencies": {
     "@genkit-ai/google-genai": "^1.20.0",
@@ -16,6 +17,7 @@
     "dotenv": "^16.4.5",
     "firebase": "^11.9.1",
     "genkit": "^1.20.0",
+    "pm2": "^5.4.2",
     "zod": "^3.24.2"
   },
   "devDependencies": {
