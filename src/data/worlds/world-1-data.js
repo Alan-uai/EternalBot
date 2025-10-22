@@ -37,4 +37,10 @@ export const world1Data = {
       unlockCost: '500',
     },
   ],
+  accessories: [
+      { id: 'imp-tail', name: 'Imp Tail', world: 'Mundo 1', boss: 'Halloween Raid', rarity: 'Evento', coins_bonus: '0.2', energy_bonus: '0.2x', damage_bonus: '0.2x' }
+  ],
+  dungeons: [
+      { name: 'Halloween Raid', boss: 'Pumpkin King', description: 'Uma raid de evento com temática de Halloween.'}
+  ]
 };

@@ -2,8 +2,8 @@
 export const halloweenEventGuideArticle = {
   id: 'halloween-event-guide',
   title: 'Guia do Evento de Halloween',
-  summary: 'Um guia completo para a nova Raid de Halloween e o sistema de progressão da Halloween Bag.',
-  content: `O Evento de Halloween traz uma nova raid desafiadora e um item de progressão exclusivo, a Halloween Bag. Este guia detalha como participar e como maximizar as recompensas do evento.
+  summary: 'Um guia completo para a Raid de Halloween, a Halloween Bag e os drops exclusivos como o Imp Tail.',
+  content: `O Evento de Halloween traz uma nova raid desafiadora e itens exclusivos. Este guia detalha como participar e como maximizar as recompensas do evento.
 
 ### Nova Raid de Halloween (Mundo 1)
 
@@ -11,6 +11,7 @@ Uma nova raid temporária está disponível no Mundo 1.
 - **Localização:** Mundo 1
 - **Total de Ondas (Waves):** 1.000
 - **Recompensa Final:** Ao completar a 1000ª onda, você recebe a **Halloween Bag**, um item de progressão com múltiplas evoluções.
+- **Drop Exclusivo:** A raid também tem a chance de dropar o acessório de cintura **Imp Tail**.
 
 ### Sistema de Progressão da Halloween Bag
 
@@ -42,6 +43,6 @@ A Halloween Bag funciona de forma similar ao poder "Adolla" do Mundo 19. Você c
 ### Dica de Farm
 Em média, completar a Raid de Halloween **duas vezes** ou obter cerca de **30.000 a 40.000 Halloween Candies** é suficiente para evoluir a Halloween Bag até sua forma Lendária com nível máximo.
 `,
-  tags: ['guia', 'evento', 'halloween', 'raid', 'halloween bag', 'progressão', 'mundo 1', 'energia', 'dano', 'moedas'],
+  tags: ['guia', 'evento', 'halloween', 'raid', 'halloween bag', 'progressão', 'mundo 1', 'energia', 'dano', 'moedas', 'imp tail'],
   imageUrl: 'wiki-1', // Reutilizando uma imagem existente
 };

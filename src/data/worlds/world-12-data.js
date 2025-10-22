@@ -1,7 +1,7 @@
 export const world12Data = {
   id: 'world-12',
   title: 'Mundo 12 - Ilha dos Heróis',
-  summary: 'Um mundo de super-heróis com foco em um misto de dano e energia.',
+  summary: 'Um mundo de super-heróis com foco em um misto de dano e energia. Contém a Raid Sins para upgrades.',
   npcs: [
     { name: 'Vilão de Rua', rank: 'E', exp: 1.8e9, hp: '1QnV' },
     { name: 'Vilão Classe Tigre', rank: 'D', exp: 2.5e9, hp: '10QnV' },
@@ -38,5 +38,20 @@ export const world12Data = {
         { type: 'energy', value: '15% Energy' },
       ],
     },
+    {
+      name: 'Sin Upgrades',
+      type: 'progression',
+      statType: 'mixed',
+      maxLevel: 100, // Exemplo
+      unlockCost: 'Raid Sins Tokens',
+      boosts: [
+          { type: 'damage', value: 'Até +50% Damage' },
+          { type: 'energy', value: 'Até +50% Energy' },
+      ],
+      description: "Upgrades de Dano e Energia obtidos com tokens da Raid Sins."
+    },
   ],
+  dungeons: [
+      { name: 'Raid Sins', boss: 'Demon King', description: 'Uma raid de desafio individual onde se obtém tokens para os Sin Upgrades.'}
+  ]
 };

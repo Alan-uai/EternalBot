@@ -6,7 +6,7 @@ export const upgradesCostsArticle = {
   content: `Esta página detalha os custos em moedas para cada nível de upgrade em várias categorias de bônus permanentes no jogo, além dos custos em Exchange Tokens para expandir os slots do inventário.
 
 **Novos Códigos:**
-Use os códigos \`Update20\`, \`320KLikes\`, \`325KLikes\`, \`590KFav\`, \`595KFav\`, \`Update19P3\`, \`315KLikes\`, \`580KFav\`, \`585KFav\`, e \`150MVisits\`, \`Update19P2Shutdown2\`, \`RandomUpdate19P2Code\`, \`Update19P2Shutdown\`, \`Update19P2\`, \`310KLikes\`, \`570KFav\`, \`575KFav\`, \`125MVisits\`, \`Update19P2Delay\`, \`Update19\`, \`300KLikes\`, \`305KLikes\`, \`560KFav\`, \`565KFav\`, \`Update19Delay\`, \`JustACodeFor19Upd\`, \`Update18P3Keys\`, \`Update18P3\`, \`290KLikes\`, \`295KLikes\`, \`550KFav\`, \`555KFav\` para recompensas!
+Use os códigos \`Update20P3\`, \`335KLikes\`, \`340KLikes\`, \`610KFav\`, \`615KFav\`, \`Update20\`, \`320KLikes\`, \`325KLikes\`, \`590KFav\`, \`595KFav\`, \`Update19P3\`, \`315KLikes\`, \`580KFav\`, \`585KFav\`, e \`150MVisits\`, \`Update19P2Shutdown2\`, \`RandomUpdate19P2Code\`, \`Update19P2Shutdown\`, \`Update19P2\`, \`310KLikes\`, \`570KFav\`, \`575KFav\`, \`125MVisits\`, \`Update19P2Delay\`, \`Update19\`, \`300KLikes\`, \`305KLikes\`, \`560KFav\`, \`565KFav\`, \`Update19Delay\`, \`JustACodeFor19Upd\`, \`Update18P3Keys\`, \`Update18P3\`, \`290KLikes\`, \`295KLikes\`, \`550KFav\`, \`555KFav\` para recompensas!
   `,
   tags: ['custos', 'upgrade', 'evolução', 'preços', 'sorte', 'exp', 'dano', 'energia', 'moedas', 'guia', 'inventário', 'token', 'códigos'],
   imageUrl: 'wiki-13', // Reusing scientific notation image as it relates to costs
