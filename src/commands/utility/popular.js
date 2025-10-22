@@ -29,10 +29,12 @@ export async function execute(interaction) {
         console.log('Iniciando a população do Firestore...');
 
         for (const article of allWikiArticles) {
+            const articleId = article.id;
+            
             // Se o 'article' é um dado de mundo (tem 'npcs', 'pets', etc.)
-            if (article.id.startsWith('world-')) {
-                const worldId = article.id;
-                const worldRef = doc(firestore, 'worlds', worldId);
+            if (articleId.startsWith('world-')) {
+                const worldNumber = articleId.split('-')[1];
+                const worldRef = doc(firestore, 'worlds', worldNumber);
 
                 // Separa os dados do documento principal das sub-coleções
                 const { npcs, pets, powers, accessories, dungeons, shadows, stands, ghouls, obelisks, ...worldData } = article;
@@ -52,8 +54,8 @@ export async function execute(interaction) {
                             const itemId = item.id || item.name.toLowerCase().replace(/ /g, '-').replace(/[^a-z0-9-]/g, '');
                             if (!itemId) continue;
 
-                            const itemRef = doc(firestore, `worlds/${worldId}/${key}`, itemId);
-                             const { stats, ...itemData } = item;
+                            const itemRef = doc(firestore, `worlds/${worldNumber}/${key}`, itemId);
+                            const { stats, ...itemData } = item;
                             batch.set(itemRef, itemData);
                             count++;
 
@@ -63,7 +65,7 @@ export async function execute(interaction) {
                                     const statId = stat.id || stat.name.toLowerCase().replace(/ /g, '-').replace(/[^a-z0-9-]/g, '');
                                     if (!statId) continue;
 
-                                    const statRef = doc(firestore, `worlds/${worldId}/powers/${itemId}/stats`, statId);
+                                    const statRef = doc(firestore, `worlds/${worldNumber}/powers/${itemId}/stats`, statId);
                                     batch.set(statRef, stat);
                                     count++;
                                 }
@@ -72,15 +74,11 @@ export async function execute(interaction) {
                     }
                 }
             } 
-            // Se for um artigo da wiki (achievement, guia, etc.)
+            // Se for um artigo da wiki (guia, etc.), salva na coleção 'wikiContent'
             else {
-                // Aqui podemos adicionar lógica para outras coleções, como 'achievements' ou 'wikiContent'
-                // Por enquanto, vamos pular para não poluir o DB com artigos que não são entidades diretas.
-                // Exemplo:
-                // if (article.id === 'achievements-guide') {
-                //     const achievementsRef = collection(firestore, 'achievements');
-                //     // lógica para adicionar achievements...
-                // }
+                const wikiRef = doc(firestore, 'wikiContent', articleId);
+                batch.set(wikiRef, article);
+                count++;
             }
         }
 
