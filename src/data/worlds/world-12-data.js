@@ -18,16 +18,6 @@ export const world12Data = {
     { name: 'Genos Jr.', rank: 'Incomum', rarity: 'Incomum', energy_bonus: '0.24x' },
     { name: 'Mosquito', rank: 'Raro', rarity: 'Raro', energy_bonus: '0.36x' },
   ],
-  shadows: [
-    {
-      id: 'garou-shadow',
-      name: 'Garou Shadow',
-      type: 'Damage',
-      stats: [
-        { rank: 'Rank SS', rarity: 'Phantom', bonus: '10% Damage', cooldown: '2s' },
-      ],
-    },
-  ],
   powers: [
     {
       name: 'Poder do Herói',

@@ -17,24 +17,6 @@ export const world8Data = {
     { name: 'Lesma', rank: 'Incomum', rarity: 'Incomum', energy_bonus: '0.16x' },
     { name: 'Cobra', rank: 'Raro', rarity: 'Raro', energy_bonus: '0.24x' },
   ],
-  shadows: [
-    {
-      id: 'itechi-shadow',
-      name: 'Itechi Shadow',
-      type: 'Energy',
-      stats: [
-        { rank: 'Rank SS', rarity: 'Phantom', bonus: '7% Energy' },
-      ],
-    },
-     {
-      id: 'madera-shadow',
-      name: 'Madera Shadow',
-      type: 'Damage',
-      stats: [
-        { rank: 'Rank SS', rarity: 'Phantom', bonus: '7% Damage', cooldown: '2s' },
-      ],
-    },
-  ],
   powers: [
     {
       name: 'Poder Ninja',

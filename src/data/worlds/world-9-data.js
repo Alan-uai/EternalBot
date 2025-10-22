@@ -17,16 +17,6 @@ export const world9Data = {
     { name: 'Oolong', rank: 'Incomum', rarity: 'Incomum', energy_bonus: '0.18x' },
     { name: 'Shenlong Bebê', rank: 'Raro', rarity: 'Raro', energy_bonus: '0.27x' },
   ],
-  shadows: [
-    {
-      id: 'veggita-shadow',
-      name: 'Veggita Shadow',
-      type: 'Energy',
-      stats: [
-        { rank: 'Rank SS', rarity: 'Phantom', bonus: '8% Energy' },
-      ],
-    },
-  ],
   powers: [
     {
       name: 'Poder Saiyajin',

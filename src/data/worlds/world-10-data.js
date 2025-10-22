@@ -17,16 +17,6 @@ export const world10Data = {
     { name: 'Robô de Batalha', rank: 'Incomum', rarity: 'Incomum', energy_bonus: '0.20x' },
     { name: 'Mecha', rank: 'Raro', rarity: 'Raro', energy_bonus: '0.30x' },
   ],
-  shadows: [
-    {
-      id: 'turbo-shadow',
-      name: 'Turbo Shadow',
-      type: 'Energy',
-      stats: [
-        { rank: 'Rank SS', rarity: 'Phantom', bonus: '9% Energy' },
-      ],
-    },
-  ],
   powers: [
     {
       name: 'Poder Cibernético',

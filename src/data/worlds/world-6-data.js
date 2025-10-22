@@ -16,17 +16,6 @@ export const world6Data = {
     { name: 'Golem Pequeno', rank: 'Incomum', rarity: 'Incomum', energy_bonus: '0.12x' },
     { name: 'Estátua Viva', rank: 'Raro', rarity: 'Raro', energy_bonus: '0.18x' },
   ],
-  shadows: [
-    {
-      id: 'statue-shadow',
-      name: 'Shadow of God',
-      type: 'Energy',
-      stats: [
-        { rank: 'Rank S', rarity: 'Mítico', bonus: '1% Energy' },
-        { rank: 'Rank SS', rarity: 'Phantom', bonus: '5% Energy' },
-      ],
-    },
-  ],
   powers: [
     {
       name: 'Poder da Terra',

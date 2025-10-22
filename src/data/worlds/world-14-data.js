@@ -17,16 +17,6 @@ export const world14Data = {
     { name: 'Pássaro Anti-Magia', rank: 'Incomum', rarity: 'Incomum', energy_bonus: '0.28x' },
     { name: 'Diabinho', rank: 'Raro', rarity: 'Raro', energy_bonus: '0.42x' },
   ],
-  shadows: [
-    {
-      id: 'valzora-shadow',
-      name: 'Valzora Shadow',
-      type: 'Energy',
-      stats: [
-        { rank: 'Rank SS', rarity: 'Phantom', bonus: '12% Energy' },
-      ],
-    },
-  ],
   powers: [
     {
       name: 'Poder Mágico',

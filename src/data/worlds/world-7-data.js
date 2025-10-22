@@ -16,17 +16,6 @@ export const world7Data = {
     { name: 'Relógio de Bolso', rank: 'Incomum', rarity: 'Incomum', energy_bonus: '0.14x' },
     { name: 'Paradoxo Encapsulado', rank: 'Raro', rarity: 'Raro', energy_bonus: '0.21x' },
   ],
-  shadows: [
-    {
-      id: 'chroni-shadow',
-      name: 'Chroni Shadow',
-      type: 'Energy',
-      stats: [
-        { rank: 'Rank S', rarity: 'Mítico', bonus: '1.5% Energy' },
-        { rank: 'Rank SS', rarity: 'Phantom', bonus: '6% Energy' },
-      ],
-    },
-  ],
   powers: [
     {
       name: 'Poder Temporal',

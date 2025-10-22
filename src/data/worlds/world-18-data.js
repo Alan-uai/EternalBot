@@ -18,16 +18,6 @@ export const world18Data = {
     { name: 'Gato', rank: 'Incomum', rarity: 'Incomum', energy_bonus: '0.36x' },
     { name: 'Anjo', rank: 'Raro', rarity: 'Raro', energy_bonus: '0.54x' },
   ],
-  shadows: [
-    {
-      id: 'chainsaw-shadow',
-      name: 'Chainsaw Shadow',
-      type: 'Damage',
-      stats: [
-        { rank: 'Rank SS', rarity: 'Phantom', bonus: '15% Damage', cooldown: '1s' },
-      ],
-    },
-  ],
   powers: [
     {
       name: 'Hero License Quest',

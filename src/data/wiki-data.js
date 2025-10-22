@@ -45,6 +45,7 @@ import { raidRequirementsArticle } from './wiki-articles/raid-requirements.js';
 import { rankArticle } from './wiki-articles/rank-system.js';
 import { scientificNotationArticle } from './wiki-articles/scientific-notation.js';
 import { scythesArticle } from './wiki-articles/scythes.js';
+import { shadowsGuideArticle } from './wiki-articles/shadows-guide.js';
 import { standsArticle } from './wiki-articles/stands.js';
 import { starChancesArticle } from './wiki-articles/star-chances.js';
 import { swordsArticle } from './wiki-articles/swords.js';
@@ -112,6 +113,7 @@ export const allWikiArticles = [
     world19PowerProgressionArticle,
     halloweenEventGuideArticle,
     championsIndexArticle,
+    shadowsGuideArticle,
 ];
 
     
