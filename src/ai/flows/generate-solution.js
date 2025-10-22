@@ -88,10 +88,11 @@ Sua resposta DEVE ser um objeto JSON contendo a chave "structuredResponse", que 
 
 **REGRAS DE ESTRUTURAÇÃO DO JSON:**
 1.  **SEMPRE** comece com um objeto com \`marcador: "texto_introdutorio"\`. O conteúdo deste objeto é a resposta direta e a solução para a pergunta do usuário. O título pode ser "Solução Direta".
-2.  A seguir, crie um ou mais objetos com \`marcador: "meio"\`. Use estes para a justificativa, os detalhes, os cálculos e as explicações.
-3.  **SE** uma seção precisar mostrar uma tabela (ex: requisitos de rank, bônus de itens, etc.), adicione o objeto \`table\` a essa seção com os dados estruturados.
-4.  Se aplicável, termine com um ou mais objetos com \`marcador: "fim"\` para dicas extras.
-5.  **A SAÍDA FINAL DEVE SER UM ÚNICO OBJETO JSON**, com a chave "structuredResponse" contendo o array de seções.
+2.  **SE** a resposta direta for simples (como fornecer o status de um item), use as seções de \`marcador: "meio"\` para agregar valor estratégico. Em vez de repetir a informação, ofereça comparações ("A Aura X é boa, mas a Aura Y do próximo mundo é 50% mais forte"), sugestões de sinergia ("Combine esta aura com a gamepass 'Double Aura' para um bônus massivo") ou dicas de como obter o item.
+3.  **SE** a pergunta exigir uma explicação complexa, um cálculo ou um passo a passo, use as seções de \`marcador: "meio"\` para detalhar a justificativa e a análise.
+4.  **SE** uma seção precisar mostrar uma tabela (ex: requisitos de rank, bônus de itens, etc.), adicione o objeto \`table\` a essa seção com os dados estruturados.
+5.  Se aplicável, termine com um ou mais objetos com \`marcador: "fim"\` para dicas extras.
+6.  **A SAÍDA FINAL DEVE SER UM ÚNICO OBJETO JSON**, com a chave "structuredResponse" contendo o array de seções.
 
 ### Termos e Sinônimos do Jogo (Use para traduzir a pergunta do usuário)
 - "Adolla": Refere-se exclusivamente ao poder de progressão do Mundo 19. Sinônimos: "poder do mundo 19", "poder de fire force". Não é um item de comida.
@@ -184,5 +185,7 @@ const generateSolutionFlow = ai.defineFlow(
     }
   }
 );
+
+    
 
     
