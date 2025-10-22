@@ -1,7 +1,8 @@
 // src/commands/utility/iniciar-perfil.js
-import { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle, ChannelType, PermissionsBitField, EmbedBuilder } from 'discord.js';
+import { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle, ChannelType, PermissionsBitField, EmbedBuilder, AttachmentBuilder } from 'discord.js';
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, query, where, getDocs } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
+import { createProfileImage } from '../../utils/createProfileImage.js';
 
 const FORMULARIO_CHANNEL_ID = '1429260045371310200';
 const CUSTOM_ID_PREFIX = 'iniciar-perfil';
@@ -12,6 +13,7 @@ const IMPORT_MODAL_ID = `${CUSTOM_ID_PREFIX}_importar_modal`;
 const PROFILE_CATEGORY_ID = '1426957344897761280'; // ID da Categoria "Perfis"
 
 export const INVENTORY_CATEGORIES = [
+    { id: 'estatisticas', name: 'Estatísticas', emoji: '📊' },
     { id: 'armas', name: 'Armas', emoji: '⚔️' },
     { id: 'poderes', name: 'Poderes', emoji: '⚡' },
     { id: 'pets', name: 'Pets', emoji: '🐾' },
@@ -125,20 +127,10 @@ async function handleImportSubmit(interaction) {
          return interaction.editReply('Seu perfil foi importado, mas houve um erro ao criar seu canal privado. Por favor, contate um administrador.');
     }
     
-    // Dispara a criação dos tópicos do inventário
-    await createInventoryThreads(channel);
+    // Dispara a criação dos tópicos do inventário e atualização da imagem
+    await createInventoryThreads(channel, { ...userSnap.data(), ...profileDataToUpdate }, discordUser);
     
-    const confirmationMessage = `**Perfil importado do site com sucesso!**
-
-- **Mundo Atual:** ${profileDataToUpdate.currentWorld || 'N/D'}
-- **Rank:** ${profileDataToUpdate.rank || 'N/D'}
-- **Dano Total (DPS):** ${profileDataToUpdate.dps || 'N/D'}
-- **Energia Atual (Acumulada):** ${profileDataToUpdate.totalEnergy || 'N/D'}
-- **Ganho de Energia (por clique):** ${profileDataToUpdate.energyPerClick || 'N/D'}
-`;
-    await channel.send(confirmationMessage);
-
-    await interaction.editReply(`Seu perfil foi importado com sucesso! Seus painéis de inventário foram criados nos tópicos do seu canal privado: <#${channel.id}>`);
+    await interaction.editReply(`Seu perfil foi importado com sucesso! Seus painéis de inventário foram criados e atualizados nos tópicos do seu canal privado: <#${channel.id}>`);
 }
 
 
@@ -233,26 +225,15 @@ async function handleFormSubmit(interaction) {
         });
     }
 
-
     const channel = await findOrCreateUserChannel(interaction, user);
     if (!channel) {
         return interaction.editReply('Seu perfil foi atualizado, mas houve um erro ao criar seu canal privado. Por favor, contate um administrador.');
     }
     
-    // Dispara a criação dos tópicos do inventário
-    await createInventoryThreads(channel);
+    // Dispara a criação/atualização dos tópicos do inventário e da imagem
+    await createInventoryThreads(channel, { ...userSnap.data(), ...profileData }, user);
     
-    const confirmationMessage = `**Suas estatísticas foram atualizadas com sucesso!**
-
-- **Mundo Atual:** ${profileData.currentWorld}
-- **Rank:** ${profileData.rank}
-- **Dano Total (DPS):** ${profileData.dps}
-- **Energia Atual (Acumulada):** ${profileData.totalEnergy}
-- **Ganho de Energia (por clique):** ${profileData.energyPerClick}
-`;
-    await channel.send(confirmationMessage);
-
-    await interaction.editReply(`Seu perfil foi atualizado com sucesso! Seus painéis de inventário foram criados nos tópicos do seu canal privado: <#${channel.id}>`);
+    await interaction.editReply(`Seu perfil foi atualizado com sucesso! Seus painéis de inventário foram criados e atualizados nos tópicos do seu canal privado: <#${channel.id}>`);
 }
 
 export async function findOrCreateUserChannel(interaction, user) {
@@ -273,7 +254,7 @@ export async function findOrCreateUserChannel(interaction, user) {
                     {
                         id: user.id,
                         allow: [PermissionsBitField.Flags.ViewChannel],
-                        deny: [PermissionsBitField.Flags.SendMessages]
+                        deny: [PermissionsBitField.Flags.SendMessages] // Usuário não pode digitar no canal principal
                     },
                     {
                         id: interaction.client.user.id,
@@ -291,74 +272,86 @@ export async function findOrCreateUserChannel(interaction, user) {
     return userChannel;
 }
 
-export async function createInventoryThreads(channel) {
+export async function createInventoryThreads(channel, userData, discordUser) {
     const existingThreads = await channel.threads.fetch();
     const existingThreadNames = new Set(existingThreads.threads.map(t => t.name));
 
     for (const category of INVENTORY_CATEGORIES) {
-        if (!existingThreadNames.has(category.name.toLowerCase())) {
+        let thread = existingThreads.threads.find(t => t.name === category.name.toLowerCase());
+        
+        if (!thread) {
             try {
-                const thread = await channel.threads.create({
+                 thread = await channel.threads.create({
                     name: category.name.toLowerCase(),
                     autoArchiveDuration: 10080, // 7 dias
                     reason: `Tópico de inventário para ${category.name}`
                 });
-                
-                if(category.isPrivate) {
-                     const embed = new EmbedBuilder()
-                        .setColor(0x808080)
-                        .setTitle(`${category.emoji} ${category.name}`)
-                        .setDescription('Este é o seu feed de notificações sobre o bot.');
-                     await thread.send({ embeds: [embed] });
-                     continue;
-                }
-
-                const embed = new EmbedBuilder()
-                    .setColor(0x4BC5FF)
-                    .setTitle(`${category.emoji} Gerenciador de ${category.name}`)
-                    .setDescription('Aqui você pode gerenciar seus itens equipados. A imagem acima exibirá seus itens.\n\nUse os botões abaixo para interagir.')
-                    .setImage('https://via.placeholder.com/400x100/2f3136/2f3136.png'); // Placeholder
-
-                const actionRow = new ActionRowBuilder();
-                
-                if (category.id === 'gamepasses' || category.id === 'auras') {
-                    actionRow.addComponents(
-                        new ButtonBuilder()
-                            .setCustomId(`gerenciar_${category.id}_equipar`)
-                            .setLabel('Equipar')
-                            .setStyle(ButtonStyle.Success)
-                            .setEmoji('➕'),
-                        new ButtonBuilder()
-                            .setCustomId(`gerenciar_${category.id}_desequipar`)
-                            .setLabel('Desequipar')
-                            .setStyle(ButtonStyle.Danger)
-                            .setEmoji('➖')
-                    );
-                } else {
-                    actionRow.addComponents(
-                        new ButtonBuilder()
-                            .setCustomId(`gerenciar_${category.id}_equipar`)
-                            .setLabel('Equipar')
-                            .setStyle(ButtonStyle.Success)
-                            .setEmoji('➕'),
-                        new ButtonBuilder()
-                            .setCustomId(`gerenciar_${category.id}_desequipar`)
-                            .setLabel('Desequipar')
-                            .setStyle(ButtonStyle.Danger)
-                            .setEmoji('➖'),
-                        new ButtonBuilder()
-                            .setCustomId(`gerenciar_${category.id}_editar`)
-                            .setLabel('Ver/Editar')
-                            .setStyle(ButtonStyle.Primary)
-                            .setEmoji('✏️')
-                    );
-                }
-                
-                await thread.send({ embeds: [embed], components: [actionRow] });
-
             } catch (error) {
                 console.error(`Falha ao criar tópico para ${category.name}:`, error);
+                continue; // Pula para a próxima categoria se a criação do tópico falhar
             }
+        }
+        
+        // Limpa mensagens antigas do bot no tópico para manter apenas a mais recente
+        const messages = await thread.messages.fetch({ limit: 50 });
+        const botMessages = messages.filter(m => m.author.id === channel.client.user.id);
+        if (botMessages.size > 0) {
+            await thread.bulkDelete(botMessages).catch(err => console.log("Não foi possível apagar mensagens antigas, elas podem ter mais de 14 dias.", err.message));
+        }
+
+        if (category.id === 'estatisticas') {
+            const imageBuffer = await createProfileImage(userData, discordUser);
+            const attachment = new AttachmentBuilder(imageBuffer, { name: 'profile-stats.png' });
+            await thread.send({ files: [attachment] });
+        } else if (category.isPrivate) {
+             const embed = new EmbedBuilder()
+                .setColor(0x808080)
+                .setTitle(`${category.emoji} ${category.name}`)
+                .setDescription('Este é o seu feed de notificações sobre o bot.');
+             await thread.send({ embeds: [embed] });
+        } else {
+            const embed = new EmbedBuilder()
+                .setColor(0x4BC5FF)
+                .setTitle(`${category.emoji} Gerenciador de ${category.name}`)
+                .setDescription('Aqui você pode gerenciar seus itens equipados. A imagem acima exibirá seus itens.\n\nUse os botões abaixo para interagir.')
+                .setImage('https://via.placeholder.com/400x100/2f3136/2f3136.png'); // Placeholder
+
+            const actionRow = new ActionRowBuilder();
+            
+            if (category.id === 'gamepasses' || category.id === 'auras') {
+                actionRow.addComponents(
+                    new ButtonBuilder()
+                        .setCustomId(`gerenciar_${category.id}_equipar`)
+                        .setLabel('Equipar')
+                        .setStyle(ButtonStyle.Success)
+                        .setEmoji('➕'),
+                    new ButtonBuilder()
+                        .setCustomId(`gerenciar_${category.id}_desequipar`)
+                        .setLabel('Desequipar')
+                        .setStyle(ButtonStyle.Danger)
+                        .setEmoji('➖')
+                );
+            } else {
+                actionRow.addComponents(
+                    new ButtonBuilder()
+                        .setCustomId(`gerenciar_${category.id}_equipar`)
+                        .setLabel('Equipar')
+                        .setStyle(ButtonStyle.Success)
+                        .setEmoji('➕'),
+                    new ButtonBuilder()
+                        .setCustomId(`gerenciar_${category.id}_desequipar`)
+                        .setLabel('Desequipar')
+                        .setStyle(ButtonStyle.Danger)
+                        .setEmoji('➖'),
+                    new ButtonBuilder()
+                        .setCustomId(`gerenciar_${category.id}_editar`)
+                        .setLabel('Ver/Editar')
+                        .setStyle(ButtonStyle.Primary)
+                        .setEmoji('✏️')
+                );
+            }
+            
+            await thread.send({ embeds: [embed], components: [actionRow] });
         }
     }
 }
