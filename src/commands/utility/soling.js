@@ -9,6 +9,7 @@ import { createProfileImage } from '../../utils/createProfileImage.js';
 const ALLOWED_CHANNEL_IDS = ['1429295597374144563', '1426957344897761282', '1429309293076680744'];
 const SOLING_POST_CHANNEL_ID = '1429295597374144563';
 const WEBHOOK_NAME = 'Soling Bot';
+const ADMIN_ROLE_ID = '1429318984716521483';
 
 // Função para encontrar ou criar o webhook necessário
 async function getOrCreateWebhook(channel) {
@@ -213,9 +214,8 @@ async function handleInteraction(interaction) {
             const newRequestRef = doc(collection(firestore, 'dungeon_requests'));
             const newRequestId = newRequestRef.id;
 
-            // 4. Criar e postar a nova mensagem via Webhook com o botão final
+            // 4. Criar e postar a nova mensagem via Webhook com os botões finais
             let messageContent = '';
-            
             if (type === 'help') {
                 messageContent = `Buscando ajuda para solar a **${raidNome}**, ficarei grato com quem puder ajudar.`;
             } else { // hosting
@@ -228,12 +228,20 @@ async function handleInteraction(interaction) {
             
             const webhookClient = new WebhookClient({ url: webhook.url });
             
+            const confirmLabel = type === 'help' ? 'Vou Ajudar' : 'Vou Precisar';
             const confirmButton = new ButtonBuilder()
-                .setCustomId(`soling_confirm_${newRequestId}_${user.id}`) // ID final
-                .setLabel('Vou Ajudar')
+                .setCustomId(`soling_confirm_${newRequestId}_${user.id}`)
+                .setLabel(confirmLabel)
                 .setStyle(ButtonStyle.Success)
                 .setEmoji('👁️');
-            const row = new ActionRowBuilder().addComponents(confirmButton);
+
+            const finishButton = new ButtonBuilder()
+                .setCustomId(`soling_finish_${newRequestId}_${user.id}`)
+                .setLabel('Finalizar')
+                .setStyle(ButtonStyle.Danger)
+                .setEmoji('🗑️');
+
+            const row = new ActionRowBuilder().addComponents(confirmButton, finishButton);
             
             const message = await webhookClient.send({
                 content: messageContent,
@@ -244,15 +252,15 @@ async function handleInteraction(interaction) {
             });
 
             // 5. Armazenar o novo pedido no Firestore com o ID correto
-            const finalRequestRef = doc(firestore, 'dungeon_requests', message.id);
+            const finalRequestRef = doc(firestore, 'dungeon_requests', newRequestId); // Use o ID gerado
             const newRequestData = {
-                id: message.id, // Usar o ID da mensagem real como ID do documento
+                id: newRequestId,
                 userId: user.id,
                 username: user.username,
                 avatarUrl: user.displayAvatarURL(),
                 type: type,
                 raidName: raidNome,
-                messageId: message.id,
+                messageId: message.id, // Armazena o ID da mensagem real para poder deletá-la
                 createdAt: serverTimestamp(),
                 status: 'active',
                 confirmedUsers: []
@@ -262,16 +270,15 @@ async function handleInteraction(interaction) {
             // 6. Executar todas as operações no banco de dados
             await batch.commit();
             
-            await interaction.editReply({ content: 'Seu pedido foi postado com sucesso! Pedidos antigos do mesmo tipo foram removidos.' });
-            interaction.client.interactions.delete(`soling_temp_${interaction.user.id}`); // Limpar dados temporários
+            await interaction.editReply({ content: 'Seu pedido foi postado com sucesso!' });
+            interaction.client.interactions.delete(`soling_temp_${interaction.user.id}`);
 
         } else if (action === 'confirm' && interaction.isButton()) {
-            const messageId = params[0];
+            const requestId = params[0];
             const ownerId = params[1];
             
-            const requestRef = doc(firestore, 'dungeon_requests', messageId);
+            const requestRef = doc(firestore, 'dungeon_requests', requestId);
             
-            // Se o dono do post clicar
             if (interaction.user.id === ownerId) {
                 const requestSnap = await getDoc(requestRef);
                 if (!requestSnap.exists() || !requestSnap.data().confirmedUsers || requestSnap.data().confirmedUsers.length === 0) {
@@ -280,7 +287,7 @@ async function handleInteraction(interaction) {
                 
                 const confirmedUsers = requestSnap.data().confirmedUsers;
                 const selectMenu = new StringSelectMenuBuilder()
-                    .setCustomId(`soling_selectuser_${messageId}_${ownerId}`)
+                    .setCustomId(`soling_selectuser_${requestId}_${ownerId}`)
                     .setPlaceholder('Selecione um usuário para ver o perfil')
                     .addOptions(confirmedUsers.map(u => ({
                         label: u.username,
@@ -290,7 +297,7 @@ async function handleInteraction(interaction) {
                 const row = new ActionRowBuilder().addComponents(selectMenu);
                 await interaction.reply({ content: 'Selecione um participante para ver seus dados:', components: [row], ephemeral: true });
             
-            } else { // Se outro usuário clicar
+            } else { 
                 await interaction.deferUpdate();
                 const newUser = { userId: interaction.user.id, username: interaction.user.username };
                 await updateDoc(requestRef, {
@@ -320,6 +327,38 @@ async function handleInteraction(interaction) {
             } catch (e) {
                 console.error("Erro ao criar imagem de perfil no /soling:", e);
                 await interaction.editReply({ content: 'Ocorreu um erro ao gerar a imagem de perfil do usuário.'});
+            }
+
+        } else if (action === 'finish' && interaction.isButton()) {
+            const requestId = params[0];
+            const ownerId = params[1];
+
+            const member = await interaction.guild.members.fetch(interaction.user.id);
+            const isOwner = interaction.user.id === ownerId;
+            const isModerator = member.roles.cache.has(ADMIN_ROLE_ID);
+
+            if (!isOwner && !isModerator) {
+                return interaction.reply({ content: 'Apenas o dono do anúncio ou um moderador pode finalizá-lo.', ephemeral: true });
+            }
+            
+            await interaction.deferUpdate();
+
+            try {
+                const requestRef = doc(firestore, 'dungeon_requests', requestId);
+                const requestSnap = await getDoc(requestRef);
+
+                if (requestSnap.exists()) {
+                    await updateDoc(requestRef, { status: 'closed' });
+
+                    const messageId = requestSnap.data().messageId;
+                    const solingChannel = await interaction.client.channels.fetch(SOLING_POST_CHANNEL_ID);
+                    const messageToDelete = await solingChannel.messages.fetch(messageId);
+                    await messageToDelete.delete();
+                }
+                 await interaction.followUp({ content: 'Anúncio finalizado e removido com sucesso!', ephemeral: true });
+            } catch(e) {
+                console.warn(`Não foi possível finalizar o anúncio (Request ID: ${requestId}):`, e.message);
+                 await interaction.followUp({ content: 'Não foi possível encontrar ou remover o anúncio. Ele pode já ter sido removido.', ephemeral: true });
             }
         }
     } catch (error) {
