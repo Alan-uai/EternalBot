@@ -50,12 +50,8 @@ export async function execute(interaction) {
     const userRef = doc(firestore, 'users', interaction.user.id);
     const userSnap = await getDoc(userRef);
 
-    if (!userSnap.exists()) {
-        return interaction.reply({ content: 'Você precisa ter um perfil criado para usar este comando. Use `/iniciar-perfil`.', ephemeral: true });
-    }
-
-    const userData = userSnap.data();
-    const dungeonSettings = userData.dungeonSettings || {};
+    // Otimização: Se o usuário não existe, dungeonSettings será um objeto vazio.
+    const dungeonSettings = userSnap.exists() ? userSnap.data().dungeonSettings || {} : {};
 
     const modal = new ModalBuilder()
         .setCustomId('soling_modal_submit')
@@ -79,14 +75,14 @@ export async function execute(interaction) {
         .setCustomId('server_link')
         .setLabel("Link do seu servidor privado (Opcional)")
         .setStyle(TextInputStyle.Short)
-        .setValue(dungeonSettings.serverLink || '')
+        .setValue(dungeonSettings.serverLink || '') // Pré-preenche se existir
         .setRequired(false);
 
     const alwaysSendInput = new TextInputBuilder()
         .setCustomId('always_send')
         .setLabel("Sempre enviar o link acima? (sim/não)")
         .setStyle(TextInputStyle.Short)
-        .setValue(dungeonSettings.alwaysSendLink ? 'sim' : 'não')
+        .setValue(dungeonSettings.alwaysSendLink ? 'sim' : 'não') // Pré-preenche se existir
         .setRequired(true);
 
     modal.addComponents(
@@ -145,7 +141,8 @@ async function handleInteraction(interaction) {
             const userRef = doc(firestore, 'users', user.id);
             const alwaysSend = alwaysSendStr === 'sim';
             const settings = { serverLink: serverLink || null, alwaysSendLink: alwaysSend };
-            batch.update(userRef, { dungeonSettings: settings });
+            // Usa set com merge=true para criar o documento se não existir, ou atualizar se existir.
+            batch.set(userRef, { dungeonSettings: settings }, { merge: true });
             
             // 3. Criar e postar a nova mensagem via Webhook
             let messageContent = '';
@@ -162,15 +159,23 @@ async function handleInteraction(interaction) {
             if (alwaysSend && serverLink) {
                 messageContent += `\n\n**Servidor:** ${serverLink}`;
             }
+
+            const confirmButton = new ButtonBuilder()
+                .setCustomId(`soling_confirm_placeholder_${user.id}`) // Placeholder, será atualizado abaixo
+                .setLabel('Vou Ajudar')
+                .setStyle(ButtonStyle.Success)
+                .setEmoji('👁️');
+            const row = new ActionRowBuilder().addComponents(confirmButton);
             
             const message = await webhookClient.send({
                 content: messageContent,
                 username: user.displayName,
                 avatarURL: user.displayAvatarURL(),
+                components: [row], // Envia o botão diretamente
                 wait: true 
             });
 
-            // 4. Armazenar o novo pedido no Firestore
+            // 4. Armazenar o novo pedido no Firestore com o ID da mensagem real
             const newRequestRef = doc(firestore, 'dungeon_requests', message.id);
             const newRequestData = {
                 id: message.id,
@@ -189,16 +194,16 @@ async function handleInteraction(interaction) {
             // 5. Executar todas as operações no banco de dados
             await batch.commit();
 
-            // 6. Editar a mensagem do webhook para adicionar o botão
-            const confirmButton = new ButtonBuilder()
+            // 6. Atualizar o customId do botão na mensagem já postada com o ID real da mensagem
+             const finalConfirmButton = new ButtonBuilder()
                 .setCustomId(`soling_confirm_${message.id}_${user.id}`)
                 .setLabel('Vou Ajudar')
                 .setStyle(ButtonStyle.Success)
                 .setEmoji('👁️');
-            const row = new ActionRowBuilder().addComponents(confirmButton);
+            const finalRow = new ActionRowBuilder().addComponents(finalConfirmButton);
 
             await webhookClient.editMessage(message.id, {
-                components: [row]
+                components: [finalRow]
             });
             
             await interaction.editReply({ content: 'Seu pedido foi postado com sucesso! Pedidos antigos foram removidos.' });
