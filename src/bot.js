@@ -386,12 +386,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
             }
         } catch (error) {
             console.error(`Erro ao executar o comando /${interaction.commandName}:`, error);
-            const errorMessage = 'Ocorreu um erro ao executar este comando!';
-            // Lógica para responder de forma segura, evitando o erro de "já reconhecido"
             if (interaction.replied || interaction.deferred) {
-                await interaction.followUp({ content: errorMessage, ephemeral: true }).catch(e => console.error("Falha ao enviar followUp de erro:", e));
+                await interaction.followUp({ content: 'Ocorreu um erro ao executar este comando!', ephemeral: true }).catch(e => console.error("Falha ao enviar followUp de erro:", e));
             } else {
-                await interaction.reply({ content: errorMessage, ephemeral: true }).catch(e => console.error("Falha ao enviar reply de erro:", e));
+                await interaction.reply({ content: 'Ocorreu um erro ao executar este comando!', ephemeral: true }).catch(e => console.error("Falha ao enviar reply de erro:", e));
             }
         }
         return;

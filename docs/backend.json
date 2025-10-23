@@ -195,7 +195,8 @@
             "description": "User preferences for dungeon finder messages.",
             "properties": {
                 "serverLink": { "type": "string", "description": "The user's private server link." },
-                "alwaysSendLink": { "type": "boolean", "description": "If true, always send the server link in /soling posts." }
+                "alwaysSendLink": { "type": "boolean", "description": "If true, always send the server link in /soling posts." },
+                "deleteAfterMinutes": { "type": "number", "description": "Automatically delete the soling post after this many minutes." }
             }
         },
         "weaponSlots": {

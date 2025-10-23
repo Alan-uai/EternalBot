@@ -113,6 +113,7 @@ async function handleTypeSelection(interaction, type) {
         });
     } catch(error) {
         console.error('Erro em handleTypeSelection:', error);
+         await interaction.followUp({ content: 'Ocorreu um erro ao selecionar o tipo.', ephemeral: true }).catch(console.error);
     }
 }
 
@@ -126,58 +127,106 @@ async function handleRaidSelection(interaction, type) {
         // Armazenar temporariamente a escolha
         interaction.client.interactions.set(`soling_temp_${interaction.user.id}`, { type, raid: selectedRaidLabel });
         
-        // Buscar dados do usuário para pré-preencher
+        // Buscar dados do usuário para verificar o fluxo
         const userRef = doc(firestore, 'users', interaction.user.id);
         const userSnap = await getDoc(userRef);
         const dungeonSettings = userSnap.exists() ? userSnap.data().dungeonSettings || {} : {};
 
-        const modal = new ModalBuilder()
-            .setCustomId('soling_modal_submit')
-            .setTitle(`Pedido para: ${selectedRaidLabel}`);
-        
-        const serverLinkInput = new TextInputBuilder()
-            .setCustomId('server_link')
-            .setLabel("Link do seu servidor privado (Opcional)")
-            .setStyle(TextInputStyle.Short)
-            .setValue(dungeonSettings.serverLink || '')
-            .setRequired(false);
+        // Lógica do "Sempre Enviar Link"
+        if (dungeonSettings.alwaysSendLink && dungeonSettings.serverLink) {
+            // Pula o modal e vai direto para a postagem
+            await handlePostRequest(interaction, {
+                serverLink: dungeonSettings.serverLink,
+                alwaysSend: dungeonSettings.alwaysSendLink,
+                deleteAfter: dungeonSettings.deleteAfterMinutes,
+            });
+        } else {
+            // Mostra o modal para configuração
+            const modal = new ModalBuilder()
+                .setCustomId('soling_modal_submit')
+                .setTitle(`Pedido para: ${selectedRaidLabel}`);
+            
+            const serverLinkInput = new TextInputBuilder()
+                .setCustomId('server_link')
+                .setLabel("Link do seu servidor privado (Opcional)")
+                .setStyle(TextInputStyle.Short)
+                .setValue(dungeonSettings.serverLink || '')
+                .setRequired(false);
 
-        const alwaysSendInput = new TextInputBuilder()
-            .setCustomId('always_send')
-            .setLabel("Sempre enviar o link acima? (sim/não)")
-            .setStyle(TextInputStyle.Short)
-            .setValue(dungeonSettings.alwaysSendLink ? 'sim' : 'não')
-            .setRequired(true);
+            const alwaysSendInput = new TextInputBuilder()
+                .setCustomId('always_send')
+                .setLabel("Sempre enviar o link acima? (sim/não)")
+                .setStyle(TextInputStyle.Short)
+                .setValue(dungeonSettings.alwaysSendLink ? 'sim' : 'não')
+                .setRequired(true);
 
-        modal.addComponents(
-            new ActionRowBuilder().addComponents(serverLinkInput),
-            new ActionRowBuilder().addComponents(alwaysSendInput)
-        );
+            const deleteAfterInput = new TextInputBuilder()
+                .setCustomId('delete_after')
+                .setLabel("Apagar post após X minutos (opcional)")
+                .setStyle(TextInputStyle.Short)
+                .setPlaceholder("Deixe em branco para não apagar")
+                .setValue(String(dungeonSettings.deleteAfterMinutes || ''))
+                .setRequired(false);
 
-        await interaction.showModal(modal);
+            modal.addComponents(
+                new ActionRowBuilder().addComponents(serverLinkInput),
+                new ActionRowBuilder().addComponents(alwaysSendInput),
+                new ActionRowBuilder().addComponents(deleteAfterInput)
+            );
+
+            await interaction.showModal(modal);
+        }
     } catch(error) {
         console.error('Erro em handleRaidSelection:', error);
+         await interaction.followUp({ content: 'Ocorreu um erro ao selecionar a raid.', ephemeral: true }).catch(console.error);
     }
 }
 
 async function handleModalSubmit(interaction) {
     try {
-        await interaction.deferReply({ ephemeral: true });
+        const serverLink = interaction.fields.getTextInputValue('server_link');
+        const alwaysSendStr = interaction.fields.getTextInputValue('always_send').toLowerCase();
+        const deleteAfterStr = interaction.fields.getTextInputValue('delete_after');
+
+        if (alwaysSendStr !== 'sim' && alwaysSendStr !== 'não') {
+            return interaction.reply({ content: 'Valor inválido para "Sempre enviar o link?". Por favor, use "sim" ou "não".', ephemeral: true });
+        }
         
+        const deleteAfter = parseInt(deleteAfterStr, 10);
+        if (deleteAfterStr && (isNaN(deleteAfter) || deleteAfter <= 0)) {
+            return interaction.reply({ content: 'O tempo para apagar deve ser um número positivo de minutos.', ephemeral: true });
+        }
+        
+        await handlePostRequest(interaction, {
+            serverLink,
+            alwaysSend: alwaysSendStr === 'sim',
+            deleteAfter: deleteAfter || null
+        });
+
+    } catch (error) {
+        console.error("Erro em handleModalSubmit:", error);
+    }
+}
+
+async function handlePostRequest(interaction, settings) {
+    // Se a interação veio de um modal, ela precisa ser respondida/adiada primeiro
+    if (interaction.isModalSubmit()) {
+         await interaction.deferReply({ ephemeral: true });
+    }
+    // Se veio de um menu (pulou o modal), precisa ser atualizada
+    else if (interaction.isStringSelectMenu()) {
+        await interaction.update({ content: 'Processando seu pedido...', components: [] });
+    }
+
+    try {
         const { firestore } = initializeFirebase();
         const tempData = interaction.client.interactions.get(`soling_temp_${interaction.user.id}`);
         if (!tempData) {
             return interaction.editReply({ content: 'Sua sessão expirou. Por favor, use o comando /soling novamente.' });
         }
         const { type, raid: raidNome } = tempData;
-
-        const serverLink = interaction.fields.getTextInputValue('server_link');
-        const alwaysSendStr = interaction.fields.getTextInputValue('always_send').toLowerCase();
+        const { serverLink, alwaysSend, deleteAfter } = settings;
         const user = interaction.user;
-
-        if (alwaysSendStr !== 'sim' && alwaysSendStr !== 'não') {
-            return interaction.editReply({ content: 'Valor inválido para "Sempre enviar o link?". Por favor, use "sim" ou "não".' });
-        }
         
         const solingChannel = await interaction.client.channels.fetch(SOLING_POST_CHANNEL_ID).catch(() => null);
         if (!solingChannel) {
@@ -207,9 +256,8 @@ async function handleModalSubmit(interaction) {
         }
 
         const userRef = doc(firestore, 'users', user.id);
-        const alwaysSend = alwaysSendStr === 'sim';
-        const settings = { serverLink: serverLink || null, alwaysSendLink: alwaysSend };
-        batch.set(userRef, { dungeonSettings: settings }, { merge: true });
+        const newSettings = { serverLink: serverLink || null, alwaysSendLink: alwaysSend, deleteAfterMinutes: deleteAfter || null };
+        batch.set(userRef, { dungeonSettings: newSettings }, { merge: true });
         
         const newRequestRef = doc(collection(firestore, 'dungeon_requests'));
         const newRequestId = newRequestRef.id;
@@ -249,6 +297,14 @@ async function handleModalSubmit(interaction) {
             components: [row],
             wait: true 
         });
+        
+        if (deleteAfter && message) {
+            setTimeout(() => {
+                solingChannel.messages.delete(message.id)
+                    .catch(e => console.warn(`Não foi possível apagar a mensagem agendada (ID: ${message.id}): ${e.message}`));
+                updateDoc(newRequestRef, { status: 'closed' }).catch(console.error);
+            }, deleteAfter * 60 * 1000);
+        }
 
         const newRequestData = {
             id: newRequestId,
@@ -269,14 +325,15 @@ async function handleModalSubmit(interaction) {
         await interaction.editReply({ content: 'Seu pedido foi postado com sucesso!' });
         interaction.client.interactions.delete(`soling_temp_${interaction.user.id}`);
     } catch(error) {
-        console.error("Erro em handleModalSubmit:", error);
-         if (interaction.replied || interaction.deferred) {
-            await interaction.followUp({ content: 'Ocorreu um erro ao postar seu pedido.', ephemeral: true }).catch(console.error);
-        } else {
+        console.error("Erro em handlePostRequest:", error);
+        if (!interaction.replied && !interaction.deferred) {
             await interaction.reply({ content: 'Ocorreu um erro ao postar seu pedido.', ephemeral: true }).catch(console.error);
+        } else {
+            await interaction.followUp({ content: 'Ocorreu um erro ao postar seu pedido.', ephemeral: true }).catch(console.error);
         }
     }
 }
+
 
 async function handleConfirm(interaction, requestId, ownerId) {
     try {
@@ -312,6 +369,7 @@ async function handleConfirm(interaction, requestId, ownerId) {
         }
     } catch (error) {
          console.error("Erro em handleConfirm:", error);
+         await interaction.followUp({ content: 'Ocorreu um erro ao confirmar presença.', ephemeral: true }).catch(console.error);
     }
 }
 
@@ -372,28 +430,26 @@ async function handleFinish(interaction, requestId, ownerId) {
 
 
 async function handleInteraction(interaction) {
-    const [command, action, ...params] = interaction.customId.split('_');
+    try {
+        const [command, action, ...params] = interaction.customId.split('_');
+        if (command !== 'soling') return;
 
-    if (command !== 'soling') return;
-
-    // Roteamento de Interações
-    if (interaction.isButton()) {
-        if (action === 'type') {
-            await handleTypeSelection(interaction, params[0]);
-        } else if (action === 'confirm') {
-            await handleConfirm(interaction, params[0], params[1]);
-        } else if (action === 'finish') {
-            await handleFinish(interaction, params[0], params[1]);
+        if (interaction.isButton()) {
+            if (action === 'type') await handleTypeSelection(interaction, params[0]);
+            else if (action === 'confirm') await handleConfirm(interaction, params[0], params[1]);
+            else if (action === 'finish') await handleFinish(interaction, params[0], params[1]);
+        } else if (interaction.isStringSelectMenu()) {
+            if (action === 'raid') await handleRaidSelection(interaction, params[0]);
+            else if (action === 'selectuser') await handleSelectUser(interaction);
+        } else if (interaction.isModalSubmit()) {
+            if (action === 'modal') await handleModalSubmit(interaction);
         }
-    } else if (interaction.isStringSelectMenu()) {
-        if (action === 'raid') {
-            await handleRaidSelection(interaction, params[0]);
-        } else if (action === 'selectuser') {
-            await handleSelectUser(interaction);
-        }
-    } else if (interaction.isModalSubmit()) {
-        if (action === 'modal') {
-             await handleModalSubmit(interaction);
+    } catch (error) {
+        console.error(`Erro no manipulador de interação de /soling (Ação: ${interaction.customId}):`, error);
+         if (!interaction.replied && !interaction.deferred) {
+            await interaction.reply({ content: 'Ocorreu um erro ao processar esta ação.', ephemeral: true }).catch(console.error);
+        } else {
+            await interaction.followUp({ content: 'Ocorreu um erro ao processar esta ação.', ephemeral: true }).catch(console.error);
         }
     }
 }
