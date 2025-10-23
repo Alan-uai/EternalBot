@@ -209,7 +209,11 @@ async function handleInteraction(interaction) {
             const settings = { serverLink: serverLink || null, alwaysSendLink: alwaysSend };
             batch.set(userRef, { dungeonSettings: settings }, { merge: true });
             
-            // 3. Criar e postar a nova mensagem via Webhook
+            // 3. Gerar o ID do novo pedido ANTES de postar
+            const newRequestRef = doc(collection(firestore, 'dungeon_requests'));
+            const newRequestId = newRequestRef.id;
+
+            // 4. Criar e postar a nova mensagem via Webhook com o botão final
             let messageContent = '';
             
             if (type === 'help') {
@@ -225,7 +229,7 @@ async function handleInteraction(interaction) {
             const webhookClient = new WebhookClient({ url: webhook.url });
             
             const confirmButton = new ButtonBuilder()
-                .setCustomId(`soling_confirm_placeholder_${user.id}`) // Placeholder
+                .setCustomId(`soling_confirm_${newRequestId}_${user.id}`) // ID final
                 .setLabel('Vou Ajudar')
                 .setStyle(ButtonStyle.Success)
                 .setEmoji('👁️');
@@ -239,10 +243,10 @@ async function handleInteraction(interaction) {
                 wait: true 
             });
 
-            // 4. Armazenar o novo pedido no Firestore com o ID da mensagem real
-            const newRequestRef = doc(firestore, 'dungeon_requests', message.id);
+            // 5. Armazenar o novo pedido no Firestore com o ID correto
+            const finalRequestRef = doc(firestore, 'dungeon_requests', message.id);
             const newRequestData = {
-                id: message.id,
+                id: message.id, // Usar o ID da mensagem real como ID do documento
                 userId: user.id,
                 username: user.username,
                 avatarUrl: user.displayAvatarURL(),
@@ -253,22 +257,10 @@ async function handleInteraction(interaction) {
                 status: 'active',
                 confirmedUsers: []
             };
-            batch.set(newRequestRef, newRequestData);
+            batch.set(finalRequestRef, newRequestData);
             
-            // 5. Executar todas as operações no banco de dados
+            // 6. Executar todas as operações no banco de dados
             await batch.commit();
-
-            // 6. Atualizar o customId do botão na mensagem já postada
-             const finalConfirmButton = new ButtonBuilder()
-                .setCustomId(`soling_confirm_${message.id}_${user.id}`)
-                .setLabel('Vou Ajudar')
-                .setStyle(ButtonStyle.Success)
-                .setEmoji('👁️');
-            const finalRow = new ActionRowBuilder().addComponents(finalConfirmButton);
-
-            await webhookClient.editMessage(message.id, {
-                components: [finalRow]
-            });
             
             await interaction.editReply({ content: 'Seu pedido foi postado com sucesso! Pedidos antigos do mesmo tipo foram removidos.' });
             interaction.client.interactions.delete(`soling_temp_${interaction.user.id}`); // Limpar dados temporários
@@ -332,10 +324,10 @@ async function handleInteraction(interaction) {
         }
     } catch (error) {
         console.error(`Erro no manipulador de interação de /soling (Ação: ${action}):`, error);
-        if (interaction.replied || interaction.deferred) {
-            await interaction.followUp({ content: 'Ocorreu um erro ao processar sua ação.', ephemeral: true }).catch(console.error);
-        } else {
+        if (!interaction.replied && !interaction.deferred) {
             await interaction.reply({ content: 'Ocorreu um erro ao processar sua ação.', ephemeral: true }).catch(console.error);
+        } else {
+             await interaction.followUp({ content: 'Ocorreu um erro ao processar sua ação.', ephemeral: true }).catch(console.error);
         }
     }
 }
