@@ -1,6 +1,6 @@
 // src/commands/utility/soling.js
 import { SlashCommandBuilder, ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, WebhookClient, StringSelectMenuBuilder } from 'discord.js';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
 import { lobbyDungeonsArticle } from '../../data/wiki-articles/lobby-dungeons.js';
 import { raidRequirementsArticle } from '../../data/wiki-articles/raid-requirements.js';
@@ -46,29 +46,18 @@ export async function execute(interaction) {
         return interaction.reply({ content: 'Desculpe, este comando está temporariamente desativado por um problema de configuração.', ephemeral: true });
     }
 
+    const { firestore } = initializeFirebase();
+    const userRef = doc(firestore, 'users', interaction.user.id);
+    const userSnap = await getDoc(userRef);
+
+    if (!userSnap.exists()) {
+        return interaction.reply({ content: 'Você precisa ter um perfil criado para usar este comando. Use `/iniciar-perfil`.', ephemeral: true });
+    }
+
+    const userData = userSnap.data();
+    const dungeonSettings = userData.dungeonSettings || {};
+
     const modal = new ModalBuilder()
-        .setCustomId('soling_modal')
-        .setTitle('Procurar/Oferecer Ajuda em Raid');
-
-    const aProcuraDeInput = new StringSelectMenuBuilder()
-        .setCustomId('procurando_tipo')
-        .setPlaceholder('O que você está procurando?')
-        .addOptions([
-            { label: 'Ajuda para solar', value: 'ajuda' },
-            { label: 'Solar para quem precisar', value: 'solar' },
-        ]);
-
-    const raidInput = new StringSelectMenuBuilder()
-        .setCustomId('raid_nome')
-        .setPlaceholder('Qual raid você vai fazer?')
-        .addOptions(getAvailableRaids().slice(0, 25)); // Limite de 25 opções
-
-    const firstActionRow = new ActionRowBuilder().addComponents(aProcuraDeInput);
-    const secondActionRow = new ActionRowBuilder().addComponents(raidInput);
-
-    // Modais não suportam menus de seleção diretamente. Precisamos de uma abordagem diferente.
-    // Vamos usar um modal com campos de texto e instruir o usuário.
-     const modalForReal = new ModalBuilder()
         .setCustomId('soling_modal_submit')
         .setTitle('Procurar/Oferecer Ajuda em Raid');
 
@@ -86,12 +75,30 @@ export async function execute(interaction) {
         .setStyle(TextInputStyle.Short)
         .setRequired(true);
 
-    modalForReal.addComponents(
+    const serverLinkInput = new TextInputBuilder()
+        .setCustomId('server_link')
+        .setLabel("Link do seu servidor privado (Opcional)")
+        .setStyle(TextInputStyle.Short)
+        .setPlaceholder("https://www.roblox.com/games/...")
+        .setValue(dungeonSettings.serverLink || '')
+        .setRequired(false);
+
+    const alwaysSendInput = new TextInputBuilder()
+        .setCustomId('always_send')
+        .setLabel("Sempre enviar o link acima? (sim/não)")
+        .setStyle(TextInputStyle.Short)
+        .setPlaceholder("sim ou não")
+        .setValue(dungeonSettings.alwaysSendLink ? 'sim' : 'não')
+        .setRequired(true);
+
+    modal.addComponents(
         new ActionRowBuilder().addComponents(tipoInput),
-        new ActionRowBuilder().addComponents(raidNomeInput)
+        new ActionRowBuilder().addComponents(raidNomeInput),
+        new ActionRowBuilder().addComponents(serverLinkInput),
+        new ActionRowBuilder().addComponents(alwaysSendInput)
     );
 
-    await interaction.showModal(modalForReal);
+    await interaction.showModal(modal);
 }
 
 async function handleInteraction(interaction) {
@@ -101,23 +108,24 @@ async function handleInteraction(interaction) {
 
     const tipo = interaction.fields.getTextInputValue('tipo').toLowerCase();
     const raidNome = interaction.fields.getTextInputValue('raid');
+    const serverLink = interaction.fields.getTextInputValue('server_link');
+    const alwaysSendStr = interaction.fields.getTextInputValue('always_send').toLowerCase();
     const user = interaction.user;
 
     if (tipo !== 'ajuda' && tipo !== 'solar') {
         return interaction.editReply({ content: 'Tipo de procura inválido. Por favor, digite "ajuda" ou "solar".' });
     }
+    if (alwaysSendStr !== 'sim' && alwaysSendStr !== 'não') {
+        return interaction.editReply({ content: 'Valor inválido para "Sempre enviar o link?". Por favor, use "sim" ou "não".' });
+    }
 
     const { firestore } = initializeFirebase();
     const userRef = doc(firestore, 'users', user.id);
-    const userSnap = await getDoc(userRef);
-
-    if (!userSnap.exists()) {
-        return interaction.editReply({ content: 'Você precisa ter um perfil criado para usar este comando. Use `/iniciar-perfil`.' });
-    }
     
-    const userData = userSnap.data();
-    const serverLink = userData.dungeonSettings?.serverLink;
-    const alwaysSend = userData.dungeonSettings?.alwaysSendLink;
+    // Salvar as configurações de dungeon atualizadas
+    const alwaysSend = alwaysSendStr === 'sim';
+    const settings = { serverLink: serverLink || null, alwaysSendLink: alwaysSend };
+    await updateDoc(userRef, { dungeonSettings: settings }, { merge: true });
 
     let messageContent = '';
     let requestType = '';
@@ -157,11 +165,7 @@ async function handleInteraction(interaction) {
             status: 'active'
         });
 
-        // Adicionar um botão para fechar o pedido (para o usuário que o criou)
-        // Isso requer que o bot edite a mensagem do webhook, o que é possível.
-        // Por simplicidade inicial, vamos deixar sem o botão de fechar.
-
-        await interaction.editReply({ content: 'Seu pedido foi postado com sucesso!' });
+        await interaction.editReply({ content: 'Seu pedido foi postado com sucesso e suas configurações de link foram salvas!' });
 
     } catch (error) {
         console.error('Erro ao enviar webhook de /soling:', error);
@@ -170,5 +174,3 @@ async function handleInteraction(interaction) {
 }
 
 export { handleInteraction };
-
-    
