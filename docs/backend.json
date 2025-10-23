@@ -236,7 +236,19 @@
             "raidName": { "type": "string", "description": "The name of the raid for the request." },
             "messageId": { "type": "string", "description": "The ID of the message posted in the soling channel." },
             "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp of the request." },
-            "status": { "type": "string", "enum": ["active", "closed"], "description": "The status of the request." }
+            "status": { "type": "string", "enum": ["active", "closed"], "description": "The status of the request." },
+            "confirmedUsers": {
+                "type": "array",
+                "description": "A list of users who confirmed they will help.",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "userId": { "type": "string" },
+                        "username": { "type": "string" }
+                    },
+                    "required": ["userId", "username"]
+                }
+            }
         },
         "required": ["id", "userId", "type", "raidName", "createdAt", "status"]
     },
