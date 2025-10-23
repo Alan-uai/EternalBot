@@ -1,5 +1,5 @@
 // src/commands/utility/soling.js
-import { SlashCommandBuilder, ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, WebhookClient, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, AttachmentBuilder } from 'discord.js';
+import { SlashCommandBuilder, ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, WebhookClient, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, AttachmentBuilder, ChannelType } from 'discord.js';
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, query, where, getDocs, writeBatch, arrayUnion } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
 import { lobbyDungeonsArticle } from '../../data/wiki-articles/lobby-dungeons.js';
@@ -8,7 +8,28 @@ import { createProfileImage } from '../../utils/createProfileImage.js';
 
 const ALLOWED_CHANNEL_IDS = ['1429295597374144563', '1426957344897761282', '1429309293076680744'];
 const SOLING_POST_CHANNEL_ID = '1429295597374144563';
-const WEBHOOK_URL = process.env.SOLING_WEBHOOK_URL; 
+const WEBHOOK_NAME = 'Soling Bot';
+
+// Função para encontrar ou criar o webhook necessário
+async function getOrCreateWebhook(channel) {
+    const webhooks = await channel.fetchWebhooks();
+    let webhook = webhooks.find(wh => wh.name === WEBHOOK_NAME && wh.owner.id === channel.client.user.id);
+
+    if (!webhook) {
+        try {
+            webhook = await channel.createWebhook({
+                name: WEBHOOK_NAME,
+                avatar: channel.client.user.displayAvatarURL(),
+                reason: 'Webhook para o sistema de /soling'
+            });
+            console.log(`Webhook '${WEBHOOK_NAME}' criado no canal ${channel.name}.`);
+        } catch (error) {
+            console.error("Erro ao criar o webhook:", error);
+            return null;
+        }
+    }
+    return webhook;
+}
 
 export const data = new SlashCommandBuilder()
     .setName('soling')
@@ -43,9 +64,14 @@ export async function execute(interaction) {
         return interaction.reply({ content: `Este comando só pode ser usado nos canais designados de /soling, ajuda ou chat.`, ephemeral: true });
     }
     
-    if (!WEBHOOK_URL) {
-        console.error("[ERRO] A URL do Webhook de /soling não está configurada no .env (SOLING_WEBHOOK_URL).");
-        return interaction.reply({ content: 'Desculpe, este comando está temporariamente desativado por um problema de configuração.', ephemeral: true });
+    const solingChannel = await interaction.client.channels.fetch(SOLING_POST_CHANNEL_ID).catch(() => null);
+     if (!solingChannel || solingChannel.type !== ChannelType.GuildText) {
+        return interaction.reply({ content: 'O canal de postagem para /soling não foi encontrado ou não é um canal de texto.', ephemeral: true });
+    }
+
+    const webhook = await getOrCreateWebhook(solingChannel);
+    if (!webhook) {
+        return interaction.reply({ content: 'Desculpe, este comando está temporariamente desativado por um problema de configuração do webhook. O administrador foi notificado.', ephemeral: true });
     }
 
     const initialButtons = new ActionRowBuilder()
@@ -146,8 +172,18 @@ async function handleInteraction(interaction) {
         if (alwaysSendStr !== 'sim' && alwaysSendStr !== 'não') {
             return interaction.editReply({ content: 'Valor inválido para "Sempre enviar o link?". Por favor, use "sim" ou "não".' });
         }
+        
+        const solingChannel = await interaction.client.channels.fetch(SOLING_POST_CHANNEL_ID).catch(() => null);
+        if (!solingChannel) {
+            return interaction.editReply({ content: 'O canal de postagem de /soling não foi encontrado.' });
+        }
+        
+        const webhook = await getOrCreateWebhook(solingChannel);
+        if (!webhook) {
+             return interaction.editReply({ content: 'Não foi possível criar ou encontrar o webhook necessário para postar a mensagem.' });
+        }
+        const webhookClient = new WebhookClient({ url: webhook.url });
 
-        const webhookClient = new WebhookClient({ url: WEBHOOK_URL });
 
         try {
             // 1. Encontrar e fechar pedidos antigos
@@ -156,7 +192,6 @@ async function handleInteraction(interaction) {
             const oldRequestsSnap = await getDocs(q);
 
             const batch = writeBatch(firestore);
-            const solingChannel = await interaction.client.channels.fetch(SOLING_POST_CHANNEL_ID);
 
             for (const requestDoc of oldRequestsSnap.docs) {
                 const oldRequestData = requestDoc.data();
