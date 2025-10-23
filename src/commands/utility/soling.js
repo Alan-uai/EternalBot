@@ -1,6 +1,6 @@
 // src/commands/utility/soling.js
 import { SlashCommandBuilder, ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, WebhookClient, StringSelectMenuBuilder } from 'discord.js';
-import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, query, where, getDocs, writeBatch } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
 import { lobbyDungeonsArticle } from '../../data/wiki-articles/lobby-dungeons.js';
 import { raidRequirementsArticle } from '../../data/wiki-articles/raid-requirements.js';
@@ -79,7 +79,6 @@ export async function execute(interaction) {
         .setCustomId('server_link')
         .setLabel("Link do seu servidor privado (Opcional)")
         .setStyle(TextInputStyle.Short)
-        .setPlaceholder("https://www.roblox.com/games/...")
         .setValue(dungeonSettings.serverLink || '')
         .setRequired(false);
 
@@ -87,7 +86,6 @@ export async function execute(interaction) {
         .setCustomId('always_send')
         .setLabel("Sempre enviar o link acima? (sim/não)")
         .setStyle(TextInputStyle.Short)
-        .setPlaceholder("sim ou não")
         .setValue(dungeonSettings.alwaysSendLink ? 'sim' : 'não')
         .setRequired(true);
 
@@ -120,40 +118,68 @@ async function handleInteraction(interaction) {
     }
 
     const { firestore } = initializeFirebase();
-    const userRef = doc(firestore, 'users', user.id);
-    
-    // Salvar as configurações de dungeon atualizadas
-    const alwaysSend = alwaysSendStr === 'sim';
-    const settings = { serverLink: serverLink || null, alwaysSendLink: alwaysSend };
-    await updateDoc(userRef, { dungeonSettings: settings }, { merge: true });
-
-    let messageContent = '';
-    let requestType = '';
-
-    if (tipo === 'ajuda') {
-        messageContent = `Buscando ajuda para solar a **${raidNome}**, ficarei grato com quem puder ajudar.`;
-        requestType = 'help';
-    } else { // solar
-        messageContent = `Solando a **${raidNome}** para quem precisar, só entrar pelo link.`;
-        requestType = 'hosting';
-    }
-
-    if (alwaysSend && serverLink) {
-        messageContent += `\n\n**Servidor:** ${serverLink}`;
-    }
-
     const webhookClient = new WebhookClient({ url: WEBHOOK_URL });
-    
+
     try {
+        // 1. Encontrar e fechar pedidos antigos
+        const requestsRef = collection(firestore, 'dungeon_requests');
+        const q = query(requestsRef, where("userId", "==", user.id), where("status", "==", "active"));
+        const oldRequestsSnap = await getDocs(q);
+
+        const batch = writeBatch(firestore);
+        const solingChannel = await interaction.client.channels.fetch(SOLING_CHANNEL_ID);
+
+        for (const requestDoc of oldRequestsSnap.docs) {
+            const oldRequestData = requestDoc.data();
+            try {
+                // Tenta deletar a mensagem antiga postada pelo webhook
+                await webhookClient.deleteMessage(oldRequestData.messageId);
+            } catch (error) {
+                // Se a mensagem não puder ser deletada pelo webhook (ex: permissões, já deletada), tenta pelo canal
+                try {
+                     const oldMessage = await solingChannel.messages.fetch(oldRequestData.messageId);
+                     await oldMessage.delete();
+                } catch(e) {
+                     console.warn(`Não foi possível deletar a mensagem antiga de /soling (ID: ${oldRequestData.messageId}). Pode já ter sido removida.`, e.message);
+                }
+            }
+            // Marca o documento antigo como fechado
+            batch.update(requestDoc.ref, { status: 'closed' });
+        }
+
+
+        // 2. Salvar as configurações de dungeon atualizadas do usuário
+        const userRef = doc(firestore, 'users', user.id);
+        const alwaysSend = alwaysSendStr === 'sim';
+        const settings = { serverLink: serverLink || null, alwaysSendLink: alwaysSend };
+        batch.update(userRef, { dungeonSettings: settings });
+        
+        // 3. Criar e postar a nova mensagem
+        let messageContent = '';
+        let requestType = '';
+
+        if (tipo === 'ajuda') {
+            messageContent = `Buscando ajuda para solar a **${raidNome}**, ficarei grato com quem puder ajudar.`;
+            requestType = 'help';
+        } else { // solar
+            messageContent = `Solando a **${raidNome}** para quem precisar, só entrar pelo link.`;
+            requestType = 'hosting';
+        }
+
+        if (alwaysSend && serverLink) {
+            messageContent += `\n\n**Servidor:** ${serverLink}`;
+        }
+        
         const message = await webhookClient.send({
             content: messageContent,
             username: user.displayName,
             avatarURL: user.displayAvatarURL(),
+            wait: true // Essencial para obter o ID da mensagem criada
         });
         
-        // Armazenar no Firestore
-        const requestRef = doc(firestore, 'dungeon_requests', message.id);
-        await setDoc(requestRef, {
+        // 4. Armazenar o novo pedido no Firestore
+        const newRequestRef = doc(firestore, 'dungeon_requests', message.id);
+        const newRequestData = {
             id: message.id,
             userId: user.id,
             username: user.username,
@@ -163,13 +189,17 @@ async function handleInteraction(interaction) {
             messageId: message.id,
             createdAt: serverTimestamp(),
             status: 'active'
-        });
+        };
+        batch.set(newRequestRef, newRequestData);
+        
+        // 5. Executar todas as operações no banco de dados
+        await batch.commit();
 
-        await interaction.editReply({ content: 'Seu pedido foi postado com sucesso e suas configurações de link foram salvas!' });
+        await interaction.editReply({ content: 'Seu pedido foi postado com sucesso! Pedidos antigos foram removidos.' });
 
     } catch (error) {
-        console.error('Erro ao enviar webhook de /soling:', error);
-        await interaction.editReply({ content: 'Ocorreu um erro ao postar seu pedido. Por favor, tente novamente.' });
+        console.error('Erro no fluxo de /soling:', error);
+        await interaction.editReply({ content: 'Ocorreu um erro ao processar seu pedido. Por favor, tente novamente.' });
     }
 }
 
