@@ -373,84 +373,94 @@ async function handleUnansweredQuestion(message, question, imageAttachment) {
 
 // Evento de interação para executar comandos e interações
 client.on(Events.InteractionCreate, async (interaction) => {
-    const COMMUNITY_HELP_CHANNEL_ID = '1426957344897761282';
-    const MOD_CURATION_CHANNEL_ID = '1426968477482225716';
-
+    // Tratamento de Comandos de Barra (/)
     if (interaction.isChatInputCommand()) {
         const command = client.commands.get(interaction.commandName);
-
         if (!command) {
             console.error(`Nenhum comando correspondente a ${interaction.commandName} foi encontrado.`);
             return;
         }
-
         try {
             if (command.execute) {
-              await command.execute(interaction, { client });
+                await command.execute(interaction, { client });
             }
         } catch (error) {
-            console.error(error);
+            console.error(`Erro ao executar o comando /${interaction.commandName}:`, error);
             const errorMessage = 'Ocorreu um erro ao executar este comando!';
+            // Lógica para responder de forma segura, evitando o erro de "já reconhecido"
             if (interaction.replied || interaction.deferred) {
-                await interaction.followUp({ content: errorMessage, ephemeral: true });
+                await interaction.followUp({ content: errorMessage, ephemeral: true }).catch(e => console.error("Falha ao enviar followUp de erro:", e));
             } else {
-                await interaction.reply({ content: errorMessage, ephemeral: true });
+                await interaction.reply({ content: errorMessage, ephemeral: true }).catch(e => console.error("Falha ao enviar reply de erro:", e));
             }
         }
         return;
     }
 
+    // Tratamento de outras interações (Botões, Menus, Modais)
     if (interaction.isButton() || interaction.isModalSubmit() || interaction.isStringSelectMenu()) {
         const customIdParts = interaction.customId.split('_');
         const commandName = customIdParts[0]; 
-        
-        const interactionHandler = client.interactions.get(commandName);
 
+        // Roteia para o manipulador de interação do comando (ex: 'gerenciar', 'iniciar-perfil')
+        const interactionHandler = client.interactions.get(commandName);
         if (interactionHandler) {
             try {
                 await interactionHandler(interaction, { client });
             } catch (error) {
                 console.error(`Erro ao lidar com interação para ${commandName}:`, error);
-                 if (interaction.replied || interaction.deferred) {
-                    await interaction.followUp({ content: 'Ocorreu um erro ao processar sua ação.', ephemeral: true });
-                } else if (!interaction.replied) {
-                    await interaction.reply({ content: 'Ocorreu um erro ao processar sua ação.', ephemeral: true });
+                const errorMessage = 'Ocorreu um erro ao processar sua ação.';
+                if (interaction.replied || interaction.deferred) {
+                    await interaction.followUp({ content: errorMessage, ephemeral: true }).catch(e => console.error("Falha ao enviar followUp de erro de interação:", e));
+                } else {
+                    await interaction.reply({ content: errorMessage, ephemeral: true }).catch(e => console.error("Falha ao enviar reply de erro de interação:", e));
                 }
             }
+        // Tratamento especial para interações que não seguem o padrão commandName_...
         } else if (interaction.isButton() && interaction.customId.startsWith('feedback_')) {
-             await handleFeedbackButton(interaction);
+            await handleFeedbackButton(interaction);
         } else if (interaction.isButton() && interaction.customId.startsWith('mod_')) {
-             await handleModButton(interaction);
+            await handleModButton(interaction);
         } else if (interaction.customId.startsWith('curate_')) {
-            const [_, action, ...idParts] = customIdParts;
-            const id = idParts.join('_');
-            
-            if (action !== 'approve' && action !== 'reject' && action !== 'regenerate_modal' && action !== 'final_approve') {
-                if(action !== 'fixed') {
-                     await interaction.deferUpdate();
-                }
-            }
-
-            if (action === 'fixed') {
-                await handleCurationFixed(interaction, id);
-            } else if (action === 'approve') {
-                await handleCurationApprove(interaction, id);
-            } else if (action === 'reject') {
-                await handleCurationReject(interaction, id);
-            } else if (action === 'regenerate_modal') {
-                await handleCurationRegenerateModal(interaction, id);
-            } else if (action === 'regenerate_submit') {
-                await handleCurationRegenerateSubmit(interaction, id);
-            } else if (action === 'select' && interaction.isStringSelectMenu()) {
-                await handleCurationSelectAnswer(interaction, id);
-            } else if (action === 'final_approve') {
-                await handleFinalApprove(interaction, id);
-            } else if (action === 'final_reject') {
-                await handleFinalReject(interaction, id);
-            }
+            await handleCurationFlow(interaction);
         }
     }
 });
+
+async function handleCurationFlow(interaction) {
+    const customIdParts = interaction.customId.split('_');
+    const [_, action, ...idParts] = customIdParts;
+    const id = idParts.join('_');
+    
+    // Deferir updates para evitar timeouts, exceto para ações que precisam de uma resposta imediata
+    if (action !== 'approve' && action !== 'reject' && action !== 'regenerate_modal' && action !== 'final_approve') {
+        if(action !== 'fixed' && !interaction.isModalSubmit()) {
+             await interaction.deferUpdate();
+        }
+    }
+
+    switch (action) {
+        case 'fixed':
+            return handleCurationFixed(interaction, id);
+        case 'approve':
+            return handleCurationApprove(interaction, id);
+        case 'reject':
+            return handleCurationReject(interaction, id);
+        case 'regenerate_modal':
+            return handleCurationRegenerateModal(interaction, id);
+        case 'regenerate_submit':
+            return handleCurationRegenerateSubmit(interaction, id);
+        case 'select':
+            if (interaction.isStringSelectMenu()) {
+                return handleCurationSelectAnswer(interaction, id);
+            }
+            break;
+        case 'final_approve':
+            return handleFinalApprove(interaction, id);
+        case 'final_reject':
+            return handleFinalReject(interaction, id);
+    }
+}
 
 
 async function handleFeedbackButton(interaction) {
@@ -1041,5 +1051,3 @@ http.createServer((req, res) => {
 }).listen(port, () => {
   console.log(`Servidor web ouvindo na porta ${port}`);
 });
-
-    
