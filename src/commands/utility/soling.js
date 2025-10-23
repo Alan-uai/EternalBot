@@ -12,7 +12,8 @@ const WEBHOOK_NAME = 'Soling Bot';
 
 // Função para encontrar ou criar o webhook necessário
 async function getOrCreateWebhook(channel) {
-    const webhooks = await channel.fetchWebhooks();
+    if (!channel || channel.type !== ChannelType.GuildText) return null;
+    const webhooks = await channel.fetchWebhooks().catch(() => new Map());
     let webhook = webhooks.find(wh => wh.name === WEBHOOK_NAME && wh.owner.id === channel.client.user.id);
 
     if (!webhook) {
@@ -65,16 +66,6 @@ export async function execute(interaction) {
             return interaction.reply({ content: `Este comando só pode ser usado nos canais designados de /soling, ajuda ou chat.`, ephemeral: true });
         }
         
-        const solingChannel = await interaction.client.channels.fetch(SOLING_POST_CHANNEL_ID).catch(() => null);
-         if (!solingChannel || solingChannel.type !== ChannelType.GuildText) {
-            return interaction.reply({ content: 'O canal de postagem para /soling não foi encontrado ou não é um canal de texto.', ephemeral: true });
-        }
-
-        const webhook = await getOrCreateWebhook(solingChannel);
-        if (!webhook) {
-            return interaction.reply({ content: 'Desculpe, este comando está temporariamente desativado por um problema de configuração do webhook. O administrador foi notificado.', ephemeral: true });
-        }
-
         const initialButtons = new ActionRowBuilder()
             .addComponents(
                 new ButtonBuilder()
@@ -97,10 +88,10 @@ export async function execute(interaction) {
 
     } catch (error) {
         console.error('Erro no comando /soling:', error);
-        if (!interaction.replied && !interaction.deferred) {
-            await interaction.reply({ content: 'Ocorreu um erro ao iniciar o comando.', ephemeral: true }).catch(()=>{});
+         if (interaction.replied || interaction.deferred) {
+            await interaction.followUp({ content: 'Ocorreu um erro ao iniciar o comando.', ephemeral: true }).catch(console.error);
         } else {
-            await interaction.followUp({ content: 'Ocorreu um erro ao iniciar o comando.', ephemeral: true }).catch(()=>{});
+            await interaction.reply({ content: 'Ocorreu um erro ao iniciar o comando.', ephemeral: true }).catch(console.error);
         }
     }
 }
@@ -193,12 +184,10 @@ async function handleInteraction(interaction) {
             if (!webhook) {
                  return interaction.editReply({ content: 'Não foi possível criar ou encontrar o webhook necessário para postar a mensagem.' });
             }
-            const webhookClient = new WebhookClient({ url: webhook.url });
-
-
-            // 1. Encontrar e fechar pedidos antigos
+            
+            // 1. Encontrar e fechar pedidos antigos DO MESMO TIPO
             const requestsRef = collection(firestore, 'dungeon_requests');
-            const q = query(requestsRef, where("userId", "==", user.id), where("status", "==", "active"));
+            const q = query(requestsRef, where("userId", "==", user.id), where("status", "==", "active"), where("type", "==", type));
             const oldRequestsSnap = await getDocs(q);
 
             const batch = writeBatch(firestore);
@@ -232,7 +221,9 @@ async function handleInteraction(interaction) {
             if (alwaysSend && serverLink) {
                 messageContent += `\n\n**Servidor:** ${serverLink}`;
             }
-
+            
+            const webhookClient = new WebhookClient({ url: webhook.url });
+            
             const confirmButton = new ButtonBuilder()
                 .setCustomId(`soling_confirm_placeholder_${user.id}`) // Placeholder
                 .setLabel('Vou Ajudar')
@@ -279,7 +270,7 @@ async function handleInteraction(interaction) {
                 components: [finalRow]
             });
             
-            await interaction.editReply({ content: 'Seu pedido foi postado com sucesso! Pedidos antigos foram removidos.' });
+            await interaction.editReply({ content: 'Seu pedido foi postado com sucesso! Pedidos antigos do mesmo tipo foram removidos.' });
             interaction.client.interactions.delete(`soling_temp_${interaction.user.id}`); // Limpar dados temporários
 
         } else if (action === 'confirm' && interaction.isButton()) {
@@ -342,9 +333,9 @@ async function handleInteraction(interaction) {
     } catch (error) {
         console.error(`Erro no manipulador de interação de /soling (Ação: ${action}):`, error);
         if (interaction.replied || interaction.deferred) {
-            await interaction.followUp({ content: 'Ocorreu um erro ao processar sua ação.', ephemeral: true }).catch(() => {});
+            await interaction.followUp({ content: 'Ocorreu um erro ao processar sua ação.', ephemeral: true }).catch(console.error);
         } else {
-            await interaction.reply({ content: 'Ocorreu um erro ao processar sua ação.', ephemeral: true }).catch(() => {});
+            await interaction.reply({ content: 'Ocorreu um erro ao processar sua ação.', ephemeral: true }).catch(console.error);
         }
     }
 }
