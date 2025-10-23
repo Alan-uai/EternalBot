@@ -256,8 +256,8 @@ client.on(Events.MessageCreate, async (message) => {
     const historyLimit = 10;
 
     try {
+        // Corrigido para buscar o histórico corretamente
         while (currentMessage.reference && history.length < historyLimit) {
-            // Correctly fetch from the channel of the message being referenced
             const repliedToMessage = await currentMessage.channel.messages.fetch(currentMessage.reference.messageId);
             const role = repliedToMessage.author.id === client.user.id ? 'assistant' : 'user';
             const content = repliedToMessage.content.replace(/<@!?(\d+)>/g, '').trim();
@@ -1041,3 +1041,5 @@ http.createServer((req, res) => {
 }).listen(port, () => {
   console.log(`Servidor web ouvindo na porta ${port}`);
 });
+
+    

@@ -1,4 +1,3 @@
-
 // src/commands/utility/soling.js
 import { SlashCommandBuilder, ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, WebhookClient, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, AttachmentBuilder } from 'discord.js';
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, query, where, getDocs, writeBatch, arrayUnion } from 'firebase/firestore';
@@ -7,7 +6,8 @@ import { lobbyDungeonsArticle } from '../../data/wiki-articles/lobby-dungeons.js
 import { raidRequirementsArticle } from '../../data/wiki-articles/raid-requirements.js';
 import { createProfileImage } from '../../utils/createProfileImage.js';
 
-const SOLING_CHANNEL_ID = '1429295597374144563';
+const ALLOWED_CHANNEL_IDS = ['1429295597374144563', '1426957344897761282', '1429309293076680744'];
+const SOLING_POST_CHANNEL_ID = '1429295597374144563';
 const WEBHOOK_URL = process.env.SOLING_WEBHOOK_URL; 
 
 export const data = new SlashCommandBuilder()
@@ -17,10 +17,12 @@ export const data = new SlashCommandBuilder()
 function getAvailableRaids() {
     const raids = new Set();
     
+    // Raids do Lobby
     lobbyDungeonsArticle.tables.lobbySchedule.rows.forEach(raid => {
         raids.add(raid['Dificuldade']);
     });
 
+    // Raids de Mundo
     raidRequirementsArticle.tables.requirements.rows.forEach(row => {
         Object.keys(row).forEach(key => {
             if (key !== 'Wave' && row[key] && !raids.has(key)) {
@@ -37,8 +39,8 @@ function getAvailableRaids() {
 
 
 export async function execute(interaction) {
-    if (interaction.channelId !== SOLING_CHANNEL_ID) {
-        return interaction.reply({ content: `Este comando só pode ser usado no canal <#${SOLING_CHANNEL_ID}>.`, ephemeral: true });
+    if (!ALLOWED_CHANNEL_IDS.includes(interaction.channelId)) {
+        return interaction.reply({ content: `Este comando só pode ser usado nos canais designados de /soling, ajuda ou chat.`, ephemeral: true });
     }
     
     if (!WEBHOOK_URL) {
@@ -46,71 +48,101 @@ export async function execute(interaction) {
         return interaction.reply({ content: 'Desculpe, este comando está temporariamente desativado por um problema de configuração.', ephemeral: true });
     }
 
-    const { firestore } = initializeFirebase();
-    const userRef = doc(firestore, 'users', interaction.user.id);
-    const userSnap = await getDoc(userRef);
+    const initialButtons = new ActionRowBuilder()
+        .addComponents(
+            new ButtonBuilder()
+                .setCustomId('soling_type_help')
+                .setLabel('Preciso de Ajuda')
+                .setStyle(ButtonStyle.Primary)
+                .setEmoji('🙋‍♂️'),
+            new ButtonBuilder()
+                .setCustomId('soling_type_hosting')
+                .setLabel('Vou Solar (Hosting)')
+                .setStyle(ButtonStyle.Success)
+                .setEmoji('👑')
+        );
 
-    // Otimização: Se o usuário não existe, dungeonSettings será um objeto vazio.
-    const dungeonSettings = userSnap.exists() ? userSnap.data().dungeonSettings || {} : {};
-
-    const modal = new ModalBuilder()
-        .setCustomId('soling_modal_submit')
-        .setTitle('Procurar/Oferecer Ajuda em Raid');
-
-    const tipoInput = new TextInputBuilder()
-        .setCustomId('tipo')
-        .setLabel("Você está procurando AJUDA ou vai SOLAR?")
-        .setPlaceholder('Digite "ajuda" ou "solar"')
-        .setStyle(TextInputStyle.Short)
-        .setRequired(true);
-        
-    const raidNomeInput = new TextInputBuilder()
-        .setCustomId('raid')
-        .setLabel("Qual o nome da Raid?")
-        .setPlaceholder('Ex: Crazy, Leaf Raid, Green Planet Raid...')
-        .setStyle(TextInputStyle.Short)
-        .setRequired(true);
-
-    const serverLinkInput = new TextInputBuilder()
-        .setCustomId('server_link')
-        .setLabel("Link do seu servidor privado (Opcional)")
-        .setStyle(TextInputStyle.Short)
-        .setValue(dungeonSettings.serverLink || '') // Pré-preenche se existir
-        .setRequired(false);
-
-    const alwaysSendInput = new TextInputBuilder()
-        .setCustomId('always_send')
-        .setLabel("Sempre enviar o link acima? (sim/não)")
-        .setStyle(TextInputStyle.Short)
-        .setValue(dungeonSettings.alwaysSendLink ? 'sim' : 'não') // Pré-preenche se existir
-        .setRequired(true);
-
-    modal.addComponents(
-        new ActionRowBuilder().addComponents(tipoInput),
-        new ActionRowBuilder().addComponents(raidNomeInput),
-        new ActionRowBuilder().addComponents(serverLinkInput),
-        new ActionRowBuilder().addComponents(alwaysSendInput)
-    );
-
-    await interaction.showModal(modal);
+    await interaction.reply({
+        content: 'O que você gostaria de fazer?',
+        components: [initialButtons],
+        ephemeral: true
+    });
 }
 
 async function handleInteraction(interaction) {
     const { firestore } = initializeFirebase();
-    
-    // Handler para o modal principal de /soling
-    if (interaction.isModalSubmit() && interaction.customId === 'soling_modal_submit') {
-        await interaction.deferReply({ ephemeral: true });
+    const [command, action, ...params] = interaction.customId.split('_');
 
-        const tipo = interaction.fields.getTextInputValue('tipo').toLowerCase();
-        const raidNome = interaction.fields.getTextInputValue('raid');
+    if (command !== 'soling') return;
+
+    if (action === 'type' && interaction.isButton()) {
+        const type = params[0]; // 'help' or 'hosting'
+        const raids = getAvailableRaids();
+
+        const raidMenu = new StringSelectMenuBuilder()
+            .setCustomId(`soling_raid_${type}`)
+            .setPlaceholder('Selecione a raid desejada...')
+            .addOptions(raids.slice(0, 25)); // Limite de 25 opções
+
+        const row = new ActionRowBuilder().addComponents(raidMenu);
+
+        await interaction.update({
+            content: 'Agora, selecione a raid:',
+            components: [row],
+        });
+
+    } else if (action === 'raid' && interaction.isStringSelectMenu()) {
+        const type = params[0];
+        const selectedRaidValue = interaction.values[0];
+        const raids = getAvailableRaids();
+        const selectedRaidLabel = raids.find(r => r.value === selectedRaidValue)?.label || selectedRaidValue;
+
+        // Armazenar temporariamente a escolha
+        interaction.client.interactions.set(`soling_temp_${interaction.user.id}`, { type, raid: selectedRaidLabel });
+        
+        // Buscar dados do usuário para pré-preencher
+        const userRef = doc(firestore, 'users', interaction.user.id);
+        const userSnap = await getDoc(userRef);
+        const dungeonSettings = userSnap.exists() ? userSnap.data().dungeonSettings || {} : {};
+
+        const modal = new ModalBuilder()
+            .setCustomId('soling_modal_submit')
+            .setTitle(`Pedido para: ${selectedRaidLabel}`);
+        
+        const serverLinkInput = new TextInputBuilder()
+            .setCustomId('server_link')
+            .setLabel("Link do seu servidor privado (Opcional)")
+            .setStyle(TextInputStyle.Short)
+            .setValue(dungeonSettings.serverLink || '')
+            .setRequired(false);
+
+        const alwaysSendInput = new TextInputBuilder()
+            .setCustomId('always_send')
+            .setLabel("Sempre enviar o link acima? (sim/não)")
+            .setStyle(TextInputStyle.Short)
+            .setValue(dungeonSettings.alwaysSendLink ? 'sim' : 'não')
+            .setRequired(true);
+
+        modal.addComponents(
+            new ActionRowBuilder().addComponents(serverLinkInput),
+            new ActionRowBuilder().addComponents(alwaysSendInput)
+        );
+
+        await interaction.showModal(modal);
+
+    } else if (action === 'modal' && interaction.isModalSubmit()) {
+        await interaction.deferReply({ ephemeral: true });
+        
+        const tempData = interaction.client.interactions.get(`soling_temp_${interaction.user.id}`);
+        if (!tempData) {
+            return interaction.editReply({ content: 'Sua sessão expirou. Por favor, use o comando /soling novamente.' });
+        }
+        const { type, raid: raidNome } = tempData;
+
         const serverLink = interaction.fields.getTextInputValue('server_link');
         const alwaysSendStr = interaction.fields.getTextInputValue('always_send').toLowerCase();
         const user = interaction.user;
 
-        if (tipo !== 'ajuda' && tipo !== 'solar') {
-            return interaction.editReply({ content: 'Tipo de procura inválido. Por favor, digite "ajuda" ou "solar".' });
-        }
         if (alwaysSendStr !== 'sim' && alwaysSendStr !== 'não') {
             return interaction.editReply({ content: 'Valor inválido para "Sempre enviar o link?". Por favor, use "sim" ou "não".' });
         }
@@ -124,7 +156,7 @@ async function handleInteraction(interaction) {
             const oldRequestsSnap = await getDocs(q);
 
             const batch = writeBatch(firestore);
-            const solingChannel = await interaction.client.channels.fetch(SOLING_CHANNEL_ID);
+            const solingChannel = await interaction.client.channels.fetch(SOLING_POST_CHANNEL_ID);
 
             for (const requestDoc of oldRequestsSnap.docs) {
                 const oldRequestData = requestDoc.data();
@@ -141,19 +173,15 @@ async function handleInteraction(interaction) {
             const userRef = doc(firestore, 'users', user.id);
             const alwaysSend = alwaysSendStr === 'sim';
             const settings = { serverLink: serverLink || null, alwaysSendLink: alwaysSend };
-            // Usa set com merge=true para criar o documento se não existir, ou atualizar se existir.
             batch.set(userRef, { dungeonSettings: settings }, { merge: true });
             
             // 3. Criar e postar a nova mensagem via Webhook
             let messageContent = '';
-            let requestType = '';
-
-            if (tipo === 'ajuda') {
+            
+            if (type === 'help') {
                 messageContent = `Buscando ajuda para solar a **${raidNome}**, ficarei grato com quem puder ajudar.`;
-                requestType = 'help';
-            } else { // solar
+            } else { // hosting
                 messageContent = `Solando a **${raidNome}** para quem precisar, só entrar pelo link.`;
-                requestType = 'hosting';
             }
 
             if (alwaysSend && serverLink) {
@@ -161,7 +189,7 @@ async function handleInteraction(interaction) {
             }
 
             const confirmButton = new ButtonBuilder()
-                .setCustomId(`soling_confirm_placeholder_${user.id}`) // Placeholder, será atualizado abaixo
+                .setCustomId(`soling_confirm_placeholder_${user.id}`) // Placeholder
                 .setLabel('Vou Ajudar')
                 .setStyle(ButtonStyle.Success)
                 .setEmoji('👁️');
@@ -171,7 +199,7 @@ async function handleInteraction(interaction) {
                 content: messageContent,
                 username: user.displayName,
                 avatarURL: user.displayAvatarURL(),
-                components: [row], // Envia o botão diretamente
+                components: [row],
                 wait: true 
             });
 
@@ -182,7 +210,7 @@ async function handleInteraction(interaction) {
                 userId: user.id,
                 username: user.username,
                 avatarUrl: user.displayAvatarURL(),
-                type: requestType,
+                type: type,
                 raidName: raidNome,
                 messageId: message.id,
                 createdAt: serverTimestamp(),
@@ -194,7 +222,7 @@ async function handleInteraction(interaction) {
             // 5. Executar todas as operações no banco de dados
             await batch.commit();
 
-            // 6. Atualizar o customId do botão na mensagem já postada com o ID real da mensagem
+            // 6. Atualizar o customId do botão na mensagem já postada
              const finalConfirmButton = new ButtonBuilder()
                 .setCustomId(`soling_confirm_${message.id}_${user.id}`)
                 .setLabel('Vou Ajudar')
@@ -207,69 +235,71 @@ async function handleInteraction(interaction) {
             });
             
             await interaction.editReply({ content: 'Seu pedido foi postado com sucesso! Pedidos antigos foram removidos.' });
+            interaction.client.interactions.delete(`soling_temp_${interaction.user.id}`); // Limpar dados temporários
 
         } catch (error) {
             console.error('Erro no fluxo de /soling:', error);
             await interaction.editReply({ content: 'Ocorreu um erro ao processar seu pedido. Por favor, tente novamente.' });
         }
-        return;
-    }
-
-    // Handler para os botões e menus de seleção do /soling
-    if(interaction.customId.startsWith('soling_')) {
-        const [_, action, messageId, ownerId] = interaction.customId.split('_');
-
-        if (action === 'confirm') {
-            const requestRef = doc(firestore, 'dungeon_requests', messageId);
-            
-            // Se o dono do post clicar
-            if (interaction.user.id === ownerId) {
-                const requestSnap = await getDoc(requestRef);
-                if (!requestSnap.exists() || !requestSnap.data().confirmedUsers || requestSnap.data().confirmedUsers.length === 0) {
-                    return interaction.reply({ content: 'Ninguém confirmou presença ainda.', ephemeral: true });
-                }
-                
-                const confirmedUsers = requestSnap.data().confirmedUsers;
-                const selectMenu = new StringSelectMenuBuilder()
-                    .setCustomId(`soling_selectuser_${messageId}_${ownerId}`)
-                    .setPlaceholder('Selecione um usuário para ver o perfil')
-                    .addOptions(confirmedUsers.map(u => ({
-                        label: u.username,
-                        value: u.userId
-                    })));
-                
-                const row = new ActionRowBuilder().addComponents(selectMenu);
-                await interaction.reply({ content: 'Selecione um participante para ver seus dados:', components: [row], ephemeral: true });
-            
-            } else { // Se outro usuário clicar
-                await interaction.deferUpdate();
-                const newUser = { userId: interaction.user.id, username: interaction.user.username };
-                await updateDoc(requestRef, {
-                    confirmedUsers: arrayUnion(newUser)
-                });
-                await interaction.followUp({ content: 'Sua presença foi confirmada! O líder do grupo foi notificado.', ephemeral: true });
+    } else if (action === 'confirm' && interaction.isButton()) {
+        const messageId = params[0];
+        const ownerId = params[1];
+        
+        const requestRef = doc(firestore, 'dungeon_requests', messageId);
+        
+        // Se o dono do post clicar
+        if (interaction.user.id === ownerId) {
+            const requestSnap = await getDoc(requestRef);
+            if (!requestSnap.exists() || !requestSnap.data().confirmedUsers || requestSnap.data().confirmedUsers.length === 0) {
+                return interaction.reply({ content: 'Ninguém confirmou presença ainda.', ephemeral: true });
             }
+            
+            const confirmedUsers = requestSnap.data().confirmedUsers;
+            const selectMenu = new StringSelectMenuBuilder()
+                .setCustomId(`soling_selectuser_${messageId}_${ownerId}`)
+                .setPlaceholder('Selecione um usuário para ver o perfil')
+                .addOptions(confirmedUsers.map(u => ({
+                    label: u.username,
+                    value: u.userId
+                })));
+            
+            const row = new ActionRowBuilder().addComponents(selectMenu);
+            await interaction.reply({ content: 'Selecione um participante para ver seus dados:', components: [row], ephemeral: true });
+        
+        } else { // Se outro usuário clicar
+            await interaction.deferUpdate();
+            const newUser = { userId: interaction.user.id, username: interaction.user.username };
+            await updateDoc(requestRef, {
+                confirmedUsers: arrayUnion(newUser)
+            });
+            await interaction.followUp({ content: 'Sua presença foi confirmada! O líder do grupo foi notificado.', ephemeral: true });
+        }
 
-        } else if (action === 'selectuser' && interaction.isStringSelectMenu()) {
-            const selectedUserId = interaction.values[0];
-            const userRef = doc(firestore, 'users', selectedUserId);
-            const userSnap = await getDoc(userRef);
+    } else if (action === 'selectuser' && interaction.isStringSelectMenu()) {
+        const selectedUserId = interaction.values[0];
+        const userRef = doc(firestore, 'users', selectedUserId);
+        const userSnap = await getDoc(userRef);
 
-            if (!userSnap.exists()) {
-                return interaction.reply({ content: `O usuário selecionado ainda não possui um perfil no Guia Eterno.`, ephemeral: true });
-            }
+        if (!userSnap.exists()) {
+            return interaction.reply({ content: `O usuário selecionado ainda não possui um perfil no Guia Eterno.`, ephemeral: true });
+        }
 
-            const userData = userSnap.data();
-            const discordUser = await interaction.client.users.fetch(selectedUserId);
+        const userData = userSnap.data();
+        const discordUser = await interaction.client.users.fetch(selectedUserId);
 
-            await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ ephemeral: true });
 
+        try {
             const profileImage = await createProfileImage(userData, discordUser);
             const attachment = new AttachmentBuilder(profileImage, { name: 'profile-image.png' });
-
             await interaction.editReply({ files: [attachment] });
+        } catch (e) {
+            console.error("Erro ao criar imagem de perfil no /soling:", e);
+            await interaction.editReply({ content: 'Ocorreu um erro ao gerar a imagem de perfil do usuário.'});
         }
     }
 }
 
 export { handleInteraction };
+
+    
