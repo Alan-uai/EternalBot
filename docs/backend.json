@@ -17,7 +17,7 @@
     "Achievement": {
       "title": "Achievement",
       "type": "object",
-      "description": "Representa uma conquista no jogo.",
+      "description": "Represents uma conquista no jogo.",
       "properties": {
         "id": { "type": "string" },
         "name": { "type": "string" },
@@ -190,6 +190,14 @@
             "type": "number",
             "description": "F2P currency earned from achievements, used for Gamepasses."
         },
+        "dungeonSettings": {
+            "type": "object",
+            "description": "User preferences for dungeon finder messages.",
+            "properties": {
+                "serverLink": { "type": "string", "description": "The user's private server link." },
+                "alwaysSendLink": { "type": "boolean", "description": "If true, always send the server link in /soling posts." }
+            }
+        },
         "weaponSlots": {
             "type": "object",
             "description": "Stores the equipped weapons in the three slots.",
@@ -214,6 +222,23 @@
         "id",
         "email"
       ]
+    },
+    "DungeonRequest": {
+        "title": "DungeonRequest",
+        "type": "object",
+        "description": "Stores a user's request for help or to host a dungeon.",
+        "properties": {
+            "id": { "type": "string", "description": "Unique identifier for the request." },
+            "userId": { "type": "string", "description": "The Discord ID of the user making the request." },
+            "username": { "type": "string", "description": "The Discord username of the user." },
+            "avatarUrl": { "type": "string", "description": "The URL of the user's Discord avatar." },
+            "type": { "type": "string", "enum": ["help", "hosting"], "description": "Whether the user is seeking help or hosting." },
+            "raidName": { "type": "string", "description": "The name of the raid for the request." },
+            "messageId": { "type": "string", "description": "The ID of the message posted in the soling channel." },
+            "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp of the request." },
+            "status": { "type": "string", "enum": ["active", "closed"], "description": "The status of the request." }
+        },
+        "required": ["id", "userId", "type", "raidName", "createdAt", "status"]
     },
     "UserWeapon": {
       "title": "UserWeapon",
@@ -578,6 +603,14 @@
           "entityName": "Achievement",
           "schema": { "$ref": "#/backend/entities/Achievement" },
           "description": "Stores game achievements."
+        }
+      },
+      {
+        "path": "/dungeon_requests/{requestId}",
+        "definition": {
+          "entityName": "DungeonRequest",
+          "schema": { "$ref": "#/backend/entities/DungeonRequest" },
+          "description": "Stores user requests for dungeon help or hosting."
         }
       },
       {

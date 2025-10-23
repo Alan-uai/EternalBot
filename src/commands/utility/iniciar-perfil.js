@@ -10,6 +10,8 @@ const FORM_BUTTON_ID = `${CUSTOM_ID_PREFIX}_abrir`;
 const IMPORT_BUTTON_ID = `${CUSTOM_ID_PREFIX}_importar`;
 const FORM_MODAL_ID = `${CUSTOM_ID_PREFIX}_modal`;
 const IMPORT_MODAL_ID = `${CUSTOM_ID_PREFIX}_importar_modal`;
+const DUNGEON_SETTINGS_BUTTON_ID = `${CUSTOM_ID_PREFIX}_dungeon_settings`;
+const DUNGEON_SETTINGS_MODAL_ID = `${CUSTOM_ID_PREFIX}_dungeon_modal`;
 const PROFILE_CATEGORY_ID = '1426957344897761280'; // ID da Categoria "Perfis"
 
 export const INVENTORY_CATEGORIES = [
@@ -22,6 +24,7 @@ export const INVENTORY_CATEGORIES = [
     { id: 'gamepasses', name: 'Gamepasses', emoji: '🎟️' },
     { id: 'sombras', name: 'Sombras', emoji: '👤' },
     { id: 'stands', name: 'Stands', emoji: '🕺' },
+    { id: 'configuracoes-dungeons', name: 'Configurações de Dungeons', emoji: '⚙️' },
     { id: 'notificacoes', name: 'Notificações', emoji: '🔔', isPrivate: true }
 ];
 
@@ -61,12 +64,16 @@ async function handleInteraction(interaction) {
             await handleOpenFormButton(interaction);
         } else if (interaction.customId === IMPORT_BUTTON_ID) {
             await handleOpenImportModal(interaction);
+        } else if (interaction.customId === DUNGEON_SETTINGS_BUTTON_ID) {
+            await handleOpenDungeonSettings(interaction);
         }
     } else if (interaction.isModalSubmit()) {
         if (interaction.customId === FORM_MODAL_ID) {
             await handleFormSubmit(interaction);
         } else if (interaction.customId === IMPORT_MODAL_ID) {
             await handleImportSubmit(interaction);
+        } else if (interaction.customId === DUNGEON_SETTINGS_MODAL_ID) {
+            await handleDungeonSettingsSubmit(interaction);
         }
     }
 }
@@ -236,6 +243,69 @@ async function handleFormSubmit(interaction) {
     await interaction.editReply(`Seu perfil foi atualizado com sucesso! Seus painéis de inventário foram criados e atualizados nos tópicos do seu canal privado: <#${channel.id}>`);
 }
 
+async function handleOpenDungeonSettings(interaction) {
+    const { firestore } = initializeFirebase();
+    const userRef = doc(firestore, 'users', interaction.user.id);
+    const userSnap = await getDoc(userRef);
+    const userData = userSnap.exists() ? userSnap.data() : {};
+    const dungeonSettings = userData.dungeonSettings || {};
+
+    const modal = new ModalBuilder()
+        .setCustomId(DUNGEON_SETTINGS_MODAL_ID)
+        .setTitle('Configurações de Dungeons');
+
+    const serverLinkInput = new TextInputBuilder()
+        .setCustomId('server_link')
+        .setLabel("Link do seu servidor privado do Roblox")
+        .setStyle(TextInputStyle.Short)
+        .setPlaceholder("https://www.roblox.com/games/...")
+        .setValue(dungeonSettings.serverLink || '')
+        .setRequired(false);
+
+    const alwaysSendInput = new TextInputBuilder()
+        .setCustomId('always_send')
+        .setLabel("Sempre enviar o link? (sim/não)")
+        .setStyle(TextInputStyle.Short)
+        .setPlaceholder("sim ou não")
+        .setValue(dungeonSettings.alwaysSendLink ? 'sim' : 'não')
+        .setRequired(true);
+
+    modal.addComponents(
+        new ActionRowBuilder().addComponents(serverLinkInput),
+        new ActionRowBuilder().addComponents(alwaysSendInput)
+    );
+
+    await interaction.showModal(modal);
+}
+
+async function handleDungeonSettingsSubmit(interaction) {
+    await interaction.deferReply({ ephemeral: true });
+    
+    const serverLink = interaction.fields.getTextInputValue('server_link');
+    const alwaysSend = interaction.fields.getTextInputValue('always_send').toLowerCase();
+
+    if (alwaysSend !== 'sim' && alwaysSend !== 'não') {
+        return interaction.editReply({ content: 'Valor inválido para "Sempre enviar o link?". Por favor, use "sim" ou "não".' });
+    }
+
+    const { firestore } = initializeFirebase();
+    const userRef = doc(firestore, 'users', interaction.user.id);
+
+    const settings = {
+        serverLink: serverLink || null,
+        alwaysSendLink: alwaysSend === 'sim'
+    };
+
+    try {
+        await updateDoc(userRef, { dungeonSettings: settings }, { merge: true });
+        await interaction.editReply('Suas configurações de dungeon foram salvas com sucesso!');
+    } catch (error) {
+        console.error("Erro ao salvar configurações de dungeon:", error);
+        await interaction.editReply('Ocorreu um erro ao salvar suas configurações.');
+    }
+}
+
+
 export async function findOrCreateUserChannel(interaction, user) {
     const channelName = `perfil-${user.username.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
     let userChannel = interaction.guild.channels.cache.find(ch => ch.name === channelName && ch.type === ChannelType.GuildText);
@@ -309,6 +379,20 @@ export async function createInventoryThreads(channel, userData, discordUser) {
                 .setTitle(`${category.emoji} ${category.name}`)
                 .setDescription('Este é o seu feed de notificações sobre o bot.');
              await thread.send({ embeds: [embed] });
+        } else if (category.id === 'configuracoes-dungeons') {
+            const embed = new EmbedBuilder()
+                .setColor(0x7289DA)
+                .setTitle(`${category.emoji} ${category.name}`)
+                .setDescription('Aqui você pode configurar as opções para o comando `/soling`.\n\nClique no botão abaixo para definir ou atualizar o link do seu servidor privado.');
+
+            const actionRow = new ActionRowBuilder().addComponents(
+                new ButtonBuilder()
+                    .setCustomId(DUNGEON_SETTINGS_BUTTON_ID)
+                    .setLabel('Configurar Link do Servidor')
+                    .setStyle(ButtonStyle.Primary)
+                    .setEmoji('🔗')
+            );
+            await thread.send({ embeds: [embed], components: [actionRow] });
         } else {
             const embed = new EmbedBuilder()
                 .setColor(0x4BC5FF)
@@ -357,3 +441,5 @@ export async function createInventoryThreads(channel, userData, discordUser) {
 }
 
 export { handleInteraction };
+
+    
