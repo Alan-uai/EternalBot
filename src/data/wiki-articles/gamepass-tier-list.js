@@ -91,10 +91,10 @@ As gamepasses podem ser divididas em categorias para melhor entendimento:
         rows: [
             { 'Gamepass de Giro de Estrela': 'Fast Star Open' },
             { 'Gamepass de Giro de Estrela': 'Multi Open' },
-            { 'Gamepass de Giro de Estrela': 'Double Aura' }, // Double Aura está listada aqui na imagem
+            { 'Gamepass de Giro de Estrela': 'Double Aura' },
             { 'Gamepass de Giro de Estrela': 'Lucky!' },
             { 'Gamepass de Giro de Estrela': 'Super Lucky!' },
-            { 'Gamepass de Giro de Estrela': 'Ultra Lucky!' },
+            { 'Gamepass de Giro de Estrela': 'Ultra Luck!' },
         ]
     }
   },
