@@ -1,5 +1,5 @@
 // src/commands/utility/updcodes.js
-import { SlashCommandBuilder, PermissionsBitField, EmbedBuilder } from 'discord.js';
+import { SlashCommandBuilder, PermissionsBitField } from 'discord.js';
 import { initializeFirebase } from '../../firebase/index.js';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 
@@ -73,26 +73,24 @@ export async function execute(interaction) {
 
         // Atualizar a mensagem no canal
         const oldMessageId = docSnap.exists() ? docSnap.data().messageId : null;
-        const formattedCodesList = updatedCodes.map(code => `• \`${code}\``).join('\n');
         
-        const embed = new EmbedBuilder()
-            .setColor(0x3498DB)
-            .setTitle(' Códigos Ativos do Jogo')
-            .setDescription(formattedCodesList.length > 0 ? formattedCodesList : 'Nenhum código ativo no momento.')
-            .setTimestamp()
-            .setFooter({ text: 'Use /codes para ver esta lista a qualquer momento.' });
+        const formattedCodesList = updatedCodes.length > 0 
+            ? updatedCodes.map(code => `• \`${code}\``).join('\n')
+            : 'Nenhum código ativo no momento.';
 
+        const messageContent = `** CÓDIGOS ATIVOS DO JOGO **\n\n${formattedCodesList}\n\n*Use /codes para ver esta lista a qualquer momento.*`;
+        
         let newMessage;
         if (oldMessageId) {
             try {
                 const oldMessage = await codesChannel.messages.fetch(oldMessageId);
-                newMessage = await oldMessage.edit({ embeds: [embed] });
+                newMessage = await oldMessage.edit({ content: messageContent });
             } catch (error) {
                 console.warn(`Não foi possível editar a mensagem antiga de códigos (ID: ${oldMessageId}). Criando uma nova.`);
-                newMessage = await codesChannel.send({ embeds: [embed] });
+                newMessage = await codesChannel.send({ content: messageContent });
             }
         } else {
-            newMessage = await codesChannel.send({ embeds: [embed] });
+            newMessage = await codesChannel.send({ content: messageContent });
         }
         
         // Salva o ID da nova/editada mensagem e os códigos no Firestore
