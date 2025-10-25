@@ -1,6 +1,6 @@
 // src/commands/utility/soling.js
 import { SlashCommandBuilder, ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, WebhookClient, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, AttachmentBuilder, ChannelType } from 'discord.js';
-import { doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, query, where, getDocs, writeBatch, arrayUnion } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, query, where, getDocs, writeBatch, arrayUnion, deleteDoc } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
 import { lobbyDungeonsArticle } from '../../data/wiki-articles/lobby-dungeons.js';
 import { raidRequirementsArticle } from '../../data/wiki-articles/raid-requirements.js';
@@ -93,6 +93,7 @@ async function handleTypeSelection(interaction, type) {
 
     const row = new ActionRowBuilder().addComponents(raidMenu);
 
+    // Atualiza a interação original em vez de responder novamente
     await interaction.update({
         content: 'Agora, selecione a raid:',
         components: [row],
@@ -184,7 +185,10 @@ async function handlePostRequest(interaction, settings) {
 
     const tempData = interaction.client.interactions.get(`soling_temp_${user.id}`);
     if (!tempData) {
-        return interaction.editReply({ content: 'Sua sessão expirou. Por favor, use o comando /soling novamente.', ephemeral: true });
+        const replyContent = 'Sua sessão expirou. Por favor, use o comando /soling novamente.';
+         return interaction.replied || interaction.deferred 
+            ? interaction.editReply({ content: replyContent, ephemeral: true }) 
+            : interaction.reply({ content: replyContent, ephemeral: true });
     }
     const { type, raid: raidName } = tempData;
     const { serverLink, alwaysSendLink, deleteAfterMinutes } = settings;
@@ -215,7 +219,8 @@ async function handlePostRequest(interaction, settings) {
         } catch(e) {
              console.warn(`Não foi possível deletar a mensagem antiga de /soling (ID: ${oldRequestData.messageId}). Pode já ter sido removida.`, e.message);
         }
-        batch.update(requestDoc.ref, { status: 'closed' });
+        // Em vez de atualizar, deleta o documento antigo
+        batch.delete(requestDoc.ref);
     }
     
     const userRef = doc(firestore, 'users', user.id);
@@ -224,7 +229,7 @@ async function handlePostRequest(interaction, settings) {
 
     const guild = await interaction.client.guilds.fetch(interaction.guildId);
     const member = await guild.members.fetch(user.id);
-    const nick = member.nickname || user.username;
+    const nick = member.nickname; // Usa apenas o nickname
     
     batch.set(userRef, { dungeonSettings: { serverLink, alwaysSendLink, deleteAfterMinutes } }, { merge: true });
 
@@ -233,8 +238,8 @@ async function handlePostRequest(interaction, settings) {
         
     const embed = new EmbedBuilder()
         .setColor(type === 'help' ? 0x3498DB : 0x2ECC71)
-        .setTitle(`🏯 Sala: ${raidName}`)
-        .setAuthor({ name: nick, iconURL: user.displayAvatarURL() })
+        .setTitle(`🏯 ${raidName}`)
+        .setAuthor({ name: nick || user.username, iconURL: user.displayAvatarURL() })
         .setDescription(`**Jogadores na sala:** 1/10\n\n*Clique no olho para confirmar presença e ver a lista de jogadores!*`)
         .setTimestamp();
     
@@ -274,7 +279,7 @@ async function handlePostRequest(interaction, settings) {
     const row = new ActionRowBuilder().addComponents(confirmButton, webButton, mobileButton, joinButton, finishButton);
     
     const message = await webhookClient.send({
-        username: nick,
+        username: nick || user.username,
         avatarURL: user.displayAvatarURL(),
         embeds: [embed],
         components: [row],
@@ -283,9 +288,12 @@ async function handlePostRequest(interaction, settings) {
     
     if (deleteAfterMinutes && message) {
         setTimeout(() => {
+            // Tenta deletar a mensagem, mas não quebra se já foi removida
             solingChannel.messages.delete(message.id)
                 .catch(e => console.warn(`Não foi possível apagar a mensagem agendada (ID: ${message.id}): ${e.message}`));
-            updateDoc(newRequestRef, { status: 'closed' }).catch(console.error);
+            
+            // Deleta o documento do Firestore
+            deleteDoc(newRequestRef).catch(console.error);
         }, deleteAfterMinutes * 60 * 1000);
     }
 
@@ -295,7 +303,7 @@ async function handlePostRequest(interaction, settings) {
         raidName: raidName,
         messageId: message.id,
         createdAt: serverTimestamp(),
-        status: 'active',
+        status: 'active', // Status ainda é útil para queries de busca de anúncios ativos
         confirmedUsers: []
     };
     batch.set(newRequestRef, newRequestData);
@@ -304,7 +312,7 @@ async function handlePostRequest(interaction, settings) {
     
     const finalReply = 'Seu pedido foi postado com sucesso!';
     if (interaction.replied || interaction.deferred) {
-        await interaction.editReply({ content: finalReply });
+        await interaction.editReply({ content: finalReply, ephemeral: true });
     } else {
         await interaction.reply({ content: finalReply, ephemeral: true });
     }
@@ -318,7 +326,7 @@ async function handleConfirm(interaction, requestId) {
     await interaction.deferReply({ ephemeral: true });
 
     const requestSnap = await getDoc(requestRef);
-    if (!requestSnap.exists() || requestSnap.data().status !== 'active') {
+    if (!requestSnap.exists()) { // O status 'active' não é mais necessário, apenas se o doc existe
         return interaction.editReply({ content: 'Este pedido de soling não existe mais.' });
     }
 
@@ -391,7 +399,7 @@ async function handleFinish(interaction, requestId) {
     await interaction.deferReply({ ephemeral: true });
 
     const requestSnap = await getDoc(requestRef);
-    if(!requestSnap.exists() || requestSnap.data().status !== 'active') {
+    if(!requestSnap.exists()) {
         return interaction.editReply({ content: 'Este anúncio não existe mais ou já foi finalizado.' });
     }
     
@@ -404,11 +412,13 @@ async function handleFinish(interaction, requestId) {
         return interaction.editReply({ content: 'Apenas o dono do anúncio ou um moderador pode finalizá-lo.' });
     }
     
-    await updateDoc(requestRef, { status: 'closed' });
+    // Deleta o documento do Firestore
+    await deleteDoc(requestRef);
     
     try {
+        // Tenta deletar a mensagem original do anúncio
         await interaction.message.delete();
-        await interaction.editReply({ content: 'Anúncio finalizado com sucesso.'});
+        await interaction.editReply({ content: 'Anúncio finalizado e removido com sucesso.'});
     } catch (e) {
         console.warn(`Não foi possível deletar a mensagem (ID: ${interaction.message.id}), pode já ter sido removida.`);
         await interaction.editReply({ content: 'Anúncio finalizado, mas não foi possível remover a mensagem (pode já ter sido apagada).'});
