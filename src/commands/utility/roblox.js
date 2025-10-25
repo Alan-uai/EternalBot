@@ -14,7 +14,13 @@ export async function execute(interaction) {
     await interaction.deferReply({ ephemeral: true });
 
     const targetUser = interaction.options.getUser('usuario') || interaction.user;
-    const member = await interaction.guild.members.fetch(targetUser.id).catch(() => null);
+    
+    // Correção: Buscar a guilda e o membro de forma robusta
+    const guild = await interaction.client.guilds.fetch(interaction.guildId);
+    if (!guild) {
+        return interaction.editReply('Não foi possível encontrar as informações do servidor.');
+    }
+    const member = await guild.members.fetch(targetUser.id).catch(() => null);
 
     if (!member) {
         return interaction.editReply(`Não foi possível encontrar o membro ${targetUser.tag} no servidor.`);
@@ -23,6 +29,7 @@ export async function execute(interaction) {
     const nickname = member.nickname;
 
     if (!nickname) {
+        // Usa displayName (que pode ser o nickname ou o username global) para a mensagem de erro.
         return interaction.editReply(`O usuário **${member.displayName}** não possui um nickname configurado neste servidor.`);
     }
 
