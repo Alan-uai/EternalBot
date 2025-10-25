@@ -93,7 +93,6 @@ async function handleTypeSelection(interaction, type) {
 
     const row = new ActionRowBuilder().addComponents(raidMenu);
 
-    // Atualiza a interação original em vez de responder novamente
     await interaction.update({
         content: 'Agora, selecione a raid:',
         components: [row],
@@ -101,6 +100,8 @@ async function handleTypeSelection(interaction, type) {
 }
 
 async function handleRaidSelection(interaction, type) {
+    await interaction.deferUpdate(); // Defer the update to prevent timeout
+
     const { firestore } = initializeFirebase();
     const selectedRaidValue = interaction.values[0];
     const raids = getAvailableRaids();
@@ -115,7 +116,6 @@ async function handleRaidSelection(interaction, type) {
 
     // If user has settings to always send a link and the link exists, post directly
     if (dungeonSettings.alwaysSendLink && dungeonSettings.serverLink) {
-        await interaction.deferUpdate(); // Acknowledge the interaction
         await handlePostRequest(interaction, dungeonSettings);
     } else {
         // Otherwise, show the configuration modal
@@ -147,7 +147,7 @@ async function handleRaidSelection(interaction, type) {
 
         modal.addComponents(
             new ActionRowBuilder().addComponents(serverLinkInput),
-            new ActionRowBuilder().addComponents(alwaysSendInput),
+            new ActionRowrow().addComponents(alwaysSendInput),
             new ActionRowBuilder().addComponents(deleteAfterInput)
         );
         await interaction.showModal(modal);
@@ -187,7 +187,7 @@ async function handlePostRequest(interaction, settings) {
     if (!tempData) {
         const replyContent = 'Sua sessão expirou. Por favor, use o comando /soling novamente.';
          return interaction.replied || interaction.deferred 
-            ? interaction.editReply({ content: replyContent, ephemeral: true }) 
+            ? interaction.followUp({ content: replyContent, ephemeral: true }) 
             : interaction.reply({ content: replyContent, ephemeral: true });
     }
     const { type, raid: raidName } = tempData;
@@ -196,13 +196,13 @@ async function handlePostRequest(interaction, settings) {
     const solingChannel = await interaction.client.channels.fetch(SOLING_POST_CHANNEL_ID).catch(() => null);
     if (!solingChannel) {
         const replyContent = 'O canal de postagem de /soling não foi encontrado.';
-        return interaction.replied || interaction.deferred ? interaction.editReply({ content: replyContent }) : interaction.reply({ content: replyContent, ephemeral: true });
+        return interaction.replied || interaction.deferred ? interaction.followUp({ content: replyContent, ephemeral: true }) : interaction.reply({ content: replyContent, ephemeral: true });
     }
     
     const webhook = await getOrCreateWebhook(solingChannel);
     if (!webhook) {
          const replyContent = 'Não foi possível criar ou encontrar o webhook necessário para postar a mensagem.';
-         return interaction.replied || interaction.deferred ? interaction.editReply({ content: replyContent }) : interaction.reply({ content: replyContent, ephemeral: true });
+         return interaction.replied || interaction.deferred ? interaction.followUp({ content: replyContent, ephemeral: true }) : interaction.reply({ content: replyContent, ephemeral: true });
     }
     
     const requestsRef = collection(firestore, 'dungeon_requests');
@@ -312,7 +312,8 @@ async function handlePostRequest(interaction, settings) {
     
     const finalReply = 'Seu pedido foi postado com sucesso!';
     if (interaction.replied || interaction.deferred) {
-        await interaction.editReply({ content: finalReply, ephemeral: true });
+        // Use followUp if the interaction was deferred (e.g., from handleRaidSelection or modal submit)
+        await interaction.followUp({ content: finalReply, ephemeral: true });
     } else {
         await interaction.reply({ content: finalReply, ephemeral: true });
     }
