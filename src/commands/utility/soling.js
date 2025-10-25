@@ -70,11 +70,13 @@ export async function execute(interaction) {
             new ButtonBuilder()
                 .setCustomId('soling_type_help')
                 .setEmoji('🙋‍♂️')
-                .setStyle(ButtonStyle.Primary),
+                .setStyle(ButtonStyle.Primary)
+                .setLabel('Preciso de Ajuda'),
             new ButtonBuilder()
                 .setCustomId('soling_type_hosting')
                 .setEmoji('👑')
                 .setStyle(ButtonStyle.Success)
+                .setLabel('Estou Hosteando')
         );
 
     await interaction.reply({
@@ -211,8 +213,8 @@ async function handlePostRequest(interaction, settings) {
     for (const requestDoc of oldRequestsSnap.docs) {
         const oldRequestData = requestDoc.data();
         try {
-            const oldMessage = await solingChannel.messages.fetch(oldRequestData.messageId);
-            await oldMessage.delete();
+            const oldMessage = await solingChannel.messages.fetch(oldRequestData.messageId).catch(() => null);
+            if (oldMessage) await oldMessage.delete();
         } catch(e) {
              console.warn(`Não foi possível deletar a mensagem antiga de /soling (ID: ${oldRequestData.messageId}). Pode já ter sido removida.`, e.message);
         }
@@ -224,7 +226,7 @@ async function handlePostRequest(interaction, settings) {
     
     const userSnap = await getDoc(userRef);
     const userData = userSnap.exists() ? userSnap.data() : {};
-
+    
     const guild = await interaction.client.guilds.fetch(interaction.guildId);
     const member = await guild.members.fetch(user.id);
     const nick = member.nickname;
@@ -297,7 +299,8 @@ async function handlePostRequest(interaction, settings) {
         messageId: message.id,
         createdAt: serverTimestamp(),
         status: 'active',
-        confirmedUsers: [] 
+        confirmedUsers: [],
+        manualCount: 0
     };
     batch.set(newRequestRef, newRequestData);
     
@@ -327,21 +330,33 @@ async function handleConfirm(interaction, requestId) {
     const ownerId = requestData.userId;
 
     if (interaction.user.id === ownerId) {
-        if (!requestData.confirmedUsers || requestData.confirmedUsers.length === 0) {
-            return interaction.editReply({ content: 'Ninguém manifestou interesse ainda.' });
+        let menuOptions = [{
+            label: 'Confirmar jogadores existentes',
+            description: 'Adicionar jogadores que já estão no servidor.',
+            value: 'add_existing_players'
+        }];
+
+        if (requestData.confirmedUsers && requestData.confirmedUsers.length > 0) {
+            menuOptions.push(...requestData.confirmedUsers.map(u => ({
+                label: `${u.inGame ? '✅' : '❔'} ${u.username}`,
+                description: `Clique para ${u.inGame ? 'remover da' : 'confirmar na'} contagem.`,
+                value: u.userId
+            })));
+        } else {
+             menuOptions.push({
+                label: 'Ninguém manifestou interesse ainda',
+                description: 'A lista está vazia.',
+                value: 'empty'
+            });
         }
         
         const selectMenu = new StringSelectMenuBuilder()
             .setCustomId(`soling_selectuser_${requestId}`)
-            .setPlaceholder('Selecione um jogador para confirmar/remover')
-            .addOptions(requestData.confirmedUsers.map(u => ({
-                label: `${u.inGame ? '✅' : '❔'} ${u.username}`,
-                description: `Clique para confirmar a entrada ou remover da contagem.`,
-                value: u.userId
-            })));
+            .setPlaceholder('Selecione uma opção...')
+            .addOptions(menuOptions.slice(0, 25)); // Limite de 25
         
         const row = new ActionRowBuilder().addComponents(selectMenu);
-        await interaction.editReply({ content: 'Selecione um participante para gerenciar:', components: [row] });
+        await interaction.editReply({ content: 'Selecione um participante para gerenciar ou adicione jogadores existentes:', components: [row] });
     
     } else { 
         const newUser = { userId: interaction.user.id, username: interaction.user.username, inGame: false };
@@ -359,11 +374,79 @@ async function handleConfirm(interaction, requestId) {
     }
 }
 
+async function handleAddExistingPlayersModal(interaction, requestId) {
+    const modal = new ModalBuilder()
+        .setCustomId(`soling_addplayers_submit_${requestId}`)
+        .setTitle('Adicionar Jogadores');
+
+    const playerCountInput = new TextInputBuilder()
+        .setCustomId('player_count')
+        .setLabel("Quantos jogadores deseja adicionar?")
+        .setStyle(TextInputStyle.Short)
+        .setPlaceholder('Digite um número (ex: 3)')
+        .setRequired(true);
+
+    modal.addComponents(new ActionRowBuilder().addComponents(playerCountInput));
+    await interaction.showModal(modal);
+}
+
+async function handleAddExistingPlayersSubmit(interaction, requestId) {
+    const { firestore } = initializeFirebase();
+    await interaction.deferUpdate();
+
+    const countStr = interaction.fields.getTextInputValue('player_count');
+    const count = parseInt(countStr, 10);
+
+    if (isNaN(count) || count <= 0) {
+        await interaction.followUp({ content: 'Por favor, insira um número válido.', ephemeral: true });
+        return;
+    }
+
+    const requestRef = doc(firestore, 'dungeon_requests', requestId);
+    await updateDoc(requestRef, { manualCount: count });
+
+    // Re-fetch e atualiza o embed
+    const requestSnap = await getDoc(requestRef);
+    if (requestSnap.exists()) {
+        const requestData = requestSnap.data();
+        await updateEmbedCount(interaction, requestData);
+    }
+    
+    await interaction.followUp({ content: `${count} jogador(es) adicionado(s) à contagem manualmente.`, ephemeral: true });
+}
+
+async function updateEmbedCount(interaction, requestData) {
+    const inGameCount = (requestData.confirmedUsers?.filter(u => u.inGame).length || 0) + 1 + (requestData.manualCount || 0);
+    const originalEmbed = interaction.message.embeds[0];
+    const updatedEmbed = EmbedBuilder.from(originalEmbed)
+        .setDescription(`**Jogadores na sala:** ${inGameCount}/10\n\n*Clique no olho (👁️) para manifestar interesse e entrar na lista de espera! O dono do anúncio confirmará sua entrada.*`);
+
+    await interaction.message.edit({ embeds: [updatedEmbed] }).catch(console.error);
+
+    if (inGameCount >= 10) {
+        await interaction.followUp({ content: 'Grupo cheio! O anúncio será fechado automaticamente.', ephemeral: true });
+        await handleFinish(interaction, requestData.id, true); // Pass a flag to indicate auto-close
+    }
+}
+
+
 async function handleSelectUser(interaction, requestId) {
     await interaction.deferUpdate();
     
     const { firestore } = initializeFirebase();
-    const selectedUserId = interaction.values[0];
+    const selectedValue = interaction.values[0];
+
+    if (selectedValue === 'empty') {
+        await interaction.followUp({ content: 'Nenhum jogador para gerenciar.', ephemeral: true });
+        return;
+    }
+
+    if (selectedValue === 'add_existing_players') {
+        await handleAddExistingPlayersModal(interaction, requestId);
+        return;
+    }
+
+    const selectedUserId = selectedValue;
     const requestRef = doc(firestore, 'dungeon_requests', requestId);
 
     const requestSnap = await getDoc(requestRef);
@@ -382,32 +465,34 @@ async function handleSelectUser(interaction, requestId) {
     // Alternar o status 'inGame'
     confirmedUsers[userIndex].inGame = !confirmedUsers[userIndex].inGame;
 
-    await updateDoc(requestRef, { confirmedUsers: confirmedUsers });
+    await updateDoc(requestRef, { confirmedUsers });
     
-    const inGameCount = confirmedUsers.filter(u => u.inGame).length + 1; // +1 for the owner
-    const originalEmbed = interaction.message.embeds[0];
-    const updatedEmbed = EmbedBuilder.from(originalEmbed)
-        .setDescription(`**Jogadores na sala:** ${inGameCount}/10\n\n*Clique no olho (👁️) para manifestar interesse e entrar na lista de espera! O dono do anúncio confirmará sua entrada.*`);
-
-    await interaction.message.edit({ embeds: [updatedEmbed] });
+    await updateEmbedCount(interaction, { ...requestData, confirmedUsers });
 
     // Atualiza o menu para o dono
+     let menuOptions = [{
+        label: 'Confirmar jogadores existentes',
+        description: 'Adicionar jogadores que já estão no servidor.',
+        value: 'add_existing_players'
+    }];
+    if (confirmedUsers.length > 0) {
+        menuOptions.push(...confirmedUsers.map(u => ({
+            label: `${u.inGame ? '✅' : '❔'} ${u.username}`,
+            description: `Clique para ${u.inGame ? 'remover da' : 'confirmar na'} contagem.`,
+            value: u.userId
+        })));
+    } else {
+        menuOptions.push({ label: 'Ninguém manifestou interesse ainda', description: 'A lista está vazia.', value: 'empty' });
+    }
+
     const selectMenu = new StringSelectMenuBuilder()
         .setCustomId(`soling_selectuser_${requestId}`)
         .setPlaceholder('Selecione um jogador para confirmar/remover')
-        .addOptions(confirmedUsers.map(u => ({
-            label: `${u.inGame ? '✅' : '❔'} ${u.username}`,
-            description: `Clique para confirmar a entrada ou remover da contagem.`,
-            value: u.userId
-        })));
+        .addOptions(menuOptions.slice(0, 25));
     const row = new ActionRowBuilder().addComponents(selectMenu);
-    await interaction.followUp({ content: `Status de ${confirmedUsers[userIndex].username} atualizado. Contagem: ${inGameCount}/10`, components: [row], ephemeral: true });
     
-    // Verifica se atingiu o limite
-    if (inGameCount >= 10) {
-        await interaction.followUp({ content: 'Grupo cheio! O anúncio será fechado automaticamente.', ephemeral: true });
-        await handleFinish(interaction, requestId, true); // Pass a flag to indicate auto-close
-    }
+    const statusText = confirmedUsers[userIndex].inGame ? 'confirmado na sala' : 'removido da contagem';
+    await interaction.followUp({ content: `Status de ${confirmedUsers[userIndex].username} atualizado para: ${statusText}.`, components: [row], ephemeral: true });
 }
 
 
@@ -421,27 +506,28 @@ async function handleFinish(interaction, requestId, autoClosed = false) {
 
     const requestSnap = await getDoc(requestRef);
     if(!requestSnap.exists()) {
-        if(!autoClosed) await interaction.editReply({ content: 'Este anúncio não existe mais ou já foi finalizado.' });
+        if (!autoClosed) await interaction.editReply({ content: 'Este anúncio não existe mais ou já foi finalizado.' }).catch(() => {});
         return;
     }
     
     const ownerId = requestSnap.data().userId;
-    const member = await interaction.guild.members.fetch(interaction.user.id);
+    const member = await interaction.guild.members.fetch(interaction.user.id).catch(() => null);
+    
     const isOwner = interaction.user.id === ownerId;
-    const isModerator = member.roles.cache.has(ADMIN_ROLE_ID);
+    const isModerator = member && member.roles.cache.has(ADMIN_ROLE_ID);
 
     if (!isOwner && !isModerator && !autoClosed) {
-        return interaction.editReply({ content: 'Apenas o dono do anúncio ou um moderador pode finalizá-lo.' });
+        return interaction.editReply({ content: 'Apenas o dono do anúncio ou um moderador pode finalizá-lo.' }).catch(()=>{});
     }
     
-    await deleteDoc(requestRef);
+    await deleteDoc(requestRef).catch(console.error);
     
     try {
         await interaction.message.delete();
-        if(!autoClosed) await interaction.editReply({ content: 'Anúncio finalizado e removido com sucesso.'});
+        if(!autoClosed) await interaction.editReply({ content: 'Anúncio finalizado e removido com sucesso.'}).catch(()=>{});
     } catch (e) {
         console.warn(`Não foi possível deletar a mensagem (ID: ${interaction.message.id}), pode já ter sido removida.`);
-        if(!autoClosed) await interaction.editReply({ content: 'Anúncio finalizado, mas não foi possível remover a mensagem (pode já ter sido apagada).'});
+        if(!autoClosed) await interaction.editReply({ content: 'Anúncio finalizado, mas não foi possível remover a mensagem (pode já ter sido apagada).'}).catch(()=>{});
     }
 }
 
@@ -467,6 +553,8 @@ export async function handleInteraction(interaction) {
         } else if (interaction.isModalSubmit()) {
             if (action === 'modal') {
                  await handleModalSubmit(interaction);
+            } else if (action === 'addplayers') {
+                 await handleAddExistingPlayersSubmit(interaction, params[1]); // e.g., soling_addplayers_submit_requestId
             }
         }
     } catch (error) {
