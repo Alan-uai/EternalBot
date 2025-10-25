@@ -170,11 +170,8 @@ async function handleRaidSelection(interaction, type) {
         }
     } catch(error) {
         console.error("Erro em handleRaidSelection:", error);
-         if (!interaction.replied && !interaction.deferred) {
-            await interaction.reply({ content: 'Ocorreu um erro ao processar a seleção da raid.', ephemeral: true }).catch(() => {});
-        } else {
-            await interaction.followUp({ content: 'Ocorreu um erro ao processar a seleção da raid.', ephemeral: true }).catch(() => {});
-        }
+        // O erro será tratado pelo catch principal no bot.js
+        throw error;
     }
 }
 
@@ -249,13 +246,12 @@ async function handlePostRequest(interaction, settings) {
     const nick = member.nickname || user.username;
     const match = nick.match(/(.*) \(@(.+)\)/);
     const displayName = match ? match[1].trim() : nick;
-    let robloxUsername = match ? match[2] : null;
+    let robloxUsername = null;
     let robloxId = null;
 
-    if (robloxUsername && member.roles.cache.has(VERIFIED_ROLE_ID)) {
-         robloxId = await usernameToId(robloxUsername);
-    } else {
-        robloxUsername = null; // Garante que se não for verificado, o username do roblox seja nulo
+    if (match && member.roles.cache.has(VERIFIED_ROLE_ID)) {
+        robloxUsername = match[2];
+        robloxId = await usernameToId(robloxUsername);
     }
     
     const userRef = doc(firestore, 'users', user.id);
@@ -275,7 +271,6 @@ async function handlePostRequest(interaction, settings) {
     
     const webhookClient = new WebhookClient({ url: webhook.url });
     
-    const confirmLabel = type === 'help' ? 'Vou Ajudar' : 'Vou Precisar';
     const confirmButton = new ButtonBuilder()
         .setCustomId(`soling_confirm_${newRequestId}`)
         .setEmoji('👁️')
