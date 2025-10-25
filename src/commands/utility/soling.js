@@ -132,8 +132,9 @@ async function handleRaidSelection(interaction, type) {
     const dungeonSettings = userSnap.exists() ? userSnap.data().dungeonSettings || {} : {};
 
     if (dungeonSettings.alwaysSendLink && dungeonSettings.serverLink) {
+        // A interaction do menu de seleção precisa ser "reconhecida" antes de processar
         await interaction.update({ content: 'Processando seu pedido com as configurações salvas...', components: [] });
-        await handlePostRequest(interaction, userSnap, dungeonSettings);
+        await handlePostRequest(interaction, dungeonSettings);
     } else {
         const modal = new ModalBuilder()
             .setCustomId('soling_modal_submit')
@@ -166,13 +167,12 @@ async function handleRaidSelection(interaction, type) {
             new ActionRowBuilder().addComponents(alwaysSendInput),
             new ActionRowBuilder().addComponents(deleteAfterInput)
         );
-
+        // A interaction do menu de seleção já foi usada para mostrar o modal
         await interaction.showModal(modal);
     }
 }
 
 async function handleModalSubmit(interaction) {
-    const { firestore } = initializeFirebase();
     const serverLink = interaction.fields.getTextInputValue('server_link');
     const alwaysSendStr = interaction.fields.getTextInputValue('always_send').toLowerCase();
     const deleteAfterStr = interaction.fields.getTextInputValue('delete_after');
@@ -186,24 +186,23 @@ async function handleModalSubmit(interaction) {
         return interaction.reply({ content: 'O tempo para apagar deve ser um número positivo de minutos.', ephemeral: true });
     }
     
+    // A interaction do modal precisa ser "reconhecida" antes de processar
     await interaction.deferReply({ ephemeral: true });
-    const userRef = doc(firestore, 'users', interaction.user.id);
-    const userSnap = await getDoc(userRef);
-
+    
     const settings = {
         serverLink: serverLink || null,
         alwaysSendLink: alwaysSendStr === 'sim',
         deleteAfterMinutes: deleteAfter || null
     };
 
-    await handlePostRequest(interaction, userSnap, settings);
+    await handlePostRequest(interaction, settings);
 }
 
-async function handlePostRequest(interaction, userSnap, settings) {
+async function handlePostRequest(interaction, settings) {
     const { firestore } = initializeFirebase();
     const user = interaction.user;
 
-    const member = await interaction.guild.members.fetch(user.id);
+    const member = await interaction.guild.members.fetch(user.id).catch(() => null);
     if (!member) {
          return interaction.editReply({ content: 'Não foi possível encontrar suas informações no servidor.', ephemeral: true });
     }
@@ -328,7 +327,12 @@ async function handlePostRequest(interaction, userSnap, settings) {
     
     await batch.commit();
     
-    await interaction.editReply({ content: 'Seu pedido foi postado com sucesso!', ephemeral: true });
+    // interaction.editReply já foi feito no handleModalSubmit ou handleRaidSelection
+    if (interaction.replied || interaction.deferred) {
+        await interaction.editReply({ content: 'Seu pedido foi postado com sucesso!' });
+    } else {
+        await interaction.reply({ content: 'Seu pedido foi postado com sucesso!', ephemeral: true });
+    }
     interaction.client.interactions.delete(`soling_temp_${user.id}`);
 }
 
@@ -407,7 +411,7 @@ async function handleProfile(interaction, requestId) {
         new ButtonBuilder().setLabel('Web').setStyle(ButtonStyle.Link).setURL(webLink),
         new ButtonBuilder().setLabel('Mobile').setStyle(ButtonStyle.Link).setURL(appLink)
     );
-    await interaction.editReply({ content: `Clique para ver o perfil Roblox do host **${requestData.robloxUsername}**:`, components: [profileRow] });
+    await interaction.editReply({ content: `Clique para ver o perfil Roblox do host **${requestData.username} (@${requestData.robloxUsername})**:`, components: [profileRow] });
 
 }
 
@@ -523,9 +527,14 @@ export async function handleInteraction(interaction) {
            });
         } else {
              try {
-                await interaction.reply({ content: 'Ocorreu um erro ao processar sua ação.', ephemeral: true });
+                // A interaction pode ter expirado, então a resposta pode falhar.
+                if (!interaction.isExpired()) {
+                    await interaction.reply({ content: 'Ocorreu um erro ao processar sua ação.', ephemeral: true });
+                }
              } catch(e) {
-                 if (e.code !== 10062 && e.message !== 'The reply to this interaction has not been sent or deferred.') console.error("Falha no reply do erro de interação:", e);
+                 if (e.code !== 10062 && e.message !== 'The reply to this interaction has not been sent or deferred.') {
+                    console.error("Falha no reply do erro de interação:", e);
+                 }
              }
         }
     }
