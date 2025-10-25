@@ -70,6 +70,17 @@ const GAME_LINK = 'https://www.roblox.com/games/90462358603255/15-Min-Anime-Eter
 const notifiedRaids = new Set();
 const TEN_MINUTES_IN_MS = 10 * 60 * 1000;
 
+// Função dedicada para enviar e agendar a exclusão
+async function sendAndDelete(channel, content, embed) {
+    try {
+        const sentMessage = await channel.send({ content, embeds: [embed] });
+        setTimeout(() => sentMessage.delete().catch(console.error), TEN_MINUTES_IN_MS);
+    } catch (error) {
+        console.error("Erro ao enviar ou agendar exclusão de mensagem de raid:", error);
+    }
+}
+
+
 function checkRaidTimes() {
     const now = new Date();
     const currentMinute = now.getMinutes();
@@ -89,8 +100,10 @@ function checkRaidTimes() {
 
         // Check for 5-minute warning
         if (currentMinute === (raidMinute - 5 + 60) % 60) {
-            if (!notifiedRaids.has(`${raidIdentifier}-warning`)) {
-                const channel = await client.channels.fetch(RAID_CHANNEL_ID);
+            const warningIdentifier = `${raidIdentifier}-warning`;
+            if (!notifiedRaids.has(warningIdentifier)) {
+                notifiedRaids.add(warningIdentifier); // Marca como notificado imediatamente
+                const channel = await client.channels.fetch(RAID_CHANNEL_ID).catch(() => null);
                 if (channel) {
                     const embed = new EmbedBuilder()
                         .setColor(0xFFD700) // Gold
@@ -103,17 +116,17 @@ function checkRaidTimes() {
                         )
                         .setTimestamp();
                     
-                    const sentMessage = await channel.send({ content: roleMention, embeds: [embed] });
-                    setTimeout(() => sentMessage.delete().catch(console.error), TEN_MINUTES_IN_MS);
-                    notifiedRaids.add(`${raidIdentifier}-warning`);
+                    sendAndDelete(channel, roleMention, embed);
                 }
             }
         }
 
         // Check for raid start
         if (currentMinute === raidMinute) {
-             if (!notifiedRaids.has(`${raidIdentifier}-start`)) {
-                const channel = await client.channels.fetch(RAID_CHANNEL_ID);
+             const startIdentifier = `${raidIdentifier}-start`;
+             if (!notifiedRaids.has(startIdentifier)) {
+                notifiedRaids.add(startIdentifier); // Marca como notificado imediatamente
+                const channel = await client.channels.fetch(RAID_CHANNEL_ID).catch(() => null);
                  if (channel) {
                     const embed = new EmbedBuilder()
                         .setColor(0xFF4B4B) // Red
@@ -127,9 +140,7 @@ function checkRaidTimes() {
                         )
                         .setTimestamp();
 
-                    const sentMessage = await channel.send({ content: roleMention, embeds: [embed] });
-                    setTimeout(() => sentMessage.delete().catch(console.error), TEN_MINUTES_IN_MS);
-                    notifiedRaids.add(`${raidIdentifier}-start`);
+                     sendAndDelete(channel, roleMention, embed);
                 }
             }
         }
