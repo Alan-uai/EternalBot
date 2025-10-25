@@ -448,9 +448,48 @@ client.on(Events.InteractionCreate, async (interaction) => {
             await handleModButton(interaction);
         } else if (interaction.customId.startsWith('curate_')) {
             await handleCurationFlow(interaction);
+        } else if (interaction.customId.startsWith('farmaccess_')) {
+            await handleFarmAccessFlow(interaction);
         }
     }
 });
+
+
+async function handleFarmAccessFlow(interaction) {
+    const [_, action, userId] = interaction.customId.split('_');
+    const { firestore } = initializeFirebase();
+
+    if (action === 'approve') {
+        const userRef = doc(firestore, 'users', userId);
+        try {
+            await updateDoc(userRef, { farming: true });
+            await interaction.reply({ content: `Acesso de Farming aprovado para o usuário <@${userId}>.`, ephemeral: true });
+
+            // Disable buttons
+            const originalMessage = interaction.message;
+            const disabledRow = new ActionRowBuilder();
+            originalMessage.components[0].components.forEach(component => {
+                disabledRow.addComponents(ButtonBuilder.from(component).setDisabled(true));
+            });
+            await originalMessage.edit({ components: [disabledRow] });
+
+        } catch (error) {
+            console.error("Erro ao aprovar acesso de farming:", error);
+            await interaction.reply({ content: 'Ocorreu um erro ao tentar aprovar o acesso.', ephemeral: true });
+        }
+    } else if (action === 'reject') {
+        await interaction.reply({ content: `Acesso de Farming rejeitado para o usuário <@${userId}>.`, ephemeral: true });
+        
+        // Disable buttons
+        const originalMessage = interaction.message;
+        const disabledRow = new ActionRowBuilder();
+        originalMessage.components[0].components.forEach(component => {
+            disabledRow.addComponents(ButtonBuilder.from(component).setDisabled(true).setLabel('Rejeitado').setStyle(ButtonStyle.Danger));
+        });
+        await originalMessage.edit({ components: [disabledRow] });
+    }
+}
+
 
 async function handleCurationFlow(interaction) {
     const customIdParts = interaction.customId.split('_');
