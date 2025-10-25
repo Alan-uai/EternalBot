@@ -410,7 +410,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
                 const errorMessage = 'Ocorreu um erro ao processar sua ação.';
                 if (interaction.replied || interaction.deferred) {
                     await interaction.followUp({ content: errorMessage, ephemeral: true }).catch(e => console.error("Falha ao enviar followUp de erro de interação:", e));
-                } else {
+                } else if(!interaction.replied) {
                     await interaction.reply({ content: errorMessage, ephemeral: true }).catch(e => console.error("Falha ao enviar reply de erro de interação:", e));
                 }
             }

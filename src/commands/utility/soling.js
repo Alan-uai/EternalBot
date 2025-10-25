@@ -277,18 +277,21 @@ async function handlePostRequest(interaction, settings) {
         
         const newRequestRef = doc(collection(firestore, 'dungeon_requests'));
         const newRequestId = newRequestRef.id;
-
+        
         const nick = member.nickname || user.username;
         const match = nick.match(/(.*) \(@(.+)\)/);
-        const displayName = match ? match[1] : nick;
+        const displayName = match ? match[1].trim() : nick;
         const robloxUsername = match ? match[2] : null;
 
-        const robloxId = robloxUsername ? await usernameToId(robloxUsername) : null;
+        let robloxId = null;
+        if (robloxUsername && member.roles.cache.has(VERIFIED_ROLE_ID)) {
+             robloxId = await usernameToId(robloxUsername);
+        }
 
         const embed = new EmbedBuilder()
             .setColor(type === 'help' ? 0x3498DB : 0x2ECC71)
             .setTitle(`🏯 Sala: ${raidNome}`)
-            .setAuthor({ name: `${displayName} (@${robloxUsername || 'não verificado'})`, iconURL: user.displayAvatarURL() })
+            .setAuthor({ name: `${displayName} ${robloxUsername ? `(@${robloxUsername})` : '(não verificado)'}`, iconURL: user.displayAvatarURL() })
             .setDescription(`**Jogadores na sala:** 1/10\n\n*Clique no olho para confirmar presença e ver a lista de jogadores!*`)
             .setTimestamp();
         
@@ -420,7 +423,7 @@ async function handleConfirm(interaction, requestId) {
             const originalEmbed = interaction.message.embeds[0];
             const updatedEmbed = EmbedBuilder.from(originalEmbed)
                 .setDescription(`**Jogadores na sala:** ${updatedUsers.length + 1}/10\n\n*Clique no olho para confirmar presença e ver a lista de jogadores!*`);
-            await interaction.editReply({ embeds: [updatedEmbed] });
+            await interaction.message.edit({ embeds: [updatedEmbed] });
 
             await interaction.followUp({ content: 'Sua presença foi confirmada! O líder do grupo foi notificado.', ephemeral: true });
         }
@@ -442,13 +445,13 @@ async function handleProfile(interaction, requestId) {
         }
 
         const requestData = requestSnap.data();
-        const hostMember = await interaction.guild.members.fetch(requestData.userId);
+        
+        const hostMember = await interaction.guild.members.fetch(requestData.userId).catch(() => null);
 
-        if (!hostMember.roles.cache.has(VERIFIED_ROLE_ID) || !requestData.robloxUsername) {
+        if (!hostMember || !hostMember.roles.cache.has(VERIFIED_ROLE_ID) || !requestData.robloxUsername) {
             return interaction.editReply({ content: '⚠️ O host não tem um perfil Roblox verificado ou o nome de usuário não pôde ser encontrado.' });
         }
         
-        // Usa o robloxId agora salvo no banco de dados
         const robloxId = requestData.robloxId;
         if (!robloxId) {
             return interaction.editReply({ content: 'Não foi possível encontrar o ID do Roblox para este usuário. O host talvez precise recriar o anúncio.' });
