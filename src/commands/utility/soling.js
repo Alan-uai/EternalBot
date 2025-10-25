@@ -150,7 +150,6 @@ async function handleRaidSelection(interaction, type) {
 
         // Lógica do "Sempre Enviar Link"
         if (dungeonSettings.alwaysSendLink && dungeonSettings.serverLink) {
-            // Pula o modal e vai direto para a postagem
             await interaction.update({ content: 'Processando seu pedido com as configurações salvas...', components: [] });
             await handlePostRequest(interaction, {
                 serverLink: dungeonSettings.serverLink,
@@ -158,7 +157,6 @@ async function handleRaidSelection(interaction, type) {
                 deleteAfter: dungeonSettings.deleteAfterMinutes,
             });
         } else {
-            // Mostra o modal para configuração
             const modal = new ModalBuilder()
                 .setCustomId('soling_modal_submit')
                 .setTitle(`Pedido para: ${selectedRaidLabel}`);
@@ -223,35 +221,41 @@ async function handleModalSubmit(interaction) {
 
     } catch (error) {
         console.error("Erro em handleModalSubmit:", error);
-        if(!interaction.replied && !interaction.deferred) {
-            await interaction.reply({ content: 'Ocorreu um erro ao submeter o formulário.', ephemeral: true }).catch(console.error);
+        const errorReply = { content: 'Ocorreu um erro ao submeter o formulário.', ephemeral: true };
+        if (interaction.replied || interaction.deferred) {
+            await interaction.editReply(errorReply).catch(console.error);
         } else {
-             await interaction.editReply({ content: 'Ocorreu um erro ao submeter o formulário.' }).catch(console.error);
+            await interaction.reply(errorReply).catch(console.error);
         }
     }
 }
 
 async function handlePostRequest(interaction, settings) {
+    const { firestore } = initializeFirebase();
+    const user = interaction.user;
+    const member = interaction.member;
+
     try {
-        const { firestore } = initializeFirebase();
-        const tempData = interaction.client.interactions.get(`soling_temp_${interaction.user.id}`);
+        const tempData = interaction.client.interactions.get(`soling_temp_${user.id}`);
         if (!tempData) {
-             const replyOptions = { content: 'Sua sessão expirou. Por favor, use o comando /soling novamente.', ephemeral: true };
-             return interaction.isModalSubmit() ? interaction.editReply(replyOptions) : interaction.reply(replyOptions);
+            const replyOptions = { content: 'Sua sessão expirou. Por favor, use o comando /soling novamente.', ephemeral: true };
+            if (interaction.replied || interaction.deferred) {
+                return interaction.editReply(replyOptions);
+            } else {
+                return interaction.reply(replyOptions);
+            }
         }
         const { type, raid: raidNome } = tempData;
         const { serverLink, alwaysSend, deleteAfter } = settings;
-        const user = interaction.user;
-        const member = interaction.member;
-
+        
         const solingChannel = await interaction.client.channels.fetch(SOLING_POST_CHANNEL_ID).catch(() => null);
         if (!solingChannel) {
-            return interaction.editReply({ content: 'O canal de postagem de /soling não foi encontrado.' });
+            return interaction.editReply({ content: 'O canal de postagem de /soling não foi encontrado.', ephemeral: true });
         }
         
         const webhook = await getOrCreateWebhook(solingChannel);
         if (!webhook) {
-             return interaction.editReply({ content: 'Não foi possível criar ou encontrar o webhook necessário para postar a mensagem.' });
+             return interaction.editReply({ content: 'Não foi possível criar ou encontrar o webhook necessário para postar a mensagem.', ephemeral: true });
         }
         
         const requestsRef = collection(firestore, 'dungeon_requests');
@@ -275,9 +279,6 @@ async function handlePostRequest(interaction, settings) {
         const newSettings = { serverLink: serverLink || null, alwaysSendLink: alwaysSend, deleteAfterMinutes: deleteAfter || null };
         batch.set(userRef, { dungeonSettings: newSettings }, { merge: true });
         
-        const newRequestRef = doc(collection(firestore, 'dungeon_requests'));
-        const newRequestId = newRequestRef.id;
-        
         const nick = member.nickname || user.username;
         const match = nick.match(/(.*) \(@(.+)\)/);
         const displayName = match ? match[1].trim() : nick;
@@ -288,10 +289,15 @@ async function handlePostRequest(interaction, settings) {
              robloxId = await usernameToId(robloxUsername);
         }
 
+        const newRequestRef = doc(collection(firestore, 'dungeon_requests'));
+        const newRequestId = newRequestRef.id;
+
+        const authorText = robloxUsername ? `${displayName} (@${robloxUsername})` : `${displayName} (não verificado)`;
+        
         const embed = new EmbedBuilder()
             .setColor(type === 'help' ? 0x3498DB : 0x2ECC71)
             .setTitle(`🏯 Sala: ${raidNome}`)
-            .setAuthor({ name: `${displayName} ${robloxUsername ? `(@${robloxUsername})` : '(não verificado)'}`, iconURL: user.displayAvatarURL() })
+            .setAuthor({ name: authorText, iconURL: user.displayAvatarURL() })
             .setDescription(`**Jogadores na sala:** 1/10\n\n*Clique no olho para confirmar presença e ver a lista de jogadores!*`)
             .setTimestamp();
         
@@ -357,16 +363,15 @@ async function handlePostRequest(interaction, settings) {
         
         const finalReplyOptions = { content: 'Seu pedido foi postado com sucesso!', ephemeral: true };
         
-        // Se a interação original já foi respondida (ex: por um deferReply ou update), usamos editReply.
         if (interaction.replied || interaction.deferred) {
             await interaction.editReply(finalReplyOptions);
         } else {
             await interaction.reply(finalReplyOptions);
         }
-        interaction.client.interactions.delete(`soling_temp_${interaction.user.id}`);
+        interaction.client.interactions.delete(`soling_temp_${user.id}`);
     } catch(error) {
         console.error("Erro em handlePostRequest:", error);
-         const errorReplyOptions = { content: 'Ocorreu um erro ao postar seu pedido.', ephemeral: true };
+        const errorReplyOptions = { content: 'Ocorreu um erro ao postar seu pedido.', ephemeral: true };
         if (interaction.replied || interaction.deferred) {
             await interaction.editReply(errorReplyOptions).catch(console.error);
         } else {
@@ -445,19 +450,12 @@ async function handleProfile(interaction, requestId) {
 
         const requestData = requestSnap.data();
         
-        const hostMember = await interaction.guild.members.fetch(requestData.userId).catch(() => null);
-
-        if (!hostMember || !hostMember.roles.cache.has(VERIFIED_ROLE_ID) || !requestData.robloxUsername) {
+        if (!requestData.robloxUsername || !requestData.robloxId) {
             return interaction.editReply({ content: '⚠️ O host não tem um perfil Roblox verificado ou o nome de usuário não pôde ser encontrado.' });
         }
         
-        const robloxId = requestData.robloxId;
-        if (!robloxId) {
-            return interaction.editReply({ content: 'Não foi possível encontrar o ID do Roblox para este usuário. O host talvez precise recriar o anúncio.' });
-        }
-
-        const webLink = `https://www.roblox.com/users/${robloxId}/profile`;
-        const appLink = `roblox://users/${robloxId}/profile`;
+        const webLink = `https://www.roblox.com/users/${requestData.robloxId}/profile`;
+        const appLink = `roblox://users/${requestData.robloxId}/profile`;
 
         const profileRow = new ActionRowBuilder().addComponents(
             new ButtonBuilder().setLabel('Web').setStyle(ButtonStyle.Link).setURL(webLink),
@@ -558,10 +556,11 @@ async function handleFinish(interaction, requestId) {
 
     } catch(e) {
         console.warn(`Não foi possível finalizar o anúncio (Request ID: ${requestId}):`, e.message);
-        if(!interaction.replied && !interaction.deferred) {
-            await interaction.reply({ content: 'Não foi possível encontrar ou remover o anúncio. Ele pode já ter sido removido.', ephemeral: true }).catch(console.error);
+        const errorMsg = 'Não foi possível encontrar ou remover o anúncio. Ele pode já ter sido removido.';
+        if (interaction.replied || interaction.deferred) {
+            await interaction.editReply({ content: errorMsg }).catch(console.error);
         } else {
-            await interaction.editReply({ content: 'Não foi possível encontrar ou remover o anúncio. Ele pode já ter sido removido.' }).catch(console.error);
+             await interaction.reply({ content: errorMsg, ephemeral: true }).catch(console.error);
         }
     }
 }
