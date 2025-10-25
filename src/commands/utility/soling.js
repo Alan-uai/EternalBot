@@ -105,16 +105,19 @@ async function handleRaidSelection(interaction, type) {
     const raids = getAvailableRaids();
     const selectedRaidLabel = raids.find(r => r.value === selectedRaidValue)?.label || selectedRaidValue;
 
+    // Store temporary data for the next step
     interaction.client.interactions.set(`soling_temp_${interaction.user.id}`, { type, raid: selectedRaidLabel });
     
     const userRef = doc(firestore, 'users', interaction.user.id);
     const userSnap = await getDoc(userRef);
     const dungeonSettings = userSnap.exists() ? userSnap.data().dungeonSettings || {} : {};
 
+    // If user has settings to always send a link and the link exists, post directly
     if (dungeonSettings.alwaysSendLink && dungeonSettings.serverLink) {
-        await interaction.update({ content: 'Processando seu pedido com as configurações salvas...', components: [] });
+        await interaction.deferUpdate(); // Acknowledge the interaction
         await handlePostRequest(interaction, dungeonSettings);
     } else {
+        // Otherwise, show the configuration modal
         const modal = new ModalBuilder()
             .setCustomId('soling_modal_submit')
             .setTitle(`Pedido para: ${selectedRaidLabel}`);
@@ -188,12 +191,14 @@ async function handlePostRequest(interaction, settings) {
     
     const solingChannel = await interaction.client.channels.fetch(SOLING_POST_CHANNEL_ID).catch(() => null);
     if (!solingChannel) {
-        return interaction.editReply({ content: 'O canal de postagem de /soling não foi encontrado.', ephemeral: true });
+        const replyContent = 'O canal de postagem de /soling não foi encontrado.';
+        return interaction.replied || interaction.deferred ? interaction.editReply({ content: replyContent }) : interaction.reply({ content: replyContent, ephemeral: true });
     }
     
     const webhook = await getOrCreateWebhook(solingChannel);
     if (!webhook) {
-         return interaction.editReply({ content: 'Não foi possível criar ou encontrar o webhook necessário para postar a mensagem.', ephemeral: true });
+         const replyContent = 'Não foi possível criar ou encontrar o webhook necessário para postar a mensagem.';
+         return interaction.replied || interaction.deferred ? interaction.editReply({ content: replyContent }) : interaction.reply({ content: replyContent, ephemeral: true });
     }
     
     const requestsRef = collection(firestore, 'dungeon_requests');
@@ -216,9 +221,11 @@ async function handlePostRequest(interaction, settings) {
     const userRef = doc(firestore, 'users', user.id);
     const userSnap = await getDoc(userRef);
     const userData = userSnap.exists() ? userSnap.data() : {};
-    
-    const nick = (await interaction.guild.members.fetch(user.id)).nickname;
 
+    const guild = await interaction.client.guilds.fetch(interaction.guildId);
+    const member = await guild.members.fetch(user.id);
+    const nick = member.nickname || user.username;
+    
     batch.set(userRef, { dungeonSettings: { serverLink, alwaysSendLink, deleteAfterMinutes } }, { merge: true });
 
     const newRequestRef = doc(collection(firestore, 'dungeon_requests'));
@@ -227,7 +234,7 @@ async function handlePostRequest(interaction, settings) {
     const embed = new EmbedBuilder()
         .setColor(type === 'help' ? 0x3498DB : 0x2ECC71)
         .setTitle(`🏯 Sala: ${raidName}`)
-        .setAuthor({ name: nick || user.username, iconURL: user.displayAvatarURL() })
+        .setAuthor({ name: nick, iconURL: user.displayAvatarURL() })
         .setDescription(`**Jogadores na sala:** 1/10\n\n*Clique no olho para confirmar presença e ver a lista de jogadores!*`)
         .setTimestamp();
     
@@ -238,7 +245,7 @@ async function handlePostRequest(interaction, settings) {
         .setEmoji('👁️')
         .setStyle(ButtonStyle.Primary);
     
-    const webLink = userData.robloxUsername ? `https://www.roblox.com/users/${userData.robloxId}/profile` : 'https://www.roblox.com';
+    const webLink = userData.robloxId ? `https://www.roblox.com/users/${userData.robloxId}/profile` : 'https://www.roblox.com';
     const mobileLink = userData.robloxId ? `roblox://users/${userData.robloxId}/profile` : 'https://www.roblox.com';
     
     const webButton = new ButtonBuilder()
@@ -267,7 +274,7 @@ async function handlePostRequest(interaction, settings) {
     const row = new ActionRowBuilder().addComponents(confirmButton, webButton, mobileButton, joinButton, finishButton);
     
     const message = await webhookClient.send({
-        username: nick || user.username,
+        username: nick,
         avatarURL: user.displayAvatarURL(),
         embeds: [embed],
         components: [row],
@@ -295,7 +302,12 @@ async function handlePostRequest(interaction, settings) {
     
     await batch.commit();
     
-    await interaction.editReply({ content: 'Seu pedido foi postado com sucesso!' });
+    const finalReply = 'Seu pedido foi postado com sucesso!';
+    if (interaction.replied || interaction.deferred) {
+        await interaction.editReply({ content: finalReply });
+    } else {
+        await interaction.reply({ content: finalReply, ephemeral: true });
+    }
     interaction.client.interactions.delete(`soling_temp_${user.id}`);
 }
 
