@@ -119,59 +119,53 @@ async function handleTypeSelection(interaction, type) {
 }
 
 async function handleRaidSelection(interaction, type) {
-    try {
-        const { firestore } = initializeFirebase();
-        const selectedRaidValue = interaction.values[0];
-        const raids = getAvailableRaids();
-        const selectedRaidLabel = raids.find(r => r.value === selectedRaidValue)?.label || selectedRaidValue;
+    const { firestore } = initializeFirebase();
+    const selectedRaidValue = interaction.values[0];
+    const raids = getAvailableRaids();
+    const selectedRaidLabel = raids.find(r => r.value === selectedRaidValue)?.label || selectedRaidValue;
 
-        interaction.client.interactions.set(`soling_temp_${interaction.user.id}`, { type, raid: selectedRaidLabel });
+    interaction.client.interactions.set(`soling_temp_${interaction.user.id}`, { type, raid: selectedRaidLabel });
+    
+    const userRef = doc(firestore, 'users', interaction.user.id);
+    const userSnap = await getDoc(userRef);
+    const dungeonSettings = userSnap.exists() ? userSnap.data().dungeonSettings || {} : {};
+
+    if (dungeonSettings.alwaysSendLink && dungeonSettings.serverLink) {
+        await interaction.update({ content: 'Processando seu pedido com as configurações salvas...', components: [] });
+        await handlePostRequest(interaction, dungeonSettings);
+    } else {
+        const modal = new ModalBuilder()
+            .setCustomId('soling_modal_submit')
+            .setTitle(`Pedido para: ${selectedRaidLabel}`);
         
-        const userRef = doc(firestore, 'users', interaction.user.id);
-        const userSnap = await getDoc(userRef);
-        const dungeonSettings = userSnap.exists() ? userSnap.data().dungeonSettings || {} : {};
+        const serverLinkInput = new TextInputBuilder()
+            .setCustomId('server_link')
+            .setLabel("Link do seu servidor privado (Opcional)")
+            .setStyle(TextInputStyle.Short)
+            .setValue(dungeonSettings.serverLink || '')
+            .setRequired(false);
 
-        if (dungeonSettings.alwaysSendLink && dungeonSettings.serverLink) {
-            await interaction.update({ content: 'Processando seu pedido com as configurações salvas...', components: [] });
-            await handlePostRequest(interaction, dungeonSettings);
-        } else {
-            const modal = new ModalBuilder()
-                .setCustomId('soling_modal_submit')
-                .setTitle(`Pedido para: ${selectedRaidLabel}`);
-            
-            const serverLinkInput = new TextInputBuilder()
-                .setCustomId('server_link')
-                .setLabel("Link do seu servidor privado (Opcional)")
-                .setStyle(TextInputStyle.Short)
-                .setValue(dungeonSettings.serverLink || '')
-                .setRequired(false);
+        const alwaysSendInput = new TextInputBuilder()
+            .setCustomId('always_send')
+            .setLabel("Sempre enviar o link acima? (sim/não)")
+            .setStyle(TextInputStyle.Short)
+            .setValue(dungeonSettings.alwaysSendLink ? 'sim' : 'não')
+            .setRequired(true);
 
-            const alwaysSendInput = new TextInputBuilder()
-                .setCustomId('always_send')
-                .setLabel("Sempre enviar o link acima? (sim/não)")
-                .setStyle(TextInputStyle.Short)
-                .setValue(dungeonSettings.alwaysSendLink ? 'sim' : 'não')
-                .setRequired(true);
+        const deleteAfterInput = new TextInputBuilder()
+            .setCustomId('delete_after')
+            .setLabel("Apagar post após X minutos (opcional)")
+            .setStyle(TextInputStyle.Short)
+            .setPlaceholder("Deixe em branco para não apagar")
+            .setValue(String(dungeonSettings.deleteAfterMinutes || ''))
+            .setRequired(false);
 
-            const deleteAfterInput = new TextInputBuilder()
-                .setCustomId('delete_after')
-                .setLabel("Apagar post após X minutos (opcional)")
-                .setStyle(TextInputStyle.Short)
-                .setPlaceholder("Deixe em branco para não apagar")
-                .setValue(String(dungeonSettings.deleteAfterMinutes || ''))
-                .setRequired(false);
-
-            modal.addComponents(
-                new ActionRowBuilder().addComponents(serverLinkInput),
-                new ActionRowBuilder().addComponents(alwaysSendInput),
-                new ActionRowBuilder().addComponents(deleteAfterInput)
-            );
-            await interaction.showModal(modal);
-        }
-    } catch(error) {
-        console.error("Erro em handleRaidSelection:", error);
-        // O erro será tratado pelo catch principal no bot.js
-        throw error;
+        modal.addComponents(
+            new ActionRowBuilder().addComponents(serverLinkInput),
+            new ActionRowBuilder().addComponents(alwaysSendInput),
+            new ActionRowBuilder().addComponents(deleteAfterInput)
+        );
+        await interaction.showModal(modal);
     }
 }
 
@@ -243,15 +237,19 @@ async function handlePostRequest(interaction, settings) {
         batch.update(requestDoc.ref, { status: 'closed' });
     }
     
-    const nick = member.nickname || user.username;
-    const match = nick.match(/(.*) \(@(.+)\)/);
-    const displayName = match ? match[1].trim() : nick;
+    const nick = member.nickname;
+    const match = nick ? nick.match(/(.*) \(@(.+)\)/) : null;
+    
+    let displayName = nick || user.username;
     let robloxUsername = null;
     let robloxId = null;
 
-    if (match && member.roles.cache.has(VERIFIED_ROLE_ID)) {
-        robloxUsername = match[2];
-        robloxId = await usernameToId(robloxUsername);
+    if (match) {
+        displayName = match[1].trim();
+        if (member.roles.cache.has(VERIFIED_ROLE_ID)) {
+            robloxUsername = match[2].trim();
+            robloxId = await usernameToId(robloxUsername);
+        }
     }
     
     const userRef = doc(firestore, 'users', user.id);
@@ -259,7 +257,7 @@ async function handlePostRequest(interaction, settings) {
 
     const newRequestRef = doc(collection(firestore, 'dungeon_requests'));
     const newRequestId = newRequestRef.id;
-
+    
     const authorText = robloxUsername ? `${displayName} (@${robloxUsername})` : `${displayName} (não verificado)`;
     
     const embed = new EmbedBuilder()
