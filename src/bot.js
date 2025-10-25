@@ -44,7 +44,7 @@ for (const folder of commandFolders) {
   for (const file of commandFiles) {
     const filePath = path.join(commandsPath, file);
     // Skip the chat command as it's being handled by mentions
-    if (path.basename(filePath) === 'chat.js') continue;
+    if (path.basename(filePath) === 'chat.js' || path.basename(filePath) === 'roblox.js') continue;
     const command = await import(`file://${filePath}`);
     
     // Configurar comandos de barra
@@ -992,18 +992,27 @@ client.on(Events.GuildMemberUpdate, async (oldMember, newMember) => {
     const hasVerifiedRole = newMember.roles.cache.has(verifiedRoleId);
 
     if (!hadVerifiedRole && hasVerifiedRole) {
+        console.log(`Usuário ${newMember.user.tag} recebeu o cargo verificado. Sincronizando perfil...`);
         const { firestore } = initializeFirebase();
         const userRef = doc(firestore, 'users', newMember.id);
 
         let robloxUsername = null;
         let robloxId = null;
 
+        // A lógica de extração agora fica aqui
         const nick = newMember.nickname;
-        const match = nick ? nick.match(/(.*) \(@(.+)\)/) : null;
-
-        if (match) {
-            robloxUsername = match[2].trim();
-            robloxId = await usernameToId(robloxUsername);
+        if (nick) {
+            const match = nick.match(/(.*) \(@(.+)\)/);
+            if (match && match[2]) {
+                robloxUsername = match[2].trim();
+                console.log(`Roblox Username extraído: ${robloxUsername}`);
+                robloxId = await usernameToId(robloxUsername);
+                console.log(`Roblox ID obtido: ${robloxId}`);
+            } else {
+                 console.log(`Nickname "${nick}" não está no formato esperado para extração.`);
+            }
+        } else {
+            console.log(`Usuário ${newMember.user.tag} não possui nickname no servidor.`);
         }
 
         const profileData = {
@@ -1014,19 +1023,23 @@ client.on(Events.GuildMemberUpdate, async (oldMember, newMember) => {
             lastUpdated: serverTimestamp()
         };
 
-        const userSnap = await getDoc(userRef);
-        if (userSnap.exists()) {
-            await updateDoc(userRef, profileData);
-             console.log(`Perfil Roblox sincronizado para ${newMember.user.tag} (Username: ${robloxUsername}, ID: ${robloxId})`);
-        } else {
-             await setDoc(userRef, {
-                ...profileData,
-                email: null,
-                reputationPoints: 0,
-                credits: 0,
-                createdAt: serverTimestamp(),
-            });
-             console.log(`Perfil criado e sincronizado para o usuário verificado: ${newMember.user.tag} (Username: ${robloxUsername}, ID: ${robloxId})`);
+        try {
+            const userSnap = await getDoc(userRef);
+            if (userSnap.exists()) {
+                await updateDoc(userRef, profileData);
+                console.log(`Perfil Roblox sincronizado para ${newMember.user.tag} (Username: ${robloxUsername}, ID: ${robloxId})`);
+            } else {
+                await setDoc(userRef, {
+                    ...profileData,
+                    email: null,
+                    reputationPoints: 0,
+                    credits: 0,
+                    createdAt: serverTimestamp(),
+                });
+                console.log(`Perfil criado e sincronizado para o usuário verificado: ${newMember.user.tag} (Username: ${robloxUsername}, ID: ${robloxId})`);
+            }
+        } catch (error) {
+            console.error(`Erro ao salvar perfil sincronizado para ${newMember.user.tag}:`, error);
         }
     }
 
