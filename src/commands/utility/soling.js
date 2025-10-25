@@ -1,6 +1,6 @@
 // src/commands/utility/soling.js
 import { SlashCommandBuilder, ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, WebhookClient, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, AttachmentBuilder, ChannelType } from 'discord.js';
-import { doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, query, where, getDocs, writeBatch, arrayUnion, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, query, where, getDocs, writeBatch, arrayUnion, deleteDoc, arrayRemove } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
 import { lobbyDungeonsArticle } from '../../data/wiki-articles/lobby-dungeons.js';
 import { raidRequirementsArticle } from '../../data/wiki-articles/raid-requirements.js';
@@ -100,25 +100,22 @@ async function handleTypeSelection(interaction, type) {
 }
 
 async function handleRaidSelection(interaction, type) {
-    await interaction.deferUpdate(); // Defer the update to prevent timeout
+    await interaction.deferUpdate();
 
     const { firestore } = initializeFirebase();
     const selectedRaidValue = interaction.values[0];
     const raids = getAvailableRaids();
     const selectedRaidLabel = raids.find(r => r.value === selectedRaidValue)?.label || selectedRaidValue;
 
-    // Store temporary data for the next step
     interaction.client.interactions.set(`soling_temp_${interaction.user.id}`, { type, raid: selectedRaidLabel });
     
     const userRef = doc(firestore, 'users', interaction.user.id);
     const userSnap = await getDoc(userRef);
     const dungeonSettings = userSnap.exists() ? userSnap.data().dungeonSettings || {} : {};
 
-    // If user has settings to always send a link and the link exists, post directly
     if (dungeonSettings.alwaysSendLink && dungeonSettings.serverLink) {
         await handlePostRequest(interaction, dungeonSettings);
     } else {
-        // Otherwise, show the configuration modal
         const modal = new ModalBuilder()
             .setCustomId('soling_modal_submit')
             .setTitle(`Pedido para: ${selectedRaidLabel}`);
@@ -147,7 +144,7 @@ async function handleRaidSelection(interaction, type) {
 
         modal.addComponents(
             new ActionRowBuilder().addComponents(serverLinkInput),
-            new ActionRowrow().addComponents(alwaysSendInput),
+            new ActionRowBuilder().addComponents(alwaysSendInput),
             new ActionRowBuilder().addComponents(deleteAfterInput)
         );
         await interaction.showModal(modal);
@@ -219,20 +216,19 @@ async function handlePostRequest(interaction, settings) {
         } catch(e) {
              console.warn(`Não foi possível deletar a mensagem antiga de /soling (ID: ${oldRequestData.messageId}). Pode já ter sido removida.`, e.message);
         }
-        // Em vez de atualizar, deleta o documento antigo
         batch.delete(requestDoc.ref);
     }
     
     const userRef = doc(firestore, 'users', user.id);
+    batch.set(userRef, { dungeonSettings: { serverLink, alwaysSendLink, deleteAfterMinutes } }, { merge: true });
+    
     const userSnap = await getDoc(userRef);
     const userData = userSnap.exists() ? userSnap.data() : {};
 
     const guild = await interaction.client.guilds.fetch(interaction.guildId);
     const member = await guild.members.fetch(user.id);
-    const nick = member.nickname; // Usa apenas o nickname
+    const nick = member.nickname;
     
-    batch.set(userRef, { dungeonSettings: { serverLink, alwaysSendLink, deleteAfterMinutes } }, { merge: true });
-
     const newRequestRef = doc(collection(firestore, 'dungeon_requests'));
     const newRequestId = newRequestRef.id;
         
@@ -240,7 +236,7 @@ async function handlePostRequest(interaction, settings) {
         .setColor(type === 'help' ? 0x3498DB : 0x2ECC71)
         .setTitle(`🏯 ${raidName}`)
         .setAuthor({ name: nick || user.username, iconURL: user.displayAvatarURL() })
-        .setDescription(`**Jogadores na sala:** 1/10\n\n*Clique no olho para confirmar presença e ver a lista de jogadores!*`)
+        .setDescription(`**Jogadores na sala:** 1/10\n\n*Clique no olho (👁️) para manifestar interesse e entrar na lista de espera! O dono do anúncio confirmará sua entrada.*`)
         .setTimestamp();
     
     const webhookClient = new WebhookClient({ url: webhook.url });
@@ -288,11 +284,8 @@ async function handlePostRequest(interaction, settings) {
     
     if (deleteAfterMinutes && message) {
         setTimeout(() => {
-            // Tenta deletar a mensagem, mas não quebra se já foi removida
             solingChannel.messages.delete(message.id)
                 .catch(e => console.warn(`Não foi possível apagar a mensagem agendada (ID: ${message.id}): ${e.message}`));
-            
-            // Deleta o documento do Firestore
             deleteDoc(newRequestRef).catch(console.error);
         }, deleteAfterMinutes * 60 * 1000);
     }
@@ -303,8 +296,8 @@ async function handlePostRequest(interaction, settings) {
         raidName: raidName,
         messageId: message.id,
         createdAt: serverTimestamp(),
-        status: 'active', // Status ainda é útil para queries de busca de anúncios ativos
-        confirmedUsers: []
+        status: 'active',
+        confirmedUsers: [] 
     };
     batch.set(newRequestRef, newRequestData);
     
@@ -312,7 +305,6 @@ async function handlePostRequest(interaction, settings) {
     
     const finalReply = 'Seu pedido foi postado com sucesso!';
     if (interaction.replied || interaction.deferred) {
-        // Use followUp if the interaction was deferred (e.g., from handleRaidSelection or modal submit)
         await interaction.followUp({ content: finalReply, ephemeral: true });
     } else {
         await interaction.reply({ content: finalReply, ephemeral: true });
@@ -327,7 +319,7 @@ async function handleConfirm(interaction, requestId) {
     await interaction.deferReply({ ephemeral: true });
 
     const requestSnap = await getDoc(requestRef);
-    if (!requestSnap.exists()) { // O status 'active' não é mais necessário, apenas se o doc existe
+    if (!requestSnap.exists()) {
         return interaction.editReply({ content: 'Este pedido de soling não existe mais.' });
     }
 
@@ -336,25 +328,26 @@ async function handleConfirm(interaction, requestId) {
 
     if (interaction.user.id === ownerId) {
         if (!requestData.confirmedUsers || requestData.confirmedUsers.length === 0) {
-            return interaction.editReply({ content: 'Ninguém confirmou presença ainda.' });
+            return interaction.editReply({ content: 'Ninguém manifestou interesse ainda.' });
         }
         
         const selectMenu = new StringSelectMenuBuilder()
             .setCustomId(`soling_selectuser_${requestId}`)
-            .setPlaceholder('Selecione um usuário para ver o perfil')
+            .setPlaceholder('Selecione um jogador para confirmar/remover')
             .addOptions(requestData.confirmedUsers.map(u => ({
-                label: u.username,
+                label: `${u.inGame ? '✅' : '❔'} ${u.username}`,
+                description: `Clique para confirmar a entrada ou remover da contagem.`,
                 value: u.userId
             })));
         
         const row = new ActionRowBuilder().addComponents(selectMenu);
-        await interaction.editReply({ content: 'Selecione um participante para ver seus dados:', components: [row] });
+        await interaction.editReply({ content: 'Selecione um participante para gerenciar:', components: [row] });
     
     } else { 
-        const newUser = { userId: interaction.user.id, username: interaction.user.username };
+        const newUser = { userId: interaction.user.id, username: interaction.user.username, inGame: false };
         
         if (requestData.confirmedUsers.some(u => u.userId === newUser.userId)) {
-             await interaction.editReply({ content: 'Você já confirmou sua presença.' });
+             await interaction.editReply({ content: 'Você já está na lista de interessados.' });
              return;
         }
 
@@ -362,46 +355,74 @@ async function handleConfirm(interaction, requestId) {
             confirmedUsers: arrayUnion(newUser)
         });
 
-        // Atualiza o embed
-        const updatedUsers = [...requestData.confirmedUsers, newUser];
-        const originalEmbed = interaction.message.embeds[0];
-        const updatedEmbed = EmbedBuilder.from(originalEmbed)
-            .setDescription(`**Jogadores na sala:** ${updatedUsers.length + 1}/10\n\n*Clique no olho para confirmar presença e ver a lista de jogadores!*`);
-        await interaction.message.edit({ embeds: [updatedEmbed] });
-
-        await interaction.editReply({ content: 'Sua presença foi confirmada! O líder do grupo foi notificado.' });
+        await interaction.editReply({ content: 'Seu interesse foi registrado! O líder do grupo irá confirmar sua entrada na sala.' });
     }
 }
 
 async function handleSelectUser(interaction, requestId) {
-    await interaction.deferReply({ ephemeral: true });
-
+    await interaction.deferUpdate();
+    
     const { firestore } = initializeFirebase();
     const selectedUserId = interaction.values[0];
-    const userRef = doc(firestore, 'users', selectedUserId);
-    const userSnap = await getDoc(userRef);
+    const requestRef = doc(firestore, 'dungeon_requests', requestId);
 
-    if (!userSnap.exists()) {
-        return interaction.editReply({ content: `O usuário selecionado ainda não possui um perfil no Guia Eterno.` });
+    const requestSnap = await getDoc(requestRef);
+    if (!requestSnap.exists()) {
+        return interaction.followUp({ content: 'Este anúncio não existe mais.', ephemeral: true });
     }
 
-    const userData = userSnap.data();
-    const discordUser = await interaction.client.users.fetch(selectedUserId);
+    const requestData = requestSnap.data();
+    let confirmedUsers = requestData.confirmedUsers || [];
+    const userIndex = confirmedUsers.findIndex(u => u.userId === selectedUserId);
 
-    const profileImage = await createProfileImage(userData, discordUser);
-    const attachment = new AttachmentBuilder(profileImage, { name: 'profile-image.png' });
-    await interaction.editReply({ files: [attachment] });
+    if (userIndex === -1) {
+        return interaction.followUp({ content: 'Usuário não encontrado na lista.', ephemeral: true });
+    }
+
+    // Alternar o status 'inGame'
+    confirmedUsers[userIndex].inGame = !confirmedUsers[userIndex].inGame;
+
+    await updateDoc(requestRef, { confirmedUsers: confirmedUsers });
+    
+    const inGameCount = confirmedUsers.filter(u => u.inGame).length + 1; // +1 for the owner
+    const originalEmbed = interaction.message.embeds[0];
+    const updatedEmbed = EmbedBuilder.from(originalEmbed)
+        .setDescription(`**Jogadores na sala:** ${inGameCount}/10\n\n*Clique no olho (👁️) para manifestar interesse e entrar na lista de espera! O dono do anúncio confirmará sua entrada.*`);
+
+    await interaction.message.edit({ embeds: [updatedEmbed] });
+
+    // Atualiza o menu para o dono
+    const selectMenu = new StringSelectMenuBuilder()
+        .setCustomId(`soling_selectuser_${requestId}`)
+        .setPlaceholder('Selecione um jogador para confirmar/remover')
+        .addOptions(confirmedUsers.map(u => ({
+            label: `${u.inGame ? '✅' : '❔'} ${u.username}`,
+            description: `Clique para confirmar a entrada ou remover da contagem.`,
+            value: u.userId
+        })));
+    const row = new ActionRowBuilder().addComponents(selectMenu);
+    await interaction.followUp({ content: `Status de ${confirmedUsers[userIndex].username} atualizado. Contagem: ${inGameCount}/10`, components: [row], ephemeral: true });
+    
+    // Verifica se atingiu o limite
+    if (inGameCount >= 10) {
+        await interaction.followUp({ content: 'Grupo cheio! O anúncio será fechado automaticamente.', ephemeral: true });
+        await handleFinish(interaction, requestId, true); // Pass a flag to indicate auto-close
+    }
 }
 
-async function handleFinish(interaction, requestId) {
+
+async function handleFinish(interaction, requestId, autoClosed = false) {
     const { firestore } = initializeFirebase();
     const requestRef = doc(firestore, 'dungeon_requests', requestId);
     
-    await interaction.deferReply({ ephemeral: true });
+    if(!autoClosed) {
+        await interaction.deferReply({ ephemeral: true });
+    }
 
     const requestSnap = await getDoc(requestRef);
     if(!requestSnap.exists()) {
-        return interaction.editReply({ content: 'Este anúncio não existe mais ou já foi finalizado.' });
+        if(!autoClosed) await interaction.editReply({ content: 'Este anúncio não existe mais ou já foi finalizado.' });
+        return;
     }
     
     const ownerId = requestSnap.data().userId;
@@ -409,20 +430,18 @@ async function handleFinish(interaction, requestId) {
     const isOwner = interaction.user.id === ownerId;
     const isModerator = member.roles.cache.has(ADMIN_ROLE_ID);
 
-    if (!isOwner && !isModerator) {
+    if (!isOwner && !isModerator && !autoClosed) {
         return interaction.editReply({ content: 'Apenas o dono do anúncio ou um moderador pode finalizá-lo.' });
     }
     
-    // Deleta o documento do Firestore
     await deleteDoc(requestRef);
     
     try {
-        // Tenta deletar a mensagem original do anúncio
         await interaction.message.delete();
-        await interaction.editReply({ content: 'Anúncio finalizado e removido com sucesso.'});
+        if(!autoClosed) await interaction.editReply({ content: 'Anúncio finalizado e removido com sucesso.'});
     } catch (e) {
         console.warn(`Não foi possível deletar a mensagem (ID: ${interaction.message.id}), pode já ter sido removida.`);
-        await interaction.editReply({ content: 'Anúncio finalizado, mas não foi possível remover a mensagem (pode já ter sido apagada).'});
+        if(!autoClosed) await interaction.editReply({ content: 'Anúncio finalizado, mas não foi possível remover a mensagem (pode já ter sido apagada).'});
     }
 }
 
