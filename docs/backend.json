@@ -168,6 +168,14 @@
           "type": "string",
           "description": "The user's chosen username."
         },
+        "robloxUsername": {
+          "type": "string",
+          "description": "The user's Roblox username, extracted from their nickname."
+        },
+        "robloxId": {
+          "type": "number",
+          "description": "The user's Roblox ID."
+        },
         "email": {
           "type": "string",
           "description": "The user's email address.",
@@ -231,10 +239,6 @@
         "properties": {
             "id": { "type": "string", "description": "Unique identifier for the request." },
             "userId": { "type": "string", "description": "The Discord ID of the user making the request." },
-            "username": { "type": "string", "description": "The Discord username of the user." },
-            "robloxUsername": { "type": "string", "description": "The Roblox username of the user, extracted from nickname." },
-            "robloxId": { "type": "number", "description": "The Roblox user ID of the user." },
-            "avatarUrl": { "type": "string", "description": "The URL of the user's Discord avatar." },
             "type": { "type": "string", "enum": ["help", "hosting"], "description": "Whether the user is seeking help or hosting." },
             "raidName": { "type": "string", "description": "The name of the raid for the request." },
             "messageId": { "type": "string", "description": "The ID of the message posted in the soling channel." },

@@ -13,6 +13,8 @@ import { generateSolution } from './ai/flows/generate-solution.js';
 import { updateKnowledgeBase } from './ai/flows/update-knowledge-base.js';
 import axios from 'axios';
 import { createTableImage } from './utils/createTableImage.js';
+import { usernameToId } from './utils/roblox.js';
+
 
 // Resolve __dirname for ES Modules
 const __filename = fileURLToPath(import.meta.url);
@@ -992,23 +994,39 @@ client.on(Events.GuildMemberUpdate, async (oldMember, newMember) => {
     if (!hadVerifiedRole && hasVerifiedRole) {
         const { firestore } = initializeFirebase();
         const userRef = doc(firestore, 'users', newMember.id);
-        const userSnap = await getDoc(userRef);
 
-        if (!userSnap.exists()) {
-            try {
-                const newUserProfile = {
-                    id: newMember.id,
-                    username: newMember.user.username,
-                    email: null,
-                    reputationPoints: 0,
-                    credits: 0,
-                    createdAt: serverTimestamp(),
-                };
-                await setDoc(userRef, newUserProfile);
-                console.log(`Perfil criado automaticamente para o usuário verificado: ${newMember.user.tag} (${newMember.id})`);
-            } catch (error) {
-                console.error(`Falha ao criar perfil automático para ${newMember.id}:`, error);
-            }
+        let robloxUsername = null;
+        let robloxId = null;
+
+        const nick = newMember.nickname;
+        const match = nick ? nick.match(/(.*) \(@(.+)\)/) : null;
+
+        if (match) {
+            robloxUsername = match[2].trim();
+            robloxId = await usernameToId(robloxUsername);
+        }
+
+        const profileData = {
+            id: newMember.id,
+            username: newMember.user.username,
+            robloxUsername: robloxUsername,
+            robloxId: robloxId,
+            lastUpdated: serverTimestamp()
+        };
+
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists()) {
+            await updateDoc(userRef, profileData);
+             console.log(`Perfil Roblox sincronizado para ${newMember.user.tag} (Username: ${robloxUsername}, ID: ${robloxId})`);
+        } else {
+             await setDoc(userRef, {
+                ...profileData,
+                email: null,
+                reputationPoints: 0,
+                credits: 0,
+                createdAt: serverTimestamp(),
+            });
+             console.log(`Perfil criado e sincronizado para o usuário verificado: ${newMember.user.tag} (Username: ${robloxUsername}, ID: ${robloxId})`);
         }
     }
 
