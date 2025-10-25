@@ -119,75 +119,80 @@ async function handleTypeSelection(interaction, type) {
 }
 
 async function handleRaidSelection(interaction, type) {
-    const { firestore } = initializeFirebase();
-    const selectedRaidValue = interaction.values[0];
-    const raids = getAvailableRaids();
-    const selectedRaidLabel = raids.find(r => r.value === selectedRaidValue)?.label || selectedRaidValue;
+    try {
+        const { firestore } = initializeFirebase();
+        const selectedRaidValue = interaction.values[0];
+        const raids = getAvailableRaids();
+        const selectedRaidLabel = raids.find(r => r.value === selectedRaidValue)?.label || selectedRaidValue;
 
-    // Armazenar temporariamente a escolha
-    interaction.client.interactions.set(`soling_temp_${interaction.user.id}`, { type, raid: selectedRaidLabel });
-    
-    const userRef = doc(firestore, 'users', interaction.user.id);
-    const userSnap = await getDoc(userRef);
-    const dungeonSettings = userSnap.exists() ? userSnap.data().dungeonSettings || {} : {};
-
-    if (dungeonSettings.alwaysSendLink && dungeonSettings.serverLink) {
-        // A interaction do menu de seleção precisa ser "reconhecida" antes de processar
-        await interaction.update({ content: 'Processando seu pedido com as configurações salvas...', components: [] });
-        await handlePostRequest(interaction, dungeonSettings);
-    } else {
-        const modal = new ModalBuilder()
-            .setCustomId('soling_modal_submit')
-            .setTitle(`Pedido para: ${selectedRaidLabel}`);
+        interaction.client.interactions.set(`soling_temp_${interaction.user.id}`, { type, raid: selectedRaidLabel });
         
-        const serverLinkInput = new TextInputBuilder()
-            .setCustomId('server_link')
-            .setLabel("Link do seu servidor privado (Opcional)")
-            .setStyle(TextInputStyle.Short)
-            .setValue(dungeonSettings.serverLink || '')
-            .setRequired(false);
+        const userRef = doc(firestore, 'users', interaction.user.id);
+        const userSnap = await getDoc(userRef);
+        const dungeonSettings = userSnap.exists() ? userSnap.data().dungeonSettings || {} : {};
 
-        const alwaysSendInput = new TextInputBuilder()
-            .setCustomId('always_send')
-            .setLabel("Sempre enviar o link acima? (sim/não)")
-            .setStyle(TextInputStyle.Short)
-            .setValue(dungeonSettings.alwaysSendLink ? 'sim' : 'não')
-            .setRequired(true);
+        if (dungeonSettings.alwaysSendLink && dungeonSettings.serverLink) {
+            await interaction.update({ content: 'Processando seu pedido com as configurações salvas...', components: [] });
+            await handlePostRequest(interaction, dungeonSettings);
+        } else {
+            const modal = new ModalBuilder()
+                .setCustomId('soling_modal_submit')
+                .setTitle(`Pedido para: ${selectedRaidLabel}`);
+            
+            const serverLinkInput = new TextInputBuilder()
+                .setCustomId('server_link')
+                .setLabel("Link do seu servidor privado (Opcional)")
+                .setStyle(TextInputStyle.Short)
+                .setValue(dungeonSettings.serverLink || '')
+                .setRequired(false);
 
-        const deleteAfterInput = new TextInputBuilder()
-            .setCustomId('delete_after')
-            .setLabel("Apagar post após X minutos (opcional)")
-            .setStyle(TextInputStyle.Short)
-            .setPlaceholder("Deixe em branco para não apagar")
-            .setValue(String(dungeonSettings.deleteAfterMinutes || ''))
-            .setRequired(false);
+            const alwaysSendInput = new TextInputBuilder()
+                .setCustomId('always_send')
+                .setLabel("Sempre enviar o link acima? (sim/não)")
+                .setStyle(TextInputStyle.Short)
+                .setValue(dungeonSettings.alwaysSendLink ? 'sim' : 'não')
+                .setRequired(true);
 
-        modal.addComponents(
-            new ActionRowBuilder().addComponents(serverLinkInput),
-            new ActionRowBuilder().addComponents(alwaysSendInput),
-            new ActionRowBuilder().addComponents(deleteAfterInput)
-        );
-        // A interaction do menu de seleção já foi usada para mostrar o modal
-        await interaction.showModal(modal);
+            const deleteAfterInput = new TextInputBuilder()
+                .setCustomId('delete_after')
+                .setLabel("Apagar post após X minutos (opcional)")
+                .setStyle(TextInputStyle.Short)
+                .setPlaceholder("Deixe em branco para não apagar")
+                .setValue(String(dungeonSettings.deleteAfterMinutes || ''))
+                .setRequired(false);
+
+            modal.addComponents(
+                new ActionRowBuilder().addComponents(serverLinkInput),
+                new ActionRowBuilder().addComponents(alwaysSendInput),
+                new ActionRowBuilder().addComponents(deleteAfterInput)
+            );
+            await interaction.showModal(modal);
+        }
+    } catch(error) {
+        console.error("Erro em handleRaidSelection:", error);
+         if (!interaction.replied && !interaction.deferred) {
+            await interaction.reply({ content: 'Ocorreu um erro ao processar a seleção da raid.', ephemeral: true }).catch(() => {});
+        } else {
+            await interaction.followUp({ content: 'Ocorreu um erro ao processar a seleção da raid.', ephemeral: true }).catch(() => {});
+        }
     }
 }
 
 async function handleModalSubmit(interaction) {
+    await interaction.deferReply({ ephemeral: true });
+
     const serverLink = interaction.fields.getTextInputValue('server_link');
     const alwaysSendStr = interaction.fields.getTextInputValue('always_send').toLowerCase();
     const deleteAfterStr = interaction.fields.getTextInputValue('delete_after');
 
     if (alwaysSendStr !== 'sim' && alwaysSendStr !== 'não') {
-        return interaction.reply({ content: 'Valor inválido para "Sempre enviar o link?". Por favor, use "sim" ou "não".', ephemeral: true });
+        return interaction.editReply({ content: 'Valor inválido para "Sempre enviar o link?". Por favor, use "sim" ou "não".' });
     }
     
     const deleteAfter = parseInt(deleteAfterStr, 10);
     if (deleteAfterStr && (isNaN(deleteAfter) || deleteAfter <= 0)) {
-        return interaction.reply({ content: 'O tempo para apagar deve ser um número positivo de minutos.', ephemeral: true });
+        return interaction.editReply({ content: 'O tempo para apagar deve ser um número positivo de minutos.' });
     }
-    
-    // A interaction do modal precisa ser "reconhecida" antes de processar
-    await interaction.deferReply({ ephemeral: true });
     
     const settings = {
         serverLink: serverLink || null,
@@ -225,8 +230,7 @@ async function handlePostRequest(interaction, settings) {
     }
     
     const requestsRef = collection(firestore, 'dungeon_requests');
-    // Consulta por pedidos ativos DO MESMO TIPO.
-    const q = query(requestsRef, where("userId", "==", user.id), where("status", "==", "active"), where("type", "==", type));
+    const q = query(requestsRef, where("userId", "==", user.id), where("status", "==", "active"));
     const oldRequestsSnap = await getDocs(q);
 
     const batch = writeBatch(firestore);
@@ -245,11 +249,13 @@ async function handlePostRequest(interaction, settings) {
     const nick = member.nickname || user.username;
     const match = nick.match(/(.*) \(@(.+)\)/);
     const displayName = match ? match[1].trim() : nick;
-    const robloxUsername = match ? match[2] : null;
-
+    let robloxUsername = match ? match[2] : null;
     let robloxId = null;
+
     if (robloxUsername && member.roles.cache.has(VERIFIED_ROLE_ID)) {
          robloxId = await usernameToId(robloxUsername);
+    } else {
+        robloxUsername = null; // Garante que se não for verificado, o username do roblox seja nulo
     }
     
     const userRef = doc(firestore, 'users', user.id);
@@ -272,26 +278,39 @@ async function handlePostRequest(interaction, settings) {
     const confirmLabel = type === 'help' ? 'Vou Ajudar' : 'Vou Precisar';
     const confirmButton = new ButtonBuilder()
         .setCustomId(`soling_confirm_${newRequestId}`)
-        .setLabel(confirmLabel)
         .setEmoji('👁️')
         .setStyle(ButtonStyle.Primary);
+    
+    const webLink = robloxUsername ? `https://www.roblox.com/users/${robloxId}/profile` : 'https://www.roblox.com';
+    const mobileLink = robloxId ? `roblox://users/${robloxId}/profile` : 'https://www.roblox.com';
+    
+    const webButton = new ButtonBuilder()
+        .setLabel('Web')
+        .setEmoji('🖥️')
+        .setStyle(ButtonStyle.Link)
+        .setURL(webLink)
+        .setDisabled(!robloxId);
 
-    const profileButton = new ButtonBuilder()
-        .setCustomId(`soling_profile_${newRequestId}`)
-        .setEmoji('👤')
-        .setStyle(ButtonStyle.Secondary);
+    const mobileButton = new ButtonBuilder()
+        .setLabel('Mobile')
+        .setEmoji('📱')
+        .setStyle(ButtonStyle.Link)
+        .setURL(mobileLink)
+        .setDisabled(!robloxId);
         
     const joinButton = new ButtonBuilder()
          .setCustomId(`soling_join_${newRequestId}`)
-        .setEmoji('🎮')
-        .setStyle(ButtonStyle.Secondary);
+         .setEmoji('🎮')
+         .setLabel('Entrar')
+         .setStyle(ButtonStyle.Success);
 
     const finishButton = new ButtonBuilder()
         .setCustomId(`soling_finish_${newRequestId}`)
         .setEmoji('🗑️')
+        .setLabel('Finalizar')
         .setStyle(ButtonStyle.Danger);
 
-    const row = new ActionRowBuilder().addComponents(confirmButton, profileButton, joinButton, finishButton);
+    const row = new ActionRowBuilder().addComponents(confirmButton, webButton, mobileButton, joinButton, finishButton);
     
     const message = await webhookClient.send({
         username: displayName,
@@ -312,7 +331,7 @@ async function handlePostRequest(interaction, settings) {
     const newRequestData = {
         id: newRequestId,
         userId: user.id,
-        username: displayName, // Salva o DisplayName
+        username: displayName,
         robloxUsername: robloxUsername,
         robloxId: robloxId,
         avatarUrl: user.displayAvatarURL(),
@@ -327,12 +346,7 @@ async function handlePostRequest(interaction, settings) {
     
     await batch.commit();
     
-    // interaction.editReply já foi feito no handleModalSubmit ou handleRaidSelection
-    if (interaction.replied || interaction.deferred) {
-        await interaction.editReply({ content: 'Seu pedido foi postado com sucesso!' });
-    } else {
-        await interaction.reply({ content: 'Seu pedido foi postado com sucesso!', ephemeral: true });
-    }
+    await interaction.editReply({ content: 'Seu pedido foi postado com sucesso!' });
     interaction.client.interactions.delete(`soling_temp_${user.id}`);
 }
 
@@ -388,32 +402,6 @@ async function handleConfirm(interaction, requestId) {
     }
 }
 
-async function handleProfile(interaction, requestId) {
-    await interaction.deferReply({ ephemeral: true });
-    const { firestore } = initializeFirebase();
-    const requestRef = doc(firestore, 'dungeon_requests', requestId);
-    const requestSnap = await getDoc(requestRef);
-
-    if (!requestSnap.exists() || requestSnap.data().status !== 'active') {
-        return interaction.editReply({ content: 'Este pedido de soling não existe mais.' });
-    }
-
-    const requestData = requestSnap.data();
-    
-    if (!requestData.robloxUsername || !requestData.robloxId) {
-        return interaction.editReply({ content: '⚠️ O host não tem um perfil Roblox verificado ou o nome de usuário não pôde ser encontrado.' });
-    }
-    
-    const webLink = `https://www.roblox.com/users/${requestData.robloxId}/profile`;
-    const appLink = `roblox://users/${requestData.robloxId}/profile`;
-
-    const profileRow = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setLabel('Web').setStyle(ButtonStyle.Link).setURL(webLink),
-        new ButtonBuilder().setLabel('Mobile').setStyle(ButtonStyle.Link).setURL(appLink)
-    );
-    await interaction.editReply({ content: `Clique para ver o perfil Roblox do host **${requestData.username} (@${requestData.robloxUsername})**:`, components: [profileRow] });
-
-}
 
 async function handleJoin(interaction, requestId) {
     await interaction.deferReply({ ephemeral: true });
@@ -501,8 +489,6 @@ export async function handleInteraction(interaction) {
                 await handleTypeSelection(interaction, params[0]);
             } else if (action === 'confirm') {
                 await handleConfirm(interaction, params[0]);
-            } else if (action === 'profile') {
-                await handleProfile(interaction, params[0]);
             } else if (action === 'join') {
                 await handleJoin(interaction, params[0]);
             } else if (action === 'finish') {
@@ -527,7 +513,6 @@ export async function handleInteraction(interaction) {
            });
         } else {
              try {
-                // A interaction pode ter expirado, então a resposta pode falhar.
                 if (!interaction.isExpired()) {
                     await interaction.reply({ content: 'Ocorreu um erro ao processar sua ação.', ephemeral: true });
                 }
