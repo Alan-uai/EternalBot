@@ -43,8 +43,6 @@ for (const folder of commandFolders) {
   const commandFiles = fs.readdirSync(commandsPath).filter((file) => file.endsWith('.js'));
   for (const file of commandFiles) {
     const filePath = path.join(commandsPath, file);
-    // Skip the chat command as it's being handled by mentions
-    if (path.basename(filePath) === 'chat.js' || path.basename(filePath) === 'roblox.js') continue;
     const command = await import(`file://${filePath}`);
     
     // Configurar comandos de barra
@@ -148,6 +146,18 @@ function checkRaidTimes() {
 }
 // ------------------------
 
+// --- Farm Plan Scheduler ---
+async function checkFarmPlans() {
+    const { firestore } = initializeFirebase();
+    const now = new Date();
+    const days = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+    const currentDay = days[now.getDay()];
+    const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+
+    // Lógica para anúncio
+}
+// ------------------------
+
 // Evento de Ready
 client.once(Events.ClientReady, async (readyClient) => {
   console.log(`Pronto! Logado como ${readyClient.user.tag}`);
@@ -174,6 +184,10 @@ client.once(Events.ClientReady, async (readyClient) => {
   // Iniciar o agendador de raids
   console.log('Agendador de alertas de raid iniciado.');
   setInterval(checkRaidTimes, 60000); // Executa a cada 60 segundos
+
+  // Iniciar o agendador de farms
+  console.log('Agendador de planos de farm iniciado.');
+  setInterval(checkFarmPlans, 60000); // Executa a cada 60 segundos
 });
 
 
@@ -1091,3 +1105,5 @@ http.createServer((req, res) => {
 }).listen(port, () => {
   console.log(`Servidor web ouvindo na porta ${port}`);
 });
+
+    

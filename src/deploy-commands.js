@@ -5,3 +5,5 @@
 // Você pode remover este arquivo com segurança do seu projeto.
 
 console.log("Este script foi descontinuado. O deploy de comandos agora é feito automaticamente em src/bot.js.");
+
+    

@@ -225,7 +225,8 @@
             "necklace": { "$ref": "#/backend/entities/UserJewelry" },
             "earring": { "$ref": "#/backend/entities/UserJewelry" }
           }
-        }
+        },
+        "farming": { "type": "boolean", "description": "Flag to indicate if user can access farming commands." }
       },
       "required": [
         "id",
@@ -258,6 +259,44 @@
             }
         },
         "required": ["id", "userId", "type", "raidName", "createdAt", "status"]
+    },
+    "FarmPlan": {
+        "title": "FarmPlan",
+        "type": "object",
+        "description": "Represents a single scheduled farm event for a user or group.",
+        "properties": {
+            "id": { "type": "string" },
+            "userId": { "type": "string", "description": "The Discord ID of the host." },
+            "groupId": { "type": "string", "description": "Optional ID of the FarmGroup this plan belongs to." },
+            "dayOfWeek": { "type": "string", "enum": ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"] },
+            "time": { "type": "string", "description": "Time of the farm in HH:MM format." },
+            "activity": { "type": "string", "description": "The farming activity (e.g., 'Raid Sins', 'Farm de Tokens')." }
+        },
+        "required": ["id", "userId", "dayOfWeek", "time", "activity"]
+    },
+    "FarmGroup": {
+        "title": "FarmGroup",
+        "type": "object",
+        "description": "Represents a group of users for farming.",
+        "properties": {
+            "id": { "type": "string" },
+            "name": { "type": "string" },
+            "hostId": { "type": "string", "description": "The Discord ID of the group's host." },
+            "memberIds": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["id", "name", "hostId"]
+    },
+    "FarmSubscription": {
+        "title": "FarmSubscription",
+        "type": "object",
+        "description": "Represents a user's subscription to a farm plan or group.",
+        "properties": {
+            "id": { "type": "string" },
+            "userId": { "type": "string" },
+            "planId": { "type": "string", "description": "ID of the FarmPlan if subscribing to a single event." },
+            "groupId": { "type": "string", "description": "ID of the FarmGroup if subscribing to a group." }
+        },
+        "required": ["id", "userId"]
     },
     "UserWeapon": {
       "title": "UserWeapon",
@@ -633,6 +672,30 @@
         }
       },
       {
+        "path": "/farm_plans/{planId}",
+        "definition": {
+          "entityName": "FarmPlan",
+          "schema": { "$ref": "#/backend/entities/FarmPlan" },
+          "description": "Stores all scheduled farm events."
+        }
+      },
+      {
+        "path": "/farm_groups/{groupId}",
+        "definition": {
+          "entityName": "FarmGroup",
+          "schema": { "$ref": "#/backend/entities/FarmGroup" },
+          "description": "Stores farm groups and their members."
+        }
+      },
+      {
+        "path": "/farm_subscriptions/{subscriptionId}",
+        "definition": {
+          "entityName": "FarmSubscription",
+          "schema": { "$ref": "#/backend/entities/FarmSubscription" },
+          "description": "Stores user subscriptions to farms and groups."
+        }
+      },
+      {
         "path": "/users/{userId}",
         "definition": {
           "entityName": "User",
@@ -857,6 +920,8 @@
         }
       }
     ],
-    "reasoning": "The Firestore structure is organized with 'worlds' as the top-level collection to logically separate game content. Each world document contains sub-collections for 'powers', 'npcs', 'pets', 'dungeons', 'accessories', 'shadows' and 'stands', creating a hierarchical and scalable data model. This allows for efficient querying of specific game data. For example, to get all shadows for 'World 7', you query the '/worlds/world7/shadows' sub-collection. A new top-level collection 'achievements' is added to store all game achievements, which is separate from world-specific data."
+    "reasoning": "The Firestore structure is organized with 'worlds' as the top-level collection to logically separate game content. Each world document contains sub-collections for 'powers', 'npcs', 'pets', 'dungeons', 'accessories', 'shadows' and 'stands', creating a hierarchical and scalable data model. This allows for efficient querying of specific game data. For example, to get all shadows for 'World 7', you query the '/worlds/world7/shadows' sub-collection. A new top-level collection 'achievements' is added to store all game achievements, which is separate from world-specific data. New collections for the farming system ('farm_plans', 'farm_groups', 'farm_subscriptions') are added at the top level to manage the new feature's data."
   }
 }
+
+    
