@@ -223,7 +223,7 @@ async function handleModalSubmit(interaction) {
 
     } catch (error) {
         console.error("Erro em handleModalSubmit:", error);
-        if(!interaction.replied) {
+        if(!interaction.replied && !interaction.deferred) {
             await interaction.reply({ content: 'Ocorreu um erro ao submeter o formulário.', ephemeral: true }).catch(console.error);
         } else {
              await interaction.editReply({ content: 'Ocorreu um erro ao submeter o formulário.' }).catch(console.error);
@@ -378,18 +378,18 @@ async function handlePostRequest(interaction, settings) {
 
 async function handleConfirm(interaction, requestId) {
     try {
+        await interaction.deferReply({ ephemeral: true });
         const { firestore } = initializeFirebase();
         const requestRef = doc(firestore, 'dungeon_requests', requestId);
         const requestSnap = await getDoc(requestRef);
         
         if (!requestSnap.exists()) {
-            return interaction.reply({ content: 'Este pedido de soling não existe mais.', ephemeral: true });
+            return interaction.editReply({ content: 'Este pedido de soling não existe mais.' });
         }
         const requestData = requestSnap.data();
         const ownerId = requestData.userId;
 
         if (interaction.user.id === ownerId) {
-            await interaction.deferReply({ ephemeral: true });
             if (!requestData.confirmedUsers || requestData.confirmedUsers.length === 0) {
                 return interaction.editReply({ content: 'Ninguém confirmou presença ainda.' });
             }
@@ -406,11 +406,10 @@ async function handleConfirm(interaction, requestId) {
             await interaction.editReply({ content: 'Selecione um participante para ver seus dados:', components: [row] });
         
         } else { 
-            await interaction.deferUpdate();
             const newUser = { userId: interaction.user.id, username: interaction.user.username };
             
             if (requestData.confirmedUsers.some(u => u.userId === newUser.userId)) {
-                 await interaction.followUp({ content: 'Você já confirmou sua presença.', ephemeral: true });
+                 await interaction.editReply({ content: 'Você já confirmou sua presença.' });
                  return;
             }
 
@@ -425,11 +424,11 @@ async function handleConfirm(interaction, requestId) {
                 .setDescription(`**Jogadores na sala:** ${updatedUsers.length + 1}/10\n\n*Clique no olho para confirmar presença e ver a lista de jogadores!*`);
             await interaction.message.edit({ embeds: [updatedEmbed] });
 
-            await interaction.followUp({ content: 'Sua presença foi confirmada! O líder do grupo foi notificado.', ephemeral: true });
+            await interaction.editReply({ content: 'Sua presença foi confirmada! O líder do grupo foi notificado.' });
         }
     } catch (error) {
          console.error("Erro em handleConfirm:", error);
-         await interaction.followUp({ content: 'Ocorreu um erro ao confirmar presença.', ephemeral: true }).catch(console.error);
+         await interaction.editReply({ content: 'Ocorreu um erro ao confirmar presença.' }).catch(console.error);
     }
 }
 
@@ -464,7 +463,7 @@ async function handleProfile(interaction, requestId) {
             new ButtonBuilder().setLabel('Web').setStyle(ButtonStyle.Link).setURL(webLink),
             new ButtonBuilder().setLabel('Mobile').setStyle(ButtonStyle.Link).setURL(appLink)
         );
-        await interaction.editReply({ content: `Clique para ver o perfil Roblox do host **${requestData.username}**:`, components: [profileRow] });
+        await interaction.editReply({ content: `Clique para ver o perfil Roblox do host **${requestData.robloxUsername}**:`, components: [profileRow] });
 
     } catch (error) {
         console.error("Erro em handleProfile:", error);
@@ -528,12 +527,13 @@ async function handleSelectUser(interaction) {
 
 async function handleFinish(interaction, requestId) {
     try {
+        await interaction.deferReply({ ephemeral: true });
         const { firestore } = initializeFirebase();
         const requestRef = doc(firestore, 'dungeon_requests', requestId);
         const requestSnap = await getDoc(requestRef);
         
         if(!requestSnap.exists()) {
-            return interaction.reply({ content: 'Este anúncio não existe mais.', ephemeral: true });
+            return interaction.editReply({ content: 'Este anúncio não existe mais.' });
         }
         
         const ownerId = requestSnap.data().userId;
@@ -542,19 +542,26 @@ async function handleFinish(interaction, requestId) {
         const isModerator = member.roles.cache.has(ADMIN_ROLE_ID);
 
         if (!isOwner && !isModerator) {
-            return interaction.reply({ content: 'Apenas o dono do anúncio ou um moderador pode finalizá-lo.', ephemeral: true });
+            return interaction.editReply({ content: 'Apenas o dono do anúncio ou um moderador pode finalizá-lo.' });
         }
         
-        await interaction.deferUpdate();
         await updateDoc(requestRef, { status: 'closed' });
-        await interaction.message.delete();
+        
+        try {
+            await interaction.message.delete();
+            await interaction.editReply({ content: 'Anúncio finalizado com sucesso.'});
+        } catch (e) {
+            console.warn(`Não foi possível deletar a mensagem (ID: ${interaction.message.id}), pode já ter sido removida.`);
+            await interaction.editReply({ content: 'Anúncio finalizado, mas não foi possível remover a mensagem (pode já ter sido apagada).'});
+        }
+
 
     } catch(e) {
         console.warn(`Não foi possível finalizar o anúncio (Request ID: ${requestId}):`, e.message);
-        try {
-           await interaction.followUp({ content: 'Não foi possível encontrar ou remover o anúncio. Ele pode já ter sido removido.', ephemeral: true });
-        } catch (followUpError) {
-             console.error("Erro no followup do handleFinish:", followUpError.message);
+        if(!interaction.replied && !interaction.deferred) {
+            await interaction.reply({ content: 'Não foi possível encontrar ou remover o anúncio. Ele pode já ter sido removido.', ephemeral: true }).catch(console.error);
+        } else {
+            await interaction.editReply({ content: 'Não foi possível encontrar ou remover o anúncio. Ele pode já ter sido removido.' }).catch(console.error);
         }
     }
 }
