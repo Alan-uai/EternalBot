@@ -331,8 +331,8 @@ async function handleConfirm(interaction, requestId) {
 
     if (interaction.user.id === ownerId) {
         let menuOptions = [{
-            label: 'Confirmar jogadores existentes',
-            description: 'Adicionar jogadores que já estão no servidor.',
+            label: 'Adicionar/Remover jogadores manuais',
+            description: 'Atualizar contagem de jogadores que já estão no servidor.',
             value: 'add_existing_players'
         }];
 
@@ -377,16 +377,26 @@ async function handleConfirm(interaction, requestId) {
 async function handleAddExistingPlayersModal(interaction, requestId) {
     const modal = new ModalBuilder()
         .setCustomId(`soling_addplayers_submit_${requestId}`)
-        .setTitle('Adicionar Jogadores');
+        .setTitle('Adicionar/Remover Jogadores Manuais');
 
-    const playerCountInput = new TextInputBuilder()
-        .setCustomId('player_count')
-        .setLabel("Quantos jogadores deseja adicionar?")
+    const addCountInput = new TextInputBuilder()
+        .setCustomId('add_count')
+        .setLabel("Adicionar jogadores")
         .setStyle(TextInputStyle.Short)
-        .setPlaceholder('Digite um número (ex: 3)')
-        .setRequired(true);
+        .setPlaceholder('Número de jogadores para adicionar à contagem.')
+        .setRequired(false);
 
-    modal.addComponents(new ActionRowBuilder().addComponents(playerCountInput));
+    const removeCountInput = new TextInputBuilder()
+        .setCustomId('remove_count')
+        .setLabel("Remover jogadores")
+        .setStyle(TextInputStyle.Short)
+        .setPlaceholder('Número de jogadores para remover da contagem.')
+        .setRequired(false);
+
+    modal.addComponents(
+        new ActionRowBuilder().addComponents(addCountInput),
+        new ActionRowBuilder().addComponents(removeCountInput)
+    );
     await interaction.showModal(modal);
 }
 
@@ -394,25 +404,36 @@ async function handleAddExistingPlayersSubmit(interaction, requestId) {
     const { firestore } = initializeFirebase();
     await interaction.deferUpdate();
 
-    const countStr = interaction.fields.getTextInputValue('player_count');
-    const count = parseInt(countStr, 10);
+    const addStr = interaction.fields.getTextInputValue('add_count') || '0';
+    const removeStr = interaction.fields.getTextInputValue('remove_count') || '0';
+    
+    const addCount = parseInt(addStr, 10);
+    const removeCount = parseInt(removeStr, 10);
 
-    if (isNaN(count) || count <= 0) {
-        await interaction.followUp({ content: 'Por favor, insira um número válido.', ephemeral: true });
+    if (isNaN(addCount) || isNaN(removeCount)) {
+        await interaction.followUp({ content: 'Por favor, insira números válidos.', ephemeral: true });
         return;
     }
 
     const requestRef = doc(firestore, 'dungeon_requests', requestId);
-    await updateDoc(requestRef, { manualCount: count });
+    const requestSnap = await getDoc(requestRef);
+
+    if (!requestSnap.exists()) {
+        return interaction.followUp({ content: 'Este anúncio não existe mais.', ephemeral: true });
+    }
+
+    const currentManualCount = requestSnap.data().manualCount || 0;
+    const newManualCount = Math.max(0, currentManualCount + addCount - removeCount);
+
+    await updateDoc(requestRef, { manualCount: newManualCount });
 
     // Re-fetch e atualiza o embed
-    const requestSnap = await getDoc(requestRef);
-    if (requestSnap.exists()) {
-        const requestData = requestSnap.data();
-        await updateEmbedCount(interaction, requestData);
+    const updatedRequestSnap = await getDoc(requestRef);
+    if (updatedRequestSnap.exists()) {
+        await updateEmbedCount(interaction, updatedRequestSnap.data());
     }
     
-    await interaction.followUp({ content: `${count} jogador(es) adicionado(s) à contagem manualmente.`, ephemeral: true });
+    await interaction.followUp({ content: `Contagem manual atualizada: ${addCount} adicionado(s) e ${removeCount} removido(s).`, ephemeral: true });
 }
 
 async function updateEmbedCount(interaction, requestData) {
@@ -471,8 +492,8 @@ async function handleSelectUser(interaction, requestId) {
 
     // Atualiza o menu para o dono
      let menuOptions = [{
-        label: 'Confirmar jogadores existentes',
-        description: 'Adicionar jogadores que já estão no servidor.',
+        label: 'Adicionar/Remover jogadores manuais',
+        description: 'Atualizar contagem de jogadores que já estão no servidor.',
         value: 'add_existing_players'
     }];
     if (confirmedUsers.length > 0) {
