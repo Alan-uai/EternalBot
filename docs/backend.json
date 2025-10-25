@@ -233,6 +233,7 @@
             "userId": { "type": "string", "description": "The Discord ID of the user making the request." },
             "username": { "type": "string", "description": "The Discord username of the user." },
             "robloxUsername": { "type": "string", "description": "The Roblox username of the user, extracted from nickname." },
+            "robloxId": { "type": "number", "description": "The Roblox user ID of the user." },
             "avatarUrl": { "type": "string", "description": "The URL of the user's Discord avatar." },
             "type": { "type": "string", "enum": ["help", "hosting"], "description": "Whether the user is seeking help or hosting." },
             "raidName": { "type": "string", "description": "The name of the raid for the request." },
@@ -855,5 +856,3 @@
     "reasoning": "The Firestore structure is organized with 'worlds' as the top-level collection to logically separate game content. Each world document contains sub-collections for 'powers', 'npcs', 'pets', 'dungeons', 'accessories', 'shadows' and 'stands', creating a hierarchical and scalable data model. This allows for efficient querying of specific game data. For example, to get all shadows for 'World 7', you query the '/worlds/world7/shadows' sub-collection. A new top-level collection 'achievements' is added to store all game achievements, which is separate from world-specific data."
   }
 }
-
-    

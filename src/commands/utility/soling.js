@@ -67,8 +67,8 @@ function getAvailableRaids() {
 async function usernameToId(username) {
   try {
     const res = await axios.post('https://users.roblox.com/v1/usernames/users', {
-        usernames: [username],
-        excludeBannedUsers: true
+        "usernames": [username],
+        "excludeBannedUsers": true
     });
     return res.data?.data?.[0]?.id ?? null;
   } catch(e) {
@@ -151,6 +151,7 @@ async function handleRaidSelection(interaction, type) {
         // Lógica do "Sempre Enviar Link"
         if (dungeonSettings.alwaysSendLink && dungeonSettings.serverLink) {
             // Pula o modal e vai direto para a postagem
+            await interaction.update({ content: 'Processando seu pedido com as configurações salvas...', components: [] });
             await handlePostRequest(interaction, {
                 serverLink: dungeonSettings.serverLink,
                 alwaysSend: dungeonSettings.alwaysSendLink,
@@ -222,22 +223,21 @@ async function handleModalSubmit(interaction) {
 
     } catch (error) {
         console.error("Erro em handleModalSubmit:", error);
-         await interaction.editReply({ content: 'Ocorreu um erro ao submeter o formulário.' }).catch(console.error);
+        if(!interaction.replied) {
+            await interaction.reply({ content: 'Ocorreu um erro ao submeter o formulário.', ephemeral: true }).catch(console.error);
+        } else {
+             await interaction.editReply({ content: 'Ocorreu um erro ao submeter o formulário.' }).catch(console.error);
+        }
     }
 }
 
 async function handlePostRequest(interaction, settings) {
-    // Se a interação veio de um modal, ela já foi adiada.
-    // Se veio de um menu (pulou o modal), precisa ser atualizada
-    if (interaction.isStringSelectMenu()) {
-        await interaction.update({ content: 'Processando seu pedido...', components: [] });
-    }
-
     try {
         const { firestore } = initializeFirebase();
         const tempData = interaction.client.interactions.get(`soling_temp_${interaction.user.id}`);
         if (!tempData) {
-            return interaction.editReply({ content: 'Sua sessão expirou. Por favor, use o comando /soling novamente.' });
+             const replyOptions = { content: 'Sua sessão expirou. Por favor, use o comando /soling novamente.', ephemeral: true };
+             return interaction.isModalSubmit() ? interaction.editReply(replyOptions) : interaction.reply(replyOptions);
         }
         const { type, raid: raidNome } = tempData;
         const { serverLink, alwaysSend, deleteAfter } = settings;
@@ -283,6 +283,8 @@ async function handlePostRequest(interaction, settings) {
         const displayName = match ? match[1] : nick;
         const robloxUsername = match ? match[2] : null;
 
+        const robloxId = robloxUsername ? await usernameToId(robloxUsername) : null;
+
         const embed = new EmbedBuilder()
             .setColor(type === 'help' ? 0x3498DB : 0x2ECC71)
             .setTitle(`🏯 Sala: ${raidNome}`)
@@ -295,6 +297,7 @@ async function handlePostRequest(interaction, settings) {
         const confirmLabel = type === 'help' ? 'Vou Ajudar' : 'Vou Precisar';
         const confirmButton = new ButtonBuilder()
             .setCustomId(`soling_confirm_${newRequestId}`)
+            .setLabel(confirmLabel)
             .setEmoji('👁️')
             .setStyle(ButtonStyle.Primary);
 
@@ -316,7 +319,7 @@ async function handlePostRequest(interaction, settings) {
         const row = new ActionRowBuilder().addComponents(confirmButton, profileButton, joinButton, finishButton);
         
         const message = await webhookClient.send({
-            username: user.displayName,
+            username: displayName,
             avatarURL: user.displayAvatarURL(),
             embeds: [embed],
             components: [row],
@@ -336,6 +339,7 @@ async function handlePostRequest(interaction, settings) {
             userId: user.id,
             username: user.username,
             robloxUsername: robloxUsername,
+            robloxId: robloxId,
             avatarUrl: user.displayAvatarURL(),
             type: type,
             raidName: raidNome,
@@ -348,12 +352,22 @@ async function handlePostRequest(interaction, settings) {
         
         await batch.commit();
         
-        await interaction.editReply({ content: 'Seu pedido foi postado com sucesso!' });
+        const finalReplyOptions = { content: 'Seu pedido foi postado com sucesso!', ephemeral: true };
+        
+        // Se a interação original já foi respondida (ex: por um deferReply ou update), usamos editReply.
+        if (interaction.replied || interaction.deferred) {
+            await interaction.editReply(finalReplyOptions);
+        } else {
+            await interaction.reply(finalReplyOptions);
+        }
         interaction.client.interactions.delete(`soling_temp_${interaction.user.id}`);
     } catch(error) {
         console.error("Erro em handlePostRequest:", error);
+         const errorReplyOptions = { content: 'Ocorreu um erro ao postar seu pedido.', ephemeral: true };
         if (interaction.replied || interaction.deferred) {
-            await interaction.editReply({ content: 'Ocorreu um erro ao postar seu pedido.' }).catch(console.error);
+            await interaction.editReply(errorReplyOptions).catch(console.error);
+        } else {
+            await interaction.reply(errorReplyOptions).catch(console.error);
         }
     }
 }
@@ -433,10 +447,11 @@ async function handleProfile(interaction, requestId) {
         if (!hostMember.roles.cache.has(VERIFIED_ROLE_ID) || !requestData.robloxUsername) {
             return interaction.editReply({ content: '⚠️ O host não tem um perfil Roblox verificado ou o nome de usuário não pôde ser encontrado.' });
         }
-
-        const robloxId = await usernameToId(requestData.robloxUsername);
+        
+        // Usa o robloxId agora salvo no banco de dados
+        const robloxId = requestData.robloxId;
         if (!robloxId) {
-            return interaction.editReply({ content: 'Não foi possível encontrar o ID do Roblox para este usuário.' });
+            return interaction.editReply({ content: 'Não foi possível encontrar o ID do Roblox para este usuário. O host talvez precise recriar o anúncio.' });
         }
 
         const webLink = `https://www.roblox.com/users/${robloxId}/profile`;
@@ -572,7 +587,10 @@ export async function handleInteraction(interaction) {
         }
     } catch (error) {
         console.error(`Erro no manipulador de interação de /soling (Ação: ${interaction.customId}):`, error);
+        if(!interaction.replied && !interaction.deferred){
+             await interaction.reply({ content: 'Ocorreu um erro ao processar esta ação.', ephemeral: true }).catch(console.error);
+        } else {
+             await interaction.followUp({ content: 'Ocorreu um erro ao processar esta ação.', ephemeral: true }).catch(console.error);
+        }
     }
 }
-
-    
