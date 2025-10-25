@@ -47,15 +47,17 @@ export async function execute(interaction) {
 }
 
 async function handleInteraction(interaction) {
-    const [command, action, ...params] = interaction.customId.split('_');
+    const customId = interaction.customId;
+    const command = customId.split('_')[0];
+    
     if (command !== 'requestfarm') return;
 
     if (interaction.isButton()) {
-        if (action === 'open') {
+        if (customId === 'requestfarm_open_modal') {
             await openRequestModal(interaction);
         }
     } else if (interaction.isModalSubmit()) {
-        if (action === 'modal') {
+        if (customId === 'requestfarm_modal_submit') {
             await handleModalSubmit(interaction);
         }
     }
@@ -117,5 +119,3 @@ async function handleModalSubmit(interaction) {
 }
 
 export { handleInteraction };
-
-    
