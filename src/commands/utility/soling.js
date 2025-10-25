@@ -5,11 +5,14 @@ import { initializeFirebase } from '../../firebase/index.js';
 import { lobbyDungeonsArticle } from '../../data/wiki-articles/lobby-dungeons.js';
 import { raidRequirementsArticle } from '../../data/wiki-articles/raid-requirements.js';
 import { createProfileImage } from '../../utils/createProfileImage.js';
+import axios from 'axios';
 
 const ALLOWED_CHANNEL_IDS = ['1429295597374144563', '1426957344897761282', '1429309293076680744'];
 const SOLING_POST_CHANNEL_ID = '1429295597374144563';
 const WEBHOOK_NAME = 'Soling Bot';
 const ADMIN_ROLE_ID = '1429318984716521483';
+const VERIFIED_ROLE_ID = '1429278854874140734';
+
 
 // Função para encontrar ou criar o webhook necessário
 async function getOrCreateWebhook(channel) {
@@ -60,6 +63,19 @@ function getAvailableRaids() {
     }));
 }
 
+
+async function usernameToId(username) {
+  try {
+    const res = await axios.post('https://users.roblox.com/v1/usernames/users', {
+        usernames: [username],
+        excludeBannedUsers: true
+    });
+    return res.data?.data?.[0]?.id ?? null;
+  } catch(e) {
+      console.error("Erro ao buscar ID do Roblox:", e);
+      return null;
+  }
+}
 
 export async function execute(interaction) {
     if (!ALLOWED_CHANNEL_IDS.includes(interaction.channelId)) {
@@ -184,17 +200,18 @@ async function handleRaidSelection(interaction, type) {
 
 async function handleModalSubmit(interaction) {
     try {
+        await interaction.deferReply({ ephemeral: true });
         const serverLink = interaction.fields.getTextInputValue('server_link');
         const alwaysSendStr = interaction.fields.getTextInputValue('always_send').toLowerCase();
         const deleteAfterStr = interaction.fields.getTextInputValue('delete_after');
 
         if (alwaysSendStr !== 'sim' && alwaysSendStr !== 'não') {
-            return interaction.reply({ content: 'Valor inválido para "Sempre enviar o link?". Por favor, use "sim" ou "não".', ephemeral: true });
+            return interaction.editReply({ content: 'Valor inválido para "Sempre enviar o link?". Por favor, use "sim" ou "não".' });
         }
         
         const deleteAfter = parseInt(deleteAfterStr, 10);
         if (deleteAfterStr && (isNaN(deleteAfter) || deleteAfter <= 0)) {
-            return interaction.reply({ content: 'O tempo para apagar deve ser um número positivo de minutos.', ephemeral: true });
+            return interaction.editReply({ content: 'O tempo para apagar deve ser um número positivo de minutos.' });
         }
         
         await handlePostRequest(interaction, {
@@ -205,16 +222,14 @@ async function handleModalSubmit(interaction) {
 
     } catch (error) {
         console.error("Erro em handleModalSubmit:", error);
+         await interaction.editReply({ content: 'Ocorreu um erro ao submeter o formulário.' }).catch(console.error);
     }
 }
 
 async function handlePostRequest(interaction, settings) {
-    // Se a interação veio de um modal, ela precisa ser respondida/adiada primeiro
-    if (interaction.isModalSubmit()) {
-         await interaction.deferReply({ ephemeral: true });
-    }
+    // Se a interação veio de um modal, ela já foi adiada.
     // Se veio de um menu (pulou o modal), precisa ser atualizada
-    else if (interaction.isStringSelectMenu()) {
+    if (interaction.isStringSelectMenu()) {
         await interaction.update({ content: 'Processando seu pedido...', components: [] });
     }
 
@@ -227,7 +242,8 @@ async function handlePostRequest(interaction, settings) {
         const { type, raid: raidNome } = tempData;
         const { serverLink, alwaysSend, deleteAfter } = settings;
         const user = interaction.user;
-        
+        const member = interaction.member;
+
         const solingChannel = await interaction.client.channels.fetch(SOLING_POST_CHANNEL_ID).catch(() => null);
         if (!solingChannel) {
             return interaction.editReply({ content: 'O canal de postagem de /soling não foi encontrado.' });
@@ -262,38 +278,47 @@ async function handlePostRequest(interaction, settings) {
         const newRequestRef = doc(collection(firestore, 'dungeon_requests'));
         const newRequestId = newRequestRef.id;
 
-        let messageContent = '';
-        if (type === 'help') {
-            messageContent = `Buscando ajuda para solar a **${raidNome}**, ficarei grato com quem puder ajudar.`;
-        } else { // hosting
-            messageContent = `Solando a **${raidNome}** para quem precisar, só entrar pelo link.`;
-        }
+        const nick = member.nickname || user.username;
+        const match = nick.match(/(.*) \(@(.+)\)/);
+        const displayName = match ? match[1] : nick;
+        const robloxUsername = match ? match[2] : null;
 
-        if (alwaysSend && serverLink) {
-            messageContent += `\n\n**Servidor:** ${serverLink}`;
-        }
+        const embed = new EmbedBuilder()
+            .setColor(type === 'help' ? 0x3498DB : 0x2ECC71)
+            .setTitle(`🏯 Sala: ${raidNome}`)
+            .setAuthor({ name: `${displayName} (@${robloxUsername || 'não verificado'})`, iconURL: user.displayAvatarURL() })
+            .setDescription(`**Jogadores na sala:** 1/10\n\n*Clique no olho para confirmar presença e ver a lista de jogadores!*`)
+            .setTimestamp();
         
         const webhookClient = new WebhookClient({ url: webhook.url });
         
         const confirmLabel = type === 'help' ? 'Vou Ajudar' : 'Vou Precisar';
         const confirmButton = new ButtonBuilder()
-            .setCustomId(`soling_confirm_${newRequestId}_${user.id}`)
-            .setLabel(confirmLabel)
-            .setStyle(ButtonStyle.Success)
-            .setEmoji('👁️');
+            .setCustomId(`soling_confirm_${newRequestId}`)
+            .setEmoji('👁️')
+            .setStyle(ButtonStyle.Primary);
+
+        const profileButton = new ButtonBuilder()
+            .setCustomId(`soling_profile_${newRequestId}`)
+            .setEmoji('👤')
+            .setStyle(ButtonStyle.Secondary);
+            
+        const joinButton = new ButtonBuilder()
+             .setCustomId(`soling_join_${newRequestId}`)
+            .setEmoji('🎮')
+            .setStyle(ButtonStyle.Secondary);
 
         const finishButton = new ButtonBuilder()
-            .setCustomId(`soling_finish_${newRequestId}_${user.id}`)
-            .setLabel('Finalizar')
-            .setStyle(ButtonStyle.Danger)
-            .setEmoji('🗑️');
+            .setCustomId(`soling_finish_${newRequestId}`)
+            .setEmoji('🗑️')
+            .setStyle(ButtonStyle.Danger);
 
-        const row = new ActionRowBuilder().addComponents(confirmButton, finishButton);
+        const row = new ActionRowBuilder().addComponents(confirmButton, profileButton, joinButton, finishButton);
         
         const message = await webhookClient.send({
-            content: messageContent,
             username: user.displayName,
             avatarURL: user.displayAvatarURL(),
+            embeds: [embed],
             components: [row],
             wait: true 
         });
@@ -310,6 +335,7 @@ async function handlePostRequest(interaction, settings) {
             id: newRequestId,
             userId: user.id,
             username: user.username,
+            robloxUsername: robloxUsername,
             avatarUrl: user.displayAvatarURL(),
             type: type,
             raidName: raidNome,
@@ -326,32 +352,35 @@ async function handlePostRequest(interaction, settings) {
         interaction.client.interactions.delete(`soling_temp_${interaction.user.id}`);
     } catch(error) {
         console.error("Erro em handlePostRequest:", error);
-        if (!interaction.replied && !interaction.deferred) {
-            await interaction.reply({ content: 'Ocorreu um erro ao postar seu pedido.', ephemeral: true }).catch(console.error);
-        } else {
-            await interaction.followUp({ content: 'Ocorreu um erro ao postar seu pedido.', ephemeral: true }).catch(console.error);
+        if (interaction.replied || interaction.deferred) {
+            await interaction.editReply({ content: 'Ocorreu um erro ao postar seu pedido.' }).catch(console.error);
         }
     }
 }
 
 
-async function handleConfirm(interaction, requestId, ownerId) {
+async function handleConfirm(interaction, requestId) {
     try {
         const { firestore } = initializeFirebase();
         const requestRef = doc(firestore, 'dungeon_requests', requestId);
+        const requestSnap = await getDoc(requestRef);
         
+        if (!requestSnap.exists()) {
+            return interaction.reply({ content: 'Este pedido de soling não existe mais.', ephemeral: true });
+        }
+        const requestData = requestSnap.data();
+        const ownerId = requestData.userId;
+
         if (interaction.user.id === ownerId) {
             await interaction.deferReply({ ephemeral: true });
-            const requestSnap = await getDoc(requestRef);
-            if (!requestSnap.exists() || !requestSnap.data().confirmedUsers || requestSnap.data().confirmedUsers.length === 0) {
+            if (!requestData.confirmedUsers || requestData.confirmedUsers.length === 0) {
                 return interaction.editReply({ content: 'Ninguém confirmou presença ainda.' });
             }
             
-            const confirmedUsers = requestSnap.data().confirmedUsers;
             const selectMenu = new StringSelectMenuBuilder()
-                .setCustomId(`soling_selectuser_${requestId}_${ownerId}`)
+                .setCustomId(`soling_selectuser_${requestId}`)
                 .setPlaceholder('Selecione um usuário para ver o perfil')
-                .addOptions(confirmedUsers.map(u => ({
+                .addOptions(requestData.confirmedUsers.map(u => ({
                     label: u.username,
                     value: u.userId
                 })));
@@ -362,9 +391,23 @@ async function handleConfirm(interaction, requestId, ownerId) {
         } else { 
             await interaction.deferUpdate();
             const newUser = { userId: interaction.user.id, username: interaction.user.username };
+            
+            if (requestData.confirmedUsers.some(u => u.userId === newUser.userId)) {
+                 await interaction.followUp({ content: 'Você já confirmou sua presença.', ephemeral: true });
+                 return;
+            }
+
             await updateDoc(requestRef, {
                 confirmedUsers: arrayUnion(newUser)
             });
+
+            // Atualiza o embed
+            const updatedUsers = [...requestData.confirmedUsers, newUser];
+            const originalEmbed = interaction.message.embeds[0];
+            const updatedEmbed = EmbedBuilder.from(originalEmbed)
+                .setDescription(`**Jogadores na sala:** ${updatedUsers.length + 1}/10\n\n*Clique no olho para confirmar presença e ver a lista de jogadores!*`);
+            await interaction.editReply({ embeds: [updatedEmbed] });
+
             await interaction.followUp({ content: 'Sua presença foi confirmada! O líder do grupo foi notificado.', ephemeral: true });
         }
     } catch (error) {
@@ -372,6 +415,73 @@ async function handleConfirm(interaction, requestId, ownerId) {
          await interaction.followUp({ content: 'Ocorreu um erro ao confirmar presença.', ephemeral: true }).catch(console.error);
     }
 }
+
+async function handleProfile(interaction, requestId) {
+    await interaction.deferReply({ ephemeral: true });
+    try {
+        const { firestore } = initializeFirebase();
+        const requestRef = doc(firestore, 'dungeon_requests', requestId);
+        const requestSnap = await getDoc(requestRef);
+
+        if (!requestSnap.exists()) {
+            return interaction.editReply({ content: 'Este pedido de soling não existe mais.' });
+        }
+
+        const requestData = requestSnap.data();
+        const hostMember = await interaction.guild.members.fetch(requestData.userId);
+
+        if (!hostMember.roles.cache.has(VERIFIED_ROLE_ID) || !requestData.robloxUsername) {
+            return interaction.editReply({ content: '⚠️ O host não tem um perfil Roblox verificado ou o nome de usuário não pôde ser encontrado.' });
+        }
+
+        const robloxId = await usernameToId(requestData.robloxUsername);
+        if (!robloxId) {
+            return interaction.editReply({ content: 'Não foi possível encontrar o ID do Roblox para este usuário.' });
+        }
+
+        const webLink = `https://www.roblox.com/users/${robloxId}/profile`;
+        const appLink = `roblox://users/${robloxId}/profile`;
+
+        const profileRow = new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setLabel('Web').setStyle(ButtonStyle.Link).setURL(webLink),
+            new ButtonBuilder().setLabel('Mobile').setStyle(ButtonStyle.Link).setURL(appLink)
+        );
+        await interaction.editReply({ content: `Clique para ver o perfil Roblox do host **${requestData.username}**:`, components: [profileRow] });
+
+    } catch (error) {
+        console.error("Erro em handleProfile:", error);
+        await interaction.editReply({ content: 'Ocorreu um erro ao buscar o perfil do host.' }).catch(console.error);
+    }
+}
+
+async function handleJoin(interaction, requestId) {
+    await interaction.deferReply({ ephemeral: true });
+    try {
+        const { firestore } = initializeFirebase();
+        const requestRef = doc(firestore, 'dungeon_requests', requestId);
+        const requestSnap = await getDoc(requestRef);
+
+        if (!requestSnap.exists()) {
+            return interaction.editReply({ content: 'Este pedido de soling não existe mais.' });
+        }
+
+        const requestData = requestSnap.data();
+        const userRef = doc(firestore, 'users', requestData.userId);
+        const userSnap = await getDoc(userRef);
+
+        const serverLink = userSnap.exists() ? userSnap.data().dungeonSettings?.serverLink : null;
+
+        if (serverLink) {
+            await interaction.editReply({ content: `**Link do Servidor Privado do Host:**\n${serverLink}` });
+        } else {
+            await interaction.editReply({ content: 'O host não forneceu um link de servidor privado.' });
+        }
+    } catch (error) {
+        console.error("Erro em handleJoin:", error);
+        await interaction.editReply({ content: 'Ocorreu um erro ao buscar o link do servidor.' }).catch(console.error);
+    }
+}
+
 
 async function handleSelectUser(interaction) {
     try {
@@ -398,8 +508,17 @@ async function handleSelectUser(interaction) {
     }
 }
 
-async function handleFinish(interaction, requestId, ownerId) {
+async function handleFinish(interaction, requestId) {
     try {
+        const { firestore } = initializeFirebase();
+        const requestRef = doc(firestore, 'dungeon_requests', requestId);
+        const requestSnap = await getDoc(requestRef);
+        
+        if(!requestSnap.exists()) {
+            return interaction.reply({ content: 'Este anúncio não existe mais.', ephemeral: true });
+        }
+        
+        const ownerId = requestSnap.data().userId;
         const member = await interaction.guild.members.fetch(interaction.user.id);
         const isOwner = interaction.user.id === ownerId;
         const isModerator = member.roles.cache.has(ADMIN_ROLE_ID);
@@ -409,49 +528,51 @@ async function handleFinish(interaction, requestId, ownerId) {
         }
         
         await interaction.deferUpdate();
+        await updateDoc(requestRef, { status: 'closed' });
+        await interaction.message.delete();
 
-        const { firestore } = initializeFirebase();
-        const requestRef = doc(firestore, 'dungeon_requests', requestId);
-        const requestSnap = await getDoc(requestRef);
-
-        if (requestSnap.exists()) {
-            await updateDoc(requestRef, { status: 'closed' });
-            const messageId = requestSnap.data().messageId;
-            const solingChannel = await interaction.client.channels.fetch(SOLING_POST_CHANNEL_ID);
-            const messageToDelete = await solingChannel.messages.fetch(messageId);
-            await messageToDelete.delete();
-        }
-            // Não há mais necessidade de followup aqui, pois a mensagem é deletada.
     } catch(e) {
         console.warn(`Não foi possível finalizar o anúncio (Request ID: ${requestId}):`, e.message);
-        await interaction.followUp({ content: 'Não foi possível encontrar ou remover o anúncio. Ele pode já ter sido removido.', ephemeral: true }).catch(console.error);
+        try {
+           await interaction.followUp({ content: 'Não foi possível encontrar ou remover o anúncio. Ele pode já ter sido removido.', ephemeral: true });
+        } catch (followUpError) {
+             console.error("Erro no followup do handleFinish:", followUpError.message);
+        }
     }
 }
 
 
-async function handleInteraction(interaction) {
+export async function handleInteraction(interaction) {
     try {
         const [command, action, ...params] = interaction.customId.split('_');
         if (command !== 'soling') return;
 
         if (interaction.isButton()) {
-            if (action === 'type') await handleTypeSelection(interaction, params[0]);
-            else if (action === 'confirm') await handleConfirm(interaction, params[0], params[1]);
-            else if (action === 'finish') await handleFinish(interaction, params[0], params[1]);
+            if (action === 'type') {
+                await handleTypeSelection(interaction, params[0]);
+            } else if (action === 'confirm') {
+                await handleConfirm(interaction, params[0]);
+            } else if (action === 'profile') {
+                await handleProfile(interaction, params[0]);
+            } else if (action === 'join') {
+                await handleJoin(interaction, params[0]);
+            } else if (action === 'finish') {
+                await handleFinish(interaction, params[0]);
+            }
         } else if (interaction.isStringSelectMenu()) {
-            if (action === 'raid') await handleRaidSelection(interaction, params[0]);
-            else if (action === 'selectuser') await handleSelectUser(interaction);
+            if (action === 'raid') {
+                await handleRaidSelection(interaction, params[0]);
+            } else if (action === 'selectuser') {
+                await handleSelectUser(interaction);
+            }
         } else if (interaction.isModalSubmit()) {
-            if (action === 'modal') await handleModalSubmit(interaction);
+            if (action === 'modal') {
+                 await handleModalSubmit(interaction);
+            }
         }
     } catch (error) {
         console.error(`Erro no manipulador de interação de /soling (Ação: ${interaction.customId}):`, error);
-         if (!interaction.replied && !interaction.deferred) {
-            await interaction.reply({ content: 'Ocorreu um erro ao processar esta ação.', ephemeral: true }).catch(console.error);
-        } else {
-            await interaction.followUp({ content: 'Ocorreu um erro ao processar esta ação.', ephemeral: true }).catch(console.error);
-        }
     }
 }
 
-export { handleInteraction };
+    
