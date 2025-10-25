@@ -190,24 +190,30 @@ async function handleModalSubmit(interaction) {
     const userRef = doc(firestore, 'users', interaction.user.id);
     const userSnap = await getDoc(userRef);
 
-    await handlePostRequest(interaction, userSnap, {
-        serverLink,
-        alwaysSend: alwaysSendStr === 'sim',
-        deleteAfter: deleteAfter || null
-    });
+    const settings = {
+        serverLink: serverLink || null,
+        alwaysSendLink: alwaysSendStr === 'sim',
+        deleteAfterMinutes: deleteAfter || null
+    };
+
+    await handlePostRequest(interaction, userSnap, settings);
 }
 
 async function handlePostRequest(interaction, userSnap, settings) {
     const { firestore } = initializeFirebase();
     const user = interaction.user;
-    const member = interaction.member;
+
+    const member = await interaction.guild.members.fetch(user.id);
+    if (!member) {
+         return interaction.editReply({ content: 'Não foi possível encontrar suas informações no servidor.', ephemeral: true });
+    }
 
     const tempData = interaction.client.interactions.get(`soling_temp_${user.id}`);
     if (!tempData) {
         return interaction.editReply({ content: 'Sua sessão expirou. Por favor, use o comando /soling novamente.', ephemeral: true });
     }
     const { type, raid: raidName } = tempData;
-    const { serverLink, alwaysSend, deleteAfter } = settings;
+    const { serverLink, alwaysSendLink, deleteAfterMinutes } = settings;
     
     const solingChannel = await interaction.client.channels.fetch(SOLING_POST_CHANNEL_ID).catch(() => null);
     if (!solingChannel) {
@@ -248,8 +254,7 @@ async function handlePostRequest(interaction, userSnap, settings) {
     }
     
     const userRef = doc(firestore, 'users', user.id);
-    const newSettings = { serverLink: serverLink || null, alwaysSendLink: alwaysSend, deleteAfterMinutes: deleteAfter || null };
-    batch.set(userRef, { dungeonSettings: newSettings }, { merge: true });
+    batch.set(userRef, { dungeonSettings: { serverLink, alwaysSendLink, deleteAfterMinutes } }, { merge: true });
 
     const newRequestRef = doc(collection(firestore, 'dungeon_requests'));
     const newRequestId = newRequestRef.id;
@@ -297,12 +302,12 @@ async function handlePostRequest(interaction, userSnap, settings) {
         wait: true 
     });
     
-    if (deleteAfter && message) {
+    if (deleteAfterMinutes && message) {
         setTimeout(() => {
             solingChannel.messages.delete(message.id)
                 .catch(e => console.warn(`Não foi possível apagar a mensagem agendada (ID: ${message.id}): ${e.message}`));
             updateDoc(newRequestRef, { status: 'closed' }).catch(console.error);
-        }, deleteAfter * 60 * 1000);
+        }, deleteAfterMinutes * 60 * 1000);
     }
 
     const newRequestData = {
@@ -511,16 +516,16 @@ export async function handleInteraction(interaction) {
             }
         }
     } catch (error) {
-        console.error(`Erro no manipulador de interação de /soling (Ação: ${interaction.customId}):`, error);
+        console.error(`Erro no manipulador de interação de /soling (ID: ${interaction.customId}):`, error);
         if (interaction.replied || interaction.deferred) {
            await interaction.followUp({ content: 'Ocorreu um erro ao processar sua ação.', ephemeral: true }).catch(e => {
-                if (e.code !== 10062) console.error("Falha no followup do erro de interação:", e);
+                if (e.code !== 10062) console.error("Falha no followup do erro de interação:", e.message);
            });
         } else {
              try {
                 await interaction.reply({ content: 'Ocorreu um erro ao processar sua ação.', ephemeral: true });
              } catch(e) {
-                 if (e.code !== 10062) console.error("Falha no reply do erro de interação:", e);
+                 if (e.code !== 10062 && e.message !== 'The reply to this interaction has not been sent or deferred.') console.error("Falha no reply do erro de interação:", e);
              }
         }
     }
