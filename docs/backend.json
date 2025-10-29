@@ -160,36 +160,14 @@
       "type": "object",
       "description": "Represents a user of the Eternal Guide app.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the user."
-        },
-        "username": {
-          "type": "string",
-          "description": "The user's chosen username."
-        },
-        "email": {
-          "type": "string",
-          "description": "The user's email address.",
-          "format": "email"
-        },
-        "tag": {
-          "type": "string",
-          "description": "An optional tag for special user roles, like 'admin'."
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the user account was created.",
-          "format": "date-time"
-        },
-        "reputationPoints": {
-            "type": "number",
-            "description": "Points awarded to a user for helpful feedback."
-        },
-        "credits": {
-            "type": "number",
-            "description": "F2P currency earned from achievements, used for Gamepasses."
-        },
+        "id": { "type": "string", "description": "Unique identifier for the user." },
+        "username": { "type": "string", "description": "The user's chosen username." },
+        "email": { "type": "string", "description": "The user's email address.", "format": "email" },
+        "tag": { "type": "string", "description": "An optional tag for special user roles, like 'admin'." },
+        "createdAt": { "type": "string", "description": "Timestamp indicating when the user account was created.", "format": "date-time" },
+        "birthday": { "type": "string", "description": "The user's birthday in MM-DD format.", "pattern": "^(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$" },
+        "reputationPoints": { "type": "number", "description": "Points awarded to a user for helpful feedback." },
+        "credits": { "type": "number", "description": "F2P currency earned from achievements, used for Gamepasses." },
         "dungeonSettings": {
             "type": "object",
             "description": "User preferences for dungeon finder messages.",
@@ -854,5 +832,3 @@
     "reasoning": "The Firestore structure is organized with 'worlds' as the top-level collection to logically separate game content. Each world document contains sub-collections for 'powers', 'npcs', 'pets', 'dungeons', 'accessories', 'shadows' and 'stands', creating a hierarchical and scalable data model. This allows for efficient querying of specific game data. For example, to get all shadows for 'World 7', you query the '/worlds/world7/shadows' sub-collection. A new top-level collection 'achievements' is added to store all game achievements, which is separate from world-specific data."
   }
 }
-
-    

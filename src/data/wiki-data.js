@@ -1,3 +1,4 @@
+// src/data/wiki-data.js
 
 // Este arquivo agrega todos os artigos da wiki e dados de mundos em um só lugar.
 import { world1Data } from './worlds/world-1-data.js';
@@ -57,6 +58,7 @@ import { upgradesCostsArticle } from './wiki-articles/upgrades-costs.js';
 import { world19PowerProgressionArticle } from './wiki-articles/world-19-power-progression.js';
 import { world20RaidsArticle } from './wiki-articles/world-20-raids.js';
 import { worldBossesArticle } from './wiki-articles/world-bosses.js';
+import { birthdaySystemArticle } from './wiki-articles/birthday-system.js';
 
 export const allWikiArticles = [
     // World Data
@@ -118,6 +120,5 @@ export const allWikiArticles = [
     shadowsGuideArticle,
     limitedPacksGuideArticle,
     avatarIndexArticle,
+    birthdaySystemArticle,
 ];
-
-    

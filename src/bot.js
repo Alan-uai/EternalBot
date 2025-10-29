@@ -7,12 +7,14 @@ import { fileURLToPath } from 'node:url';
 import { Client, Collection, Events, GatewayIntentBits, REST, Routes, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, AttachmentBuilder } from 'discord.js';
 import { initializeFirebase } from './firebase/index.js';
 import { loadKnowledgeBase } from './knowledge-base.js';
-import { doc, getDoc, setDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { lobbyDungeonsArticle } from './data/wiki-articles/lobby-dungeons.js';
 import { generateSolution } from './ai/flows/generate-solution.js';
+import { generateBirthdayWish } from './ai/flows/generate-birthday-wish.js';
 import { updateKnowledgeBase } from './ai/flows/update-knowledge-base.js';
 import axios from 'axios';
 import { createTableImage } from './utils/createTableImage.js';
+import { createBirthdayCard } from './utils/createBirthdayCard.js';
 
 // Resolve __dirname for ES Modules
 const __filename = fileURLToPath(import.meta.url);
@@ -62,17 +64,20 @@ for (const folder of commandFolders) {
   }
 }
 
-// --- Raid Alert Scheduler ---
+// --- Scheduled Tasks ---
 const RAID_CHANNEL_ID = '1429260587648417964';
+const BIRTHDAY_CHANNEL_ID = '1429309293076680744'; // Canal de chat para anúncios
 const GAME_LINK = 'https://www.roblox.com/games/90462358603255/15-Min-Anime-Eternal';
 const notifiedRaids = new Set();
+let notifiedBirthday = false;
 const TEN_MINUTES_IN_MS = 10 * 60 * 1000;
 
-function checkRaidTimes() {
+function checkScheduledTasks() {
     const now = new Date();
     const currentMinute = now.getMinutes();
     const currentHour = now.getHours();
 
+    // --- Raid Alert Logic ---
     // Reset notified raids at the beginning of each hour
     if (currentMinute === 0) {
         notifiedRaids.clear();
@@ -132,6 +137,62 @@ function checkRaidTimes() {
             }
         }
     });
+
+    // --- Birthday Announcement Logic ---
+    if (currentHour === 11 && currentMinute === 30 && !notifiedBirthday) {
+        checkBirthdays();
+        notifiedBirthday = true;
+    }
+    // Reset a cada dia
+    if (currentHour === 0 && currentMinute === 0 && notifiedBirthday) {
+        notifiedBirthday = false;
+    }
+}
+
+async function checkBirthdays() {
+    console.log('Verificando aniversários...');
+    const { firestore } = initializeFirebase();
+    const today = new Date();
+    const todayString = `${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`; // MM-DD
+
+    const usersRef = collection(firestore, 'users');
+    const q = query(usersRef, where("birthday", "==", todayString));
+
+    try {
+        const querySnapshot = await getDocs(q);
+        if (querySnapshot.empty) {
+            console.log('Nenhum aniversário hoje.');
+            return;
+        }
+
+        const birthdayUsers = querySnapshot.docs.map(doc => doc.data());
+        const announcementChannel = await client.channels.fetch(BIRTHDAY_CHANNEL_ID);
+
+        if (announcementChannel) {
+            const userMentions = birthdayUsers.map(u => `<@${u.id}>`).join(', ');
+            await announcementChannel.send(`🎉🎂 **Feliz Aniversário para:** ${userMentions}! 🎂🎉\n\nDesejamos a vocês um dia incrível! Fiquem de olho em suas DMs para uma surpresa especial do Gui!`);
+        }
+
+        for (const userData of birthdayUsers) {
+            const user = await client.users.fetch(userData.id);
+            if (user) {
+                try {
+                    const wish = await generateBirthdayWish({ userName: user.username });
+                    const cardBuffer = await createBirthdayCard(user.username, wish.message);
+                    const attachment = new AttachmentBuilder(cardBuffer, { name: 'birthday-card.png' });
+
+                    await user.send({
+                        content: `Opa, ${user.username}! A equipe do Guia Eterno e eu, o Gui, te desejamos um dia extraordinário!`,
+                        files: [attachment]
+                    });
+                } catch (dmError) {
+                    console.error(`Não foi possível enviar DM de aniversário para ${user.tag}:`, dmError);
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Erro ao verificar aniversários:', error);
+    }
 }
 // ------------------------
 
@@ -158,9 +219,9 @@ client.once(Events.ClientReady, async (readyClient) => {
   initializeFirebase();
   console.log('Firebase inicializado.');
 
-  // Iniciar o agendador de raids
-  console.log('Agendador de alertas de raid iniciado.');
-  setInterval(checkRaidTimes, 60000); // Executa a cada 60 segundos
+  // Iniciar o agendador de tarefas
+  console.log('Agendador de tarefas iniciado.');
+  setInterval(checkScheduledTasks, 60000); // Executa a cada 60 segundos
 });
 
 
