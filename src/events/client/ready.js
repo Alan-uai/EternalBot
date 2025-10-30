@@ -5,8 +5,16 @@ import { doc, getDocs, collection, query, where, writeBatch, setDoc, getDoc } fr
 // Função para garantir que os webhooks necessários existam
 async function initializeWebhooks(client) {
     const { logger, config, services } = client.container;
-    const { firestore } = services.firebase;
+    const { firebase } = services;
+    const { firestore } = firebase;
     logger.info('Inicializando e verificando Webhooks...');
+
+    // Validação do AssetService e CLOUDINARY_URL
+    if (!firebase.assetService || !firebase.assetService.isBaseUrlValid()) {
+        logger.error("[WebhookManager] A CLOUDINARY_URL não está configurada ou é inválida! Assets visuais como GIFs não funcionarão.");
+    } else {
+        logger.info("[WebhookManager] CLOUDINARY_URL validada com sucesso.");
+    }
 
     const requiredWebhooks = [
         { name: 'Anunciador de Raids', channelId: config.RAID_CHANNEL_ID, docId: 'raidAnnouncer' },
