@@ -28,9 +28,9 @@ export class AssetService {
     generateAssetUrl(assetId) {
         if (!assetId || !this.isBaseUrlValid()) return null;
         
-        // Constrói a URL usando a pasta 'Home' conforme a estrutura do Cloudinary.
-        // Cloudinary trata a extensão automaticamente com base nas transformações ou no formato original.
-        return `${this.baseUrl}/Home/${assetId}`;
+        // Constrói a URL final juntando a base com o ID do asset.
+        // Ex: https://.../eternal-bot-assets/EasyA
+        return `${this.baseUrl}/${assetId}`;
     }
 
     /**
