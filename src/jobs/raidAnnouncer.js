@@ -5,6 +5,27 @@ import { doc, getDoc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 
 const ANNOUNCEMENT_LIFETIME_MS = 2 * 60 * 1000; // 2 minutos para o portal ficar aberto
 
+async function getOrCreateWebhook(channel, name, logger, assetService) {
+    if (!channel || (channel.type !== ChannelType.GuildText && channel.type !== ChannelType.GuildAnnouncement)) {
+        logger.error(`[getOrCreateWebhook] Canal fornecido para "${name}" é inválido.`);
+        return null;
+    }
+    try {
+        const avatarURL = await assetService.getAsset('BotAvatar');
+        const newWebhook = await channel.createWebhook({
+            name: name,
+            avatar: avatarURL,
+            reason: `Webhook para ${name}`,
+        });
+        logger.info(`[getOrCreateWebhook] Webhook "${name}" criado.`);
+        return newWebhook;
+    } catch (error) {
+        logger.error(`[getOrCreateWebhook] Falha crítica ao criar webhook para "${name}":`, error);
+        return null;
+    }
+}
+
+
 async function handleRaidLifecycle(container) {
     const { client, config, logger, services } = container;
     const { firebase } = services;
@@ -49,6 +70,7 @@ async function handleRaidLifecycle(container) {
              return;
         }
         
+        // --- Lógica para o CICLO ATUAL da raid ---
         if (currentRaid) {
             const raidId = currentRaid.Dificuldade;
             const raidStartTimeMs = currentRaid.startTime.getTime();
@@ -56,8 +78,10 @@ async function handleRaidLifecycle(container) {
             const tenSecondMark = portalCloseTime - 10 * 1000;
             const currentState = announcerState.raidId === raidId ? announcerState.state : 'new';
 
-            if (currentState === 'new') {
-                const openWebhook = await raidChannel.createWebhook({ name: `🔥 A Raid Começou: ${raidId}!`, avatar: await assetService.getAsset('BotAvatar'), reason: 'Anúncio de raid aberta.' });
+            if (currentState === 'new' || currentState === 'starting_soon') {
+                const openWebhook = await getOrCreateWebhook(raidChannel, `🔥 A Raid Começou: ${raidId}!`, logger, assetService);
+                if (!openWebhook) return;
+
                 const gifUrl = await assetService.getAsset(`${raidId}A`);
                 const embed = new EmbedBuilder()
                     .setColor(0xFF4B4B).addFields(
@@ -91,20 +115,19 @@ async function handleRaidLifecycle(container) {
                  logger.info(`[${raidId}] Anúncio de FECHANDO EM 10S enviado.`);
             }
         }
+        // --- Lógica para o CICLO FUTURO da raid ---
         else if (nextRaid) {
             const raidId = nextRaid.Dificuldade;
             const raidStartTimeMs = nextRaid.startTime.getTime();
             const fiveMinuteMark = raidStartTimeMs - 5 * 60 * 1000;
             const currentState = announcerState.raidId === raidId ? announcerState.state : 'finished';
 
-            if (currentState === 'finished' && now.getTime() < fiveMinuteMark) {
-                 const webhook = await getOrCreateWebhook(raidChannel, `Próxima Raid: ${raidId}`, announcerRef, logger, assetService);
+            if (currentState === 'finished' && now.getTime() >= fiveMinuteMark) {
+                 const webhook = await getOrCreateWebhook(raidChannel, `Próxima Raid: ${raidId}`, logger, assetService);
                  if (!webhook) return;
                  const gifUrl = await assetService.getAsset(`${raidId}PR`);
                  const payload = { content: gifUrl || ' ' };
-                 let message;
-                 if (announcerState.messageId) message = await webhook.editMessage(announcerState.messageId, payload).catch(() => null);
-                 if (!message) message = await webhook.send({ ...payload, wait: true });
+                 const message = await webhook.send({ ...payload, wait: true });
                  
                  await setDoc(announcerRef, { state: 'next_up', raidId: raidId, webhookUrl: webhook.url, messageId: message.id }, { merge: true });
                  logger.info(`[${raidId}] Anunciado como PRÓXIMA RAID.`);
@@ -119,48 +142,16 @@ async function handleRaidLifecycle(container) {
                 logger.info(`[${raidId}] Anúncio de 5 MINUTOS enviado.`);
             }
         }
-        else if (announcerState.state && announcerState.state !== 'finished') {
+        // --- Lógica de LIMPEZA ---
+        else if (announcerState.state && announcerState.state !== 'finished' && announcerState.webhookUrl) {
             logger.info(`[${announcerState.raidId}] Ciclo da raid finalizado, limpando estado.`);
             const webhook = new WebhookClient({ url: announcerState.webhookUrl });
             await webhook.delete().catch(e => logger.warn(`[${announcerState.raidId}] Falha ao deletar webhook da raid anterior: ${e.message}`));
-            await updateDoc(announcerRef, { state: 'finished', messageId: null, webhookUrl: null });
+            await updateDoc(announcerRef, { state: 'finished', raidId: null, messageId: null, webhookUrl: null });
         }
 
     } catch (error) {
         logger.error('[raidAnnouncer] Erro no ciclo de vida da raid:', error);
-    }
-}
-
-async function getOrCreateWebhook(channel, name, firestoreRef, logger, assetService) {
-    if (!channel || (channel.type !== ChannelType.GuildText && channel.type !== ChannelType.GuildAnnouncement)) {
-        logger.error(`[getOrCreateWebhook] Canal fornecido para "${name}" é inválido.`);
-        return null;
-    }
-    const { firestore } = channel.client.container.services.firebase;
-    const docSnap = await getDoc(firestoreRef);
-    const existingUrl = docSnap.exists() ? docSnap.data().webhookUrl : null;
-
-    if (existingUrl) {
-        try {
-            const webhook = new WebhookClient({ url: existingUrl });
-            await webhook.fetch(); // Verifica se o webhook ainda existe
-            return webhook;
-        } catch (error) {
-            logger.warn(`[getOrCreateWebhook] Webhook para "${name}" inválido ou deletado. Criando um novo.`);
-        }
-    }
-    try {
-        const newWebhook = await channel.createWebhook({
-            name: name,
-            avatar: await assetService.getAsset('BotAvatar'),
-            reason: `Webhook para ${name}`,
-        });
-        await setDoc(firestoreRef, { webhookUrl: newWebhook.url }, { merge: true });
-        logger.info(`[getOrCreateWebhook] Webhook "${name}" criado e salvo no Firestore.`);
-        return newWebhook;
-    } catch (error) {
-        logger.error(`[getOrCreateWebhook] Falha crítica ao criar webhook para "${name}":`, error);
-        return null;
     }
 }
 

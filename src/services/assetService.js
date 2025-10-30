@@ -26,7 +26,6 @@ export class AssetService {
      */
     generateAssetUrl(assetId) {
         if (!assetId || !this.isBaseUrlValid()) return null;
-
         // O assetId já é o nome final do arquivo no Cloudinary (ex: 'EasyA', 'BotAvatar')
         // A extensão é gerenciada pelo próprio Cloudinary na entrega.
         return `${this.baseUrl}/${assetId}`;
@@ -65,6 +64,7 @@ export class AssetService {
 
         } catch (error) {
             console.error(`[AssetService] Erro ao buscar/salvar o asset '${assetId}':`, error);
+            // Fallback para gerar a URL dinamicamente em caso de erro no Firestore
             return this.generateAssetUrl(assetId);
         }
     }
