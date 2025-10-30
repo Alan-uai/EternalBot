@@ -45,6 +45,7 @@ function getRaidStatus(config) {
 
     const raids = lobbyDungeonsArticle.tables.lobbySchedule.rows;
     const statuses = [];
+    
     let nextRaidInfo = { raidName: null, secondsUntilNextOpen: Infinity };
 
     // Encontra a próxima raid a abrir
@@ -56,7 +57,7 @@ function getRaidStatus(config) {
             secondsUntilOpen += 3600; 
         }
         if (secondsUntilOpen < nextRaidInfo.secondsUntilNextOpen) {
-            nextRaidInfo = { raidName: raid['Dificuldade'], secondsUntilNextOpen };
+            nextRaidInfo = { raidName: raid['Dificuldade'], secondsUntilNextOpen: secondsUntilOpen };
         }
     }
     
@@ -79,19 +80,21 @@ function getRaidStatus(config) {
             const closeSeconds = secondsUntilClose % 60;
             statusText = '✅ **ABERTA**';
             details = `Fecha em: \`${closeMinutes}m ${closeSeconds.toString().padStart(2, '0')}s\``;
-            gifId = (secondsUntilClose <= 10) ? 'EasyF' : 'EasyA';
+            if (raid['Dificuldade'] === 'Easy') {
+                 gifId = (secondsUntilClose <= 10) ? 'EasyF' : 'EasyA';
+            }
         } else {
             statusText = '❌ Fechada';
             const minutesPart = Math.floor(secondsUntilOpen / 60);
             const secondsPart = secondsUntilOpen % 60;
             details = `Abre em: \`${minutesPart}m ${secondsPart.toString().padStart(2, '0')}s\``;
-            if (raid['Dificuldade'] === nextRaidInfo.raidName) {
+            if (raid['Dificuldade'] === 'Easy' && raid['Dificuldade'] === nextRaidInfo.raidName) {
                 gifId = (secondsUntilOpen <= 300) ? 'Easy5m' : 'EasyPR';
             }
         }
         
         let imageUrl = null;
-        if (config.CLOUDINARY_URL && raid['Dificuldade'] === 'Easy' && gifId) {
+        if (config.CLOUDINARY_URL && gifId) {
              imageUrl = `${config.CLOUDINARY_URL}${gifId}.gif`;
         }
         
@@ -99,7 +102,7 @@ function getRaidStatus(config) {
             name: `> ${raid['Dificuldade']}`,
             value: `${statusText}\n> ${details}`,
             inline: true,
-            imageUrl: imageUrl // Passando a URL para ser usada depois
+            imageUrl: imageUrl 
         });
     }
 
@@ -129,11 +132,10 @@ export async function run(container) {
             .setColor(0x3498DB)
             .setTitle('Painel de Status das Raids do Lobby')
             .setDescription('Este painel é atualizado automaticamente a cada 10 segundos.')
-            .addFields(statuses.map(s => ({ name: s.name, value: s.value, inline: s.inline }))) // Mapeia para remover a URL do campo de fields
+            .addFields(statuses.map(s => ({ name: s.name, value: s.value, inline: s.inline })))
             .setTimestamp()
             .setFooter({ text: 'Horários baseados no fuso horário do servidor (UTC).' });
             
-        // Define a imagem principal do embed como o GIF da próxima raid a abrir ou a que está aberta.
         if(nextRaidImageUrl) {
             embed.setImage(nextRaidImageUrl);
         }

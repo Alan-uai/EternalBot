@@ -8,6 +8,9 @@ const lastNotificationTimes = new Map();
 const ANNOUNCEMENT_LIFETIME_MS = 2 * 60 * 1000; // Mensagens duram 2 minutos
 const WEBHOOK_NAME = 'Anunciador de Raids';
 
+export const name = 'raidAnnouncer';
+export const intervalMs = 10000; // A cada 10 segundos
+
 async function sendRaidAnnouncement(client, raid) {
     const { config, logger, services } = client.container;
     const { firestore } = services.firebase;
@@ -38,7 +41,7 @@ async function sendRaidAnnouncement(client, raid) {
             { name: 'Entrar no Jogo', value: `**[Clique aqui para ir para o jogo](${config.GAME_LINK})**` }
         )
         .setTimestamp()
-        .setFooter({ text: 'A Raid fechará em 2m.' });
+        .setFooter({ text: 'O portal fechará em 2 minutos.' });
 
     try {
         const webhookClient = new WebhookClient({ url: webhook.url });
