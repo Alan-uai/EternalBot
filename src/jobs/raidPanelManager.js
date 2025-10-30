@@ -35,7 +35,7 @@ async function getOrCreatePanelMessage(client) {
     return message;
 }
 
-function getRaidStatus() {
+function getRaidStatus(config) {
     const now = new Date();
     const currentMinute = now.getUTCMinutes();
     const currentSecond = now.getUTCSeconds();
@@ -45,59 +45,71 @@ function getRaidStatus() {
 
     const raids = lobbyDungeonsArticle.tables.lobbySchedule.rows;
     const statuses = [];
+    let nextRaidInfo = { raidName: null, secondsUntilNextOpen: Infinity };
 
+    // Encontra a próxima raid a abrir
     for (const raid of raids) {
         const raidStartMinute = parseInt(raid['Horário'].substring(3, 5), 10);
         const raidStartSecondInHour = raidStartMinute * 60;
-
-        // Calcula o tempo até a próxima abertura
-        let secondsUntilNextOpen = raidStartSecondInHour - totalSecondsInHour;
-        if (secondsUntilNextOpen < 0) {
-            // Se já passou, calcula para a próxima hora
-            secondsUntilNextOpen += 3600; 
+        let secondsUntilOpen = raidStartSecondInHour - totalSecondsInHour;
+        if (secondsUntilOpen < 0) {
+            secondsUntilOpen += 3600; 
         }
-
-        let statusText, details;
-        const minutesPart = Math.floor(secondsUntilNextOpen / 60);
-        const secondsPart = secondsUntilNextOpen % 60;
-
-        // Verifica se a raid está na janela de "ABERTA"
-        // O portal abre em `raidStartMinute` e fecha em `raidStartMinute + 2`
-        // Ex: Abre em :10, fecha em :12.
-        // A conta precisa verificar se o tempo atual está *depois* da abertura mas *antes* do fechamento
+        if (secondsUntilOpen < nextRaidInfo.secondsUntilNextOpen) {
+            nextRaidInfo = { raidName: raid['Dificuldade'], secondsUntilNextOpen };
+        }
+    }
+    
+    // Gera o status de cada raid
+    for (const raid of raids) {
+        const raidStartMinute = parseInt(raid['Horário'].substring(3, 5), 10);
+        const raidStartSecondInHour = raidStartMinute * 60;
         const portalCloseSecondInHour = raidStartSecondInHour + PORTAL_OPEN_DURATION_SECONDS;
         
-        // Ajuste para o caso da raid que começa no final da hora (ex: :50)
-        let isCurrentlyOpen = false;
-        if (raidStartSecondInHour > portalCloseSecondInHour) { // Ex: abre em 3540 (:59), fecha em 3660 (:01 da próx. hora)
-             isCurrentlyOpen = (totalSecondsInHour >= raidStartSecondInHour) || (totalSecondsInHour < (portalCloseSecondInHour - 3600));
-        } else {
-             isCurrentlyOpen = (totalSecondsInHour >= raidStartSecondInHour) && (totalSecondsInHour < portalCloseSecondInHour);
-        }
+        let secondsUntilOpen = raidStartSecondInHour - totalSecondsInHour;
+        if (secondsUntilOpen < 0) secondsUntilOpen += 3600;
+
+        let statusText, details, gifId = null;
+
+        const isCurrentlyOpen = (totalSecondsInHour >= raidStartSecondInHour) && (totalSecondsInHour < portalCloseSecondInHour);
 
         if (isCurrentlyOpen) {
-            statusText = '✅ **ABERTA**';
             const secondsUntilClose = portalCloseSecondInHour - totalSecondsInHour;
             const closeMinutes = Math.floor(secondsUntilClose / 60);
             const closeSeconds = secondsUntilClose % 60;
+            statusText = '✅ **ABERTA**';
             details = `Fecha em: \`${closeMinutes}m ${closeSeconds.toString().padStart(2, '0')}s\``;
+            gifId = (secondsUntilClose <= 10) ? 'EasyF' : 'EasyA';
         } else {
             statusText = '❌ Fechada';
+            const minutesPart = Math.floor(secondsUntilOpen / 60);
+            const secondsPart = secondsUntilOpen % 60;
             details = `Abre em: \`${minutesPart}m ${secondsPart.toString().padStart(2, '0')}s\``;
+            if (raid['Dificuldade'] === nextRaidInfo.raidName) {
+                gifId = (secondsUntilOpen <= 300) ? 'Easy5m' : 'EasyPR';
+            }
+        }
+        
+        let imageUrl = null;
+        if (config.CLOUDINARY_URL && raid['Dificuldade'] === 'Easy' && gifId) {
+             imageUrl = `${config.CLOUDINARY_URL}${gifId}.gif`;
         }
         
         statuses.push({
             name: `> ${raid['Dificuldade']}`,
             value: `${statusText}\n> ${details}`,
             inline: true,
+            imageUrl: imageUrl // Passando a URL para ser usada depois
         });
     }
+
+    const nextRaidImageUrl = statuses.find(s => s.imageUrl && (s.value.includes('Abre em') || s.value.includes('ABERTA')) )?.imageUrl || null;
     
-    return { statuses };
+    return { statuses, nextRaidImageUrl };
 }
 
 export async function run(container) {
-    const { client, logger, services } = container;
+    const { client, logger, services, config } = container;
     
     if (!services.firebase) { 
         logger.debug('Serviço Firebase não encontrado. Pulando atualização do painel de raids.');
@@ -111,15 +123,20 @@ export async function run(container) {
             return;
         }
 
-        const { statuses } = getRaidStatus();
+        const { statuses, nextRaidImageUrl } = getRaidStatus(config);
 
         const embed = new EmbedBuilder()
             .setColor(0x3498DB)
             .setTitle('Painel de Status das Raids do Lobby')
             .setDescription('Este painel é atualizado automaticamente a cada 10 segundos.')
-            .addFields(statuses)
+            .addFields(statuses.map(s => ({ name: s.name, value: s.value, inline: s.inline }))) // Mapeia para remover a URL do campo de fields
             .setTimestamp()
             .setFooter({ text: 'Horários baseados no fuso horário do servidor (UTC).' });
+            
+        // Define a imagem principal do embed como o GIF da próxima raid a abrir ou a que está aberta.
+        if(nextRaidImageUrl) {
+            embed.setImage(nextRaidImageUrl);
+        }
             
         await panelMessage.edit({ embeds: [embed] });
 

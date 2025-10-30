@@ -18,8 +18,9 @@ export function loadConfig(logger) {
     
     return {
         DISCORD_TOKEN: process.env.DISCORD_TOKEN,
-        CLIENT_ID: process.env.CLIENT_ID,
+        CLIENT_ID: process.env[CLIENT_ID],
         GUILD_ID: process.env.GUILD_ID,
+        CLOUDINARY_URL: process.env.CLOUDINARY_URL, // URL base para os assets
         // IDs de Canais
         CHAT_CHANNEL_ID: '1429309293076680744',
         MOD_CURATION_CHANNEL_ID: '1426968477482225716',
