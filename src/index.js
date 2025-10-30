@@ -2,6 +2,8 @@
 import 'dotenv/config';
 import http from 'node:http';
 import { Client, GatewayIntentBits, Collection } from 'discord.js';
+import fs from 'node:fs';
+import path from 'node:path';
 
 import { loadConfig } from './config/loader.js';
 import { createLogger } from './utils/logger.js';
@@ -13,7 +15,7 @@ import { loadServices } from './loaders/serviceLoader.js';
 import { getOrCreateWebhook as getOrCreateWebhookUtil } from './utils/webhookManager.js';
 
 async function start() {
-    const logger = createLogger();
+    const logger = createLogger(process.env.NODE_ENV === 'development' ? 'debug' : 'info');
 
     // Carregar configuração
     const config = loadConfig(logger);
@@ -46,7 +48,6 @@ async function start() {
     client.container = container;
     client.getOrCreateWebhook = (channel, name, avatar) => getOrCreateWebhookUtil(channel, name, avatar, logger);
 
-
     try {
         logger.info('Inicializando serviços...');
         await loadServices(container);
@@ -55,15 +56,43 @@ async function start() {
         await loadCommands(container);
 
         logger.info('Carregando manipuladores de interação...');
-        loadInteractions(container);
+        await loadInteractions(container);
         
         logger.info('Carregando eventos do cliente...');
-        loadEvents(container);
+        await loadEvents(container);
         
         logger.info('Iniciando tarefas agendadas (jobs)...');
         loadJobs(container);
 
         await client.login(config.DISCORD_TOKEN);
+        
+        if (config.NODE_ENV === 'development') {
+             logger.info('Modo de desenvolvimento ativado. Observando mudanças nos arquivos...');
+             const loadersPath = path.resolve(process.cwd(), 'src/loaders');
+             const commandsPath = path.resolve(process.cwd(), 'src/commands');
+             const eventsPath = path.resolve(process.cwd(), 'src/events');
+             const interactionsPath = path.resolve(process.cwd(), 'src/interactions');
+
+             fs.watch(commandsPath, { recursive: true }, (eventType, filename) => {
+                 if (filename && filename.endsWith('.js')) {
+                     logger.debug(`Mudança detectada em ${filename}, recarregando comandos...`);
+                     loadCommands(container);
+                 }
+             });
+             fs.watch(eventsPath, { recursive: true }, (eventType, filename) => {
+                 if (filename && filename.endsWith('.js')) {
+                     logger.debug(`Mudança detectada em ${filename}, recarregando eventos...`);
+                     loadEvents(container);
+                 }
+             });
+             fs.watch(interactionsPath, { recursive: true }, (eventType, filename) => {
+                 if (filename && filename.endsWith('.js')) {
+                     logger.debug(`Mudança detectada em ${filename}, recarregando interações...`);
+                     loadInteractions(container);
+                 }
+             });
+        }
+
 
     } catch (err) {
         logger.error('Erro fatal durante a inicialização:', err);

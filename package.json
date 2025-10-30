@@ -2,12 +2,11 @@
   "name": "discord-bot-js",
   "version": "1.0.0",
   "private": true,
-  "main": "src/bot.js",
+  "main": "src/index.js",
   "type": "module",
   "scripts": {
-    "start": "pm2 start src/bot.js --name bot --watch",
-    "stop": "pm2 stop bot",
-    "watch": "pm2 start src/bot.js --name bot --watch"
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
   },
   "dependencies": {
     "@genkit-ai/google-genai": "^1.20.0",
@@ -17,6 +16,8 @@
     "dotenv": "^16.4.5",
     "firebase": "^11.9.1",
     "genkit": "^1.20.0",
+    "gif-encoder-2": "^1.0.5",
+    "node-cron": "^3.0.3",
     "pm2": "^5.4.2",
     "zod": "^3.24.2"
   },
