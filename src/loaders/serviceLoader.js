@@ -8,7 +8,8 @@ export async function loadServices(container) {
 
     // Firebase Service
     try {
-        services.firebase = initializeFirebase();
+        const firebaseServices = initializeFirebase();
+        services.firebase = firebaseServices;
         logger.info('Serviço Firebase inicializado com sucesso.');
     } catch (error) {
         logger.error('Falha ao inicializar o serviço Firebase:', error);
@@ -27,9 +28,10 @@ export async function loadServices(container) {
         throw error;
     }
     
-    // Asset Service - Agora aninhado sob o serviço firebase para consistência
+    // Asset Service
     try {
-        services.firebase.assetService = new AssetService(config);
+        // Injeta a configuração e a instância do firestore no serviço de assets
+        services.firebase.assetService = new AssetService(config, services.firebase.firestore);
         logger.info('Serviço de Assets inicializado.');
     } catch (error) {
         logger.error('Falha ao inicializar o serviço de Assets:', error);

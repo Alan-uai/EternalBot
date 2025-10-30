@@ -6,9 +6,10 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 const PANEL_DOC_ID = 'raidPanel';
 const PORTAL_OPEN_DURATION_SECONDS = 2 * 60; // 2 minutos
 
-function getRaidStatus(container) {
-    const { client, logger, services } = container;
+async function getRaidStatus(container) {
+    const { logger, services } = container;
     const { firebase } = services;
+    const { assetService } = firebase;
     
     const now = new Date();
     const currentMinute = now.getUTCMinutes();
@@ -41,8 +42,8 @@ function getRaidStatus(container) {
     }
     
     // Adiciona o GIF da próxima raid no topo, se existir
-    if (nextRaidForGif && firebase && firebase.assetService) {
-        const gifUrl = firebase.assetService.getAsset(`${nextRaidForGif['Dificuldade']}PR`);
+    if (nextRaidForGif && assetService) {
+        const gifUrl = await assetService.getAsset(`${nextRaidForGif['Dificuldade']}PR`);
         if (gifUrl) {
             statuses.push({ name: '\u200B', value: gifUrl, inline: false });
         }
@@ -79,7 +80,7 @@ function getRaidStatus(container) {
             'Easy': '🟢', 'Medium': '🟡', 'Hard': '🔴', 'Insane': '⚔️', 'Crazy': '🔥', 'Nightmare': '💀', 'Leaf Raid (1800)': '🌿'
         };
         
-        const separator = statuses.length > 1 && !statuses[statuses.length - 1].value.includes('https://') ? '---------------------\n' : '';
+        const separator = statuses.length > 0 && !statuses[statuses.length - 1].value.includes('https://') ? '---------------------\n' : '';
 
         statuses.push({
             name: `${separator}${raidEmojis[raid['Dificuldade']] || '⚔️'} ${raid['Dificuldade']}`,
@@ -102,14 +103,13 @@ export async function run(container) {
         logger.error('[raidPanelManager] Serviço Firestore não está inicializado.');
         return;
     }
-    const { firestore } = firebase;
+    const { firestore, assetService } = firebase;
 
     try {
         const panelWebhookDocRef = doc(firestore, 'bot_config', PANEL_DOC_ID);
         const docSnap = await getDoc(panelWebhookDocRef);
 
         if (!docSnap.exists() || !docSnap.data().webhookUrl) {
-            // Este log será menos agressivo pois o ready.js deve cuidar da criação.
             logger.debug(`[raidPanelManager] Webhook '${PANEL_DOC_ID}' não encontrado no Firestore. O painel não será atualizado.`);
             return;
         }
@@ -118,9 +118,9 @@ export async function run(container) {
         const messageId = docSnap.data().messageId;
         const webhookClient = new WebhookClient({ url: webhookUrl });
 
-        const statuses = getRaidStatus(container);
+        const statuses = await getRaidStatus(container);
         
-        const avatarUrl = firebase.assetService ? firebase.assetService.getAsset('DungeonLobby') : client.user.displayAvatarURL();
+        const avatarUrl = assetService ? await assetService.getAsset('DungeonLobby') : client.user.displayAvatarURL();
 
         const embed = new EmbedBuilder()
             .setColor(0x2F3136)

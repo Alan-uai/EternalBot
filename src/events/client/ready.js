@@ -6,11 +6,11 @@ import { doc, getDocs, collection, query, where, writeBatch, setDoc, getDoc } fr
 async function initializeWebhooks(client) {
     const { logger, config, services } = client.container;
     const { firebase } = services;
-    const { firestore } = firebase;
+    const { firestore, assetService } = firebase;
     logger.info('Inicializando e verificando Webhooks...');
 
     // Validação do AssetService e CLOUDINARY_URL
-    if (!firebase.assetService || !firebase.assetService.isBaseUrlValid()) {
+    if (!assetService || !assetService.isBaseUrlValid()) {
         logger.error("[WebhookManager] A CLOUDINARY_URL não está configurada ou é inválida! Assets visuais como GIFs não funcionarão.");
     } else {
         logger.info("[WebhookManager] CLOUDINARY_URL validada com sucesso.");
@@ -39,7 +39,7 @@ async function initializeWebhooks(client) {
             if (!webhook) {
                 webhook = await channel.createWebhook({
                     name: webhookConfig.name,
-                    avatar: client.user.displayAvatarURL(),
+                    avatar: await assetService.getAsset('BotAvatar'),
                     reason: `Webhook necessário para ${webhookConfig.name}`
                 });
                 logger.info(`[WebhookManager] Webhook '${webhookConfig.name}' criado no canal #${channel.name}.`);
@@ -112,8 +112,8 @@ async function cleanupExpiredRaidMessages(client) {
 export const name = Events.ClientReady;
 export const once = true;
 
-export async function execute(client) {
-    const { logger, commands, config } = client.container;
+export async function execute(client, container) {
+    const { logger, commands, config } = container;
     
     logger.info(`Pronto! Logado como ${client.user.tag}`);
 
