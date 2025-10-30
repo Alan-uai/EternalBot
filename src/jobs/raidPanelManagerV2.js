@@ -13,7 +13,20 @@ const PORTAL_OPEN_DURATION_SECONDS = 2 * 60;
 async function getOrCreatePanelMessage(client) {
     const { config, logger, services } = client.container;
     const { firestore } = services.firebase;
-    const channel = await client.channels.fetch(config.RAID_CHANNEL_ID);
+    
+    let channel;
+    try {
+        channel = await client.channels.fetch(config.RAID_CHANNEL_ID);
+    } catch (fetchError) {
+        logger.error(`[raidPanelManagerV2] Não foi possível encontrar o canal de raid (ID: ${config.RAID_CHANNEL_ID})`, fetchError);
+        return { webhook: null, messageId: null };
+    }
+
+    if (!channel) {
+        logger.error(`[raidPanelManagerV2] O canal de raid com ID ${config.RAID_CHANNEL_ID} retornou nulo.`);
+        return { webhook: null, messageId: null };
+    }
+
     const panelDocRef = doc(firestore, 'bot_config', PANEL_DOC_ID);
     const panelDocSnap = await getDoc(panelDocRef);
     let messageId;
@@ -26,7 +39,7 @@ async function getOrCreatePanelMessage(client) {
 
     const webhook = await client.getOrCreateWebhook(channel, WEBHOOK_NAME, client.user.displayAvatarURL());
     if (!webhook) {
-        logger.error('Não foi possível criar ou obter o webhook para o painel de raids V2.');
+        logger.error('[raidPanelManagerV2] Não foi possível criar ou obter o webhook para o painel de raids V2.');
         return { webhook: null, messageId: null };
     }
     
@@ -40,7 +53,7 @@ async function getOrCreatePanelMessage(client) {
             const webhookClient = new WebhookClient({ url: webhook.url });
             await webhookClient.fetchMessage(messageId);
         } catch (error) {
-             logger.warn(`Mensagem do painel V2 (ID: ${messageId}) não encontrada. Criando uma nova.`);
+             logger.warn(`[raidPanelManagerV2] Mensagem do painel V2 (ID: ${messageId}) não encontrada. Criando uma nova.`);
              messageId = null;
         }
     }
@@ -101,7 +114,7 @@ export async function run(container) {
     const { client, logger, services } = container;
     
     if (!services.firebase) { 
-        logger.debug('Serviço Firebase não encontrado. Pulando atualização do painel V2.');
+        logger.debug('[raidPanelManagerV2] Serviço Firebase não encontrado. Pulando atualização.');
         return;
     }
     
@@ -118,7 +131,6 @@ export async function run(container) {
             .setDescription(`*Atualizado <t:${Math.floor(Date.now() / 1000)}:R>*\n_ _`)
             .setFooter({ text: 'Horários baseados no fuso horário do servidor (UTC).' });
 
-        // Adiciona um separador invisível
         const addSeparator = () => embed.addFields({ name: '\u200B', value: '\u200B' });
 
         statuses.forEach((status, index) => {

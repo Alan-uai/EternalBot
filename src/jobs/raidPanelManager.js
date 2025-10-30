@@ -13,7 +13,20 @@ const PORTAL_OPEN_DURATION_SECONDS = 2 * 60; // 2 minutos em segundos
 async function getOrCreatePanelMessage(client) {
     const { config, logger, services } = client.container;
     const { firestore } = services.firebase;
-    const channel = await client.channels.fetch(config.RAID_CHANNEL_ID);
+    
+    let channel;
+    try {
+        channel = await client.channels.fetch(config.RAID_CHANNEL_ID);
+    } catch (fetchError) {
+        logger.error(`[raidPanelManager] Não foi possível encontrar o canal de raid (ID: ${config.RAID_CHANNEL_ID})`, fetchError);
+        return { webhook: null, messageId: null };
+    }
+
+    if (!channel) {
+        logger.error(`[raidPanelManager] O canal de raid com ID ${config.RAID_CHANNEL_ID} retornou nulo.`);
+        return { webhook: null, messageId: null };
+    }
+
     const panelDocRef = doc(firestore, 'bot_config', PANEL_DOC_ID);
     const panelDocSnap = await getDoc(panelDocRef);
     let messageId;
@@ -26,24 +39,22 @@ async function getOrCreatePanelMessage(client) {
 
     const webhook = await client.getOrCreateWebhook(channel, WEBHOOK_NAME, client.user.displayAvatarURL());
     if (!webhook) {
-        logger.error('Não foi possível criar ou obter o webhook para o painel de raids.');
+        logger.error('[raidPanelManager] Não foi possível criar ou obter o webhook para o painel de raids.');
         return { webhook: null, messageId: null };
     }
     
     // Se a URL do webhook mudou ou é a primeira vez, atualiza no DB
     if (webhook.url !== webhookUrl) {
         await setDoc(panelDocRef, { webhookUrl: webhook.url }, { merge: true });
-        // Se a URL mudou, a mensagem antiga é órfã, então forçamos a criação de uma nova
-        messageId = null;
+        messageId = null; // Força a criação de uma nova mensagem
     }
 
     if (messageId) {
-        // Verifica se a mensagem ainda existe, se não, cria uma nova
         try {
             const webhookClient = new WebhookClient({ url: webhook.url });
             await webhookClient.fetchMessage(messageId);
         } catch (error) {
-             logger.warn(`Mensagem do painel (ID: ${messageId}) não encontrada. Criando uma nova.`);
+             logger.warn(`[raidPanelManager] Mensagem do painel (ID: ${messageId}) não encontrada. Criando uma nova.`);
              messageId = null;
         }
     }
@@ -57,7 +68,6 @@ function getRaidStatus(config) {
     const currentMinute = now.getUTCMinutes();
     const currentSecond = now.getUTCSeconds();
     
-    // Total de segundos passados na hora atual (em UTC)
     const totalSecondsInHour = (currentMinute * 60) + currentSecond;
 
     const raids = lobbyDungeonsArticle.tables.lobbySchedule.rows;
@@ -65,7 +75,6 @@ function getRaidStatus(config) {
     
     let nextRaidInfo = { raidName: null, secondsUntilNextOpen: Infinity };
 
-    // Encontra a próxima raid a abrir
     for (const raid of raids) {
         const raidStartMinute = parseInt(raid['Horário'].substring(3, 5), 10);
         const raidStartSecondInHour = raidStartMinute * 60;
@@ -78,7 +87,6 @@ function getRaidStatus(config) {
         }
     }
     
-    // Gera o status de cada raid
     for (const raid of raids) {
         const raidStartMinute = parseInt(raid['Horário'].substring(3, 5), 10);
         const raidStartSecondInHour = raidStartMinute * 60;
@@ -132,7 +140,7 @@ export async function run(container) {
     const { client, logger, services, config } = container;
     
     if (!services.firebase) { 
-        logger.debug('Serviço Firebase não encontrado. Pulando atualização do painel de raids.');
+        logger.debug('[raidPanelManager] Serviço Firebase não encontrado. Pulando atualização.');
         return;
     }
     
@@ -162,7 +170,6 @@ export async function run(container) {
             await webhookClient.editMessage(messageId, { embeds: [embed] });
         } else {
             const channel = await client.channels.fetch(config.RAID_CHANNEL_ID);
-            // Deleta mensagens antigas do bot para evitar duplicatas antes de criar uma nova
             const oldMessages = await channel.messages.fetch({ limit: 10 });
             const oldBotPanel = oldMessages.find(m => m.webhookId === webhook.id && m.embeds[0]?.title === 'Painel de Status das Raids do Lobby');
             if (oldBotPanel) await oldBotPanel.delete().catch(() => {});
@@ -175,15 +182,13 @@ export async function run(container) {
             });
             messageId = sentMessage.id;
             
-            // Tenta fixar a nova mensagem com a conta do bot
             try {
                 const newMessage = await channel.messages.fetch(messageId);
-                await newMessage.pin().catch(err => logger.error("Não foi possível fixar a nova mensagem do painel de raid.", err));
+                await newMessage.pin().catch(err => logger.error("[raidPanelManager] Não foi possível fixar a nova mensagem do painel.", err));
             } catch(pinError) {
-                 logger.error("Erro ao buscar ou fixar a mensagem do painel.", pinError);
+                 logger.error("[raidPanelManager] Erro ao buscar ou fixar a mensagem do painel.", pinError);
             }
             
-            // Salva o ID da nova mensagem no Firestore
             const panelDocRef = doc(services.firestore, 'bot_config', PANEL_DOC_ID);
             await setDoc(panelDocRef, { messageId: messageId, webhookUrl: webhook.url }, { merge: true });
         }

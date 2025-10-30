@@ -8,18 +8,22 @@ const lastNotificationTimes = new Map();
 const ANNOUNCEMENT_LIFETIME_MS = 2 * 60 * 1000; // Mensagens duram 2 minutos
 const WEBHOOK_NAME = 'Anunciador de Raids';
 
-export const name = 'raidAnnouncer';
-export const intervalMs = 10000; // A cada 10 segundos
-
 async function sendRaidAnnouncement(client, raid) {
     const { config, logger, services } = client.container;
     const { firestore } = services.firebase;
 
-    const raidChannel = await client.channels.fetch(config.RAID_CHANNEL_ID).catch(err => {
-        logger.error(`Não foi possível encontrar o canal de raid (ID: ${config.RAID_CHANNEL_ID})`, err);
-        return null;
-    });
-    if (!raidChannel) return;
+    let raidChannel;
+    try {
+        raidChannel = await client.channels.fetch(config.RAID_CHANNEL_ID);
+    } catch (fetchError) {
+        logger.error(`Não foi possível encontrar o canal de raid (ID: ${config.RAID_CHANNEL_ID})`, fetchError);
+        return;
+    }
+    
+    if (!raidChannel) {
+        logger.error(`O canal de raid com ID ${config.RAID_CHANNEL_ID} retornou nulo.`);
+        return;
+    }
 
     const webhook = await client.getOrCreateWebhook(raidChannel, WEBHOOK_NAME, client.user.displayAvatarURL());
     if (!webhook) {
