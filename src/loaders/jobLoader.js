@@ -19,6 +19,12 @@ function validateJob(mod, file) {
 export async function loadJobs(container) {
     const { logger, jobs } = container;
 
+    // Limpa jobs agendados anteriormente para evitar duplicação em hot-reloads
+    jobs.forEach(task => {
+        if (task.stop) task.stop();
+    });
+    jobs.length = 0;
+
     if (!fs.existsSync(JOBS_PATH)) {
         logger.warn(`Diretório de jobs não encontrado em ${JOBS_PATH}`);
         return;
@@ -37,25 +43,28 @@ export async function loadJobs(container) {
                 continue;
             }
             
-            const task = {
-                name: jobModule.name,
-                run: () => jobModule.run(container),
-            };
+            let task;
+            const runJob = () => jobModule.run(container);
 
             if (jobModule.schedule) {
                 if (cron.validate(jobModule.schedule)) {
-                    cron.schedule(jobModule.schedule, task.run);
+                    task = cron.schedule(jobModule.schedule, runJob);
                     logger.info(`Job agendado via cron '${jobModule.name}': ${jobModule.schedule}`);
                 } else {
                     logger.error(`Formato de cron inválido para o job '${jobModule.name}': ${jobModule.schedule}`);
                     continue;
                 }
             } else if (jobModule.intervalMs) {
-                setInterval(task.run, jobModule.intervalMs);
+                const intervalId = setInterval(runJob, jobModule.intervalMs);
+                task = { stop: () => clearInterval(intervalId) }; // Para poder parar o intervalo
                 logger.info(`Job agendado via intervalo '${jobModule.name}': a cada ${jobModule.intervalMs}ms`);
             }
             
-            jobs.push(task);
+            jobs.push({
+                name: jobModule.name,
+                run: runJob,
+                stop: () => { if(task.stop) task.stop() },
+            });
 
         } catch (err) {
             logger.error(`Falha ao carregar o job ${file}:`, err);
