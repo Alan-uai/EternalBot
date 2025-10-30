@@ -1,12 +1,13 @@
 // src/jobs/raidPanelManager.js
-import { EmbedBuilder } from 'discord.js';
+import { EmbedBuilder, WebhookClient } from 'discord.js';
 import { lobbyDungeonsArticle } from '../data/wiki-articles/lobby-dungeons.js';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 export const name = 'raidPanelManager';
-export const intervalMs = 10000; // A cada 10 segundos
+export const schedule = '*/10 * * * * *'; // A cada 10 segundos
 
 const PANEL_DOC_ID = 'raidStatusPanel';
+const WEBHOOK_NAME = 'Painel de Status das Raids do Lobby';
 const PORTAL_OPEN_DURATION_SECONDS = 2 * 60; // 2 minutos em segundos
 
 async function getOrCreatePanelMessage(client) {
@@ -15,25 +16,41 @@ async function getOrCreatePanelMessage(client) {
     const channel = await client.channels.fetch(config.RAID_CHANNEL_ID);
     const panelDocRef = doc(firestore, 'bot_config', PANEL_DOC_ID);
     const panelDocSnap = await getDoc(panelDocRef);
-    let message;
+    let messageId;
+    let webhookUrl;
 
     if (panelDocSnap.exists()) {
+        messageId = panelDocSnap.data().messageId;
+        webhookUrl = panelDocSnap.data().webhookUrl;
+    }
+
+    const webhook = await client.getOrCreateWebhook(channel, WEBHOOK_NAME, client.user.displayAvatarURL());
+    if (!webhook) {
+        logger.error('Não foi possível criar ou obter o webhook para o painel de raids.');
+        return { webhook: null, messageId: null };
+    }
+    
+    // Se a URL do webhook mudou ou é a primeira vez, atualiza no DB
+    if (webhook.url !== webhookUrl) {
+        await setDoc(panelDocRef, { webhookUrl: webhook.url }, { merge: true });
+        // Se a URL mudou, a mensagem antiga é órfã, então forçamos a criação de uma nova
+        messageId = null;
+    }
+
+    if (messageId) {
+        // Verifica se a mensagem ainda existe, se não, cria uma nova
         try {
-            message = await channel.messages.fetch(panelDocSnap.data().messageId);
+            const webhookClient = new WebhookClient({ url: webhook.url });
+            await webhookClient.fetchMessage(messageId);
         } catch (error) {
-            logger.warn('Não foi possível encontrar a mensagem do painel de raid. Criando uma nova.');
+             logger.warn(`Mensagem do painel (ID: ${messageId}) não encontrada. Criando uma nova.`);
+             messageId = null;
         }
     }
-
-    if (!message) {
-        const embed = new EmbedBuilder().setTitle('Gerando informações sobre as Raids...').setDescription('O painel será atualizado em breve.');
-        message = await channel.send({ embeds: [embed] });
-        await message.pin().catch(err => logger.error("Não foi possível fixar a mensagem do painel de raid.", err));
-        await setDoc(panelDocRef, { messageId: message.id });
-    }
-
-    return message;
+    
+    return { webhook, messageId };
 }
+
 
 function getRaidStatus(config) {
     const now = new Date();
@@ -120,11 +137,10 @@ export async function run(container) {
     }
     
     try {
-        const panelMessage = await getOrCreatePanelMessage(client);
-        if (!panelMessage) {
-            logger.error('Não foi possível obter ou criar a mensagem do painel de raids.');
-            return;
-        }
+        const { webhook, messageId: initialMessageId } = await getOrCreatePanelMessage(client);
+        if (!webhook) return;
+        
+        let messageId = initialMessageId;
 
         const { statuses, nextRaidImageUrl } = getRaidStatus(config);
 
@@ -140,7 +156,33 @@ export async function run(container) {
             embed.setImage(nextRaidImageUrl);
         }
             
-        await panelMessage.edit({ embeds: [embed] });
+        const webhookClient = new WebhookClient({ url: webhook.url });
+
+        if (messageId) {
+            await webhookClient.editMessage(messageId, { embeds: [embed] });
+        } else {
+            const channel = await client.channels.fetch(config.RAID_CHANNEL_ID);
+            // Deleta mensagens antigas do bot para evitar duplicatas antes de criar uma nova
+            const oldMessages = await channel.messages.fetch({ limit: 10 });
+            const oldBotPanel = oldMessages.find(m => m.author.id === client.user.id && m.embeds[0]?.title === 'Painel de Status das Raids do Lobby');
+            if (oldBotPanel) await oldBotPanel.delete().catch(() => {});
+
+            const sentMessage = await webhookClient.send({
+                username: webhook.name,
+                avatarURL: client.user.displayAvatarURL(),
+                embeds: [embed],
+                wait: true,
+            });
+            messageId = sentMessage.id;
+            
+            // Tenta fixar a nova mensagem com a conta do bot
+            const newMessage = await channel.messages.fetch(messageId);
+            await newMessage.pin().catch(err => logger.error("Não foi possível fixar a nova mensagem do painel de raid.", err));
+            
+            // Salva o ID da nova mensagem no Firestore
+            const panelDocRef = doc(firestore, 'bot_config', PANEL_DOC_ID);
+            await setDoc(panelDocRef, { messageId: messageId, webhookUrl: webhook.url }, { merge: true });
+        }
 
     } catch (error) {
         logger.error('Erro ao atualizar o painel de raids:', error);
