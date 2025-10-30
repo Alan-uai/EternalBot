@@ -184,7 +184,7 @@ export async function run(container) {
             }
             
             // Salva o ID da nova mensagem no Firestore
-            const panelDocRef = doc(firestore, 'bot_config', PANEL_DOC_ID);
+            const panelDocRef = doc(services.firestore, 'bot_config', PANEL_DOC_ID);
             await setDoc(panelDocRef, { messageId: messageId, webhookUrl: webhook.url }, { merge: true });
         }
 
