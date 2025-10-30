@@ -4,7 +4,7 @@ import axios from 'axios';
 
 export const data = new SlashCommandBuilder()
     .setName('roblox')
-    .setDescription('Gera links para o perfil Roblox de um usuário verificado.')
+    .setDescription('Gera um link universal para o perfil Roblox de um usuário verificado.')
     .addUserOption(option => 
         option.setName('usuario')
               .setDescription('O usuário para buscar (padrão: você mesmo).')
@@ -39,25 +39,21 @@ export async function execute(interaction) {
         }
 
         const userId = response.data.data[0].id;
-        const userProfileUrl = `https://www.roblox.com/users/${userId}/profile`;
-        const appProfileUrl = `roblox://users/${userId}/profile`;
+        // O domínio será o domínio primário do Render ou qualquer outro host.
+        // A URL precisa ser absoluta.
+        const universalProfileUrl = `https://eternalbot-o0ct.onrender.com/roblox/${userId}`;
 
         const row = new ActionRowBuilder()
             .addComponents(
                 new ButtonBuilder()
-                    .setLabel('Perfil Web')
+                    .setLabel('Abrir no Roblox')
                     .setStyle(ButtonStyle.Link)
-                    .setURL(userProfileUrl)
-                    .setEmoji('👤'),
-                new ButtonBuilder()
-                    .setLabel('Abrir no App')
-                    .setStyle(ButtonStyle.Link)
-                    .setURL(appProfileUrl)
-                    .setEmoji('📱')
+                    .setURL(universalProfileUrl)
+                    .setEmoji('▶️')
             );
 
         await interaction.editReply({
-            content: `Aqui estão os links para o perfil de ${robloxUsername}:`,
+            content: `Clique no botão abaixo para abrir o perfil de **${robloxUsername}** no app ou navegador:`,
             components: [row]
         });
 

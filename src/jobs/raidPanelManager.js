@@ -26,7 +26,7 @@ async function getOrCreatePanelMessage(client) {
     }
 
     if (!message) {
-        const embed = new EmbedBuilder().setTitle('Carregando status das raids...').setDescription('O painel será gerado em breve.');
+        const embed = new EmbedBuilder().setTitle('Gerando informações sobre as Raids...').setDescription('O painel será atualizado em breve.');
         message = await channel.send({ embeds: [embed] });
         await message.pin().catch(err => logger.error("Não foi possível fixar a mensagem do painel de raid.", err));
         await setDoc(panelDocRef, { messageId: message.id });
@@ -80,15 +80,13 @@ function getRaidStatus() {
         });
     }
     
-    return { statuses, primaryImage: null }; // primaryImage é sempre null agora
+    return { statuses, primaryImage: null };
 }
 
 
 export async function run(container) {
     const { client, logger, services } = container;
     
-    // Não executa se o serviço de assets estiver lá (para compatibilidade, caso seja reativado)
-    // A verificação principal é que não há mais geração de assets
     if (!services.firebase) { 
         logger.debug('Serviço Firebase não encontrado. Pulando atualização do painel de raids.');
         return;
