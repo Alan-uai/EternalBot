@@ -8,8 +8,6 @@ export const intervalMs = 10000; // A cada 10 segundos
 
 const PANEL_DOC_ID = 'raidStatusPanel';
 const PORTAL_OPEN_DURATION_MINUTES = 2;
-const FIVE_MINUTE_WARNING_SECONDS = 5 * 60;
-const TEN_SECOND_WARNING = 10;
 
 async function getOrCreatePanelMessage(client) {
     const { config, logger, services } = client.container;
@@ -37,7 +35,7 @@ async function getOrCreatePanelMessage(client) {
     return message;
 }
 
-function getRaidStatus(assetService) {
+function getRaidStatus() {
     const now = new Date();
     const currentMinute = now.getMinutes();
     const currentSeconds = now.getSeconds();
@@ -45,40 +43,18 @@ function getRaidStatus(assetService) {
 
     const raids = lobbyDungeonsArticle.tables.lobbySchedule.rows;
     const statuses = [];
-    let nextRaid = null;
-    let minDiff = Infinity;
 
-    // First pass: determine next raid
     for (const raid of raids) {
         const raidMinute = parseInt(raid['Horário'].substring(3, 5), 10);
         const raidStartSecondsInHour = raidMinute * 60;
         let diffSeconds = raidStartSecondsInHour - totalSecondsInHour;
-        
+
         if (diffSeconds < -(PORTAL_OPEN_DURATION_MINUTES * 60)) {
             diffSeconds += 3600; // It's for the next hour
         }
         
-        if (diffSeconds >= 0 && diffSeconds < minDiff) {
-            minDiff = diffSeconds;
-            nextRaid = raid;
-        }
-    }
-
-    let primaryImage = null; // A imagem principal a ser exibida
-
-    // Second pass: build status and determine image
-    for (const raid of raids) {
-        const raidMinute = parseInt(raid['Horário'].substring(3, 5), 10);
-        const raidStartSecondsInHour = raidMinute * 60;
-        let diffSeconds = raidStartSecondsInHour - totalSecondsInHour;
-
-        if (diffSeconds < -(PORTAL_OPEN_DURATION_MINUTES * 60)) {
-            diffSeconds += 3600; // Next hour's raid
-        }
-        
         let statusText;
         let details;
-        let isPrimary = false;
 
         const diffMinutes = Math.floor(diffSeconds / 60);
         const diffSecondsPart = diffSeconds % 60;
@@ -91,27 +67,10 @@ function getRaidStatus(assetService) {
             const remainingMinutes = Math.floor(remainingSeconds / 60);
             const secondsPart = remainingSeconds % 60;
             details = `Fecha em: \`${remainingMinutes}m ${secondsPart.toString().padStart(2, '0')}s\``;
-            
-            if (remainingSeconds <= TEN_SECOND_WARNING) {
-                primaryImage = assetService.getAsset(raid['Dificuldade'], 'closing');
-            } else {
-                primaryImage = assetService.getAsset(raid['Dificuldade'], 'open');
-            }
-             isPrimary = true;
-
         } else {
             // Raid is closed
             statusText = '❌ Fechada';
             details = `Abre em: \`${diffMinutes}m ${diffSecondsPart.toString().padStart(2, '0')}s\``;
-
-             if (raid === nextRaid) {
-                 if (diffSeconds <= FIVE_MINUTE_WARNING_SECONDS) {
-                    primaryImage = assetService.getAsset(raid['Dificuldade'], 'warning');
-                 } else {
-                    primaryImage = assetService.getAsset(raid['Dificuldade'], 'next');
-                 }
-                 isPrimary = true;
-             }
         }
         
         statuses.push({
@@ -120,21 +79,18 @@ function getRaidStatus(assetService) {
             inline: true,
         });
     }
-
-    // If no specific state was found for an image, default to the 'next' raid image if assets are ready
-    if (!primaryImage && nextRaid && assetService.isReady()) {
-        primaryImage = assetService.getAsset(nextRaid['Dificuldade'], 'next');
-    }
     
-    return { statuses, primaryImage };
+    return { statuses, primaryImage: null }; // primaryImage é sempre null agora
 }
 
 
 export async function run(container) {
     const { client, logger, services } = container;
     
-    if (!services.assetService) {
-        logger.debug('Serviço de assets não encontrado. Pulando atualização do painel de raids.');
+    // Não executa se o serviço de assets estiver lá (para compatibilidade, caso seja reativado)
+    // A verificação principal é que não há mais geração de assets
+    if (!services.firebase) { 
+        logger.debug('Serviço Firebase não encontrado. Pulando atualização do painel de raids.');
         return;
     }
     
@@ -145,7 +101,7 @@ export async function run(container) {
             return;
         }
 
-        const { statuses, primaryImage } = getRaidStatus(services.assetService);
+        const { statuses } = getRaidStatus();
 
         const embed = new EmbedBuilder()
             .setColor(0x3498DB)
@@ -155,11 +111,6 @@ export async function run(container) {
             .setTimestamp()
             .setFooter({ text: 'Horários baseados no fuso horário do servidor.' });
             
-        // Somente define a imagem se um GIF relevante (e existente) foi encontrado
-        if (primaryImage) {
-            embed.setImage(primaryImage);
-        }
-
         await panelMessage.edit({ embeds: [embed] });
 
     } catch (error) {

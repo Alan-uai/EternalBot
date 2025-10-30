@@ -4,7 +4,7 @@ import axios from 'axios';
 
 export const data = new SlashCommandBuilder()
     .setName('roblox')
-    .setDescription('Gera um link para o perfil Roblox de um usuário verificado.')
+    .setDescription('Gera links para o perfil Roblox de um usuário verificado.')
     .addUserOption(option => 
         option.setName('usuario')
               .setDescription('O usuário para buscar (padrão: você mesmo).')
@@ -17,7 +17,6 @@ export async function execute(interaction) {
     const member = await interaction.guild.members.fetch(targetUser.id);
     const displayName = member.displayName;
 
-    // Extrai o nome de usuário do Roblox do formato "Nome (@RobloxUsername)"
     const match = displayName.match(/@(\w+)/);
     if (!match) {
         return interaction.editReply({
@@ -28,7 +27,6 @@ export async function execute(interaction) {
     const robloxUsername = match[1];
 
     try {
-        // A API correta requer um método POST
         const response = await axios.post('https://users.roblox.com/v1/usernames/users', {
             "usernames": [robloxUsername],
             "excludeBannedUsers": true
@@ -47,7 +45,7 @@ export async function execute(interaction) {
         const row = new ActionRowBuilder()
             .addComponents(
                 new ButtonBuilder()
-                    .setLabel(`Ver Perfil (Web)`)
+                    .setLabel('Perfil Web')
                     .setStyle(ButtonStyle.Link)
                     .setURL(userProfileUrl)
                     .setEmoji('👤'),
@@ -70,5 +68,3 @@ export async function execute(interaction) {
         });
     }
 }
-
-    

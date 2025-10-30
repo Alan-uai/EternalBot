@@ -1,5 +1,6 @@
 // src/events/guild/guildMemberUpdate.js
-import { Events, doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { Events } from 'discord.js';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 export const name = Events.GuildMemberUpdate;
 

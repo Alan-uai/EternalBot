@@ -1,56 +1,27 @@
 // src/services/assetService.js
-import { lobbyDungeonsArticle } from '../data/wiki-articles/lobby-dungeons.js';
-import { createLoopedTextGif, createCountdownGif } from '../utils/createRaidPanelAssets.js';
-import { AttachmentBuilder } from 'discord.js';
+// Este serviço foi desativado, pois a geração de GIFs foi removida.
+// Os assets visuais serão carregados de uma CDN no futuro.
 
 export class AssetService {
     constructor(logger) {
         this.logger = logger;
-        this.assets = new Map(); // raidName -> { next, warning, open, closing }
         this.ready = false;
+        this.logger.info('AssetService inicializado, mas a geração de GIFs está desativada.');
     }
 
     isReady() {
-        return this.ready;
+        // Retorna true imediatamente, pois não há nada para gerar.
+        return true;
     }
     
     getAsset(raidName, state) {
-        const raidAssets = this.assets.get(raidName);
-        return raidAssets ? raidAssets[state] : null;
+        // Retorna null, pois não há assets locais para fornecer.
+        return null;
     }
 
-    async generateAssets() {
-        this.logger.info('Iniciando a geração de assets para o painel de raids...');
-        const raids = lobbyDungeonsArticle.tables.lobbySchedule.rows;
-
-        for (const raid of raids) {
-            const raidName = raid['Dificuldade'];
-            this.logger.debug(`Gerando assets para a raid: ${raidName}`);
-            
-            try {
-                const nextGif = await createLoopedTextGif(`Próxima Raid: ${raidName}`, '#3498DB');
-                const warningGif = await createLoopedTextGif(`${raidName} abre em 5m`, '#F1C40F');
-                const openGif = await createLoopedTextGif(`${raidName} ABERTA`, '#2ECC71');
-                const closingGif = await createCountdownGif(`Fechando em: `);
-
-                this.assets.set(raidName, {
-                    next: this.bufferToDataURI(nextGif),
-                    warning: this.bufferToDataURI(warningGif),
-                    open: this.bufferToDataURI(openGif),
-                    closing: this.bufferToDataURI(closingGif),
-                });
-                
-                this.logger.debug(`Assets para ${raidName} gerados com sucesso.`);
-            } catch(error) {
-                this.logger.error(`Falha ao gerar assets para a raid ${raidName}:`, error);
-            }
-        }
-        
+    generateAssets() {
+        // Função vazia para não fazer nada.
+        this.logger.info('Geração de assets pulada conforme configuração.');
         this.ready = true;
-        this.logger.info('Todos os assets do painel de raids foram gerados e estão prontos para uso.');
-    }
-    
-    bufferToDataURI(buffer) {
-        return `data:image/gif;base64,${buffer.toString('base64')}`;
     }
 }
