@@ -9,11 +9,6 @@ export class AssetService {
     constructor(config, firestore) {
         this.baseUrl = config.CLOUDINARY_URL || '';
         this.firestore = firestore;
-        // Mapeia IDs de assets para nomes de arquivo, caso sejam diferentes.
-        this.assets = {
-            'BotAvatar': 'BotAvatar',
-            'DungeonLobby': 'DungeonLobby',
-        };
     }
 
     isBaseUrlValid() {
