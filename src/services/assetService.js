@@ -10,8 +10,8 @@ export class AssetService {
         this.baseUrl = config.CLOUDINARY_URL || '';
         this.firestore = firestore;
         this.assets = {
-            'BotAvatar': 'BotAvatar.png',
-            'DungeonLobby': 'DungeonLobby.png',
+            'BotAvatar': 'BotAvatar',
+            'DungeonLobby': 'DungeonLobby',
         };
     }
 
@@ -27,17 +27,9 @@ export class AssetService {
     generateAssetUrl(assetId) {
         if (!assetId || !this.isBaseUrlValid()) return null;
 
-        let fileName;
-
-        if (this.assets[assetId]) {
-            fileName = this.assets[assetId];
-        } else {
-            const validSuffixes = ['PR', '5m', 'A', 'F'];
-            const suffix = validSuffixes.find(s => assetId.endsWith(s));
-            if (suffix) fileName = `${assetId}.gif`;
-        }
-
-        return fileName ? `${this.baseUrl}/${fileName}` : null;
+        // O assetId já é o nome final do arquivo no Cloudinary (ex: 'EasyA', 'BotAvatar')
+        // A extensão é gerenciada pelo próprio Cloudinary na entrega.
+        return `${this.baseUrl}/${assetId}`;
     }
 
     /**
@@ -73,7 +65,6 @@ export class AssetService {
 
         } catch (error) {
             console.error(`[AssetService] Erro ao buscar/salvar o asset '${assetId}':`, error);
-            // Fallback: tenta gerar a URL mesmo se o Firestore falhar.
             return this.generateAssetUrl(assetId);
         }
     }
