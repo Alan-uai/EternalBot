@@ -38,7 +38,7 @@ function getRaidStatus(assetService) {
     }
     
     // Adiciona o GIF da próxima raid no topo
-    if (nextRaidForGif) {
+    if (nextRaidForGif && assetService) {
         const gifUrl = assetService.getAsset(`${nextRaidForGif['Dificuldade']}PR`);
         if (gifUrl) {
             statuses.push({ name: `⏳ Próxima Raid: ${nextRaidForGif['Dificuldade']}`, value: gifUrl, inline: false });
@@ -98,7 +98,6 @@ export const schedule = '*/10 * * * * *'; // A cada 10 segundos
 
 export async function run(container) {
     const { client, logger, services } = container;
-    
     const { firestore, assetService } = services.firebase;
 
     try {

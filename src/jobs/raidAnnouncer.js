@@ -8,7 +8,7 @@ const ANNOUNCEMENT_LIFETIME_MS = 2 * 60 * 1000; // 2 minutos
 // Esta função gerencia o ciclo de vida de uma única raid
 async function handleRaidLifecycle(container, raid, now) {
     const { client, config, logger, services } = container;
-    const { firestore, assetService } = services.firebase; // Correção aqui
+    const { firestore, assetService } = services.firebase;
     const raidIdentifier = raid['Dificuldade'];
     const lifecycleRef = doc(firestore, 'bot_config/raid_lifecycles', raidIdentifier);
 
@@ -43,8 +43,11 @@ async function handleRaidLifecycle(container, raid, now) {
 
     // 1. Inicia o ciclo: Próxima Raid
     if (state === 'finished' || (lifecycleDoc.exists() && lifecycleDoc.data().raidOpenTime !== raidOpenTimeSeconds)) {
+        const gifAsset = assetService.getAsset(`${raidIdentifier}PR`);
+        if (!gifAsset) return; // Se não houver GIF, não anuncia.
+
         await webhookClient.edit({ name: `Próxima Raid: ${raidIdentifier}`, avatar: assetService.getAsset('BotAvatar') });
-        const message = await webhookClient.send({ content: assetService.getAsset(`${raidIdentifier}PR`), username: `Anunciador de Raids`, wait: true });
+        const message = await webhookClient.send({ content: gifAsset, username: `Anunciador de Raids`, wait: true });
         
         await setDoc(lifecycleRef, { state: 'next_up', messageId: message.id, raidOpenTime: raidOpenTimeSeconds });
         logger.info(`[${raidIdentifier}] Anunciado como PRÓXIMA RAID.`);
@@ -53,9 +56,12 @@ async function handleRaidLifecycle(container, raid, now) {
 
     // 2. Aviso de 5 minutos
     if (state === 'next_up' && nowSeconds >= fiveMinuteWarningTime) {
+        const gifAsset = assetService.getAsset(`${raidIdentifier}5m`);
+        if (!gifAsset) return;
+
         const { messageId } = lifecycleDoc.data();
         await webhookClient.edit({ name: `Atenção Raid ${raidIdentifier} Começando!` });
-        await webhookClient.editMessage(messageId, { content: assetService.getAsset(`${raidIdentifier}5m`) });
+        await webhookClient.editMessage(messageId, { content: gifAsset });
         await updateDoc(lifecycleRef, { state: 'starting_soon' });
         logger.info(`[${raidIdentifier}] Anúncio de 5 MINUTOS enviado.`);
         return;
@@ -63,6 +69,9 @@ async function handleRaidLifecycle(container, raid, now) {
 
     // 3. Raid Aberta
     if (state === 'starting_soon' && nowSeconds >= raidOpenTimeSeconds) {
+        const gifAsset = assetService.getAsset(`${raidIdentifier}A`);
+        if (!gifAsset) return;
+
         const { messageId } = lifecycleDoc.data();
         // Deleta a mensagem antiga do "Próxima Raid"
         try { await webhookClient.deleteMessage(messageId); } catch(e) { /* ignora */}
@@ -76,7 +85,7 @@ async function handleRaidLifecycle(container, raid, now) {
         const roleMention = raid.roleId ? `<@&${raid.roleId}>` : '@everyone';
         const embed = new EmbedBuilder()
             .setColor(0xFF4B4B)
-            .setImage(assetService.getAsset(`${raidIdentifier}A`))
+            .setImage(gifAsset)
             .addFields(
                 { name: 'Dificuldade', value: raid['Dificuldade'], inline: true },
                 { name: 'Vida do Chefe', value: `\`${raid['Vida Último Boss']}\``, inline: true },

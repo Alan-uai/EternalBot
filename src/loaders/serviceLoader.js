@@ -27,9 +27,9 @@ export async function loadServices(container) {
         throw error;
     }
     
-    // Asset Service
+    // Asset Service - Agora aninhado sob o serviço firebase para consistência
     try {
-        services.assetService = new AssetService(config);
+        services.firebase.assetService = new AssetService(config);
         logger.info('Serviço de Assets inicializado.');
     } catch (error) {
         logger.error('Falha ao inicializar o serviço de Assets:', error);
