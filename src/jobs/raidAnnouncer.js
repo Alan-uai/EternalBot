@@ -1,9 +1,10 @@
 // src/jobs/raidAnnouncer.js
-import { EmbedBuilder } from 'discord.js';
+import { EmbedBuilder, WebhookClient } from 'discord.js';
 import { lobbyDungeonsArticle } from '../data/wiki-articles/lobby-dungeons.js';
 
 let notifiedRaids = new Set();
 const TEN_MINUTES_IN_MS = 10 * 60 * 1000;
+const WEBHOOK_NAME = 'Anunciador de Raids';
 
 export const name = 'raidAnnouncer';
 export const intervalMs = 60000; // A cada 60 segundos
@@ -29,6 +30,14 @@ export async function run(container) {
 
     if (!raidChannel) return;
 
+    const webhook = await client.getOrCreateWebhook(raidChannel, WEBHOOK_NAME, client.user.displayAvatarURL());
+    if (!webhook) {
+        logger.error(`Falha ao obter o webhook para o canal de raids.`);
+        return;
+    }
+    const webhookClient = new WebhookClient({ url: webhook.url });
+
+
     for (const raid of raidSchedule) {
         const raidMinute = parseInt(raid['Horário'].substring(3, 5), 10);
         const raidIdentifier = `${currentHour}:${raidMinute}`;
@@ -49,10 +58,20 @@ export async function run(container) {
                     )
                     .setTimestamp();
                 
-                const sentMessage = await raidChannel.send({ content: roleMention, embeds: [embed] });
-                setTimeout(() => sentMessage.delete().catch(console.error), TEN_MINUTES_IN_MS);
-                notifiedRaids.add(warningId);
-                logger.info(`Alerta de 5 minutos enviado para a raid: ${raid['Dificuldade']}`);
+                try {
+                    const sentMessage = await webhookClient.send({ 
+                        username: WEBHOOK_NAME,
+                        avatarURL: client.user.displayAvatarURL(),
+                        content: roleMention, 
+                        embeds: [embed],
+                        wait: true
+                    });
+                    setTimeout(() => webhookClient.deleteMessage(sentMessage.id).catch(console.error), TEN_MINUTES_IN_MS);
+                    notifiedRaids.add(warningId);
+                    logger.info(`Alerta de 5 minutos enviado para a raid: ${raid['Dificuldade']}`);
+                } catch(e) {
+                    logger.error(`Falha ao enviar alerta de raid via webhook:`, e);
+                }
             }
         }
 
@@ -72,10 +91,20 @@ export async function run(container) {
                     )
                     .setTimestamp();
 
-                const sentMessage = await raidChannel.send({ content: roleMention, embeds: [embed] });
-                setTimeout(() => sentMessage.delete().catch(console.error), TEN_MINUTES_IN_MS);
-                notifiedRaids.add(startId);
-                logger.info(`Anúncio de início enviado para a raid: ${raid['Dificuldade']}`);
+                try {
+                    const sentMessage = await webhookClient.send({ 
+                        username: WEBHOOK_NAME,
+                        avatarURL: client.user.displayAvatarURL(),
+                        content: roleMention, 
+                        embeds: [embed],
+                        wait: true
+                    });
+                    setTimeout(() => webhookClient.deleteMessage(sentMessage.id).catch(console.error), TEN_MINUTES_IN_MS);
+                    notifiedRaids.add(startId);
+                    logger.info(`Anúncio de início enviado para a raid: ${raid['Dificuldade']}`);
+                } catch(e) {
+                    logger.error(`Falha ao enviar anúncio de início de raid via webhook:`, e);
+                }
             }
         }
     }
