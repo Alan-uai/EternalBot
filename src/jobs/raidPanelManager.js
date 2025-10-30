@@ -6,7 +6,10 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 const PANEL_DOC_ID = 'raidPanel';
 const PORTAL_OPEN_DURATION_SECONDS = 2 * 60; // 2 minutos
 
-function getRaidStatus(assetService) {
+function getRaidStatus(container) {
+    const { logger, services } = container;
+    const { assetService } = services.firebase;
+
     const now = new Date();
     const currentMinute = now.getUTCMinutes();
     const currentSecond = now.getUTCSeconds();
@@ -37,17 +40,17 @@ function getRaidStatus(assetService) {
         }
     }
     
-    // Adiciona o GIF da próxima raid no topo
+    // Adiciona o GIF da próxima raid no topo, se existir
     if (nextRaidForGif && assetService) {
         const gifUrl = assetService.getAsset(`${nextRaidForGif['Dificuldade']}PR`);
         if (gifUrl) {
             statuses.push({ name: `⏳ Próxima Raid: ${nextRaidForGif['Dificuldade']}`, value: gifUrl, inline: false });
-            statuses.push({ name: '\u200B', value: '\u200B' }); // Separador
+            statuses.push({ name: '\u200B', value: '\u200B' }); // Separador único após o GIF
         }
     }
 
-
-    for (const raid of raids) {
+    for (let i = 0; i < raids.length; i++) {
+        const raid = raids[i];
         const raidStartMinute = parseInt(raid['Horário'].substring(3, 5), 10);
         const raidStartSecondInHour = raidStartMinute * 60;
         const portalCloseSecondInHour = raidStartSecondInHour + PORTAL_OPEN_DURATION_SECONDS;
@@ -82,12 +85,18 @@ function getRaidStatus(assetService) {
             value: `${statusText}\n${details}`,
             inline: true, 
         });
-        statuses.push({ name: '\u200B', value: '\u200B', inline: true }); // Separador
+
+        // Adiciona um separador, mas não após o último item de uma linha cheia, nem no final de tudo
+        if ((i + 1) % 2 === 0 && (i + 1) < raids.length) {
+            statuses.push({ name: '\u200B', value: '\u200B' });
+        } else {
+            statuses.push({ name: '\u200B', value: '\u200B', inline: true });
+        }
     }
     
-    // Remove o último separador se for ímpar
-    if (statuses.length > 0 && statuses.length % 2 !== 0) {
-        statuses.pop();
+    // Garante que não terminemos com um separador inline inútil
+    if(statuses.length > 0 && statuses[statuses.length-1].inline) {
+       statuses.pop();
     }
     
     return statuses;
@@ -98,7 +107,7 @@ export const schedule = '*/10 * * * * *'; // A cada 10 segundos
 
 export async function run(container) {
     const { client, logger, services } = container;
-    const { firestore, assetService } = services.firebase;
+    const { firestore } = services.firebase;
 
     try {
         const panelWebhookDocRef = doc(firestore, 'bot_config', PANEL_DOC_ID);
@@ -113,13 +122,13 @@ export async function run(container) {
         const messageId = docSnap.data().messageId;
         const webhookClient = new WebhookClient({ url: webhookUrl });
 
-        const statuses = getRaidStatus(assetService);
+        const statuses = getRaidStatus(container);
 
         const embed = new EmbedBuilder()
             .setColor(0x2F3136)
             .setAuthor({ name: '🗺️ Painel de Status das Raids do Lobby' })
             .setDescription(`*Atualizado <t:${Math.floor(Date.now() / 1000)}:R>*`)
-            .addFields(statuses)
+            .setFields(statuses)
             .setFooter({ text: 'Horários baseados no fuso horário do servidor (UTC).' });
             
         let sentMessage;

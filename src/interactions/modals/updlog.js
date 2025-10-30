@@ -3,9 +3,23 @@ import { EmbedBuilder, WebhookClient } from 'discord.js';
 import { initializeFirebase } from '../../firebase/index.js';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { ai } from '../../ai/genkit.js';
+import { z } from 'zod';
 
 export const customIdPrefix = 'updlog_modal';
 const FIRESTORE_DOC_ID = 'updlog';
+
+// Schema para garantir que a IA retorne apenas o texto traduzido
+const TranslationOutputSchema = z.object({
+  translatedText: z.string().describe('O texto traduzido final.'),
+});
+
+// Prompt mais robusto para tradução
+const translationPrompt = ai.definePrompt({
+    name: 'translateTextPrompt',
+    input: { schema: z.object({ text: z.string(), context: z.string() }) },
+    output: { schema: TranslationOutputSchema },
+    prompt: `Sua única tarefa é traduzir o texto a seguir para Português-BR. Mantenha a formatação Markdown original (quebras de linha, negrito, etc.). Contexto: "{{{context}}}". Texto para traduzir: "{{{text}}}"`,
+});
 
 export async function handleInteraction(interaction, { client }) {
     if (!interaction.isModalSubmit() || interaction.customId !== customIdPrefix) return;
@@ -34,7 +48,6 @@ export async function handleInteraction(interaction, { client }) {
         // Posta primeiro em inglês como fallback seguro
         const embedEn = new EmbedBuilder()
             .setColor(0x808080) // Cinza para indicar "processando"
-            .setTitle(titleEn)
             .setDescription(contentEn)
             .setTimestamp()
             .setFooter({ text: `Lançado por: ${interaction.user.tag} | Traduzindo...` });
@@ -42,7 +55,7 @@ export async function handleInteraction(interaction, { client }) {
         let message;
         if (messageId) {
              try {
-                message = await webhookClient.editMessage(messageId, { embeds: [embedEn] });
+                message = await webhookClient.editMessage(messageId, { username: titleEn, embeds: [embedEn] });
             } catch(e) {
                 logger.warn(`[updlog] Webhook não pôde editar a mensagem ${messageId}, enviando uma nova.`);
                 message = await webhookClient.send({ username: titleEn, embeds: [embedEn], wait: true });
@@ -62,17 +75,21 @@ export async function handleInteraction(interaction, { client }) {
 
         // Tenta traduzir e editar a mensagem
         try {
-            const { text: translatedTitle } = await ai.generate({
-                prompt: `Traduza o seguinte título para Português-BR: "${titleEn}"`,
-            });
-            const { text: translatedContent } = await ai.generate({
-                prompt: `Traduza o seguinte log para Português-BR, mantendo a formatação Markdown: \n\n${contentEn}`,
-            });
+            const [titleResult, contentResult] = await Promise.all([
+                translationPrompt({ text: titleEn, context: 'Título de uma atualização de jogo' }),
+                translationPrompt({ text: contentEn, context: 'Conteúdo de um log de atualização de jogo' })
+            ]);
+            
+            const translatedTitle = titleResult.output?.translatedText;
+            const translatedContent = contentResult.output?.translatedText;
 
+            if (!translatedTitle || !translatedContent) {
+                throw new Error("A IA não retornou o texto traduzido no formato esperado.");
+            }
+            
             const embedPt = new EmbedBuilder()
                 .setColor(0x3498DB)
-                .setTitle(translatedTitle)
-                .setDescription(translatedContent)
+                .setDescription(translatedContent) // Título removido daqui
                 .setTimestamp()
                 .setFooter({ text: `Lançado por: ${interaction.user.tag}` });
             
