@@ -1,5 +1,5 @@
 // src/commands/utility/codes.js
-import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
+import { SlashCommandBuilder } from 'discord.js';
 import { initializeFirebase } from '../../firebase/index.js';
 import { doc, getDoc } from 'firebase/firestore';
 
@@ -25,13 +25,9 @@ export async function execute(interaction) {
         const codes = docSnap.data().codes;
         const formattedCodes = codes.map(code => `• \`${code}\``).join('\n');
 
-        const embed = new EmbedBuilder()
-            .setColor(0x3498DB)
-            .setTitle(' códigos Ativos do Jogo')
-            .setDescription(formattedCodes)
-            .setTimestamp();
+        const messageContent = `**Códigos Ativos do Jogo**\n\n${formattedCodes}`;
 
-        await interaction.editReply({ embeds: [embed] });
+        await interaction.editReply({ content: messageContent });
 
     } catch (error) {
         console.error('Erro ao buscar códigos:', error);

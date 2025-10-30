@@ -1,11 +1,11 @@
 // src/commands/utility/v2.js
-import { SlashCommandBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, EmbedBuilder, PermissionsBitField } from 'discord.js';
+import { SlashCommandBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, PermissionsBitField, ContainerBuilder, TextDisplayBuilder, MessageFlags } from 'discord.js';
 
 const ADMIN_ROLE_ID = '1429318984716521483';
 
 export const data = new SlashCommandBuilder()
     .setName('v2')
-    .setDescription('Posta uma mensagem customizada em um painel moderno (embed). [Admin]')
+    .setDescription('Posta uma mensagem customizada em um painel V2 (Container). [Admin]')
     .setDefaultMemberPermissions(PermissionsBitField.Flags.Administrator);
 
 export async function execute(interaction) {
@@ -50,20 +50,27 @@ async function handleInteraction(interaction) {
     const title = interaction.fields.getTextInputValue('v2_title');
     const content = interaction.fields.getTextInputValue('v2_content');
 
-    const embed = new EmbedBuilder()
-        .setColor(0x3498DB) // Uma cor azul moderna
-        .setTitle(title)
-        .setDescription(content)
-        .setTimestamp()
-        .setFooter({ text: `Postado por: ${interaction.user.tag}`, iconURL: interaction.user.displayAvatarURL() });
-
     try {
-        await interaction.channel.send({ embeds: [embed] });
+        const container = new ContainerBuilder()
+            .setAccentColor(0x3498DB) // Cor azul moderna na lateral
+            .addTextDisplayComponents(
+                new TextDisplayBuilder().setContent(`**${title}**`),
+                new TextDisplayBuilder().setContent(content)
+            );
+
+        await interaction.channel.send({
+            components: [container],
+            flags: MessageFlags.IsComponentsV2,
+        });
+
         await interaction.editReply({ content: 'Sua mensagem foi postada com sucesso!', ephemeral: true });
+
     } catch (error) {
         console.error("Erro ao postar mensagem V2:", error);
-        await interaction.editReply({ content: 'Ocorreu um erro ao tentar postar sua mensagem.', ephemeral: true });
+        await interaction.editReply({ content: 'Ocorreu um erro ao tentar postar sua mensagem. Verifique se os builders V2 estão corretamente implementados na sua versão do discord.js', ephemeral: true });
     }
 }
 
 export { handleInteraction };
+
+    

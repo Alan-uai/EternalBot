@@ -1,5 +1,5 @@
 // src/commands/utility/updlog.js
-import { SlashCommandBuilder, PermissionsBitField, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, EmbedBuilder } from 'discord.js';
+import { SlashCommandBuilder, PermissionsBitField, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, EmbedBuilder, WebhookClient } from 'discord.js';
 import { initializeFirebase } from '../../firebase/index.js';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { ai } from '../../ai/genkit.js';
@@ -7,6 +7,7 @@ import { ai } from '../../ai/genkit.js';
 const ADMIN_ROLE_ID = '1429318984716521483';
 const UPDLOG_CHANNEL_ID = '1426958336057675857';
 const FIRESTORE_DOC_ID = 'latestUpdateLog';
+const WEBHOOK_NAME = 'Update Log'; // Nome base para o webhook
 
 export const data = new SlashCommandBuilder()
     .setName('updlog')
@@ -47,7 +48,7 @@ export async function execute(interaction) {
     await interaction.showModal(modal);
 }
 
-async function handleInteraction(interaction) {
+async function handleInteraction(interaction, { client }) {
     if (!interaction.isModalSubmit() || interaction.customId !== 'updlog_modal') return;
 
     await interaction.deferReply({ ephemeral: true });
@@ -57,62 +58,88 @@ async function handleInteraction(interaction) {
 
     const { firestore } = initializeFirebase();
     const updlogRef = doc(firestore, 'bot_config', FIRESTORE_DOC_ID);
+    const updlogChannel = await client.channels.fetch(UPDLOG_CHANNEL_ID);
+    if (!updlogChannel) {
+        return interaction.editReply('ERRO: Canal de logs de atualização não encontrado.');
+    }
+    const webhook = await client.getOrCreateWebhook(updlogChannel, WEBHOOK_NAME, client.user.displayAvatarURL());
+    if (!webhook) {
+        return interaction.editReply('ERRO: Não foi possível criar ou encontrar o webhook para os logs.');
+    }
 
     try {
-        // Tradução com Genkit
-        const { text: translatedTitle } = await ai.generate({
-            prompt: `Traduza o seguinte título de log de atualização para Português-BR, mantendo a formatação e os números: "${titleEn}"`,
-        });
-
-        const { text: translatedContent } = await ai.generate({
-            prompt: `Traduza o seguinte log de atualização para Português-BR. Mantenha toda a formatação original do Markdown (títulos, listas com marcadores como •, negrito, etc.), nomes próprios de itens, mundos e códigos. Traduza apenas as descrições e títulos de seção como 'NEW CONTENT', 'FIXES', 'NEW CODES', etc. Texto a ser traduzido:\n\n${contentEn}`,
-        });
-
-
-        const updlogChannel = await interaction.client.channels.fetch(UPDLOG_CHANNEL_ID);
-        if (!updlogChannel) {
-            return interaction.editReply('ERRO: Canal de logs de atualização não encontrado.');
-        }
-
-        // 1. Apagar a mensagem antiga
         const docSnap = await getDoc(updlogRef);
-        if (docSnap.exists()) {
-            const oldMessageId = docSnap.data().messageId;
-            if (oldMessageId) {
-                try {
-                    const oldMessage = await updlogChannel.messages.fetch(oldMessageId);
-                    await oldMessage.delete();
-                } catch (error) {
-                    console.warn(`Não foi possível apagar a mensagem antiga de log (ID: ${oldMessageId}):`, error.message);
-                }
-            }
-        }
-
-        // 2. Enviar a nova mensagem traduzida
-        const embed = new EmbedBuilder()
-            .setColor(0x3498DB)
-            .setTitle(translatedTitle)
-            .setDescription(translatedContent)
+        let messageId = docSnap.exists() ? docSnap.data().messageId : null;
+        
+        const webhookClient = new WebhookClient({ url: webhook.url });
+        
+        // Posta primeiro em inglês como fallback seguro
+        const embedEn = new EmbedBuilder()
+            .setColor(0x808080) // Cinza para indicar "processando"
+            .setTitle(titleEn)
+            .setDescription(contentEn)
             .setTimestamp()
-            .setFooter({ text: `Lançado por: ${interaction.user.tag}` });
+            .setFooter({ text: `Lançado por: ${interaction.user.tag} | Traduzindo...` });
 
-        const newMessage = await updlogChannel.send({ content: '@everyone', embeds: [embed] });
+        let message;
+        if (messageId) {
+             try {
+                message = await webhookClient.editMessage(messageId, { embeds: [embedEn] });
+            } catch(e) {
+                console.warn(`Webhook não pôde editar a mensagem ${messageId}, enviando uma nova.`);
+                message = await webhookClient.send({ username: titleEn, embeds: [embedEn], wait: true });
+            }
+        } else {
+            message = await webhookClient.send({ username: titleEn, embeds: [embedEn], wait: true });
+        }
+        
+        // Salva a referência da mensagem e conteúdo em inglês imediatamente
+        await setDoc(updlogRef, { 
+            title: titleEn, 
+            content: contentEn, 
+            messageId: message.id,
+            webhookUrl: webhook.url
+        }, { merge: true });
 
-        // 3. Salvar a nova referência no Firestore (conteúdo traduzido)
-        await setDoc(updlogRef, {
-            title: translatedTitle,
-            content: translatedContent,
-            messageId: newMessage.id,
-            channelId: newMessage.channel.id,
-            updatedAt: new Date(),
-        });
+        await interaction.editReply('Log de atualização postado em inglês. Iniciando tradução...');
 
-        await interaction.editReply('Log de atualização traduzido, lançado e salvo com sucesso!');
+        // Tenta traduzir e editar a mensagem
+        try {
+            const { text: translatedTitle } = await ai.generate({
+                prompt: `Traduza o seguinte título para Português-BR: "${titleEn}"`,
+            });
+            const { text: translatedContent } = await ai.generate({
+                prompt: `Traduza o seguinte log para Português-BR, mantendo a formatação Markdown: \n\n${contentEn}`,
+            });
+
+            const embedPt = new EmbedBuilder()
+                .setColor(0x3498DB)
+                .setTitle(translatedTitle)
+                .setDescription(translatedContent)
+                .setTimestamp()
+                .setFooter({ text: `Lançado por: ${interaction.user.tag}` });
+            
+            await webhookClient.editMessage(message.id, {
+                username: translatedTitle,
+                embeds: [embedPt]
+            });
+            
+            // Atualiza o Firestore com o conteúdo traduzido
+            await setDoc(updlogRef, { title: translatedTitle, content: translatedContent, updatedAt: new Date() }, { merge: true });
+
+             await interaction.followUp({ content: 'Tradução concluída e mensagem atualizada!', ephemeral: true });
+
+        } catch (translationError) {
+            console.error('Erro na tradução com a IA:', translationError);
+            await interaction.followUp({ content: 'A postagem foi feita em inglês, mas a tradução automática falhou. Verifique os logs da IA.', ephemeral: true });
+        }
 
     } catch (error) {
         console.error('Erro ao processar o /updlog:', error);
-        await interaction.editReply('Ocorreu um erro ao tentar traduzir e lançar o log de atualização.');
+        await interaction.editReply('Ocorreu um erro crítico ao tentar postar o log de atualização.').catch(()=>{});
     }
 }
 
 export { handleInteraction };
+
+    
