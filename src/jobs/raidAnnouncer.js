@@ -3,8 +3,9 @@ import { EmbedBuilder, WebhookClient } from 'discord.js';
 import { lobbyDungeonsArticle } from '../data/wiki-articles/lobby-dungeons.js';
 import { collection, addDoc } from 'firebase/firestore';
 
-let notifiedRaids = new Set();
-const ANNOUNCEMENT_LIFETIME_MS = 2 * 60 * 1000; // Mensagens duram 2 minutos (tempo de portal aberto)
+// Store last notification time for each raid to avoid duplicates
+const lastNotificationTimes = new Map();
+const ANNOUNCEMENT_LIFETIME_MS = 2 * 60 * 1000; // Mensagens duram 2 minutos
 const WEBHOOK_NAME = 'Anunciador de Raids';
 
 async function sendRaidAnnouncement(client, raid) {
@@ -65,28 +66,36 @@ async function sendRaidAnnouncement(client, raid) {
 }
 
 export async function run(container) {
-    const { client } = container;
+    const { client, logger } = container;
     
     const now = new Date();
-    const currentMinute = now.getMinutes();
-    const currentHour = now.getHours();
-
-    // Reset notified raids at the beginning of each hour
-    if (currentMinute === 0) {
-        notifiedRaids.clear();
-    }
+    const currentHour = now.getUTCHours(); // Use UTC for consistency
+    const currentMinute = now.getUTCMinutes();
     
     const raidSchedule = lobbyDungeonsArticle.tables.lobbySchedule.rows;
 
     for (const raid of raidSchedule) {
         const raidMinute = parseInt(raid['Horário'].substring(3, 5), 10);
-        const raidIdentifier = `${currentHour}:${raidMinute}`;
         
-        // Raid start
-        const startId = `${raidIdentifier}-start`;
-        if (currentMinute === raidMinute && !notifiedRaids.has(startId)) {
-            notifiedRaids.add(startId);
-            await sendRaidAnnouncement(client, raid);
+        // Check if the current time matches the raid's start minute
+        if (currentMinute === raidMinute) {
+            const raidIdentifier = `${raid['Dificuldade']}-${currentHour}-${currentMinute}`;
+
+            // Check if we have already notified for this specific raid at this specific time
+            if (!lastNotificationTimes.has(raidIdentifier)) {
+                logger.info(`Raid ${raid['Dificuldade']} está programada para agora. Enviando anúncio.`);
+                await sendRaidAnnouncement(client, raid);
+                // Mark this specific instance as notified
+                lastNotificationTimes.set(raidIdentifier, now.getTime());
+            }
+        }
+    }
+
+    // Cleanup old entries from the map to prevent memory leaks
+    const oneHourAgo = now.getTime() - (60 * 60 * 1000);
+    for (const [key, timestamp] of lastNotificationTimes.entries()) {
+        if (timestamp < oneHourAgo) {
+            lastNotificationTimes.delete(key);
         }
     }
 }
