@@ -164,7 +164,7 @@ export async function run(container) {
             const channel = await client.channels.fetch(config.RAID_CHANNEL_ID);
             // Deleta mensagens antigas do bot para evitar duplicatas antes de criar uma nova
             const oldMessages = await channel.messages.fetch({ limit: 10 });
-            const oldBotPanel = oldMessages.find(m => m.author.id === client.user.id && m.embeds[0]?.title === 'Painel de Status das Raids do Lobby');
+            const oldBotPanel = oldMessages.find(m => m.webhookId === webhook.id && m.embeds[0]?.title === 'Painel de Status das Raids do Lobby');
             if (oldBotPanel) await oldBotPanel.delete().catch(() => {});
 
             const sentMessage = await webhookClient.send({
@@ -176,8 +176,12 @@ export async function run(container) {
             messageId = sentMessage.id;
             
             // Tenta fixar a nova mensagem com a conta do bot
-            const newMessage = await channel.messages.fetch(messageId);
-            await newMessage.pin().catch(err => logger.error("Não foi possível fixar a nova mensagem do painel de raid.", err));
+            try {
+                const newMessage = await channel.messages.fetch(messageId);
+                await newMessage.pin().catch(err => logger.error("Não foi possível fixar a nova mensagem do painel de raid.", err));
+            } catch(pinError) {
+                 logger.error("Erro ao buscar ou fixar a mensagem do painel.", pinError);
+            }
             
             // Salva o ID da nova mensagem no Firestore
             const panelDocRef = doc(firestore, 'bot_config', PANEL_DOC_ID);

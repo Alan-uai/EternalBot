@@ -40,6 +40,7 @@ export async function execute(interaction) {
 
         const userId = response.data.data[0].id;
         const webProfileUrl = `https://www.roblox.com/users/${userId}/profile`;
+        const appRedirectUrl = `https://eternalbot-o0ct.onrender.com/roblox/${userId}`; // URL do nosso webservice
 
         const row = new ActionRowBuilder()
             .addComponents(
@@ -47,11 +48,16 @@ export async function execute(interaction) {
                     .setLabel('Ver Perfil (Web)')
                     .setStyle(ButtonStyle.Link)
                     .setURL(webProfileUrl)
-                    .setEmoji('🌐')
+                    .setEmoji('🌐'),
+                new ButtonBuilder()
+                    .setLabel('Abrir no App')
+                    .setStyle(ButtonStyle.Link)
+                    .setURL(appRedirectUrl)
+                    .setEmoji('📱')
             );
 
         await interaction.editReply({
-            content: `Clique no botão abaixo para abrir o perfil de **${robloxUsername}** no navegador:`,
+            content: `Clique nos botões abaixo para abrir o perfil de **${robloxUsername}**:`,
             components: [row]
         });
 
