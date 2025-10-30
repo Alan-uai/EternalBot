@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import http from 'node:http';
 import { fileURLToPath } from 'node:url';
-import { Client, Collection, Events, GatewayIntentBits, REST, Routes, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, AttachmentBuilder } from 'discord.js';
+import { Client, Collection, Events, GatewayIntentBits, REST, Routes, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, AttachmentBuilder, WebhookClient } from 'discord.js';
 import { initializeFirebase } from './firebase/index.js';
 import { loadKnowledgeBase } from './knowledge-base.js';
 import { doc, getDoc, setDoc, serverTimestamp, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
@@ -195,6 +195,29 @@ async function checkBirthdays() {
     }
 }
 // ------------------------
+
+// Função para encontrar ou criar um webhook reutilizável
+async function getOrCreateWebhook(channel, webhookName) {
+    if (!channel || channel.type !== ChannelType.GuildText) return null;
+    const webhooks = await channel.fetchWebhooks().catch(() => new Collection());
+    let webhook = webhooks.find(wh => wh.name === webhookName);
+
+    if (!webhook) {
+        try {
+            webhook = await channel.createWebhook({
+                name: webhookName,
+                avatar: client.user.displayAvatarURL(),
+                reason: `Webhook para o bot Guia Eterno (${webhookName})`
+            });
+            console.log(`Webhook '${webhookName}' criado no canal ${channel.name}.`);
+        } catch (error) {
+            console.error(`Erro ao criar o webhook '${webhookName}':`, error);
+            return null;
+        }
+    }
+    return webhook;
+}
+client.getOrCreateWebhook = getOrCreateWebhook; // Anexa a função ao cliente para fácil acesso
 
 // Evento de Ready
 client.once(Events.ClientReady, async (readyClient) => {
