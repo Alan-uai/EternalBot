@@ -5,9 +5,7 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { ai } from '../../ai/genkit.js';
 
 const ADMIN_ROLE_ID = '1429318984716521483';
-const UPDLOG_CHANNEL_ID = '1426958336057675857';
-const FIRESTORE_DOC_ID = 'latestUpdateLog';
-const WEBHOOK_NAME = 'Update Log'; // Nome base para o webhook
+const FIRESTORE_DOC_ID = 'updlog';
 
 export const data = new SlashCommandBuilder()
     .setName('updlog')
@@ -55,23 +53,22 @@ async function handleInteraction(interaction, { client }) {
 
     const titleEn = interaction.fields.getTextInputValue('updlog_title');
     const contentEn = interaction.fields.getTextInputValue('updlog_content');
+    const { logger } = client.container;
 
     const { firestore } = initializeFirebase();
     const updlogRef = doc(firestore, 'bot_config', FIRESTORE_DOC_ID);
-    const updlogChannel = await client.channels.fetch(UPDLOG_CHANNEL_ID);
-    if (!updlogChannel) {
-        return interaction.editReply('ERRO: Canal de logs de atualização não encontrado.');
-    }
-    const webhook = await client.getOrCreateWebhook(updlogChannel, WEBHOOK_NAME, client.user.displayAvatarURL());
-    if (!webhook) {
-        return interaction.editReply('ERRO: Não foi possível criar ou encontrar o webhook para os logs.');
-    }
-
+    
     try {
         const docSnap = await getDoc(updlogRef);
-        let messageId = docSnap.exists() ? docSnap.data().messageId : null;
-        
-        const webhookClient = new WebhookClient({ url: webhook.url });
+        const webhookData = docSnap.exists() ? docSnap.data() : {};
+
+        if (!webhookData.webhookUrl) {
+            logger.error(`[updlog] URL do webhook '${FIRESTORE_DOC_ID}' não encontrada no Firestore.`);
+            return interaction.editReply('ERRO: A URL do webhook para este comando não foi encontrada. O bot pode precisar ser reiniciado.');
+        }
+
+        let messageId = webhookData.messageId;
+        const webhookClient = new WebhookClient({ url: webhookData.webhookUrl });
         
         // Posta primeiro em inglês como fallback seguro
         const embedEn = new EmbedBuilder()
@@ -86,7 +83,7 @@ async function handleInteraction(interaction, { client }) {
              try {
                 message = await webhookClient.editMessage(messageId, { embeds: [embedEn] });
             } catch(e) {
-                console.warn(`Webhook não pôde editar a mensagem ${messageId}, enviando uma nova.`);
+                logger.warn(`[updlog] Webhook não pôde editar a mensagem ${messageId}, enviando uma nova.`);
                 message = await webhookClient.send({ username: titleEn, embeds: [embedEn], wait: true });
             }
         } else {
@@ -98,7 +95,6 @@ async function handleInteraction(interaction, { client }) {
             title: titleEn, 
             content: contentEn, 
             messageId: message.id,
-            webhookUrl: webhook.url
         }, { merge: true });
 
         await interaction.editReply('Log de atualização postado em inglês. Iniciando tradução...');
@@ -130,12 +126,12 @@ async function handleInteraction(interaction, { client }) {
              await interaction.followUp({ content: 'Tradução concluída e mensagem atualizada!', ephemeral: true });
 
         } catch (translationError) {
-            console.error('Erro na tradução com a IA:', translationError);
+            logger.error('Erro na tradução com a IA:', translationError);
             await interaction.followUp({ content: 'A postagem foi feita em inglês, mas a tradução automática falhou. Verifique os logs da IA.', ephemeral: true });
         }
 
     } catch (error) {
-        console.error('Erro ao processar o /updlog:', error);
+        logger.error('Erro ao processar o /updlog:', error);
         await interaction.editReply('Ocorreu um erro crítico ao tentar postar o log de atualização.').catch(()=>{});
     }
 }
