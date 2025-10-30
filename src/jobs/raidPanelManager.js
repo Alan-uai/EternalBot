@@ -9,8 +9,7 @@ const PORTAL_OPEN_DURATION_SECONDS = 2 * 60; // 2 minutos
 function getRaidStatus(container) {
     const { client, logger, services } = container;
     const { firebase } = services;
-    const { assetService } = firebase;
-
+    
     const now = new Date();
     const currentMinute = now.getUTCMinutes();
     const currentSecond = now.getUTCSeconds();
@@ -42,8 +41,8 @@ function getRaidStatus(container) {
     }
     
     // Adiciona o GIF da próxima raid no topo, se existir
-    if (nextRaidForGif && assetService) {
-        const gifUrl = assetService.getAsset(`${nextRaidForGif['Dificuldade']}PR`);
+    if (nextRaidForGif && firebase && firebase.assetService) {
+        const gifUrl = firebase.assetService.getAsset(`${nextRaidForGif['Dificuldade']}PR`);
         if (gifUrl) {
             statuses.push({ name: '\u200B', value: gifUrl, inline: false });
         }
@@ -80,17 +79,13 @@ function getRaidStatus(container) {
             'Easy': '🟢', 'Medium': '🟡', 'Hard': '🔴', 'Insane': '⚔️', 'Crazy': '🔥', 'Nightmare': '💀', 'Leaf Raid (1800)': '🌿'
         };
         
-        const separator = statuses.length > 0 && !statuses[statuses.length -1].value.includes('https://') ? '---------------------\n' : '';
+        const separator = statuses.length > 1 && !statuses[statuses.length - 1].value.includes('https://') ? '---------------------\n' : '';
 
         statuses.push({
             name: `${separator}${raidEmojis[raid['Dificuldade']] || '⚔️'} ${raid['Dificuldade']}`,
             value: `${statusText}\n${details}`,
-            inline: true, 
+            inline: false, 
         });
-        
-        // Adiciona campos vazios para manter o alinhamento de 3 colunas
-        statuses.push({ name: '\u200B', value: '\u200B', inline: true });
-        statuses.push({ name: '\u200B', value: '\u200B', inline: true });
     }
     
     return statuses;
@@ -107,7 +102,7 @@ export async function run(container) {
         logger.error('[raidPanelManager] Serviço Firestore não está inicializado.');
         return;
     }
-    const { firestore, assetService } = firebase;
+    const { firestore } = firebase;
 
     try {
         const panelWebhookDocRef = doc(firestore, 'bot_config', PANEL_DOC_ID);
@@ -125,7 +120,7 @@ export async function run(container) {
 
         const statuses = getRaidStatus(container);
         
-        const avatarUrl = assetService ? assetService.getAsset('DungeonLobby') : client.user.displayAvatarURL();
+        const avatarUrl = firebase.assetService ? firebase.assetService.getAsset('DungeonLobby') : client.user.displayAvatarURL();
 
         const embed = new EmbedBuilder()
             .setColor(0x2F3136)
