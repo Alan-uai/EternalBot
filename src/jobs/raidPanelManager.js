@@ -20,6 +20,33 @@ function getRaidStatus(assetService) {
     const statuses = [];
     
     let nextRaidFound = false;
+    let nextRaidForGif = null;
+    let minTimeDiff = Infinity;
+
+    // Primeiro, encontra qual é a próxima raid
+    for (const raid of raids) {
+        const raidStartMinute = parseInt(raid['Horário'].substring(3, 5), 10);
+        let raidStartTime = new Date(now);
+        raidStartTime.setUTCMinutes(raidStartMinute, 0, 0);
+        if (raidStartTime < now) {
+            raidStartTime.setUTCHours(raidStartTime.getUTCHours() + 1);
+        }
+        const timeDiff = raidStartTime.getTime() - now.getTime();
+        if (timeDiff >= 0 && timeDiff < minTimeDiff) {
+            minTimeDiff = timeDiff;
+            nextRaidForGif = raid;
+        }
+    }
+    
+    // Adiciona o GIF da próxima raid no topo
+    if (nextRaidForGif) {
+        const gifUrl = assetService.getAsset(`${nextRaidForGif['Dificuldade']}PR`);
+        if (gifUrl) {
+            statuses.push({ name: `⏳ Próxima Raid: ${nextRaidForGif['Dificuldade']}`, value: gifUrl, inline: false });
+            statuses.push({ name: '\u200B', value: '\u200B' }); // Separador
+        }
+    }
+
 
     for (const raid of raids) {
         const raidStartMinute = parseInt(raid['Horário'].substring(3, 5), 10);
@@ -27,8 +54,8 @@ function getRaidStatus(assetService) {
         const portalCloseSecondInHour = raidStartSecondInHour + PORTAL_OPEN_DURATION_SECONDS;
         
         let secondsUntilOpen = raidStartSecondInHour - totalSecondsInHour;
-        if (secondsUntilOpen < -PORTAL_OPEN_DURATION_SECONDS) { // Se já passou há muito tempo na hora atual
-             secondsUntilOpen += 3600; // Adiciona uma hora
+        if (secondsUntilOpen < -PORTAL_OPEN_DURATION_SECONDS) {
+             secondsUntilOpen += 3600; 
         }
 
         let statusText, details;
@@ -42,13 +69,6 @@ function getRaidStatus(assetService) {
             details = `Fecha em: \`${closeMinutes}m ${closeSeconds.toString().padStart(2, '0')}s\``;
         } else {
             statusText = '❌ Fechada';
-            
-            if (secondsUntilOpen >= 0 && !nextRaidFound) {
-                 const gifUrl = assetService.getAsset(`${raid['Dificuldade']}PR`);
-                 statuses.push({ name: `⏳ Próxima Raid: ${raid['Dificuldade']}`, value: gifUrl, inline: false });
-                 nextRaidFound = true;
-            }
-
             const minutesPart = Math.floor(secondsUntilOpen / 60);
             const secondsPart = secondsUntilOpen % 60;
             details = `Abre em: \`${minutesPart}m ${secondsPart.toString().padStart(2, '0')}s\``;
@@ -66,7 +86,6 @@ function getRaidStatus(assetService) {
         statuses.push({ name: '\u200B', value: '\u200B', inline: true }); // Separador
     }
     
-    // Remove o último separador
     if (statuses.length > 0 && statuses[statuses.length - 1].name === '\u200B') {
         statuses.pop();
     }
@@ -121,7 +140,6 @@ export async function run(container) {
                     embeds: [embed],
                     wait: true
                 });
-                // Atualiza o doc com o novo ID
                 await setDoc(panelWebhookDocRef, { messageId: sentMessage.id }, { merge: true });
             }
         } else {

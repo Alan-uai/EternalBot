@@ -3,38 +3,35 @@
 export class AssetService {
     constructor(config) {
         this.baseUrl = config.CLOUDINARY_URL;
+        // O BotAvatar é o único que não tem um padrão dinâmico
         this.assets = {
-            // Próxima Raid (PR)
-            'EasyPR': `${this.baseUrl}/EasyPR.gif`,
-            'MediumPR': `${this.baseUrl}/MediumPR.gif`,
-            'HardPR': `${this.baseUrl}/HardPR.gif`,
-            'InsanePR': `${this 'baseUrl}/InsanePR.gif`,
-            'CrazyPR': `${this.baseUrl}/CrazyPR.gif`,
-            'NightmarePR': `${this.baseUrl}/NightmarePR.gif`,
-            'Leaf Raid (1800)PR': `${this.baseUrl}/LeafPR.gif`,
-            // 5 Minutos para Raid
-            'Easy5m': `${this.baseUrl}/Easy5m.gif`,
-            'Medium5m': `${this.baseUrl}/Medium5m.gif`,
-            'Hard5m': `${this.baseUrl}/Hard5m.gif`,
-            'Insane5m': `${this.baseUrl}/Insane5m.gif`,
-            'Crazy5m': `${this.baseUrl}/Crazy5m.gif`,
-            'Nightmare5m': `${this.baseUrl}/Nightmare5m.gif`,
-            'Leaf Raid (1800)5m': `${this.baseUrl}/Leaf5m.gif`,
-            // Raid Aberta
-            'EasyOpen': `${this.baseUrl}/EasyOpen.gif`,
-            'MediumOpen': `${this.baseUrl}/MediumOpen.gif`,
-            'HardOpen': `${this.baseUrl}/HardOpen.gif`,
-            'InsaneOpen': `${this.baseUrl}/InsaneOpen.gif`,
-            'CrazyOpen': `${this.baseUrl}/CrazyOpen.gif`,
-            'NightmareOpen': `${this.baseUrl}/NightmareOpen.gif`,
-            'Leaf Raid (1800)Open': `${this.baseUrl}/LeafOpen.gif`,
-            // Outros
-            'Closing': `${this.baseUrl}/Closing.gif`,
             'BotAvatar': `${this.baseUrl}/BotAvatar.png`,
         };
     }
 
+    /**
+     * Retorna a URL completa para um asset.
+     * Para assets de raid, o ID é construído dinamicamente.
+     * @param {string} assetId O ID do asset (ex: 'EasyA', 'Hard5m', 'BotAvatar')
+     * @returns {string|null} A URL completa do asset ou null se não for um asset válido.
+     */
     getAsset(assetId) {
-        return this.assets[assetId] || null;
+        if (this.assets[assetId]) {
+            return this.assets[assetId];
+        }
+
+        // Para assets dinâmicos de raid como 'EasyA', 'Hard5m', etc.
+        // O assetId é o próprio nome do arquivo (sem extensão)
+        const validSuffixes = ['PR', '5m', 'A', 'F'];
+        const suffix = validSuffixes.find(s => assetId.endsWith(s));
+
+        if (suffix) {
+             // Assumimos que a maioria são GIFs, exceto o avatar
+            const extension = 'gif';
+            return `${this.baseUrl}/${assetId}.${extension}`;
+        }
+        
+        // Retorna null se não encontrar um padrão válido
+        return null;
     }
 }
