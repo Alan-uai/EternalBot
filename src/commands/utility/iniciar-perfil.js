@@ -171,6 +171,14 @@ async function handleOpenFormButton(interaction) {
         .setValue(userData.dps || '')
         .setRequired(true);
 
+    const birthdayInput = new TextInputBuilder()
+        .setCustomId('birthday')
+        .setLabel("Aniversário (DD/MM)")
+        .setPlaceholder("Ex: 25/12. Opcional.")
+        .setStyle(TextInputStyle.Short)
+        .setValue(userData.birthday ? userData.birthday.split('-').reverse().join('/') : '')
+        .setRequired(false);
+
     const energyInput = new TextInputBuilder()
         .setCustomId('totalEnergy')
         .setLabel("Energia Atual (Acumulada)")
@@ -179,20 +187,12 @@ async function handleOpenFormButton(interaction) {
         .setValue(userData.totalEnergy || '')
         .setRequired(true);
 
-    const energyPerClickInput = new TextInputBuilder()
-        .setCustomId('energyPerClick')
-        .setLabel("Ganho de Energia (por clique)")
-        .setPlaceholder("Ex: 87.04O")
-        .setStyle(TextInputStyle.Short)
-        .setValue(userData.energyPerClick || '')
-        .setRequired(true);
-
     modal.addComponents(
         new ActionRowBuilder().addComponents(worldInput),
         new ActionRowBuilder().addComponents(rankInput),
         new ActionRowBuilder().addComponents(dpsInput),
         new ActionRowBuilder().addComponents(energyInput),
-        new ActionRowBuilder().addComponents(energyPerClickInput)
+        new ActionRowBuilder().addComponents(birthdayInput)
     );
 
     await interaction.showModal(modal);
@@ -210,9 +210,24 @@ async function handleFormSubmit(interaction) {
         rank: interaction.fields.getTextInputValue('rank'),
         dps: interaction.fields.getTextInputValue('dps'),
         totalEnergy: interaction.fields.getTextInputValue('totalEnergy'),
-        energyPerClick: interaction.fields.getTextInputValue('energyPerClick'),
         lastUpdated: serverTimestamp()
     };
+
+    const birthdayValue = interaction.fields.getTextInputValue('birthday');
+    if (birthdayValue) {
+        const parts = birthdayValue.split(/[-/]/);
+        if (parts.length === 2) {
+            const [dia, mes] = parts;
+            const date = new Date(2000, mes - 1, dia);
+             if (date.getMonth() === parseInt(mes, 10) - 1 && date.getDate() === parseInt(dia, 10)) {
+                profileData.birthday = `${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`; // MM-DD
+             } else {
+                 return interaction.editReply('A data de aniversário fornecida é inválida. Use o formato DD/MM.');
+             }
+        } else if (birthdayValue.trim() !== '') {
+            return interaction.editReply('Formato de data de aniversário inválido. Use DD/MM.');
+        }
+    }
     
     const userSnap = await getDoc(userRef);
     if (userSnap.exists()) {
@@ -421,5 +436,3 @@ export async function createInventoryThreads(channel, userData, discordUser) {
 }
 
 export { handleInteraction };
-
-    

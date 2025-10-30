@@ -31,6 +31,7 @@ export async function execute(interaction) {
     const userData = userSnap.data();
 
     const creationDate = userData.createdAt?.toDate ? userData.createdAt.toDate().toLocaleDateString('pt-BR') : 'Data não registrada';
+    const birthday = userData.birthday ? userData.birthday.split('-').reverse().join('/') : 'Não informado';
 
     const embed = new EmbedBuilder()
       .setColor(0x4BC5FF)
@@ -39,14 +40,13 @@ export async function execute(interaction) {
       .addFields(
         { name: 'Reputação', value: `\`${userData.reputationPoints || 0}\``, inline: true },
         { name: 'Créditos', value: `\`${userData.credits || 0}\``, inline: true },
-        { name: 'Membro Desde', value: creationDate, inline: true },
-        { name: '\u200B', value: '\u200B' }, // Linha em branco para espaçamento
+        { name: 'Aniversário', value: `\`${birthday}\``, inline: true },
         { name: 'Mundo Atual', value: `\`${userData.currentWorld || 'N/D'}\``, inline: true },
         { name: 'Rank', value: `\`${userData.rank || 'N/D'}\``, inline: true },
+        { name: 'Membro Desde', value: creationDate, inline: true },
         { name: '\u200B', value: '\u200B' }, // Linha em branco para espaçamento
         { name: 'Dano Total (DPS)', value: `\`${userData.dps || 'N/D'}\``, inline: false },
         { name: 'Energia Atual (Acumulada)', value: `\`${userData.totalEnergy || 'N/D'}\``, inline: false },
-        { name: 'Ganho de Energia (por clique)', value: `\`${userData.energyPerClick || 'N/D'}\``, inline: false },
       )
       .setTimestamp()
       .setFooter({ text: `ID do Usuário: ${targetUser.id}` });
