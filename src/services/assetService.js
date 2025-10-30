@@ -9,6 +9,7 @@ export class AssetService {
     constructor(config, firestore) {
         this.baseUrl = config.CLOUDINARY_URL || '';
         this.firestore = firestore;
+        // Mapeia IDs de assets para nomes de arquivo, caso sejam diferentes.
         this.assets = {
             'BotAvatar': 'BotAvatar',
             'DungeonLobby': 'DungeonLobby',
@@ -21,14 +22,15 @@ export class AssetService {
 
     /**
      * Gera a URL completa de um asset (sem acessar o Firestore).
-     * @param {string} assetId O ID do asset (ex: 'EasyA', 'Hard5m').
+     * @param {string} assetId O ID público do asset (ex: 'EasyA', 'BotAvatar').
      * @returns {string|null} A URL completa ou null se inválido.
      */
     generateAssetUrl(assetId) {
         if (!assetId || !this.isBaseUrlValid()) return null;
-        // O assetId já é o nome final do arquivo no Cloudinary (ex: 'EasyA', 'BotAvatar')
-        // A extensão é gerenciada pelo próprio Cloudinary na entrega.
-        return `${this.baseUrl}/${assetId}`;
+        
+        // Constrói a URL usando a pasta 'Home' conforme a estrutura do Cloudinary.
+        // Cloudinary trata a extensão automaticamente com base nas transformações ou no formato original.
+        return `${this.baseUrl}/Home/${assetId}`;
     }
 
     /**
@@ -51,6 +53,7 @@ export class AssetService {
 
             const generatedUrl = this.generateAssetUrl(assetId);
             if (!generatedUrl) {
+                console.error(`[AssetService] Não foi possível gerar uma URL válida para o assetId: ${assetId}`);
                 return null;
             }
 
@@ -69,5 +72,3 @@ export class AssetService {
         }
     }
 }
-
-    
