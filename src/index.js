@@ -119,7 +119,7 @@ http.createServer((req, res) => {
     // Rota para redirecionamento do Roblox
     if (pathParts[0] === 'roblox' && pathParts[1]) {
         const userId = encodeURIComponent(pathParts[1]);
-        const appDeep = `roblox://users/${userId}/profile`;
+        const appDeep = `roblox://navigation/profile?userId=${userId}`;
         const webUrl = `https://www.roblox.com/users/${userId}/profile`;
         const androidIntent = `intent://users/${userId}/profile#Intent;package=com.roblox.client;scheme=roblox;end`;
 

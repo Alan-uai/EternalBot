@@ -7,9 +7,6 @@ let notifiedRaids = new Set();
 const ANNOUNCEMENT_LIFETIME_MS = 2 * 60 * 1000; // Mensagens duram 2 minutos (tempo de portal aberto)
 const WEBHOOK_NAME = 'Anunciador de Raids';
 
-export const name = 'raidAnnouncer';
-export const intervalMs = 60000; // A cada 60 segundos
-
 async function sendRaidAnnouncement(client, raid) {
     const { config, logger, services } = client.container;
     const { firestore } = services.firebase;
@@ -52,7 +49,6 @@ async function sendRaidAnnouncement(client, raid) {
             wait: true
         });
 
-        // Salva a informação da mensagem no Firestore para limpeza futura
         const announcementsRef = collection(firestore, 'bot_config/raid_announcements/messages');
         await addDoc(announcementsRef, {
             messageId: sentMessage.id,
