@@ -7,6 +7,32 @@ const lastNotificationTimes = new Map();
 const ANNOUNCEMENT_LIFETIME_MS = 2 * 60 * 1000;
 const WEBHOOK_NAME = 'Anunciador de Raids';
 
+async function getOrCreateWebhook(channel, webhookName, client) {
+    const { logger } = client.container;
+    if (!channel || channel.type !== ChannelType.GuildText) {
+        logger.error(`[getOrCreateWebhook] Canal fornecido é inválido ou não é de texto.`);
+        return null;
+    }
+    try {
+        const webhooks = await channel.fetchWebhooks();
+        let webhook = webhooks.find(wh => wh.name === webhookName && wh.owner.id === client.user.id);
+
+        if (!webhook) {
+            webhook = await channel.createWebhook({
+                name: webhookName,
+                avatar: client.user.displayAvatarURL(),
+                reason: `Webhook para ${webhookName}`,
+            });
+            logger.info(`[getOrCreateWebhook] Webhook '${webhookName}' criado no canal #${channel.name}.`);
+        }
+        return webhook;
+    } catch (error) {
+        logger.error(`[getOrCreateWebhook] Falha ao criar ou obter o webhook '${webhookName}' no canal #${channel.name}:`, error);
+        return null;
+    }
+}
+
+
 async function sendRaidAnnouncement(container, raid) {
     const { client, config, logger, services } = container;
     const { firestore } = services.firebase;
@@ -16,14 +42,14 @@ async function sendRaidAnnouncement(container, raid) {
         return null;
     });
 
-    if (!raidChannel || raidChannel.type !== ChannelType.GuildText) {
-        logger.error(`[raidAnnouncer] Canal de raid configurado é inválido ou não é um canal de texto.`);
+    if (!raidChannel) {
+        logger.error(`[raidAnnouncer] Canal de raid configurado é inválido ou não foi encontrado.`);
         return;
     }
     
-    const webhook = await client.getOrCreateWebhook(raidChannel, WEBHOOK_NAME, client.user.displayAvatarURL());
+    const webhook = await getOrCreateWebhook(raidChannel, WEBHOOK_NAME, client);
     if (!webhook) {
-        logger.error(`[raidAnnouncer] Falha ao criar ou obter webhook para o canal #${raidChannel.name}.`);
+        logger.error(`[raidAnnouncer] Falha ao criar ou obter webhook para o canal #${raidChannel.name}. O anúncio não será enviado.`);
         return;
     }
 

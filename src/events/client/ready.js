@@ -23,10 +23,11 @@ async function cleanupExpiredRaidMessages(client) {
         let deletedCount = 0;
 
         for (const messageDoc of querySnapshot.docs) {
-            const { webhookUrl, messageId, channelId } = messageDoc.data();
+            const { webhookUrl, messageId } = messageDoc.data();
 
+            // Pula se a entrada não tiver os dados necessários, apenas limpa do DB
             if (!webhookUrl || !messageId) {
-                batch.delete(messageDoc.ref); // Clean up invalid entries
+                batch.delete(messageDoc.ref);
                 continue;
             }
 
@@ -40,14 +41,15 @@ async function cleanupExpiredRaidMessages(client) {
                 logger.info(`Mensagem de raid expirada (${messageId}) deletada com sucesso.`);
                 deletedCount++;
             } catch (error) {
-                // Se a mensagem não existe mais no Discord, apenas removemos do Firestore.
+                // Se a mensagem não existe mais no Discord (código 10008), apenas removemos do Firestore.
                 if (error.code === 10008) {
                     logger.warn(`Mensagem de raid (${messageId}) não encontrada no Discord. Provavelmente já foi deletada.`);
                 } else {
                     logger.error(`Falha ao deletar mensagem de raid expirada (${messageId}):`, error.message);
                 }
             } finally {
-                batch.delete(messageDoc.ref); // Sempre remove da DB após a tentativa
+                // Sempre remove da DB após a tentativa para não tentar novamente
+                batch.delete(messageDoc.ref);
             }
         }
 

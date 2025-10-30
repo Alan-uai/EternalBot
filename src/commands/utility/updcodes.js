@@ -8,6 +8,31 @@ const CODES_CHANNEL_ID = '1429346813919494214';
 const FIRESTORE_DOC_ID = 'gameCodes';
 const WEBHOOK_NAME = 'Códigos Ativos do Jogo'; // Nome fixo para o webhook
 
+async function getOrCreateWebhook(channel, webhookName, client) {
+    const { logger } = client.container;
+    if (!channel || channel.type !== ChannelType.GuildText) {
+        logger.error(`[updcodes/getOrCreateWebhook] Canal fornecido é inválido ou não é de texto.`);
+        return null;
+    }
+    try {
+        const webhooks = await channel.fetchWebhooks();
+        let webhook = webhooks.find(wh => wh.name === webhookName && wh.owner.id === client.user.id);
+
+        if (!webhook) {
+            webhook = await channel.createWebhook({
+                name: webhookName,
+                avatar: client.user.displayAvatarURL(),
+                reason: `Webhook para ${webhookName}`,
+            });
+            logger.info(`[updcodes/getOrCreateWebhook] Webhook '${webhookName}' criado no canal #${channel.name}.`);
+        }
+        return webhook;
+    } catch (error) {
+        logger.error(`[updcodes/getOrCreateWebhook] Falha ao criar ou obter o webhook '${webhookName}' no canal #${channel.name}:`, error);
+        return null;
+    }
+}
+
 export const data = new SlashCommandBuilder()
     .setName('updcodes')
     .setDescription('Adiciona ou remove códigos do jogo.')
@@ -50,7 +75,7 @@ export async function execute(interaction) {
             return interaction.editReply('ERRO: Canal de códigos não encontrado ou não é um canal de texto.');
         }
 
-        const webhook = await client.getOrCreateWebhook(codesChannel, WEBHOOK_NAME, client.user.displayAvatarURL());
+        const webhook = await getOrCreateWebhook(codesChannel, WEBHOOK_NAME, client);
         if (!webhook) {
             return interaction.editReply('ERRO: Não foi possível criar ou encontrar o webhook para os códigos.');
         }

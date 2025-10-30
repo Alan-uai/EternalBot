@@ -12,7 +12,6 @@ import { loadEvents } from './loaders/eventLoader.js';
 import { loadInteractions } from './loaders/interactionLoader.js';
 import { loadJobs } from './loaders/jobLoader.js';
 import { loadServices } from './loaders/serviceLoader.js';
-// A inicialização de webhooks agora é feita sob demanda, não mais centralizada na inicialização.
 
 async function start() {
     const logger = createLogger(process.env.NODE_ENV === 'development' ? 'debug' : 'info');
@@ -46,38 +45,6 @@ async function start() {
     
     // Anexa o container ao cliente para fácil acesso
     client.container = container;
-
-    /**
-     * Função getOrCreateWebhook agora centralizada no cliente.
-     * Busca ou cria um webhook para um canal específico.
-     * @param {TextChannel} channel - O objeto do canal de texto.
-     * @param {string} webhookName - O nome desejado para o webhook.
-     * @param {string} avatarURL - A URL do avatar para o webhook.
-     * @returns {Promise<WebhookClient|null>}
-     */
-    client.getOrCreateWebhook = async (channel, webhookName, avatarURL) => {
-        if (!channel || channel.type !== ChannelType.GuildText) {
-             logger.error(`Tentativa de obter webhook em um canal inválido: ${channel?.name || 'desconhecido'}`);
-             return null;
-        }
-        try {
-            const webhooks = await channel.fetchWebhooks();
-            let webhook = webhooks.find(wh => wh.name === webhookName && wh.owner.id === client.user.id);
-
-            if (!webhook) {
-                webhook = await channel.createWebhook({
-                    name: webhookName,
-                    avatar: avatarURL,
-                    reason: `Webhook necessário para ${webhookName}`,
-                });
-                logger.info(`Webhook '${webhookName}' criado no canal #${channel.name}.`);
-            }
-            return webhook;
-        } catch (error) {
-            logger.error(`Não foi possível criar ou obter o webhook '${webhookName}' no canal #${channel.name}:`, error);
-            return null;
-        }
-    };
     
     try {
         logger.info('Inicializando serviços...');
