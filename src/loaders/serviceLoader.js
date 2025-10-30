@@ -2,7 +2,6 @@
 import { initializeFirebase } from '../firebase/index.js';
 import { loadKnowledgeBase } from '../knowledge-base.js';
 import { AssetService } from '../services/assetService.js';
-import { v2 as cloudinary } from 'cloudinary';
 
 export async function loadServices(container) {
     const { logger, services, config } = container;
@@ -31,20 +30,13 @@ export async function loadServices(container) {
     
     // Asset Service
     try {
-        // Configura o Cloudinary aqui, pois só é necessário durante a inicialização dos serviços.
-        if (process.env.CLOUDINARY_URL) {
-            cloudinary.config({ secure: true });
-        } else {
-             logger.warn('[AssetService] A variável de ambiente CLOUDINARY_URL não está configurada. A sincronização de assets não será executada.');
-        }
-
-        const assetService = new AssetService(config, services.firebase.firestore, cloudinary.api, logger);
-        await assetService.initialize(); // Sincroniza e carrega os IDs dos assets
+        const assetService = new AssetService(config, services.firebase.firestore, logger);
+        await assetService.initialize(); // Dispara a sincronização
         services.assetService = assetService;
-        services.firebase.assetService = assetService; // Mantém a referência antiga por compatibilidade
-        logger.info('Serviço de Assets inicializado e sincronizado.');
+        services.firebase.assetService = assetService;
+        logger.info('Serviço de Assets inicializado.');
     } catch (error) {
         logger.error('Falha ao inicializar o serviço de Assets:', error);
-        throw error;
+        // Não relança o erro para permitir que o bot funcione sem assets visuais
     }
 }

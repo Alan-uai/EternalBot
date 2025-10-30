@@ -33,8 +33,8 @@ async function getOrCreateWebhook(channel, name, logger, assetService) {
 
 async function handleRaidLifecycle(container) {
     const { client, config, logger, services } = container;
-    const { firebase } = services;
-    const { firestore, assetService } = firebase;
+    const { firebase, assetService } = services;
+    const { firestore } = firebase;
 
     const now = new Date();
     const raids = lobbyDungeonsArticle.tables.lobbySchedule.rows;
@@ -171,7 +171,7 @@ async function handleRaidLifecycle(container) {
                      const webhook = new WebhookClient({ url: announcerState.webhookUrl });
                      await webhook.deleteMessage(announcerState.messageId).catch(()=>{});
                 }
-                await updateDoc(announcerRef, { state: 'finished', raidId: null, messageId: null });
+                await updateDoc(announcerRef, { state: 'finished', raidId: null, messageId: null, webhookUrl: announcerState.webhookUrl });
              }
         }
 
@@ -188,5 +188,3 @@ export const ANNOUNCEMENT_LIFETIME_MS = 2 * 60 * 1000;
 export async function run(container) {
     await handleRaidLifecycle(container);
 }
-
-    

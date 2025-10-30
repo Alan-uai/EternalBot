@@ -8,8 +8,7 @@ const PORTAL_OPEN_DURATION_SECONDS = 2 * 60; // 2 minutos
 
 async function getRaidStatus(container) {
     const { logger, services } = container;
-    const { firebase } = services;
-    const { assetService } = firebase;
+    const { assetService } = services;
     
     const now = new Date();
     const currentMinute = now.getUTCMinutes();
@@ -97,13 +96,13 @@ export const schedule = '*/10 * * * * *'; // A cada 10 segundos
 
 export async function run(container) {
     const { client, logger, services } = container;
-    const { firebase } = services;
+    const { firebase, assetService } = services;
     
     if (!firebase || !firebase.firestore) {
         logger.error('[raidPanelManager] Serviço Firestore não está inicializado.');
         return;
     }
-    const { firestore, assetService } = firebase;
+    const { firestore } = firebase;
 
     try {
         const panelWebhookDocRef = doc(firestore, 'bot_config', PANEL_DOC_ID);

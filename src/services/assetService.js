@@ -1,109 +1,139 @@
 // src/services/assetService.js
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, writeBatch, collection } from 'firebase/firestore';
+import axios from 'axios';
 
 export class AssetService {
     /**
      * @param {object} config O objeto de configuração do bot.
      * @param {import('firebase/firestore').Firestore} firestore A instância do Firestore.
-     * @param {import('cloudinary').Api} cloudinaryApi A API do Cloudinary.
      * @param {import('../utils/logger.js').Logger} logger O logger para registrar informações.
      */
-    constructor(config, firestore, cloudinaryApi, logger) {
-        this.baseUrl = config.CLOUDINARY_URL || '';
+    constructor(config, firestore, logger) {
+        this.cloudinaryUrl = process.env.CLOUDINARY_URL || '';
         this.firestore = firestore;
-        this.cloudinaryApi = cloudinaryApi;
         this.logger = logger;
-        this.assetIds = new Set();
+        this.assetsCache = new Map(); // Cache em memória para acesso rápido
         this.isInitialized = false;
+
+        if (!this.cloudinaryUrl) {
+            this.logger.error('[AssetService] A variável de ambiente CLOUDINARY_URL não está configurada!');
+            return;
+        }
+        
+        const match = this.cloudinaryUrl.match(/cloudinary:\/\/([^:]+):([^@]+)@(.+)/);
+        if (!match) {
+            this.logger.error('[AssetService] O formato da CLOUDINARY_URL é inválido.');
+            return;
+        }
+
+        this.apiKey = match[1];
+        this.apiSecret = match[2];
+        this.cloudName = match[3];
+        this.folder = 'Home'; // Conforme especificado na estrutura
     }
 
     /**
-     * Sincroniza os assets do Cloudinary com o Firestore e depois carrega-os para a memória.
+     * Sincroniza os assets do Cloudinary com o Firestore.
      */
     async initialize() {
-        if (!this.firestore) {
-            this.logger.error('[AssetService] Firestore não está disponível. O serviço não pode ser inicializado.');
+        if (!this.apiKey) {
+            this.logger.error('[AssetService] Não é possível inicializar, CLOUDINARY_URL inválida ou ausente.');
             return;
         }
-         if (!this.cloudinaryApi || !process.env.CLOUDINARY_URL) {
-            this.logger.warn('[AssetService] API do Cloudinary ou CLOUDINARY_URL não configurada. Pulando sincronização e tentando carregar do cache.');
-            await this.loadFromCache();
-            return;
-        }
+
+        const url = `https://api.cloudinary.com/v1_1/${this.cloudName}/resources/image/upload?max_results=500&prefix=${this.folder}/`;
 
         try {
-            this.logger.info('[AssetService] Iniciando sincronização de assets do Cloudinary...');
-            const result = await this.cloudinaryApi.resources({
-                type: 'upload',
-                max_results: 500,
-                prefix: 'eternal-bot-assets/'
-            });
+            this.logger.info(`[AssetService] Sincronizando assets da pasta '${this.folder}' do Cloudinary...`);
+            const auth = {
+                username: this.apiKey,
+                password: this.apiSecret
+            };
 
-            const assetIds = result.resources.map(res => res.public_id.replace(/^eternal-bot-assets\//, ''));
+            const response = await axios.get(url, { auth });
+            const assets = response.data.resources;
 
-            if (assetIds.length > 0) {
-                const assetIdsDocRef = doc(this.firestore, 'bot_config', 'asset_ids');
-                await setDoc(assetIdsDocRef, {
-                    ids: assetIds,
-                    lastSynced: new Date().toISOString(),
-                });
-                this.logger.info(`[AssetService] Sincronização concluída! ${assetIds.length} assets salvos no Firestore.`);
-            } else {
-                 this.logger.warn('[AssetService] Nenhum asset encontrado na pasta `eternal-bot-assets` do Cloudinary durante a sincronização.');
+            if (!assets || assets.length === 0) {
+                this.logger.warn(`[AssetService] Nenhum asset encontrado na pasta '${this.folder}' do Cloudinary.`);
+                this.isInitialized = true; // Ainda assim marca como inicializado
+                return;
             }
-        } catch (error) {
-             this.logger.error('[AssetService] Falha ao sincronizar assets do Cloudinary. O serviço usará o cache do Firestore, se disponível.', error);
-        }
 
-        // Após a tentativa de sincronização, carrega os IDs para a memória
-        await this.loadFromCache();
+            const batch = writeBatch(this.firestore);
+            const assetsCollection = collection(this.firestore, 'assets');
+
+            for (const asset of assets) {
+                const id = asset.public_id.replace(`${this.folder}/`, '');
+                if (id) {
+                    const imageUrl = asset.secure_url;
+                    const assetRef = doc(assetsCollection, id);
+                    batch.set(assetRef, { url: imageUrl, syncedAt: new Date().toISOString() });
+                    this.assetsCache.set(id, imageUrl); // Pré-popula o cache em memória
+                }
+            }
+
+            await batch.commit();
+            this.isInitialized = true;
+            this.logger.info(`[AssetService] Sincronizados ${assets.length} assets e carregados no cache.`);
+
+        } catch (err) {
+            this.logger.error('[AssetService] Falha ao sincronizar assets do Cloudinary:', err.response ? err.response.data : err.message);
+            this.logger.warn('[AssetService] Tentando carregar assets do cache do Firestore como fallback...');
+            // Se a sincronização falhar, tenta carregar o que já existe
+            await this.loadFromFirestore();
+        }
     }
     
     /**
-     * Carrega a lista de IDs de assets do cache do Firestore para a memória.
+     * Carrega todos os assets do Firestore para o cache em memória.
      */
-    async loadFromCache() {
-         try {
-            const assetIdsDocRef = doc(this.firestore, 'bot_config', 'asset_ids');
-            const docSnap = await getDoc(assetIdsDocRef);
-            if (docSnap.exists() && Array.isArray(docSnap.data().ids)) {
-                this.assetIds = new Set(docSnap.data().ids);
-                this.isInitialized = true;
-                this.logger.info(`[AssetService] Carregados ${this.assetIds.size} IDs de assets do cache do Firestore.`);
-            } else {
-                this.logger.warn(`[AssetService] Documento 'asset_ids' não encontrado no cache do Firestore. A busca de assets pode falhar.`);
-            }
+    async loadFromFirestore() {
+        try {
+            const assetsCollection = collection(this.firestore, 'assets');
+            const snapshot = await getDocs(assetsCollection);
+            snapshot.forEach(doc => {
+                this.assetsCache.set(doc.id, doc.data().url);
+            });
+            this.isInitialized = true;
+            this.logger.info(`[AssetService] Carregados ${this.assetsCache.size} assets do Firestore para o cache em memória.`);
         } catch (error) {
-            this.logger.error('[AssetService] Falha ao carregar IDs de assets do cache:', error);
+            this.logger.error('[AssetService] Falha ao carregar assets do cache do Firestore:', error);
         }
     }
 
 
-    isBaseUrlValid() {
-        return this.baseUrl && this.baseUrl.startsWith('https://');
-    }
-
     /**
-     * Gera a URL completa de um asset se o ID for válido.
-     * @param {string} assetId O ID público do asset (ex: 'EasyA', 'BotAvatar').
-     * @returns {string|null} A URL completa ou null se inválido.
+     * Busca a URL de um asset. Tenta primeiro no cache em memória, depois no Firestore.
+     * @param {string} assetId O ID do asset (ex: 'EasyPR').
+     * @returns {Promise<string|null>} A URL segura do asset ou null se não for encontrado.
      */
-    getAssetUrl(assetId) {
-        if (!assetId || !this.isBaseUrlValid()) return null;
-
-        if (!this.isInitialized || !this.assetIds.has(assetId)) {
-            this.logger.debug(`[AssetService] Asset ID '${assetId}' não encontrado na lista de assets carregados.`);
+    async getAsset(assetId) {
+        if (!assetId || !this.isInitialized) {
+            if(!this.isInitialized) this.logger.warn(`[AssetService] Serviço não inicializado ao tentar buscar asset '${assetId}'.`);
             return null;
         }
 
-        return `${this.baseUrl}/${assetId}`;
-    }
-    
-    /**
-     * @param {string} assetId O ID do asset.
-     * @returns {Promise<string|null>} A URL do asset ou null.
-     */
-    async getAsset(assetId) {
-        return this.getAssetUrl(assetId);
+        // Tenta buscar do cache em memória primeiro
+        if (this.assetsCache.has(assetId)) {
+            return this.assetsCache.get(assetId);
+        }
+
+        // Se não estiver no cache, busca no Firestore (pode ter sido adicionado por outro processo)
+        try {
+            const docRef = doc(this.firestore, 'assets', assetId);
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                const url = docSnap.data().url;
+                this.assetsCache.set(assetId, url); // Atualiza o cache
+                return url;
+            } else {
+                this.logger.warn(`[AssetService] Asset '${assetId}' não encontrado no Firestore.`);
+                return null;
+            }
+        } catch (error) {
+            this.logger.error(`[AssetService] Erro ao buscar asset '${assetId}' do Firestore:`, error);
+            return null;
+        }
     }
 }
