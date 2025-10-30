@@ -23,8 +23,8 @@ async function initializeWebhooks(client) {
 
         try {
             const channel = await client.channels.fetch(webhookConfig.channelId);
-            if (!channel || channel.type !== ChannelType.GuildText) {
-                logger.error(`[WebhookManager] Canal com ID ${webhookConfig.channelId} para '${webhookConfig.name}' não é um canal de texto válido.`);
+            if (!channel || (channel.type !== ChannelType.GuildText && channel.type !== ChannelType.GuildAnnouncement)) {
+                logger.error(`[WebhookManager] Canal com ID ${webhookConfig.channelId} para '${webhookConfig.name}' não é um canal de texto ou anúncio válido.`);
                 continue;
             }
 

@@ -10,8 +10,8 @@ const WEBHOOK_NAME = 'Códigos Ativos do Jogo'; // Nome fixo para o webhook
 
 async function getOrCreateWebhook(channel, webhookName, client) {
     const { logger } = client.container;
-    if (!channel || channel.type !== ChannelType.GuildText) {
-        logger.error(`[updcodes/getOrCreateWebhook] Canal fornecido é inválido ou não é de texto.`);
+    if (!channel || (channel.type !== ChannelType.GuildText && channel.type !== ChannelType.GuildAnnouncement)) {
+        logger.error(`[updcodes/getOrCreateWebhook] Canal fornecido é inválido ou não é de texto/anúncio.`);
         return null;
     }
     try {
@@ -71,8 +71,8 @@ export async function execute(interaction) {
 
     try {
         const codesChannel = await client.channels.fetch(CODES_CHANNEL_ID);
-        if (!codesChannel || codesChannel.type !== ChannelType.GuildText) {
-            return interaction.editReply('ERRO: Canal de códigos não encontrado ou não é um canal de texto.');
+        if (!codesChannel || (codesChannel.type !== ChannelType.GuildText && codesChannel.type !== ChannelType.GuildAnnouncement)) {
+            return interaction.editReply('ERRO: Canal de códigos não encontrado ou não é um canal de texto/anúncio.');
         }
 
         const webhook = await getOrCreateWebhook(codesChannel, WEBHOOK_NAME, client);
