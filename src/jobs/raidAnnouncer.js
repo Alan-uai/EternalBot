@@ -4,13 +4,13 @@ import { lobbyDungeonsArticle } from '../data/wiki-articles/lobby-dungeons.js';
 import { collection, addDoc } from 'firebase/firestore';
 
 let notifiedRaids = new Set();
-const ANNOUNCEMENT_LIFETIME_MS = 20 * 60 * 1000; // Mensagens duram 20 minutos
+const ANNOUNCEMENT_LIFETIME_MS = 2 * 60 * 1000; // Mensagens duram 2 minutos (tempo de portal aberto)
 const WEBHOOK_NAME = 'Anunciador de Raids';
 
 export const name = 'raidAnnouncer';
 export const intervalMs = 60000; // A cada 60 segundos
 
-async function sendRaidAnnouncement(client, raid, isWarning) {
+async function sendRaidAnnouncement(client, raid) {
     const { config, logger, services } = client.container;
     const { firestore } = services.firebase;
 
@@ -27,34 +27,20 @@ async function sendRaidAnnouncement(client, raid, isWarning) {
     }
 
     const roleMention = raid.roleId ? `<@&${raid.roleId}>` : '@everyone';
-    const raidMinute = parseInt(raid['Horário'].substring(3, 5), 10);
     const expiresAt = new Date(Date.now() + ANNOUNCEMENT_LIFETIME_MS);
 
-    let embed;
-    if (isWarning) {
-        embed = new EmbedBuilder()
-            .setColor(0xFFD700) // Gold
-            .setTitle(`🚨 Alerta de Raid: ${raid['Dificuldade']} começa em 5 minutos!`)
-            .setDescription(`Preparem-se para a batalha! A dungeon do lobby está prestes a abrir.`)
-            .addFields(
-                { name: 'Dificuldade', value: raid['Dificuldade'], inline: true },
-                { name: 'Horário', value: `Começa às HH:${raidMinute.toString().padStart(2, '0')}`, inline: true },
-                { name: 'Entrar no Jogo', value: `[Clique aqui para jogar](${config.GAME_LINK})` }
-            )
-            .setTimestamp(new Date(Date.now() + 5 * 60 * 1000));
-    } else {
-        embed = new EmbedBuilder()
-            .setColor(0xFF4B4B) // Red
-            .setTitle(`🔥 A Raid Começou: ${raid['Dificuldade']}!`)
-            .setDescription(`O portal está aberto! Entre agora para não perder.`)
-            .addFields(
-                { name: 'Dificuldade', value: raid['Dificuldade'], inline: true },
-                { name: 'Vida do Chefe', value: `\`${raid['Vida Último Boss']}\``, inline: true },
-                { name: 'Dano Recomendado', value: `\`${raid['Dano Recomendado']}\``, inline: true },
-                { name: 'Entrar no Jogo', value: `**[Clique aqui para ir para o jogo](${config.GAME_LINK})**` }
-            )
-            .setTimestamp();
-    }
+    const embed = new EmbedBuilder()
+        .setColor(0xFF4B4B) // Red
+        .setTitle(`🔥 A Raid Começou: ${raid['Dificuldade']}!`)
+        .setDescription(`O portal está aberto! Entre agora para não perder.`)
+        .addFields(
+            { name: 'Dificuldade', value: raid['Dificuldade'], inline: true },
+            { name: 'Vida do Chefe', value: `\`${raid['Vida Último Boss']}\``, inline: true },
+            { name: 'Dano Recomendado', value: `\`${raid['Dano Recomendado']}\``, inline: true },
+            { name: 'Entrar no Jogo', value: `**[Clique aqui para ir para o jogo](${config.GAME_LINK})**` }
+        )
+        .setTimestamp()
+        .setFooter({ text: 'A Raid fechará em 2m.' });
 
     try {
         const webhookClient = new WebhookClient({ url: webhook.url });
@@ -76,7 +62,7 @@ async function sendRaidAnnouncement(client, raid, isWarning) {
             expiresAt: expiresAt,
         });
 
-        logger.info(`${isWarning ? 'Alerta' : 'Anúncio'} de raid enviado para: ${raid['Dificuldade']}`);
+        logger.info(`Anúncio de raid enviado para: ${raid['Dificuldade']}`);
     } catch (e) {
         logger.error(`Falha ao enviar anúncio de raid via webhook:`, e);
     }
@@ -100,18 +86,11 @@ export async function run(container) {
         const raidMinute = parseInt(raid['Horário'].substring(3, 5), 10);
         const raidIdentifier = `${currentHour}:${raidMinute}`;
         
-        // 5-minute warning
-        const warningId = `${raidIdentifier}-warning`;
-        if (currentMinute === (raidMinute - 5 + 60) % 60 && !notifiedRaids.has(warningId)) {
-            notifiedRaids.add(warningId);
-            await sendRaidAnnouncement(client, raid, true);
-        }
-
         // Raid start
         const startId = `${raidIdentifier}-start`;
         if (currentMinute === raidMinute && !notifiedRaids.has(startId)) {
             notifiedRaids.add(startId);
-            await sendRaidAnnouncement(client, raid, false);
+            await sendRaidAnnouncement(client, raid);
         }
     }
 }
