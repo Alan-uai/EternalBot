@@ -36,6 +36,11 @@ export async function loadJobs(container) {
         const filePath = path.join(JOBS_PATH, file);
         try {
             const jobModule = await import(`file://${filePath}?t=${Date.now()}`);
+             // Pula o arquivo se estiver vazio
+            if (Object.keys(jobModule).length === 0) {
+                 logger.debug(`Arquivo de job vazio ignorado: ${file}`);
+                 continue;
+            }
 
             const validationError = validateJob(jobModule, file);
             if (validationError) {

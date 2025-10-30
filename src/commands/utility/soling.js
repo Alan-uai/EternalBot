@@ -256,6 +256,8 @@ async function handlePostRequest(interaction, settings) {
         }
 
         const userRef = doc(firestore, 'users', user.id);
+        const userSnap = await getDoc(userRef);
+        const userData = userSnap.exists() ? userSnap.data() : {};
         const newSettings = { serverLink: serverLink || null, alwaysSendLink: alwaysSend, deleteAfterMinutes: deleteAfter || null };
         batch.set(userRef, { dungeonSettings: newSettings }, { merge: true });
         
@@ -289,6 +291,22 @@ async function handlePostRequest(interaction, settings) {
             .setEmoji('🗑️');
 
         const row = new ActionRowBuilder().addComponents(confirmButton, finishButton);
+
+        // Novos botões de perfil
+        if (userData.robloxId) {
+             const profileButton = new ButtonBuilder()
+                .setLabel('Ver Perfil (Web)')
+                .setStyle(ButtonStyle.Link)
+                .setURL(`https://www.roblox.com/users/${userData.robloxId}/profile`);
+            
+            const copyIdButton = new ButtonBuilder()
+                .setCustomId(`soling_copyid_${user.id}_${userData.robloxId}`)
+                .setLabel('Copiar ID')
+                .setStyle(ButtonStyle.Secondary);
+
+            row.addComponents(profileButton, copyIdButton);
+        }
+
         
         const message = await webhookClient.send({
             content: messageContent,
@@ -428,6 +446,16 @@ async function handleFinish(interaction, requestId, ownerId) {
     }
 }
 
+async function handleCopyId(interaction, userId, robloxId) {
+    if (interaction.user.id !== userId) {
+        return interaction.reply({ content: 'Você não pode usar este botão.', ephemeral: true });
+    }
+    await interaction.reply({
+        content: `O ID Roblox de ${interaction.message.interaction.user.username} é:\n\`\`\`${robloxId}\`\`\``,
+        ephemeral: true,
+    });
+}
+
 
 async function handleInteraction(interaction) {
     try {
@@ -438,6 +466,7 @@ async function handleInteraction(interaction) {
             if (action === 'type') await handleTypeSelection(interaction, params[0]);
             else if (action === 'confirm') await handleConfirm(interaction, params[0], params[1]);
             else if (action === 'finish') await handleFinish(interaction, params[0], params[1]);
+            else if (action === 'copyid') await handleCopyId(interaction, params[0], params[1]);
         } else if (interaction.isStringSelectMenu()) {
             if (action === 'raid') await handleRaidSelection(interaction, params[0]);
             else if (action === 'selectuser') await handleSelectUser(interaction);
