@@ -6,23 +6,30 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 const PANEL_DOC_ID = 'raidPanel';
 const PORTAL_OPEN_DURATION_SECONDS = 2 * 60; // 2 minutos
 
-function getRaidStatus() {
+function getRaidStatus(assetService) {
     const now = new Date();
     const currentMinute = now.getUTCMinutes();
     const currentSecond = now.getUTCSeconds();
     
     const totalSecondsInHour = (currentMinute * 60) + currentSecond;
 
-    const raids = lobbyDungeonsArticle.tables.lobbySchedule.rows;
+    const raids = [...lobbyDungeonsArticle.tables.lobbySchedule.rows].sort((a, b) => {
+        return parseInt(a['Horário'].substring(3, 5), 10) - parseInt(b['Horário'].substring(3, 5), 10);
+    });
+
     const statuses = [];
     
+    let nextRaidFound = false;
+
     for (const raid of raids) {
         const raidStartMinute = parseInt(raid['Horário'].substring(3, 5), 10);
         const raidStartSecondInHour = raidStartMinute * 60;
         const portalCloseSecondInHour = raidStartSecondInHour + PORTAL_OPEN_DURATION_SECONDS;
         
         let secondsUntilOpen = raidStartSecondInHour - totalSecondsInHour;
-        if (secondsUntilOpen < 0) secondsUntilOpen += 3600;
+        if (secondsUntilOpen < -PORTAL_OPEN_DURATION_SECONDS) { // Se já passou há muito tempo na hora atual
+             secondsUntilOpen += 3600; // Adiciona uma hora
+        }
 
         let statusText, details;
         const isCurrentlyOpen = (totalSecondsInHour >= raidStartSecondInHour) && (totalSecondsInHour < portalCloseSecondInHour);
@@ -35,6 +42,13 @@ function getRaidStatus() {
             details = `Fecha em: \`${closeMinutes}m ${closeSeconds.toString().padStart(2, '0')}s\``;
         } else {
             statusText = '❌ Fechada';
+            
+            if (secondsUntilOpen >= 0 && !nextRaidFound) {
+                 const gifUrl = assetService.getAsset(`${raid['Dificuldade']}PR`);
+                 statuses.push({ name: `⏳ Próxima Raid: ${raid['Dificuldade']}`, value: gifUrl, inline: false });
+                 nextRaidFound = true;
+            }
+
             const minutesPart = Math.floor(secondsUntilOpen / 60);
             const secondsPart = secondsUntilOpen % 60;
             details = `Abre em: \`${minutesPart}m ${secondsPart.toString().padStart(2, '0')}s\``;
@@ -49,6 +63,12 @@ function getRaidStatus() {
             value: `${statusText}\n${details}`,
             inline: true, 
         });
+        statuses.push({ name: '\u200B', value: '\u200B', inline: true }); // Separador
+    }
+    
+    // Remove o último separador
+    if (statuses.length > 0 && statuses[statuses.length - 1].name === '\u200B') {
+        statuses.pop();
     }
     
     return statuses;
@@ -65,14 +85,14 @@ export async function run(container) {
         return;
     }
     
-    const { firestore } = services.firebase;
+    const { firestore, assetService } = services;
 
     try {
         const panelWebhookDocRef = doc(firestore, 'bot_config', PANEL_DOC_ID);
         const docSnap = await getDoc(panelWebhookDocRef);
 
         if (!docSnap.exists() || !docSnap.data().webhookUrl) {
-            logger.error(`[raidPanelManager] Webhook 'raidPanel' não encontrado no Firestore. O painel não será atualizado.`);
+            logger.error(`[raidPanelManager] Webhook '${PANEL_DOC_ID}' não encontrado. O painel não será atualizado.`);
             return;
         }
         
@@ -80,14 +100,13 @@ export async function run(container) {
         const messageId = docSnap.data().messageId;
         const webhookClient = new WebhookClient({ url: webhookUrl });
 
-        const statuses = getRaidStatus();
+        const statuses = getRaidStatus(assetService);
 
         const embed = new EmbedBuilder()
             .setColor(0x2F3136)
             .setAuthor({ name: '🗺️ Painel de Status das Raids do Lobby' })
             .setDescription(`*Atualizado <t:${Math.floor(Date.now() / 1000)}:R>*`)
             .addFields(statuses)
-            .addFields({ name: '\u200B', value: '----------------------------------------' })
             .setFooter({ text: 'Horários baseados no fuso horário do servidor (UTC).' });
             
         let sentMessage;

@@ -1,9 +1,10 @@
 // src/loaders/serviceLoader.js
 import { initializeFirebase } from '../firebase/index.js';
 import { loadKnowledgeBase } from '../knowledge-base.js';
+import { AssetService } from '../services/assetService.js';
 
 export async function loadServices(container) {
-    const { logger, services } = container;
+    const { logger, services, config } = container;
 
     // Firebase Service
     try {
@@ -23,6 +24,15 @@ export async function loadServices(container) {
         logger.info('Serviço de Base de Conhecimento (Wiki) inicializado.');
     } catch (error) {
         logger.error('Falha ao inicializar o serviço da Base de Conhecimento:', error);
+        throw error;
+    }
+    
+    // Asset Service
+    try {
+        services.assetService = new AssetService(config);
+        logger.info('Serviço de Assets inicializado.');
+    } catch (error) {
+        logger.error('Falha ao inicializar o serviço de Assets:', error);
         throw error;
     }
 }

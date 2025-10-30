@@ -20,7 +20,7 @@ export function loadConfig(logger) {
         DISCORD_TOKEN: process.env.DISCORD_TOKEN,
         CLIENT_ID: process.env.CLIENT_ID,
         GUILD_ID: process.env.GUILD_ID,
-        CLOUDINARY_URL: process.env.CLOUDINARY_URL, // URL base para os assets
+        CLOUDINARY_URL: 'https://res.cloudinary.com/dfpmsqyuc/image/upload/v1730310214/eternal-bot-assets',
         // IDs de Canais
         CHAT_CHANNEL_ID: '1429309293076680744',
         MOD_CURATION_CHANNEL_ID: '1426968477482225716',
