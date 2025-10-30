@@ -382,7 +382,7 @@ async function handleCopyId(interaction, userId, robloxId) {
 }
 
 
-export async function handleInteraction(interaction, container) {
+export async function handleInteraction(interaction) {
     try {
         const [command, action, ...params] = interaction.customId.split('_');
         if (command !== 'soling') return;
@@ -396,7 +396,10 @@ export async function handleInteraction(interaction, container) {
             if (action === 'raid') await handleRaidSelection(interaction, params[0]);
             else if (action === 'selectuser') await handleSelectUser(interaction);
         } else if (interaction.isModalSubmit()) {
-            if (action === 'modal') await handleModalSubmit(interaction);
+            // Roteamento para o modal de submissão
+            if (interaction.customId === 'soling_modal_submit') {
+                await handleModalSubmit(interaction);
+            }
         }
     } catch (error) {
         console.error(`Erro no manipulador de interação de /soling (Ação: ${interaction.customId}):`, error);
