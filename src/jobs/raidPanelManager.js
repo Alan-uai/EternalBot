@@ -7,8 +7,9 @@ const PANEL_DOC_ID = 'raidPanel';
 const PORTAL_OPEN_DURATION_SECONDS = 2 * 60; // 2 minutos
 
 function getRaidStatus(container) {
-    const { logger, services } = container;
-    const { assetService } = services.firebase;
+    const { client, logger, services } = container;
+    const { firebase } = services;
+    const { assetService } = firebase;
 
     const now = new Date();
     const currentMinute = now.getUTCMinutes();
@@ -45,7 +46,6 @@ function getRaidStatus(container) {
         const gifUrl = assetService.getAsset(`${nextRaidForGif['Dificuldade']}PR`);
         if (gifUrl) {
             statuses.push({ name: `⏳ Próxima Raid: ${nextRaidForGif['Dificuldade']}`, value: gifUrl, inline: false });
-            statuses.push({ name: '\u200B', value: '\u200B' }); // Separador único após o GIF
         }
     }
 
@@ -80,23 +80,29 @@ function getRaidStatus(container) {
             'Easy': '🟢', 'Medium': '🟡', 'Hard': '🔴', 'Insane': '⚔️', 'Crazy': '🔥', 'Nightmare': '💀', 'Leaf Raid (1800)': '🌿'
         };
 
+        if (i > 0) {
+            // Adiciona um separador antes de cada bloco, exceto o primeiro
+             statuses.push({ name: '\u200B', value: '\u200B', inline: false });
+        }
+
         statuses.push({
             name: `${raidEmojis[raid['Dificuldade']] || '⚔️'} ${raid['Dificuldade']}`,
             value: `${statusText}\n${details}`,
             inline: true, 
         });
+        
+        // Adiciona as informações extras na mesma linha
+         statuses.push({
+            name: 'Dano Rec.',
+            value: `\`${raid['Dano Recomendado']}\``,
+            inline: true,
+        });
+         statuses.push({
+            name: 'Tempo Otimizado',
+            value: `\`${raid['Tempo Otimizado'] || 'N/A'}\``,
+            inline: true,
+        });
 
-        // Adiciona um separador, mas não após o último item de uma linha cheia, nem no final de tudo
-        if ((i + 1) % 2 === 0 && (i + 1) < raids.length) {
-            statuses.push({ name: '\u200B', value: '\u200B' });
-        } else {
-            statuses.push({ name: '\u200B', value: '\u200B', inline: true });
-        }
-    }
-    
-    // Garante que não terminemos com um separador inline inútil
-    if(statuses.length > 0 && statuses[statuses.length-1].inline) {
-       statuses.pop();
     }
     
     return statuses;
@@ -107,14 +113,15 @@ export const schedule = '*/10 * * * * *'; // A cada 10 segundos
 
 export async function run(container) {
     const { client, logger, services } = container;
-    const { firestore } = services.firebase;
+    const { firebase } = services;
+    const { firestore, assetService } = firebase;
 
     try {
         const panelWebhookDocRef = doc(firestore, 'bot_config', PANEL_DOC_ID);
         const docSnap = await getDoc(panelWebhookDocRef);
 
         if (!docSnap.exists() || !docSnap.data().webhookUrl) {
-            logger.error(`[raidPanelManager] Webhook '${PANEL_DOC_ID}' não encontrado no Firestore.`);
+            logger.error(`[raidPanelManager] Webhook '${PANEL_DOC_ID}' não encontrado no Firestore. O painel não será atualizado.`);
             return;
         }
         
@@ -129,6 +136,7 @@ export async function run(container) {
             .setAuthor({ name: '🗺️ Painel de Status das Raids do Lobby' })
             .setDescription(`*Atualizado <t:${Math.floor(Date.now() / 1000)}:R>*`)
             .setFields(statuses)
+            .setTimestamp()
             .setFooter({ text: 'Horários baseados no fuso horário do servidor (UTC).' });
             
         let sentMessage;
@@ -139,7 +147,7 @@ export async function run(container) {
                  logger.warn(`[raidPanelManager] Não foi possível editar a mensagem do painel (ID: ${messageId}). Criando uma nova.`);
                  sentMessage = await webhookClient.send({
                     username: 'Painel de Status das Raids',
-                    avatarURL: client.user.displayAvatarURL(),
+                    avatarURL: assetService.getAsset('DungeonLobby'),
                     embeds: [embed],
                     wait: true
                 });
@@ -148,7 +156,7 @@ export async function run(container) {
         } else {
              sentMessage = await webhookClient.send({
                 username: 'Painel de Status das Raids',
-                avatarURL: client.user.displayAvatarURL(),
+                avatarURL: assetService.getAsset('DungeonLobby'),
                 embeds: [embed],
                 wait: true,
             });
