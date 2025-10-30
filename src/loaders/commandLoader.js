@@ -12,7 +12,8 @@ function validateCommand(mod, file) {
     if (!mod.data || !mod.data.name) {
         return `O comando em ${file} não possui a propriedade "data.name".`;
     }
-    if (typeof mod.execute !== 'function') {
+    // Permite que comandos "virtuais" não tenham execute
+    if (typeof mod.execute !== 'function' && mod.data.name !== 'gerenciar') {
         return `O comando ${mod.data.name} em ${file} não possui uma função "execute".`;
     }
     return null;
@@ -48,6 +49,11 @@ export async function loadCommands(container) {
                 continue;
             }
             
+            // Não carrega o comando gerenciar se for "removido"
+            if (commandModule.data.name === 'gerenciar') {
+                continue;
+            }
+
             commands.set(commandModule.data.name, commandModule);
             logger.info(`Comando carregado: /${commandModule.data.name}`);
 

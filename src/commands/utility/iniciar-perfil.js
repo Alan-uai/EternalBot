@@ -234,7 +234,8 @@ async function handleFormSubmit(interaction) {
     }
     
     // Dispara a criação/atualização dos tópicos do inventário e da imagem
-    await createInventoryThreads(channel, { ...userSnap.data(), ...profileData }, user);
+    const updatedUserSnap = await getDoc(userRef);
+    await createInventoryThreads(channel, updatedUserSnap.data(), user);
     
     await interaction.editReply(`Seu perfil foi atualizado com sucesso! Seus painéis de inventário foram criados e atualizados nos tópicos do seu canal privado: <#${channel.id}>`);
 }
