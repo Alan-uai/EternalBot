@@ -79,30 +79,26 @@ function getRaidStatus(container) {
         const raidEmojis = {
             'Easy': '🟢', 'Medium': '🟡', 'Hard': '🔴', 'Insane': '⚔️', 'Crazy': '🔥', 'Nightmare': '💀', 'Leaf Raid (1800)': '🌿'
         };
-
-        if (i > 0) {
-            // Adiciona um separador antes de cada bloco, exceto o primeiro
-             statuses.push({ name: '\u200B', value: '\u200B', inline: false });
-        }
+        
+        const separator = i > 0 ? '---------------------\n' : '';
 
         statuses.push({
             name: `${raidEmojis[raid['Dificuldade']] || '⚔️'} ${raid['Dificuldade']}`,
-            value: `${statusText}\n${details}`,
+            value: `${separator}${statusText}\n${details}`,
             inline: true, 
         });
         
         // Adiciona as informações extras na mesma linha
          statuses.push({
             name: 'Dano Rec.',
-            value: `\`${raid['Dano Recomendado']}\``,
+            value: `${separator}\`${raid['Dano Recomendado']}\``,
             inline: true,
         });
          statuses.push({
             name: 'Tempo Otimizado',
-            value: `\`${raid['Tempo Otimizado'] || 'N/A'}\``,
+            value: `${separator}\`${raid['Tempo Otimizado'] || 'N/A'}\``,
             inline: true,
         });
-
     }
     
     return statuses;
@@ -114,6 +110,11 @@ export const schedule = '*/10 * * * * *'; // A cada 10 segundos
 export async function run(container) {
     const { client, logger, services } = container;
     const { firebase } = services;
+    
+    if (!firebase || !firebase.firestore) {
+        logger.error('[raidPanelManager] Serviço Firestore não está inicializado.');
+        return;
+    }
     const { firestore, assetService } = firebase;
 
     try {
@@ -130,6 +131,8 @@ export async function run(container) {
         const webhookClient = new WebhookClient({ url: webhookUrl });
 
         const statuses = getRaidStatus(container);
+        
+        const avatarUrl = assetService ? assetService.getAsset('DungeonLobby') : client.user.displayAvatarURL();
 
         const embed = new EmbedBuilder()
             .setColor(0x2F3136)
@@ -147,7 +150,7 @@ export async function run(container) {
                  logger.warn(`[raidPanelManager] Não foi possível editar a mensagem do painel (ID: ${messageId}). Criando uma nova.`);
                  sentMessage = await webhookClient.send({
                     username: 'Painel de Status das Raids',
-                    avatarURL: assetService.getAsset('DungeonLobby'),
+                    avatarURL: avatarUrl,
                     embeds: [embed],
                     wait: true
                 });
@@ -156,7 +159,7 @@ export async function run(container) {
         } else {
              sentMessage = await webhookClient.send({
                 username: 'Painel de Status das Raids',
-                avatarURL: assetService.getAsset('DungeonLobby'),
+                avatarURL: avatarUrl,
                 embeds: [embed],
                 wait: true,
             });
