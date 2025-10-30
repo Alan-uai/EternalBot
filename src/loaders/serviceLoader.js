@@ -25,7 +25,4 @@ export async function loadServices(container) {
         logger.error('Falha ao inicializar o serviço da Base de Conhecimento:', error);
         throw error;
     }
-    
-    // Webhook Manager Service (will be initialized after client login)
-    services.webhookManager = null;
 }

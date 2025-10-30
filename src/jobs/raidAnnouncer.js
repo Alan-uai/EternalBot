@@ -1,19 +1,29 @@
 // src/jobs/raidAnnouncer.js
-import { EmbedBuilder, WebhookClient } from 'discord.js';
+import { EmbedBuilder, WebhookClient, ChannelType } from 'discord.js';
 import { lobbyDungeonsArticle } from '../data/wiki-articles/lobby-dungeons.js';
 import { collection, addDoc } from 'firebase/firestore';
 
 const lastNotificationTimes = new Map();
 const ANNOUNCEMENT_LIFETIME_MS = 2 * 60 * 1000;
+const WEBHOOK_NAME = 'Anunciador de Raids';
 
-async function sendRaidAnnouncement(client, raid) {
-    const { config, logger, services } = client.container;
+async function sendRaidAnnouncement(container, raid) {
+    const { client, config, logger, services } = container;
     const { firestore } = services.firebase;
-    const { webhookManager } = services;
 
-    const webhook = webhookManager.getWebhook('raidAnnouncer');
+    const raidChannel = await client.channels.fetch(config.RAID_CHANNEL_ID).catch(err => {
+        logger.error(`[raidAnnouncer] Não foi possível encontrar o canal de raid (ID: ${config.RAID_CHANNEL_ID}).`, err);
+        return null;
+    });
+
+    if (!raidChannel || raidChannel.type !== ChannelType.GuildText) {
+        logger.error(`[raidAnnouncer] Canal de raid configurado é inválido ou não é um canal de texto.`);
+        return;
+    }
+    
+    const webhook = await client.getOrCreateWebhook(raidChannel, WEBHOOK_NAME, client.user.displayAvatarURL());
     if (!webhook) {
-        logger.error(`[raidAnnouncer] Webhook 'raidAnnouncer' não encontrado ou inicializado. O anúncio para ${raid['Dificuldade']} não será enviado.`);
+        logger.error(`[raidAnnouncer] Falha ao criar ou obter webhook para o canal #${raidChannel.name}.`);
         return;
     }
 
@@ -62,7 +72,7 @@ export const name = 'raidAnnouncer';
 export const schedule = '*/10 * * * * *'; // A cada 10 segundos
 
 export async function run(container) {
-    const { client, logger } = container;
+    const { logger } = container;
     
     const now = new Date();
     const currentMinute = now.getUTCMinutes();
@@ -77,12 +87,13 @@ export async function run(container) {
 
             if (!lastNotificationTimes.has(raidIdentifier)) {
                 logger.info(`Raid ${raid['Dificuldade']} está programada para agora. Enviando anúncio.`);
-                await sendRaidAnnouncement(client, raid);
+                await sendRaidAnnouncement(container, raid);
                 lastNotificationTimes.set(raidIdentifier, now.getTime());
             }
         }
     }
 
+    // Limpa o mapa de notificações antigas para evitar memory leak
     const oneHourAgo = now.getTime() - (60 * 60 * 1000);
     for (const [key, timestamp] of lastNotificationTimes.entries()) {
         if (timestamp < oneHourAgo) {

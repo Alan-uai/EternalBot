@@ -1,5 +1,5 @@
 // src/commands/utility/updcodes.js
-import { SlashCommandBuilder, PermissionsBitField, WebhookClient } from 'discord.js';
+import { SlashCommandBuilder, PermissionsBitField, WebhookClient, ChannelType } from 'discord.js';
 import { initializeFirebase } from '../../firebase/index.js';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 
@@ -46,8 +46,8 @@ export async function execute(interaction) {
 
     try {
         const codesChannel = await client.channels.fetch(CODES_CHANNEL_ID);
-        if (!codesChannel) {
-            return interaction.editReply('ERRO: Canal de códigos não encontrado.');
+        if (!codesChannel || codesChannel.type !== ChannelType.GuildText) {
+            return interaction.editReply('ERRO: Canal de códigos não encontrado ou não é um canal de texto.');
         }
 
         const webhook = await client.getOrCreateWebhook(codesChannel, WEBHOOK_NAME, client.user.displayAvatarURL());
@@ -94,7 +94,6 @@ export async function execute(interaction) {
         await setDoc(codesRef, { 
             codes: updatedCodes,
             messageId: message.id,
-            webhookUrl: webhook.url 
         });
 
         await interaction.editReply(replyMessage);
@@ -104,5 +103,3 @@ export async function execute(interaction) {
         await interaction.editReply('Ocorreu um erro ao tentar atualizar os códigos.');
     }
 }
-
-    

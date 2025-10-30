@@ -282,17 +282,16 @@ async function handlePostRequest(interaction, settings) {
             .setCustomId(`soling_confirm_${newRequestId}_${user.id}`)
             .setLabel(confirmLabel)
             .setStyle(ButtonStyle.Success)
-            .setEmoji('👁️');
+            .setEmoji('1240836511391485982'); // Custom Emoji ID for :invite:
 
         const finishButton = new ButtonBuilder()
             .setCustomId(`soling_finish_${newRequestId}_${user.id}`)
             .setLabel('Finalizar')
             .setStyle(ButtonStyle.Danger)
             .setEmoji('🗑️');
-
+        
         const row = new ActionRowBuilder().addComponents(confirmButton, finishButton);
 
-        // Novos botões de perfil
         if (userData.robloxId) {
              const profileButton = new ButtonBuilder()
                 .setLabel('Ver Perfil (Web)')
@@ -307,7 +306,6 @@ async function handlePostRequest(interaction, settings) {
             row.addComponents(profileButton, copyIdButton);
         }
 
-        
         const message = await webhookClient.send({
             content: messageContent,
             username: user.displayName,

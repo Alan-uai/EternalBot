@@ -1,5 +1,5 @@
 // src/jobs/raidPanelManager.js
-import { EmbedBuilder, WebhookClient } from 'discord.js';
+import { EmbedBuilder, WebhookClient, ChannelType } from 'discord.js';
 import { lobbyDungeonsArticle } from '../data/wiki-articles/lobby-dungeons.js';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 
@@ -7,17 +7,24 @@ export const name = 'raidPanelManager';
 export const schedule = '*/10 * * * * *'; // A cada 10 segundos
 
 const PANEL_DOC_ID = 'raidStatusPanel';
+const WEBHOOK_NAME = 'Painel de Status das Raids do Lobby';
 const PORTAL_OPEN_DURATION_SECONDS = 2 * 60; // 2 minutos
 
 async function getOrCreatePanelMessage(container) {
     const { client, logger, services } = container;
     const { firestore } = services.firebase;
-    const { webhookManager } = services;
+    const { config } = client.container;
 
-    const webhook = webhookManager.getWebhook('raidPanel');
-     if (!webhook) {
-        logger.error(`[raidPanelManager] Webhook 'raidPanel' não encontrado. O painel não será atualizado.`);
+    const raidChannel = await client.channels.fetch(config.RAID_CHANNEL_ID).catch(() => null);
+    if (!raidChannel || raidChannel.type !== ChannelType.GuildText) {
+        logger.error(`[raidPanelManager] Canal de raid (ID: ${config.RAID_CHANNEL_ID}) é inválido.`);
         return { webhookClient: null, messageId: null };
+    }
+    
+    const webhook = await client.getOrCreateWebhook(raidChannel, WEBHOOK_NAME, client.user.displayAvatarURL());
+    if (!webhook) {
+         logger.error(`[raidPanelManager] Não foi possível criar ou obter o webhook para o painel de raids.`);
+         return { webhookClient: null, messageId: null };
     }
 
     const panelDocRef = doc(firestore, 'bot_config', PANEL_DOC_ID);
@@ -90,7 +97,7 @@ function getRaidStatus(config) {
 export async function run(container) {
     const { client, logger, services, config } = container;
     
-    if (!services.firebase || !services.webhookManager) { 
+    if (!services.firebase) { 
         logger.debug('[raidPanelManager] Serviços essenciais não encontrados. Pulando atualização.');
         return;
     }
@@ -121,7 +128,7 @@ export async function run(container) {
         if (messageId) {
             await webhookClient.editMessage(messageId, { embeds: [embed] });
         } else {
-            const channel = await client.channels.fetch(config.RAID_CHANNEL_ID);
+            const raidChannel = await client.channels.fetch(config.RAID_CHANNEL_ID);
             const sentMessage = await webhookClient.send({
                 username: webhook.name,
                 avatarURL: client.user.displayAvatarURL(),
