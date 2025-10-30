@@ -31,7 +31,9 @@ export async function loadServices(container) {
     // Asset Service
     try {
         // Injeta a configuração e a instância do firestore no serviço de assets
-        services.firebase.assetService = new AssetService(config, services.firebase.firestore);
+        const assetService = new AssetService(config, services.firebase.firestore);
+        await assetService.initialize(logger); // Carrega os IDs dos assets
+        services.firebase.assetService = assetService;
         logger.info('Serviço de Assets inicializado.');
     } catch (error) {
         logger.error('Falha ao inicializar o serviço de Assets:', error);
