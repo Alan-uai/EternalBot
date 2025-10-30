@@ -17,10 +17,7 @@ async function initializeWebhooks(client) {
 
     for (const webhookConfig of requiredWebhooks) {
         const webhookDocRef = doc(firestore, 'bot_config', webhookConfig.docId);
-        const docSnap = await getDoc(webhookDocRef);
-        let webhookData = docSnap.exists() ? docSnap.data() : {};
-        let needsUpdate = false;
-
+        
         try {
             const channel = await client.channels.fetch(webhookConfig.channelId);
             if (!channel || (channel.type !== ChannelType.GuildText && channel.type !== ChannelType.GuildAnnouncement)) {
@@ -28,39 +25,21 @@ async function initializeWebhooks(client) {
                 continue;
             }
 
-            let webhook;
-            if (webhookData.webhookUrl) {
-                try {
-                    const tempClient = new WebhookClient({ url: webhookData.webhookUrl });
-                    webhook = await tempClient.fetch();
-                } catch (e) {
-                    logger.warn(`[WebhookManager] Webhook para '${webhookConfig.name}' inválido ou deletado. Criando um novo.`);
-                    webhook = null;
-                }
-            }
-
+            const webhooksInChannel = await channel.fetchWebhooks();
+            let webhook = webhooksInChannel.find(wh => wh.name === webhookConfig.name && wh.owner.id === client.user.id);
+            
             if (!webhook) {
-                const webhooksInChannel = await channel.fetchWebhooks();
-                webhook = webhooksInChannel.find(wh => wh.name === webhookConfig.name && wh.owner.id === client.user.id);
-                
-                if (!webhook) {
-                    webhook = await channel.createWebhook({
-                        name: webhookConfig.name,
-                        avatar: client.user.displayAvatarURL(),
-                        reason: `Webhook necessário para ${webhookConfig.name}`
-                    });
-                    logger.info(`[WebhookManager] Webhook '${webhookConfig.name}' criado no canal #${channel.name}.`);
-                }
-                webhookData.webhookUrl = webhook.url;
-                needsUpdate = true;
+                webhook = await channel.createWebhook({
+                    name: webhookConfig.name,
+                    avatar: client.user.displayAvatarURL(),
+                    reason: `Webhook necessário para ${webhookConfig.name}`
+                });
+                logger.info(`[WebhookManager] Webhook '${webhookConfig.name}' criado no canal #${channel.name}.`);
             }
             
-            if (needsUpdate) {
-                await setDoc(webhookDocRef, { webhookUrl: webhook.url }, { merge: true });
-                logger.info(`[WebhookManager] URL do webhook '${webhookConfig.name}' salva no Firestore.`);
-            } else {
-                 logger.info(`[WebhookManager] Webhook '${webhookConfig.name}' verificado e pronto para uso.`);
-            }
+            await setDoc(webhookDocRef, { webhookUrl: webhook.url }, { merge: true });
+            logger.info(`[WebhookManager] URL do webhook '${webhookConfig.name}' salva/verificada no Firestore.`);
+
         } catch (error) {
             logger.error(`[WebhookManager] Falha crítica ao inicializar o webhook '${webhookConfig.name}':`, error);
         }
@@ -69,7 +48,7 @@ async function initializeWebhooks(client) {
 }
 
 async function cleanupExpiredRaidMessages(client) {
-    const { logger, config, services } = client.container;
+    const { logger, services } = client.container;
     const { firestore } = services.firebase;
 
     logger.info('Verificando anúncios de raid expirados...');

@@ -19,7 +19,6 @@ function getRaidStatus(assetService) {
 
     const statuses = [];
     
-    let nextRaidFound = false;
     let nextRaidForGif = null;
     let minTimeDiff = Infinity;
 
@@ -28,11 +27,11 @@ function getRaidStatus(assetService) {
         const raidStartMinute = parseInt(raid['Horário'].substring(3, 5), 10);
         let raidStartTime = new Date(now);
         raidStartTime.setUTCMinutes(raidStartMinute, 0, 0);
-        if (raidStartTime < now) {
+        if (raidStartTime.getTime() < now.getTime() - 60000) {
             raidStartTime.setUTCHours(raidStartTime.getUTCHours() + 1);
         }
         const timeDiff = raidStartTime.getTime() - now.getTime();
-        if (timeDiff >= 0 && timeDiff < minTimeDiff) {
+        if (timeDiff >= -60000 && timeDiff < minTimeDiff) {
             minTimeDiff = timeDiff;
             nextRaidForGif = raid;
         }
@@ -86,7 +85,8 @@ function getRaidStatus(assetService) {
         statuses.push({ name: '\u200B', value: '\u200B', inline: true }); // Separador
     }
     
-    if (statuses.length > 0 && statuses[statuses.length - 1].name === '\u200B') {
+    // Remove o último separador se for ímpar
+    if (statuses.length > 0 && statuses.length % 2 !== 0) {
         statuses.pop();
     }
     
@@ -99,19 +99,14 @@ export const schedule = '*/10 * * * * *'; // A cada 10 segundos
 export async function run(container) {
     const { client, logger, services } = container;
     
-    if (!services.firebase) { 
-        logger.debug('[raidPanelManager] Serviços de Firebase não encontrados. Pulando atualização.');
-        return;
-    }
-    
-    const { firestore, assetService } = services;
+    const { firestore, assetService } = services.firebase;
 
     try {
         const panelWebhookDocRef = doc(firestore, 'bot_config', PANEL_DOC_ID);
         const docSnap = await getDoc(panelWebhookDocRef);
 
         if (!docSnap.exists() || !docSnap.data().webhookUrl) {
-            logger.error(`[raidPanelManager] Webhook '${PANEL_DOC_ID}' não encontrado. O painel não será atualizado.`);
+            logger.error(`[raidPanelManager] Webhook '${PANEL_DOC_ID}' não encontrado no Firestore.`);
             return;
         }
         
