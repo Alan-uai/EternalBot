@@ -10,6 +10,14 @@ export const data = {
     description: 'Comando interno para gerenciar interações de inventário.'
 };
 
+// Adicionando uma função execute vazia para passar na validação do loader
+export async function execute(interaction) {
+    // Este comando é acionado apenas por interações de componentes,
+    // então a execução direta não faz nada.
+    await interaction.reply({ content: 'Este comando é apenas para uso interno.', ephemeral: true });
+}
+
+
 // Dados estáticos para os encantamentos, pois não estão na wiki
 const ENCHANTMENTS = {
     breathing: [

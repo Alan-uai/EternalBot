@@ -14,8 +14,11 @@ function validateEvent(mod, file) {
     return null;
 }
 
-export function loadEvents(container) {
+export async function loadEvents(container) {
     const { client, logger } = container;
+
+    // Remove todos os listeners existentes para permitir o recarregamento
+    client.removeAllListeners();
     
     if (!fs.existsSync(EVENTS_PATH)) {
         logger.warn(`Diretório de eventos não encontrado em ${EVENTS_PATH}`);
@@ -31,14 +34,17 @@ export function loadEvents(container) {
         for (const file of eventFiles) {
             const filePath = path.join(folderPath, file);
             try {
-                const event = require(filePath);
+                // Use import() dinâmico para módulos ES
+                const event = await import(`file://${filePath}?t=${Date.now()}`);
+                
                 const validationError = validateEvent(event, file);
                 if (validationError) {
                     logger.warn(validationError);
                     continue;
                 }
                 
-                const wrapper = (...args) => event.execute(...args, client);
+                // Passa o container para o wrapper
+                const wrapper = (...args) => event.execute(...args, container);
 
                 if (event.once) {
                     client.once(event.name, wrapper);

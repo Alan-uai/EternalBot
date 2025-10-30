@@ -21,6 +21,8 @@ function validateCommand(mod, file) {
 export async function loadCommands(container) {
     const { logger, commands } = container;
     
+    commands.clear();
+
     if (!fs.existsSync(COMMANDS_PATH)) {
         logger.warn(`Diretório de comandos não encontrado em ${COMMANDS_PATH}`);
         return;
@@ -31,9 +33,15 @@ export async function loadCommands(container) {
     for (const file of commandFiles) {
         const filePath = path.join(COMMANDS_PATH, file);
         try {
-            // ESM-friendly way to import and bypass cache for potential hot-reloading
+            // Use import com um timestamp para evitar o cache do módulo, permitindo o hot-reload
             const commandModule = await import(`file://${filePath}?t=${Date.now()}`);
             
+            // Se o arquivo estiver vazio, pule-o
+            if (Object.keys(commandModule).length === 0) {
+                 logger.debug(`Arquivo de comando vazio ignorado: ${file}`);
+                 continue;
+            }
+
             const validationError = validateCommand(commandModule, file);
             if (validationError) {
                 logger.warn(validationError);
