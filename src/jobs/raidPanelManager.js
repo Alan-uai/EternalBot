@@ -1,72 +1,10 @@
 // src/jobs/raidPanelManager.js
-import { EmbedBuilder, WebhookClient, ChannelType } from 'discord.js';
+import { EmbedBuilder, WebhookClient } from 'discord.js';
 import { lobbyDungeonsArticle } from '../data/wiki-articles/lobby-dungeons.js';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 
-const PANEL_DOC_ID = 'raidStatusPanel';
-const WEBHOOK_NAME = 'Painel de Status das Raids';
+const PANEL_DOC_ID = 'raidPanel';
 const PORTAL_OPEN_DURATION_SECONDS = 2 * 60; // 2 minutos
-
-async function getOrCreatePanelMessage(container) {
-    const { client, logger, services } = container;
-    const { firestore } = services.firebase;
-    const { config } = client.container;
-
-    const raidChannel = await client.channels.fetch(config.RAID_CHANNEL_ID).catch(() => null);
-    if (!raidChannel || raidChannel.type !== ChannelType.GuildText) {
-        logger.error(`[raidPanelManager] Canal de raid (ID: ${config.RAID_CHANNEL_ID}) é inválido.`);
-        return { webhookClient: null, messageId: null, webhook: null };
-    }
-    
-    const webhook = await getOrCreateWebhook(raidChannel, WEBHOOK_NAME, client);
-    if (!webhook) {
-         logger.error(`[raidPanelManager] Não foi possível criar ou obter o webhook para o painel de raids.`);
-         return { webhookClient: null, messageId: null, webhook: null };
-    }
-
-    const panelDocRef = doc(firestore, 'bot_config', PANEL_DOC_ID);
-    const panelDocSnap = await getDoc(panelDocRef);
-    let messageId = panelDocSnap.exists() ? panelDocSnap.data().messageId : null;
-    
-    const webhookClient = new WebhookClient({ url: webhook.url });
-
-    if (messageId) {
-        try {
-            await webhookClient.fetchMessage(messageId);
-        } catch (error) {
-             logger.warn(`[raidPanelManager] Mensagem do painel (ID: ${messageId}) não encontrada. Será criada uma nova.`);
-             messageId = null;
-        }
-    }
-    
-    return { webhookClient, messageId, webhook };
-}
-
-async function getOrCreateWebhook(channel, webhookName, client) {
-    const { logger } = client.container;
-    if (!channel || channel.type !== ChannelType.GuildText) {
-        logger.error(`[getOrCreateWebhook] Canal fornecido é inválido ou não é de texto.`);
-        return null;
-    }
-    try {
-        const webhooks = await channel.fetchWebhooks();
-        let webhook = webhooks.find(wh => wh.name === webhookName && wh.owner.id === client.user.id);
-
-        if (!webhook) {
-            webhook = await channel.createWebhook({
-                name: webhookName,
-                avatar: client.user.displayAvatarURL(),
-                reason: `Webhook para ${webhookName}`,
-            });
-            logger.info(`[getOrCreateWebhook] Webhook '${webhookName}' criado no canal #${channel.name}.`);
-        }
-        return webhook;
-    } catch (error) {
-        logger.error(`[getOrCreateWebhook] Falha ao criar ou obter o webhook '${webhookName}' no canal #${channel.name}:`, error);
-        return null;
-    }
-}
-
 
 function getRaidStatus() {
     const now = new Date();
@@ -123,15 +61,24 @@ export async function run(container) {
     const { client, logger, services } = container;
     
     if (!services.firebase) { 
-        logger.debug('[raidPanelManager] Serviços essenciais não encontrados. Pulando atualização.');
+        logger.debug('[raidPanelManager] Serviços de Firebase não encontrados. Pulando atualização.');
         return;
     }
     
+    const { firestore } = services.firebase;
+
     try {
-        const { webhookClient, messageId: initialMessageId, webhook } = await getOrCreatePanelMessage(container);
-        if (!webhookClient) return;
+        const panelWebhookDocRef = doc(firestore, 'bot_config', PANEL_DOC_ID);
+        const docSnap = await getDoc(panelWebhookDocRef);
+
+        if (!docSnap.exists() || !docSnap.data().webhookUrl) {
+            logger.error(`[raidPanelManager] Webhook 'raidPanel' não encontrado no Firestore. O painel não será atualizado.`);
+            return;
+        }
         
-        let messageId = initialMessageId;
+        const webhookUrl = docSnap.data().webhookUrl;
+        const messageId = docSnap.data().messageId;
+        const webhookClient = new WebhookClient({ url: webhookUrl });
 
         const statuses = getRaidStatus();
 
@@ -143,19 +90,29 @@ export async function run(container) {
             .addFields({ name: '\u200B', value: '----------------------------------------' })
             .setFooter({ text: 'Horários baseados no fuso horário do servidor (UTC).' });
             
+        let sentMessage;
         if (messageId) {
-            await webhookClient.editMessage(messageId, { embeds: [embed] });
+            try {
+                sentMessage = await webhookClient.editMessage(messageId, { embeds: [embed] });
+            } catch(e) {
+                 logger.warn(`[raidPanelManager] Não foi possível editar a mensagem do painel (ID: ${messageId}). Criando uma nova.`);
+                 sentMessage = await webhookClient.send({
+                    username: 'Painel de Status das Raids',
+                    avatarURL: client.user.displayAvatarURL(),
+                    embeds: [embed],
+                    wait: true
+                });
+                // Atualiza o doc com o novo ID
+                await setDoc(panelWebhookDocRef, { messageId: sentMessage.id }, { merge: true });
+            }
         } else {
-            const sentMessage = await webhookClient.send({
-                username: webhook.name,
+             sentMessage = await webhookClient.send({
+                username: 'Painel de Status das Raids',
                 avatarURL: client.user.displayAvatarURL(),
                 embeds: [embed],
                 wait: true,
             });
-            messageId = sentMessage.id;
-            
-            const panelDocRef = doc(services.firestore, 'bot_config', PANEL_DOC_ID);
-            await setDoc(panelDocRef, { messageId: messageId, webhookUrl: webhook.url }, { merge: true });
+            await setDoc(panelWebhookDocRef, { messageId: sentMessage.id }, { merge: true });
         }
 
     } catch (error) {

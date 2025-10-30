@@ -1,78 +1,44 @@
 // src/jobs/raidAnnouncer.js
-import { EmbedBuilder, WebhookClient, ChannelType } from 'discord.js';
+import { EmbedBuilder, WebhookClient } from 'discord.js';
 import { lobbyDungeonsArticle } from '../data/wiki-articles/lobby-dungeons.js';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, doc, getDoc } from 'firebase/firestore';
 
 const lastNotificationTimes = new Map();
-const ANNOUNCEMENT_LIFETIME_MS = 2 * 60 * 1000;
-const WEBHOOK_NAME = 'Anunciador de Raids';
-
-async function getOrCreateWebhook(channel, webhookName, client) {
-    const { logger } = client.container;
-    if (!channel || channel.type !== ChannelType.GuildText) {
-        logger.error(`[getOrCreateWebhook] Canal fornecido é inválido ou não é de texto.`);
-        return null;
-    }
-    try {
-        const webhooks = await channel.fetchWebhooks();
-        let webhook = webhooks.find(wh => wh.name === webhookName && wh.owner.id === client.user.id);
-
-        if (!webhook) {
-            webhook = await channel.createWebhook({
-                name: webhookName,
-                avatar: client.user.displayAvatarURL(),
-                reason: `Webhook para ${webhookName}`,
-            });
-            logger.info(`[getOrCreateWebhook] Webhook '${webhookName}' criado no canal #${channel.name}.`);
-        }
-        return webhook;
-    } catch (error) {
-        logger.error(`[getOrCreateWebhook] Falha ao criar ou obter o webhook '${webhookName}' no canal #${channel.name}:`, error);
-        return null;
-    }
-}
-
+const ANNOUNCEMENT_LIFETIME_MS = 2 * 60 * 1000; // 2 minutos
 
 async function sendRaidAnnouncement(container, raid) {
     const { client, config, logger, services } = container;
     const { firestore } = services.firebase;
 
-    const raidChannel = await client.channels.fetch(config.RAID_CHANNEL_ID).catch(err => {
-        logger.error(`[raidAnnouncer] Não foi possível encontrar o canal de raid (ID: ${config.RAID_CHANNEL_ID}).`, err);
-        return null;
-    });
-
-    if (!raidChannel) {
-        logger.error(`[raidAnnouncer] Canal de raid configurado é inválido ou não foi encontrado.`);
-        return;
-    }
-    
-    const webhook = await getOrCreateWebhook(raidChannel, WEBHOOK_NAME, client);
-    if (!webhook) {
-        logger.error(`[raidAnnouncer] Falha ao criar ou obter webhook para o canal #${raidChannel.name}. O anúncio não será enviado.`);
-        return;
-    }
-
-    const roleMention = raid.roleId ? `<@&${raid.roleId}>` : '@everyone';
-    const expiresAt = new Date(Date.now() + ANNOUNCEMENT_LIFETIME_MS);
-
-    const embed = new EmbedBuilder()
-        .setColor(0xFF4B4B)
-        .setTitle(`🔥 A Raid Começou: ${raid['Dificuldade']}!`)
-        .setDescription(`O portal está aberto! Entre agora para não perder.`)
-        .addFields(
-            { name: 'Dificuldade', value: raid['Dificuldade'], inline: true },
-            { name: 'Vida do Chefe', value: `\`${raid['Vida Último Boss']}\``, inline: true },
-            { name: 'Dano Recomendado', value: `\`${raid['Dano Recomendado']}\``, inline: true },
-            { name: 'Entrar no Jogo', value: `**[Clique aqui para ir para o jogo](${config.GAME_LINK})**` }
-        )
-        .setTimestamp()
-        .setFooter({ text: 'O portal fechará em 2 minutos.' });
-
     try {
-        const webhookClient = new WebhookClient({ url: webhook.url });
+        const webhookDocRef = doc(firestore, 'bot_config', 'raidAnnouncer');
+        const docSnap = await getDoc(webhookDocRef);
+
+        if (!docSnap.exists() || !docSnap.data().webhookUrl) {
+            logger.error(`[raidAnnouncer] URL do webhook 'raidAnnouncer' não encontrada no Firestore. O anúncio não será enviado.`);
+            return;
+        }
+        const webhookUrl = docSnap.data().webhookUrl;
+        
+        const roleMention = raid.roleId ? `<@&${raid.roleId}>` : '@everyone';
+        const expiresAt = new Date(Date.now() + ANNOUNCEMENT_LIFETIME_MS);
+
+        const embed = new EmbedBuilder()
+            .setColor(0xFF4B4B)
+            .setTitle(`🔥 A Raid Começou: ${raid['Dificuldade']}!`)
+            .setDescription(`O portal está aberto! Entre agora para não perder.`)
+            .addFields(
+                { name: 'Dificuldade', value: raid['Dificuldade'], inline: true },
+                { name: 'Vida do Chefe', value: `\`${raid['Vida Último Boss']}\``, inline: true },
+                { name: 'Dano Recomendado', value: `\`${raid['Dano Recomendado']}\``, inline: true },
+                { name: 'Entrar no Jogo', value: `**[Clique aqui para ir para o jogo](${config.GAME_LINK})**` }
+            )
+            .setTimestamp()
+            .setFooter({ text: 'O portal fechará em 2 minutos.' });
+        
+        const webhookClient = new WebhookClient({ url: webhookUrl });
         const sentMessage = await webhookClient.send({
-            username: webhook.name,
+            username: "Anunciador de Raids",
             avatarURL: client.user.displayAvatarURL(),
             content: roleMention,
             embeds: [embed],
@@ -83,7 +49,7 @@ async function sendRaidAnnouncement(container, raid) {
         await addDoc(announcementsRef, {
             messageId: sentMessage.id,
             channelId: sentMessage.channel_id,
-            webhookUrl: webhook.url,
+            webhookUrl: webhookUrl,
             createdAt: new Date(),
             expiresAt: expiresAt,
         });

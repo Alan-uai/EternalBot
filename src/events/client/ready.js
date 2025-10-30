@@ -1,6 +1,72 @@
 // src/events/client/ready.js
-import { Events, REST, Routes, WebhookClient, Collection } from 'discord.js';
-import { doc, getDocs, collection, query, where, writeBatch } from 'firebase/firestore';
+import { Events, REST, Routes, WebhookClient, Collection, ChannelType } from 'discord.js';
+import { doc, getDocs, collection, query, where, writeBatch, setDoc, getDoc } from 'firebase/firestore';
+
+// Função para garantir que os webhooks necessários existam
+async function initializeWebhooks(client) {
+    const { logger, config, services } = client.container;
+    const { firestore } = services.firebase;
+    logger.info('Inicializando e verificando Webhooks...');
+
+    const requiredWebhooks = [
+        { name: 'Anunciador de Raids', channelId: config.RAID_CHANNEL_ID, docId: 'raidAnnouncer' },
+        { name: 'Painel de Status das Raids', channelId: config.RAID_CHANNEL_ID, docId: 'raidPanel' },
+        { name: 'Update Log', channelId: config.UPDLOG_CHANNEL_ID, docId: 'updlog' },
+        { name: 'Códigos Ativos do Jogo', channelId: config.CODES_CHANNEL_ID, docId: 'gameCodes' }
+    ];
+
+    for (const webhookConfig of requiredWebhooks) {
+        const webhookDocRef = doc(firestore, 'bot_config', webhookConfig.docId);
+        const docSnap = await getDoc(webhookDocRef);
+        let webhookData = docSnap.exists() ? docSnap.data() : {};
+        let needsUpdate = false;
+
+        try {
+            const channel = await client.channels.fetch(webhookConfig.channelId);
+            if (!channel || channel.type !== ChannelType.GuildText) {
+                logger.error(`[WebhookManager] Canal com ID ${webhookConfig.channelId} para '${webhookConfig.name}' não é um canal de texto válido.`);
+                continue;
+            }
+
+            let webhook;
+            if (webhookData.webhookUrl) {
+                try {
+                    const tempClient = new WebhookClient({ url: webhookData.webhookUrl });
+                    webhook = await tempClient.fetch();
+                } catch (e) {
+                    logger.warn(`[WebhookManager] Webhook para '${webhookConfig.name}' inválido ou deletado. Criando um novo.`);
+                    webhook = null;
+                }
+            }
+
+            if (!webhook) {
+                const webhooksInChannel = await channel.fetchWebhooks();
+                webhook = webhooksInChannel.find(wh => wh.name === webhookConfig.name && wh.owner.id === client.user.id);
+                
+                if (!webhook) {
+                    webhook = await channel.createWebhook({
+                        name: webhookConfig.name,
+                        avatar: client.user.displayAvatarURL(),
+                        reason: `Webhook necessário para ${webhookConfig.name}`
+                    });
+                    logger.info(`[WebhookManager] Webhook '${webhookConfig.name}' criado no canal #${channel.name}.`);
+                }
+                webhookData.webhookUrl = webhook.url;
+                needsUpdate = true;
+            }
+            
+            if (needsUpdate) {
+                await setDoc(webhookDocRef, { webhookUrl: webhook.url }, { merge: true });
+                logger.info(`[WebhookManager] URL do webhook '${webhookConfig.name}' salva no Firestore.`);
+            } else {
+                 logger.info(`[WebhookManager] Webhook '${webhookConfig.name}' verificado e pronto para uso.`);
+            }
+        } catch (error) {
+            logger.error(`[WebhookManager] Falha crítica ao inicializar o webhook '${webhookConfig.name}':`, error);
+        }
+    }
+     logger.info('Gerenciador de Webhooks inicializado com sucesso.');
+}
 
 async function cleanupExpiredRaidMessages(client) {
     const { logger, config, services } = client.container;
@@ -18,37 +84,29 @@ async function cleanupExpiredRaidMessages(client) {
             return;
         }
 
-        const webhooksCache = new Map();
         const batch = writeBatch(firestore);
         let deletedCount = 0;
 
         for (const messageDoc of querySnapshot.docs) {
             const { webhookUrl, messageId } = messageDoc.data();
 
-            // Pula se a entrada não tiver os dados necessários, apenas limpa do DB
             if (!webhookUrl || !messageId) {
                 batch.delete(messageDoc.ref);
                 continue;
             }
 
-            if (!webhooksCache.has(webhookUrl)) {
-                webhooksCache.set(webhookUrl, new WebhookClient({ url: webhookUrl }));
-            }
-            const webhookClient = webhooksCache.get(webhookUrl);
-
             try {
+                 const webhookClient = new WebhookClient({ url: webhookUrl });
                 await webhookClient.deleteMessage(messageId);
                 logger.info(`Mensagem de raid expirada (${messageId}) deletada com sucesso.`);
                 deletedCount++;
             } catch (error) {
-                // Se a mensagem não existe mais no Discord (código 10008), apenas removemos do Firestore.
-                if (error.code === 10008) {
+                if (error.code === 10008) { // Unknown Message
                     logger.warn(`Mensagem de raid (${messageId}) não encontrada no Discord. Provavelmente já foi deletada.`);
                 } else {
                     logger.error(`Falha ao deletar mensagem de raid expirada (${messageId}):`, error.message);
                 }
             } finally {
-                // Sempre remove da DB após a tentativa para não tentar novamente
                 batch.delete(messageDoc.ref);
             }
         }
@@ -71,6 +129,9 @@ export async function execute(client) {
     const { logger, commands, config } = client.container;
     
     logger.info(`Pronto! Logado como ${client.user.tag}`);
+
+    // Inicializa Webhooks
+    await initializeWebhooks(client);
 
     // Deploy de comandos
     const rest = new REST().setToken(config.DISCORD_TOKEN);
