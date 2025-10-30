@@ -39,8 +39,7 @@ export async function execute(interaction) {
         }
 
         const userId = response.data.data[0].id;
-        // O domínio será o domínio primário do Render ou qualquer outro host.
-        // A URL precisa ser absoluta.
+        // A URL base do Render será detectada automaticamente.
         const universalProfileUrl = `https://eternalbot-o0ct.onrender.com/roblox/${userId}`;
 
         const row = new ActionRowBuilder()
