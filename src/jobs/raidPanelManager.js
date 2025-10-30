@@ -45,7 +45,7 @@ function getRaidStatus(container) {
     if (nextRaidForGif && assetService) {
         const gifUrl = assetService.getAsset(`${nextRaidForGif['Dificuldade']}PR`);
         if (gifUrl) {
-            statuses.push({ name: `⏳ Próxima Raid: ${nextRaidForGif['Dificuldade']}`, value: gifUrl, inline: false });
+            statuses.push({ name: '\u200B', value: gifUrl, inline: false });
         }
     }
 
@@ -80,25 +80,17 @@ function getRaidStatus(container) {
             'Easy': '🟢', 'Medium': '🟡', 'Hard': '🔴', 'Insane': '⚔️', 'Crazy': '🔥', 'Nightmare': '💀', 'Leaf Raid (1800)': '🌿'
         };
         
-        const separator = i > 0 ? '---------------------\n' : '';
+        const separator = statuses.length > 0 && !statuses[statuses.length -1].value.includes('https://') ? '---------------------\n' : '';
 
         statuses.push({
-            name: `${raidEmojis[raid['Dificuldade']] || '⚔️'} ${raid['Dificuldade']}`,
-            value: `${separator}${statusText}\n${details}`,
+            name: `${separator}${raidEmojis[raid['Dificuldade']] || '⚔️'} ${raid['Dificuldade']}`,
+            value: `${statusText}\n${details}`,
             inline: true, 
         });
         
-        // Adiciona as informações extras na mesma linha
-         statuses.push({
-            name: 'Dano Rec.',
-            value: `${separator}\`${raid['Dano Recomendado']}\``,
-            inline: true,
-        });
-         statuses.push({
-            name: 'Tempo Otimizado',
-            value: `${separator}\`${raid['Tempo Otimizado'] || 'N/A'}\``,
-            inline: true,
-        });
+        // Adiciona campos vazios para manter o alinhamento de 3 colunas
+        statuses.push({ name: '\u200B', value: '\u200B', inline: true });
+        statuses.push({ name: '\u200B', value: '\u200B', inline: true });
     }
     
     return statuses;
@@ -122,7 +114,8 @@ export async function run(container) {
         const docSnap = await getDoc(panelWebhookDocRef);
 
         if (!docSnap.exists() || !docSnap.data().webhookUrl) {
-            logger.error(`[raidPanelManager] Webhook '${PANEL_DOC_ID}' não encontrado no Firestore. O painel não será atualizado.`);
+            // Este log será menos agressivo pois o ready.js deve cuidar da criação.
+            logger.debug(`[raidPanelManager] Webhook '${PANEL_DOC_ID}' não encontrado no Firestore. O painel não será atualizado.`);
             return;
         }
         
