@@ -64,6 +64,8 @@ function getRaidStatus(assetService) {
         }
     }
 
+    let primaryImage = null; // A imagem principal a ser exibida
+
     // Second pass: build status and determine image
     for (const raid of raids) {
         const raidMinute = parseInt(raid['Horário'].substring(3, 5), 10);
@@ -76,7 +78,7 @@ function getRaidStatus(assetService) {
         
         let statusText;
         let details;
-        let imageAsset = null;
+        let isPrimary = false;
 
         const diffMinutes = Math.floor(diffSeconds / 60);
         const diffSecondsPart = diffSeconds % 60;
@@ -91,10 +93,11 @@ function getRaidStatus(assetService) {
             details = `Fecha em: \`${remainingMinutes}m ${secondsPart.toString().padStart(2, '0')}s\``;
             
             if (remainingSeconds <= TEN_SECOND_WARNING) {
-                imageAsset = assetService.getAsset(raid['Dificuldade'], 'closing');
+                primaryImage = assetService.getAsset(raid['Dificuldade'], 'closing');
             } else {
-                imageAsset = assetService.getAsset(raid['Dificuldade'], 'open');
+                primaryImage = assetService.getAsset(raid['Dificuldade'], 'open');
             }
+             isPrimary = true;
 
         } else {
             // Raid is closed
@@ -103,10 +106,11 @@ function getRaidStatus(assetService) {
 
              if (raid === nextRaid) {
                  if (diffSeconds <= FIVE_MINUTE_WARNING_SECONDS) {
-                    imageAsset = assetService.getAsset(raid['Dificuldade'], 'warning');
+                    primaryImage = assetService.getAsset(raid['Dificuldade'], 'warning');
                  } else {
-                    imageAsset = assetService.getAsset(raid['Dificuldade'], 'next');
+                    primaryImage = assetService.getAsset(raid['Dificuldade'], 'next');
                  }
+                 isPrimary = true;
              }
         }
         
@@ -114,22 +118,23 @@ function getRaidStatus(assetService) {
             name: `> ${raid['Dificuldade']}`,
             value: `${statusText}\n> ${details}`,
             inline: true,
-            imageAsset: imageAsset // Store the chosen asset URL
         });
     }
 
-    // Find the primary image to display (the one that is not null)
-    const primaryImage = statuses.find(s => s.imageAsset)?.imageAsset || null;
+    // If no specific state was found for an image, default to the 'next' raid image if assets are ready
+    if (!primaryImage && nextRaid && assetService.isReady()) {
+        primaryImage = assetService.getAsset(nextRaid['Dificuldade'], 'next');
+    }
     
-    return { statuses: statuses.map(({name, value, inline}) => ({name, value, inline})), primaryImage };
+    return { statuses, primaryImage };
 }
 
 
 export async function run(container) {
     const { client, logger, services } = container;
     
-    if (!services.assetService || !services.assetService.isReady()) {
-        logger.debug('Serviço de assets ainda não está pronto. Pulando atualização do painel de raids.');
+    if (!services.assetService) {
+        logger.debug('Serviço de assets não encontrado. Pulando atualização do painel de raids.');
         return;
     }
     
@@ -150,11 +155,9 @@ export async function run(container) {
             .setTimestamp()
             .setFooter({ text: 'Horários baseados no fuso horário do servidor.' });
             
+        // Somente define a imagem se um GIF relevante (e existente) foi encontrado
         if (primaryImage) {
             embed.setImage(primaryImage);
-        } else {
-            // Optional: set a default placeholder if no raid is in a special state
-            // embed.setImage('attachment://default_placeholder.png');
         }
 
         await panelMessage.edit({ embeds: [embed] });

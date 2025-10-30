@@ -42,18 +42,24 @@ export async function execute(interaction) {
 
         const userId = response.data.data[0].id;
         const userProfileUrl = `https://www.roblox.com/users/${userId}/profile`;
+        const appProfileUrl = `roblox://users/${userId}/profile`;
 
         const row = new ActionRowBuilder()
             .addComponents(
                 new ButtonBuilder()
-                    .setLabel(`Ver Perfil de ${robloxUsername}`)
+                    .setLabel(`Ver Perfil (Web)`)
                     .setStyle(ButtonStyle.Link)
                     .setURL(userProfileUrl)
-                    .setEmoji('👤')
+                    .setEmoji('👤'),
+                new ButtonBuilder()
+                    .setLabel('Abrir no App')
+                    .setStyle(ButtonStyle.Link)
+                    .setURL(appProfileUrl)
+                    .setEmoji('📱')
             );
 
         await interaction.editReply({
-            content: `Aqui está o link para o perfil de ${robloxUsername}:`,
+            content: `Aqui estão os links para o perfil de ${robloxUsername}:`,
             components: [row]
         });
 
