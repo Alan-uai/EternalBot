@@ -6,6 +6,17 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 const PANEL_DOC_ID = 'raidPanel';
 const PORTAL_OPEN_DURATION_SECONDS = 2 * 60; // 2 minutos
 
+const RAID_AVATAR_PREFIXES = {
+    'Easy': 'Esy',
+    'Medium': 'Med',
+    'Hard': 'Hd',
+    'Insane': 'Isne',
+    'Crazy': 'Czy',
+    'Nightmare': 'Mare',
+    'Leaf Raid (1800)': 'Lf'
+};
+
+
 async function getRaidStatus(container) {
     const { logger, services } = container;
     const { assetService } = services;
@@ -42,7 +53,8 @@ async function getRaidStatus(container) {
     // Obtém o GIF da próxima raid
     let gifUrl = null;
     if (nextRaidForGif && assetService) {
-        gifUrl = await assetService.getAsset(`${nextRaidForGif['Dificuldade']}PR`);
+        const avatarPrefix = RAID_AVATAR_PREFIXES[nextRaidForGif['Dificuldade']] || nextRaidForGif['Dificuldade'];
+        gifUrl = await assetService.getAsset(`${avatarPrefix}PR`);
     }
 
     // Monta a lista de status de cada raid
@@ -120,16 +132,13 @@ export async function run(container) {
         const avatarUrl = assetService ? await assetService.getAsset('DungeonLobby') : client.user.displayAvatarURL();
 
         const embed = new EmbedBuilder()
+            .setImage(gifUrl || null)
             .setColor(0x2F3136)
             .setAuthor({ name: '🗺️ Painel de Status das Raids do Lobby' })
             .setDescription(`*Atualizado <t:${Math.floor(Date.now() / 1000)}:R>*`)
             .setFields(statuses)
             .setTimestamp()
             .setFooter({ text: 'Horários baseados no fuso horário do servidor (UTC).' });
-        
-        if (gifUrl) {
-            embed.setImage(gifUrl);
-        }
             
         let sentMessage;
         if (messageId) {
