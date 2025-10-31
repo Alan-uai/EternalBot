@@ -5,6 +5,15 @@ import { getRaidTimings } from '../utils/raidTimings.js'; // Importa a lógica d
 
 const PANEL_DOC_ID = 'raidPanel';
 const PERSISTENT_WEBHOOK_NAME = 'Painel de Status das Raids';
+const RAID_AVATAR_PREFIXES = {
+    'Easy': 'Esy',
+    'Medium': 'Med',
+    'Hard': 'Hd',
+    'Insane': 'Isne',
+    'Crazy': 'Czy',
+    'Nightmare': 'Mare',
+    'Leaf Raid (1800)': 'Lf'
+};
 
 async function getRaidStatusPanelData(container) {
     const { services } = container;
@@ -15,7 +24,8 @@ async function getRaidStatusPanelData(container) {
     
     let gifUrl = null;
     if (nextRaid && assetService) {
-        gifUrl = await assetService.getAsset(nextRaid.avatarPrefix + 'PR');
+        const prefix = RAID_AVATAR_PREFIXES[nextRaid.raidId] || 'Esy';
+        gifUrl = await assetService.getAsset(`${prefix}PR`);
     }
 
     return { statuses, gifUrl };
