@@ -19,8 +19,6 @@ export function getRaidTimings() {
     let minTimeDiff = Infinity;
     const statuses = [];
 
-    const totalSecondsInCurrentHour = now.getUTCMinutes() * 60 + now.getUTCSeconds();
-
     for (const raid of raids) {
         const raidId = raid['Dificuldade'];
         const raidStartMinute = parseInt(raid['Horário'].substring(3, 5), 10);
@@ -28,16 +26,11 @@ export function getRaidTimings() {
         let raidStartTime = new Date(now);
         raidStartTime.setUTCMinutes(raidStartMinute, 0, 0);
 
-        // Se a raid já passou nesta hora, calcule para a próxima hora
-        if (raidStartTime.getTime() < now.getTime() && (now.getTime() - raidStartTime.getTime()) > PORTAL_OPEN_DURATION_SECONDS * 1000) {
-            raidStartTime.setUTCHours(raidStartTime.getUTCHours() + 1);
-        }
-
         const timeDiffMs = raidStartTime.getTime() - now.getTime();
 
         // Verifica se a raid está aberta AGORA
-        if (timeDiffMs <= 0 && timeDiffMs > -PORTAL_OPEN_DURATION_SECONDS * 1000) {
-            currentRaid = {
+        if (timeDiffMs <= 0 && timeDiffMs > -(PORTAL_OPEN_DURATION_SECONDS * 1000)) {
+             currentRaid = {
                 raid,
                 raidId,
                 startTimeMs: raidStartTime.getTime(),
@@ -45,10 +38,17 @@ export function getRaidTimings() {
                 portalCloseTime: raidStartTime.getTime() + PORTAL_OPEN_DURATION_SECONDS * 1000,
             };
         }
+        
+        // Se a raid já passou nesta hora, calcule para a próxima hora
+        if (raidStartTime.getTime() < now.getTime()) {
+             raidStartTime.setUTCHours(raidStartTime.getUTCHours() + 1);
+        }
+        
+        const nextOccurrenceTimeDiff = raidStartTime.getTime() - now.getTime();
 
         // Encontra a próxima raid a começar
-        if (timeDiffMs > 0 && timeDiffMs < minTimeDiff) {
-            minTimeDiff = timeDiffMs;
+        if (nextOccurrenceTimeDiff > 0 && nextOccurrenceTimeDiff < minTimeDiff) {
+            minTimeDiff = nextOccurrenceTimeDiff;
             nextRaid = {
                 raid,
                 raidId,
@@ -68,17 +68,11 @@ export function getRaidTimings() {
             statusText = '✅ **ABERTA**';
             details = `Fecha em: \`${closeMinutes}m ${closeSeconds.toString().padStart(2, '0')}s\``;
         } else {
-            const secondsUntilOpen = Math.floor(timeDiffMs / 1000);
-             if (secondsUntilOpen < 0) {
-                 // Este caso não deve acontecer com a nova lógica, mas é um fallback
-                 statusText = '❌ Fechada';
-                 details = `Calculando...`;
-             } else {
-                statusText = '❌ Fechada';
-                const minutesPart = Math.floor(secondsUntilOpen / 60);
-                const secondsPart = secondsUntilOpen % 60;
-                details = `Abre em: \`${minutesPart}m ${secondsPart.toString().padStart(2, '0')}s\``;
-             }
+            const secondsUntilOpen = Math.floor(nextOccurrenceTimeDiff / 1000);
+            statusText = '❌ Fechada';
+            const minutesPart = Math.floor(secondsUntilOpen / 60);
+            const secondsPart = secondsUntilOpen % 60;
+            details = `Abre em: \`${minutesPart}m ${secondsPart.toString().padStart(2, '0')}s\``;
         }
         
         statuses.push({

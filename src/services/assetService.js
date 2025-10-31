@@ -111,10 +111,12 @@ export class AssetService {
              await this.loadFromFirestore();
         }
 
+        // 1. Busca no cache
         if (this.assetsCache.has(assetId)) {
             return this.assetsCache.get(assetId);
         }
-
+        
+        // 2. Se não estiver no cache, busca no Firestore (uma única vez)
         this.logger.warn(`[AssetService] Asset '${assetId}' não encontrado no cache. Tentando buscar diretamente no Firestore.`);
         try {
             const docRef = doc(this.firestore, 'assets', assetId);
@@ -122,11 +124,12 @@ export class AssetService {
 
             if (docSnap.exists()) {
                 const url = docSnap.data().url;
-                this.assetsCache.set(assetId, url);
+                this.assetsCache.set(assetId, url); // Adiciona ao cache para futuras buscas
+                this.logger.info(`[AssetService] Asset '${assetId}' encontrado no Firestore e adicionado ao cache.`);
                 return url;
             } else {
-                this.logger.warn(`[AssetService] Asset '${assetId}' também não foi encontrado no Firestore.`);
-                return null;
+                this.logger.warn(`[AssetService] Asset '${assetId}' também não foi encontrado no Firestore. A busca termina aqui.`);
+                return null; // Retorna null e não tenta novamente.
             }
         } catch (error) {
             this.logger.error(`[AssetService] Erro ao buscar fallback de asset '${assetId}' do Firestore:`, error);

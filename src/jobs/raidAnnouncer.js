@@ -5,6 +5,7 @@ import { getRaidTimings } from '../utils/raidTimings.js';
 
 const ANNOUNCER_DOC_ID = 'raidAnnouncer';
 const PERSISTENT_WEBHOOK_NAME = 'Anunciador de Raids';
+const PORTAL_OPEN_DURATION_SECONDS = 2 * 60;
 
 const RAID_AVATAR_PREFIXES = {
     'Easy': 'Esy',
@@ -16,31 +17,46 @@ const RAID_AVATAR_PREFIXES = {
     'Leaf Raid (1800)': 'Lf'
 };
 
-async function getOrCreatePersistentWebhook(client, config, logger, assetService) {
-    const channel = await client.channels.fetch(config.RAID_CHANNEL_ID).catch(() => null);
-    if (!channel) {
-        logger.error(`[raidAnnouncer] Canal de raid (ID: ${config.RAID_CHANNEL_ID}) não foi encontrado.`);
-        return null;
-    }
-    const webhooks = await channel.fetchWebhooks().catch(() => new Map());
-    let webhook = webhooks.find(wh => wh.name === PERSISTENT_WEBHOOK_NAME);
+async function getOrCreatePersistentWebhook(client, config, logger) {
+    const { services } = client.container;
+    const { firestore } = services.firebase;
+    const announcerRef = doc(firestore, 'bot_config', ANNOUNCER_DOC_ID);
+    
+    try {
+        const docSnap = await getDoc(announcerRef);
+        if (docSnap.exists() && docSnap.data().webhookId && docSnap.data().webhookUrl) {
+            // Tenta buscar o webhook existente para garantir que ele ainda é válido
+            const webhook = await client.fetchWebhook(docSnap.data().webhookId).catch(() => null);
+            if (webhook) {
+                return webhook;
+            }
+            logger.warn(`[raidAnnouncer] Webhook com ID ${docSnap.data().webhookId} não encontrado. Criando um novo.`);
+        }
 
-    if (!webhook) {
-        try {
-            const avatarURL = await assetService.getAsset('BotAvatar');
-            webhook = await channel.createWebhook({
+        const channel = await client.channels.fetch(config.RAID_CHANNEL_ID);
+        const webhooks = await channel.fetchWebhooks();
+        let existingWebhook = webhooks.find(wh => wh.name === PERSISTENT_WEBHOOK_NAME && wh.owner.id === client.user.id);
+
+        if (!existingWebhook) {
+            const avatarURL = await services.assetService.getAsset('BotAvatar');
+            existingWebhook = await channel.createWebhook({
                 name: PERSISTENT_WEBHOOK_NAME,
                 avatar: avatarURL,
                 reason: 'Webhook persistente para todos os anúncios de raid.'
             });
             logger.info(`[raidAnnouncer] Webhook persistente '${PERSISTENT_WEBHOOK_NAME}' criado.`);
-        } catch (error) {
-            logger.error(`[raidAnnouncer] Falha crítica ao criar o webhook persistente:`, error);
-            return null;
         }
+
+        // Salva/Atualiza o ID e a URL no Firestore
+        await setDoc(announcerRef, { webhookId: existingWebhook.id, webhookUrl: existingWebhook.url }, { merge: true });
+        return existingWebhook;
+
+    } catch (error) {
+        logger.error(`[raidAnnouncer] Falha crítica ao criar/obter webhook persistente:`, error);
+        return null;
     }
-    return webhook;
 }
+
 
 async function handleRaidLifecycle(container) {
     const { client, config, logger, services } = container;
@@ -52,16 +68,11 @@ async function handleRaidLifecycle(container) {
     const announcerRef = doc(firestore, 'bot_config', ANNOUNCER_DOC_ID);
 
     try {
-        const webhook = await getOrCreatePersistentWebhook(client, config, logger, assetService);
+        const webhook = await getOrCreatePersistentWebhook(client, config, logger);
         if (!webhook) return;
 
         const announcerDoc = await getDoc(announcerRef);
         const announcerState = announcerDoc.exists() ? announcerDoc.data() : { state: 'finished' };
-        
-        // Garante que a URL do webhook está sempre atualizada no Firestore
-        if (announcerState.webhookUrl !== webhook.url) {
-            await setDoc(announcerRef, { webhookId: webhook.id, webhookUrl: webhook.url }, { merge: true });
-        }
         
         const webhookClient = new WebhookClient({ id: webhook.id, token: webhook.token });
 
@@ -71,8 +82,10 @@ async function handleRaidLifecycle(container) {
             const isNewCycle = announcerState.raidId !== raidId || announcerState.state !== 'open';
 
             if (isNewCycle && announcerState.state !== 'closing_soon') {
+                
+                // Deleta a mensagem anterior ('5min' ou 'próxima')
                 if (announcerState.messageId) {
-                    await webhookClient.deleteMessage(announcerState.messageId).catch(e => logger.warn(`[${raidId}] Não foi possível deletar a mensagem de 'próxima/5min': ${e.message}`));
+                    await webhookClient.deleteMessage(announcerState.messageId).catch(e => logger.warn(`[${raidId}] Não foi possível deletar a mensagem anterior: ${e.message}`));
                 }
 
                 const openAvatar = await assetService.getAsset(`${avatarPrefix}A`);
@@ -95,7 +108,7 @@ async function handleRaidLifecycle(container) {
                 const roleMention = raid.roleId ? `<@&${raid.roleId}>` : '';
                 const message = await webhookClient.send({ content: roleMention, embeds: [embed], wait: true });
                 
-                await setDoc(announcerRef, { state: 'open', raidId, messageId: message.id, startTimeMs }, { merge: true });
+                await setDoc(announcerRef, { state: 'open', raidId, messageId: message.id, startTimeMs, webhookId: webhook.id, webhookUrl: webhook.url }, { merge: true });
                 logger.info(`[${raidId}] Anúncio de RAID ABERTA enviado.`);
 
             } else if (announcerState.state === 'open' && Date.now() >= tenSecondMark) {
@@ -144,7 +157,7 @@ async function handleRaidLifecycle(container) {
                     message = await webhookClient.send({ embeds: [embed], wait: true });
                 }
 
-                await setDoc(announcerRef, { state: 'next_up', raidId, messageId: message.id }, { merge: true });
+                await setDoc(announcerRef, { state: 'next_up', raidId, messageId: message.id, webhookId: webhook.id, webhookUrl: webhook.url }, { merge: true });
                 logger.info(`[${raidId}] Anunciado como PRÓXIMA RAID.`);
             
             } else if (announcerState.state === 'next_up' && Date.now() >= fiveMinuteMark) {
@@ -166,7 +179,10 @@ async function handleRaidLifecycle(container) {
              const timeSinceStart = Date.now() - (announcerState.startTimeMs || 0);
              if (timeSinceStart > (PORTAL_OPEN_DURATION_SECONDS * 1000) + 10000) { // 2 minutos + 10s de margem
                 logger.info(`[${announcerState.raidId}] Ciclo da raid finalizado. Preparando para o próximo.`);
-                await updateDoc(announcerRef, { state: 'finished' });
+                if (announcerState.messageId) {
+                    await webhookClient.deleteMessage(announcerState.messageId).catch(e => logger.warn(`[${announcerState.raidId}] Não foi possível deletar a mensagem final: ${e.message}`));
+                }
+                await updateDoc(announcerRef, { state: 'finished', messageId: null, raidId: null });
              }
         }
     } catch (error) {

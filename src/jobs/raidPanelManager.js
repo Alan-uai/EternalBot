@@ -24,8 +24,9 @@ async function getRaidStatusPanelData(container) {
     
     let gifUrl = null;
     if (nextRaid && assetService) {
+        // Busca o GIF da próxima raid
         const prefix = RAID_AVATAR_PREFIXES[nextRaid.raidId] || 'Esy';
-        gifUrl = await assetService.getAsset(`${prefix}PR`);
+        gifUrl = await assetService.getAsset(`${prefix}PR`); 
     }
 
     return { statuses, gifUrl };
@@ -62,7 +63,7 @@ export async function run(container) {
         const avatarUrl = assetService ? await assetService.getAsset('DungeonLobby') : client.user.displayAvatarURL();
 
         const embed = new EmbedBuilder()
-            .setImage(gifUrl || null)
+            .setImage(gifUrl || null) // Usa a URL do GIF aqui
             .setColor(0x2F3136)
             .setAuthor({ name: '🗺️ Painel de Status das Raids do Lobby' })
             .setDescription(`*Atualizado <t:${Math.floor(Date.now() / 1000)}:R>*`)
