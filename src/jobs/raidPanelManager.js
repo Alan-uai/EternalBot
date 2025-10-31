@@ -1,103 +1,23 @@
 // src/jobs/raidPanelManager.js
 import { EmbedBuilder, WebhookClient } from 'discord.js';
-import { lobbyDungeonsArticle } from '../data/wiki-articles/lobby-dungeons.js';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { getRaidTimings } from '../utils/raidTimings.js'; // Importa a lógica de tempo unificada
 
 const PANEL_DOC_ID = 'raidPanel';
-const PORTAL_OPEN_DURATION_SECONDS = 2 * 60; // 2 minutos
+const PERSISTENT_WEBHOOK_NAME = 'Painel de Status das Raids';
 
-const RAID_AVATAR_PREFIXES = {
-    'Easy': 'Esy',
-    'Medium': 'Med',
-    'Hard': 'Hd',
-    'Insane': 'Isne',
-    'Crazy': 'Czy',
-    'Nightmare': 'Mare',
-    'Leaf Raid (1800)': 'Lf'
-};
-
-
-async function getRaidStatus(container) {
-    const { logger, services } = container;
+async function getRaidStatusPanelData(container) {
+    const { services } = container;
     const { assetService } = services;
     
-    const now = new Date();
-    const currentMinute = now.getUTCMinutes();
-    const currentSecond = now.getUTCSeconds();
+    // Usa a lógica de tempo unificada para obter os status
+    const { statuses, nextRaid } = getRaidTimings();
     
-    const totalSecondsInHour = (currentMinute * 60) + currentSecond;
-
-    const raids = [...lobbyDungeonsArticle.tables.lobbySchedule.rows].sort((a, b) => {
-        return parseInt(a['Horário'].substring(3, 5), 10) - parseInt(b['Horário'].substring(3, 5), 10);
-    });
-
-    const statuses = [];
-    let nextRaidForGif = null;
-    let minTimeDiff = Infinity;
-
-    // Primeiro, encontra qual é a próxima raid para destacar o GIF
-    for (const raid of raids) {
-        const raidStartMinute = parseInt(raid['Horário'].substring(3, 5), 10);
-        let raidStartTime = new Date(now);
-        raidStartTime.setUTCMinutes(raidStartMinute, 0, 0);
-        if (raidStartTime.getTime() < now.getTime() - 60000) { // Se o tempo de início já passou há mais de 1 min
-            raidStartTime.setUTCHours(raidStartTime.getUTCHours() + 1);
-        }
-        const timeDiff = raidStartTime.getTime() - now.getTime();
-        if (timeDiff >= -60000 && timeDiff < minTimeDiff) { // Considera raides que acabaram de começar também
-            minTimeDiff = timeDiff;
-            nextRaidForGif = raid;
-        }
-    }
-    
-    // Obtém o GIF da próxima raid
     let gifUrl = null;
-    if (nextRaidForGif && assetService) {
-        const avatarPrefix = RAID_AVATAR_PREFIXES[nextRaidForGif['Dificuldade']] || nextRaidForGif['Dificuldade'];
-        gifUrl = await assetService.getAsset(`${avatarPrefix}PR`);
+    if (nextRaid && assetService) {
+        gifUrl = await assetService.getAsset(nextRaid.avatarPrefix + 'PR');
     }
 
-    // Monta a lista de status de cada raid
-    for (let i = 0; i < raids.length; i++) {
-        const raid = raids[i];
-        const raidStartMinute = parseInt(raid['Horário'].substring(3, 5), 10);
-        const raidStartSecondInHour = raidStartMinute * 60;
-        const portalCloseSecondInHour = raidStartSecondInHour + PORTAL_OPEN_DURATION_SECONDS;
-        
-        let secondsUntilOpen = raidStartSecondInHour - totalSecondsInHour;
-        if (secondsUntilOpen < -PORTAL_OPEN_DURATION_SECONDS) {
-             secondsUntilOpen += 3600; 
-        }
-
-        let statusText, details;
-        const isCurrentlyOpen = (totalSecondsInHour >= raidStartSecondInHour) && (totalSecondsInHour < portalCloseSecondInHour);
-
-        if (isCurrentlyOpen) {
-            const secondsUntilClose = portalCloseSecondInHour - totalSecondsInHour;
-            const closeMinutes = Math.floor(secondsUntilClose / 60);
-            const closeSeconds = secondsUntilClose % 60;
-            statusText = '✅ **ABERTA**';
-            details = `Fecha em: \`${closeMinutes}m ${closeSeconds.toString().padStart(2, '0')}s\``;
-        } else {
-            statusText = '❌ Fechada';
-            const minutesPart = Math.floor(secondsUntilOpen / 60);
-            const secondsPart = secondsUntilOpen % 60;
-            details = `Abre em: \`${minutesPart}m ${secondsPart.toString().padStart(2, '0')}s\``;
-        }
-        
-        const raidEmojis = {
-            'Easy': '🟢', 'Medium': '🟡', 'Hard': '🔴', 'Insane': '⚔️', 'Crazy': '🔥', 'Nightmare': '💀', 'Leaf Raid (1800)': '🌿'
-        };
-        
-        const separator = statuses.length > 0 ? '---------------------\n' : '';
-
-        statuses.push({
-            name: `${separator}${raidEmojis[raid['Dificuldade']] || '⚔️'} ${raid['Dificuldade']}`,
-            value: `${statusText}\n${details}`,
-            inline: false, 
-        });
-    }
-    
     return { statuses, gifUrl };
 }
 
@@ -127,7 +47,7 @@ export async function run(container) {
         const messageId = docSnap.data().messageId;
         const webhookClient = new WebhookClient({ url: webhookUrl });
 
-        const { statuses, gifUrl } = await getRaidStatus(container);
+        const { statuses, gifUrl } = await getRaidStatusPanelData(container);
         
         const avatarUrl = assetService ? await assetService.getAsset('DungeonLobby') : client.user.displayAvatarURL();
 
@@ -147,7 +67,7 @@ export async function run(container) {
             } catch(e) {
                  logger.warn(`[raidPanelManager] Não foi possível editar a mensagem do painel (ID: ${messageId}). Criando uma nova.`);
                  sentMessage = await webhookClient.send({
-                    username: 'Painel de Status das Raids',
+                    username: PERSISTENT_WEBHOOK_NAME,
                     avatarURL: avatarUrl,
                     embeds: [embed],
                     wait: true
@@ -156,7 +76,7 @@ export async function run(container) {
             }
         } else {
              sentMessage = await webhookClient.send({
-                username: 'Painel de Status das Raids',
+                username: PERSISTENT_WEBHOOK_NAME,
                 avatarURL: avatarUrl,
                 embeds: [embed],
                 wait: true,
