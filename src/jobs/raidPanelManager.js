@@ -21,33 +21,31 @@ async function getRaidStatus(container) {
     });
 
     const statuses = [];
-    
     let nextRaidForGif = null;
     let minTimeDiff = Infinity;
 
-    // Primeiro, encontra qual é a próxima raid
+    // Primeiro, encontra qual é a próxima raid para destacar o GIF
     for (const raid of raids) {
         const raidStartMinute = parseInt(raid['Horário'].substring(3, 5), 10);
         let raidStartTime = new Date(now);
         raidStartTime.setUTCMinutes(raidStartMinute, 0, 0);
-        if (raidStartTime.getTime() < now.getTime() - 60000) {
+        if (raidStartTime.getTime() < now.getTime() - 60000) { // Se o tempo de início já passou há mais de 1 min
             raidStartTime.setUTCHours(raidStartTime.getUTCHours() + 1);
         }
         const timeDiff = raidStartTime.getTime() - now.getTime();
-        if (timeDiff >= -60000 && timeDiff < minTimeDiff) {
+        if (timeDiff >= -60000 && timeDiff < minTimeDiff) { // Considera raides que acabaram de começar também
             minTimeDiff = timeDiff;
             nextRaidForGif = raid;
         }
     }
     
-    // Adiciona o GIF da próxima raid no topo, se existir
+    // Obtém o GIF da próxima raid
+    let gifUrl = null;
     if (nextRaidForGif && assetService) {
-        const gifUrl = await assetService.getAsset(`${nextRaidForGif['Dificuldade']}PR`);
-        if (gifUrl) {
-            statuses.push({ name: '\u200B', value: gifUrl, inline: false });
-        }
+        gifUrl = await assetService.getAsset(`${nextRaidForGif['Dificuldade']}PR`);
     }
 
+    // Monta a lista de status de cada raid
     for (let i = 0; i < raids.length; i++) {
         const raid = raids[i];
         const raidStartMinute = parseInt(raid['Horário'].substring(3, 5), 10);
@@ -79,7 +77,7 @@ async function getRaidStatus(container) {
             'Easy': '🟢', 'Medium': '🟡', 'Hard': '🔴', 'Insane': '⚔️', 'Crazy': '🔥', 'Nightmare': '💀', 'Leaf Raid (1800)': '🌿'
         };
         
-        const separator = statuses.length > 0 && !statuses[statuses.length - 1].value.includes('https://') ? '---------------------\n' : '';
+        const separator = statuses.length > 0 ? '---------------------\n' : '';
 
         statuses.push({
             name: `${separator}${raidEmojis[raid['Dificuldade']] || '⚔️'} ${raid['Dificuldade']}`,
@@ -88,7 +86,7 @@ async function getRaidStatus(container) {
         });
     }
     
-    return statuses;
+    return { statuses, gifUrl };
 }
 
 export const name = 'raidPanelManager';
@@ -117,7 +115,7 @@ export async function run(container) {
         const messageId = docSnap.data().messageId;
         const webhookClient = new WebhookClient({ url: webhookUrl });
 
-        const statuses = await getRaidStatus(container);
+        const { statuses, gifUrl } = await getRaidStatus(container);
         
         const avatarUrl = assetService ? await assetService.getAsset('DungeonLobby') : client.user.displayAvatarURL();
 
@@ -128,6 +126,10 @@ export async function run(container) {
             .setFields(statuses)
             .setTimestamp()
             .setFooter({ text: 'Horários baseados no fuso horário do servidor (UTC).' });
+        
+        if (gifUrl) {
+            embed.setImage(gifUrl);
+        }
             
         let sentMessage;
         if (messageId) {
