@@ -3,6 +3,8 @@ import { EmbedBuilder, WebhookClient, ChannelType } from 'discord.js';
 import { lobbyDungeonsArticle } from '../data/wiki-articles/lobby-dungeons.js';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 
+const ANNOUNCEMENT_LIFETIME_MS = 2 * 60 * 1000;
+
 async function getOrCreateWebhook(channel, name, logger, assetService) {
     if (!channel || (channel.type !== ChannelType.GuildText && channel.type !== ChannelType.GuildAnnouncement)) {
         logger.error(`[getOrCreateWebhook] Canal fornecido para "${name}" é inválido.`);
@@ -183,7 +185,6 @@ async function handleRaidLifecycle(container) {
 
 export const name = 'raidAnnouncer';
 export const schedule = '*/10 * * * * *'; // A cada 10 segundos
-export const ANNOUNCEMENT_LIFETIME_MS = 2 * 60 * 1000;
 
 export async function run(container) {
     await handleRaidLifecycle(container);

@@ -33,7 +33,8 @@ export async function loadServices(container) {
         const assetService = new AssetService(config, services.firebase.firestore, logger);
         await assetService.initialize(); // Dispara a sincronização
         services.assetService = assetService;
-        services.firebase.assetService = assetService;
+        // Adiciona uma referência cruzada para fácil acesso em outros serviços que dependem do firebase
+        services.firebase.assetService = assetService; 
         logger.info('Serviço de Assets inicializado.');
     } catch (error) {
         logger.error('Falha ao inicializar o serviço de Assets:', error);

@@ -1,5 +1,5 @@
 // src/services/assetService.js
-import { doc, getDoc, setDoc, writeBatch, collection } from 'firebase/firestore';
+import { doc, getDoc, writeBatch, collection, getDocs } from 'firebase/firestore';
 import axios from 'axios';
 
 export class AssetService {
@@ -9,27 +9,27 @@ export class AssetService {
      * @param {import('../utils/logger.js').Logger} logger O logger para registrar informações.
      */
     constructor(config, firestore, logger) {
-        this.cloudinaryUrl = process.env.CLOUDINARY_URL || '';
+        this.cloudinaryUrl = config.CLOUDINARY_URL;
         this.firestore = firestore;
         this.logger = logger;
         this.assetsCache = new Map(); // Cache em memória para acesso rápido
         this.isInitialized = false;
 
-        if (!this.cloudinaryUrl) {
-            this.logger.error('[AssetService] A variável de ambiente CLOUDINARY_URL não está configurada!');
-            return;
-        }
-        
-        const match = this.cloudinaryUrl.match(/cloudinary:\/\/([^:]+):([^@]+)@(.+)/);
+        const match = this.cloudinaryUrl.match(/^cloudinary:\/\/([^:]+):([^@]+)@(.+)$/);
+
         if (!match) {
-            this.logger.error('[AssetService] O formato da CLOUDINARY_URL é inválido.');
+            this.logger.error('[AssetService] CLOUDINARY_URL inválido. Use o formato: cloudinary://<key>:<secret>@<name>');
             return;
         }
 
         this.apiKey = match[1];
         this.apiSecret = match[2];
         this.cloudName = match[3];
-        this.folder = 'Home'; // Conforme especificado na estrutura
+        this.folder = 'Home';
+    }
+    
+    isBaseUrlValid() {
+        return !!this.apiKey;
     }
 
     /**
@@ -41,32 +41,32 @@ export class AssetService {
             return;
         }
 
-        const url = `https://api.cloudinary.com/v1_1/${this.cloudName}/resources/image/upload?max_results=500&prefix=${this.folder}/`;
+        const url = `https://api.cloudinary.com/v1_1/${this.cloudName}/resources/image/upload`;
+        const params = `?max_results=500&prefix=${this.folder}/`;
 
         try {
             this.logger.info(`[AssetService] Sincronizando assets da pasta '${this.folder}' do Cloudinary...`);
-            const auth = {
-                username: this.apiKey,
-                password: this.apiSecret
-            };
+            
+            const response = await axios.get(url + params, {
+                auth: { username: this.apiKey, password: this.apiSecret },
+            });
 
-            const response = await axios.get(url, { auth });
             const assets = response.data.resources;
 
             if (!assets || assets.length === 0) {
                 this.logger.warn(`[AssetService] Nenhum asset encontrado na pasta '${this.folder}' do Cloudinary.`);
-                this.isInitialized = true; // Ainda assim marca como inicializado
+                this.isInitialized = true; // Marca como inicializado mesmo sem assets
                 return;
             }
 
             const batch = writeBatch(this.firestore);
-            const assetsCollection = collection(this.firestore, 'assets');
+            const assetsCollectionRef = collection(this.firestore, 'assets');
 
             for (const asset of assets) {
                 const id = asset.public_id.replace(`${this.folder}/`, '');
                 if (id) {
                     const imageUrl = asset.secure_url;
-                    const assetRef = doc(assetsCollection, id);
+                    const assetRef = doc(assetsCollectionRef, id);
                     batch.set(assetRef, { url: imageUrl, syncedAt: new Date().toISOString() });
                     this.assetsCache.set(id, imageUrl); // Pré-popula o cache em memória
                 }
@@ -79,13 +79,12 @@ export class AssetService {
         } catch (err) {
             this.logger.error('[AssetService] Falha ao sincronizar assets do Cloudinary:', err.response ? err.response.data : err.message);
             this.logger.warn('[AssetService] Tentando carregar assets do cache do Firestore como fallback...');
-            // Se a sincronização falhar, tenta carregar o que já existe
             await this.loadFromFirestore();
         }
     }
     
     /**
-     * Carrega todos os assets do Firestore para o cache em memória.
+     * Carrega todos os assets do Firestore para o cache em memória como um fallback.
      */
     async loadFromFirestore() {
         try {
@@ -108,9 +107,10 @@ export class AssetService {
      * @returns {Promise<string|null>} A URL segura do asset ou null se não for encontrado.
      */
     async getAsset(assetId) {
-        if (!assetId || !this.isInitialized) {
-            if(!this.isInitialized) this.logger.warn(`[AssetService] Serviço não inicializado ao tentar buscar asset '${assetId}'.`);
-            return null;
+        if (!assetId) return null;
+        if (!this.isInitialized) {
+            this.logger.warn(`[AssetService] Serviço não inicializado ao tentar buscar asset '${assetId}'. Carregando do Firestore como fallback...`);
+            await this.loadFromFirestore();
         }
 
         // Tenta buscar do cache em memória primeiro
