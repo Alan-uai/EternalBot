@@ -1,5 +1,5 @@
 // src/services/assetService.js
-import { doc, getDoc, writeBatch, collection, getDocs } from 'firebase/firestore';
+import { doc, writeBatch, collection, getDocs, getDoc } from 'firebase/firestore';
 import cloudinary from 'cloudinary';
 
 export class AssetService {
@@ -19,7 +19,7 @@ export class AssetService {
 
         if (!match) {
             this.logger.error('[AssetService] CLOUDINARY_URL inválida ou ausente. O serviço de assets não funcionará.');
-            this.v2 = null; // Desativa o serviço se a URL for inválida
+            this.v2 = null; 
         } else {
             const [, apiKey, apiSecret, cloudName] = match;
             this.folder = 'Home'; // Pasta padrão no Cloudinary
@@ -59,8 +59,8 @@ export class AssetService {
 
             const assets = result.resources;
             if (!assets || assets.length === 0) {
-                this.logger.warn(`[AssetService] Nenhum asset encontrado na pasta '${this.folder}'.`);
-                this.isInitialized = true;
+                this.logger.warn(`[AssetService] Nenhum asset encontrado na pasta '${this.folder}'. Carregando do cache do Firestore se disponível.`);
+                await this.loadFromFirestore();
                 return;
             }
 
@@ -68,6 +68,7 @@ export class AssetService {
             const assetsCollectionRef = collection(this.firestore, 'assets');
 
             for (const asset of assets) {
+                // Remove o prefixo da pasta, ex: "Home/EasyA" -> "EasyA"
                 const id = asset.public_id.replace(`${this.folder}/`, '');
                 if (id) {
                     const imageUrl = asset.secure_url;

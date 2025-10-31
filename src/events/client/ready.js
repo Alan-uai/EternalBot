@@ -5,8 +5,8 @@ import { doc, getDocs, collection, query, where, writeBatch, setDoc, getDoc } fr
 // Função para garantir que os webhooks necessários existam
 async function initializeWebhooks(client) {
     const { logger, config, services } = client.container;
-    const { firebase } = services;
-    const { firestore, assetService } = firebase;
+    const { firebase, assetService } = services;
+    const { firestore } = firebase;
     logger.info('Inicializando e verificando Webhooks...');
 
     // Validação do AssetService e CLOUDINARY_URL
@@ -37,9 +37,10 @@ async function initializeWebhooks(client) {
             let webhook = webhooksInChannel.find(wh => wh.name === webhookConfig.name && wh.owner.id === client.user.id);
             
             if (!webhook) {
+                const avatarURL = await assetService.getAsset('BotAvatar');
                 webhook = await channel.createWebhook({
                     name: webhookConfig.name,
-                    avatar: await assetService.getAsset('BotAvatar'),
+                    avatar: avatarURL,
                     reason: `Webhook necessário para ${webhookConfig.name}`
                 });
                 logger.info(`[WebhookManager] Webhook '${webhookConfig.name}' criado no canal #${channel.name}.`);
