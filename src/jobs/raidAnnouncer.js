@@ -174,13 +174,13 @@ async function handleRaidLifecycle(container) {
 
                 if (announcerState.messageId) {
                     try {
-                        message = await webhook.editMessage(announcerState.messageId, { content: gifUrl || ' ' });
+                        message = await webhook.editMessage(announcerState.messageId, { content: gifUrl ? `${gifUrl} ` : ' ' });
                     } catch {
                         await webhook.deleteMessage(announcerState.messageId).catch(()=>{});
-                        message = await webhook.send({ content: gifUrl || ' ', wait: true });
+                        message = await webhook.send({ content: gifUrl ? `${gifUrl} ` : ' ', wait: true });
                     }
                 } else {
-                     message = await webhook.send({ content: gifUrl || ' ', wait: true });
+                     message = await webhook.send({ content: gifUrl ? `${gifUrl} ` : ' ', wait: true });
                 }
 
                  await setDoc(announcerRef, { state: 'next_up', raidId, webhookUrl: webhook.url, messageId: message.id, startTimeMs: raidStartTimeMs });
@@ -192,7 +192,7 @@ async function handleRaidLifecycle(container) {
                 await webhook.edit({ name: `Atenção! Raid ${raidId} em 5 Min!` }).catch(e => logger.error(`[${raidId}] Falha ao editar nome do webhook para 5min: ${e.message}`));
                 const gifUrl = await assetService.getAsset(`${raidId}5m`);
                 if (gifUrl) {
-                    await webhook.editMessage(announcerState.messageId, { content: gifUrl }).catch(e => logger.error(`[${raidId}] Falha ao editar mensagem com GIF de 5min: ${e.message}`));
+                    await webhook.editMessage(announcerState.messageId, { content: `${gifUrl} ` }).catch(e => logger.error(`[${raidId}] Falha ao editar mensagem com GIF de 5min: ${e.message}`));
                 }
 
                 await updateDoc(announcerRef, { state: 'starting_soon' });
