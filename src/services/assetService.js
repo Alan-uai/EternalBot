@@ -1,6 +1,6 @@
 // src/services/assetService.js
 import { doc, writeBatch, collection, getDocs, getDoc } from 'firebase/firestore';
-import cloudinary from 'cloudinary';
+import { v2 as cloudinary } from 'cloudinary';
 
 export class AssetService {
     /**
@@ -22,15 +22,14 @@ export class AssetService {
             this.v2 = null; 
         } else {
             const [, apiKey, apiSecret, cloudName] = match;
-            this.folder = 'Home'; // Pasta padrão no Cloudinary
             
-            cloudinary.v2.config({
+            cloudinary.config({
                 cloud_name: cloudName,
                 api_key: apiKey,
                 api_secret: apiSecret,
                 secure: true,
             });
-            this.v2 = cloudinary.v2;
+            this.v2 = cloudinary; // Use o objeto cloudinary importado
             this.logger.info('[AssetService] SDK do Cloudinary configurado.');
         }
     }
@@ -48,28 +47,29 @@ export class AssetService {
             return;
         }
 
-        this.logger.info(`[AssetService] Sincronizando assets da pasta '${this.folder}' do Cloudinary...`);
+        this.logger.info(`[AssetService] Sincronizando todos os assets do Cloudinary...`);
 
         try {
             const result = await this.v2.api.resources({
                 type: 'upload',
-                prefix: this.folder,
-                max_results: 500,
+                max_results: 500, // Busca o máximo de assets possível
             });
 
             const assets = result.resources;
             if (!assets || assets.length === 0) {
-                this.logger.warn(`[AssetService] Nenhum asset encontrado na pasta '${this.folder}'. Carregando do cache do Firestore se disponível.`);
+                this.logger.warn(`[AssetService] Nenhum asset encontrado no Cloudinary. Carregando do cache do Firestore se disponível.`);
                 await this.loadFromFirestore();
                 return;
             }
 
             const batch = writeBatch(this.firestore);
             const assetsCollectionRef = collection(this.firestore, 'assets');
+            
+            // Limpa o cache local antes de popular
+            this.assetsCache.clear();
 
             for (const asset of assets) {
-                // Remove o prefixo da pasta, ex: "Home/EasyA" -> "EasyA"
-                const id = asset.public_id.replace(`${this.folder}/`, '');
+                const id = asset.public_id.split('/').pop(); // Extrai apenas o nome do arquivo/asset
                 if (id) {
                     const imageUrl = asset.secure_url;
                     const assetRef = doc(assetsCollectionRef, id);
