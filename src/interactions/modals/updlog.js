@@ -28,7 +28,8 @@ export async function handleInteraction(interaction, { client }) {
 
     const titleEn = interaction.fields.getTextInputValue('updlog_title');
     const contentEn = interaction.fields.getTextInputValue('updlog_content');
-    const { logger } = client.container;
+    const { logger, services } = client.container;
+    const { assetService } = services;
 
     const { firestore } = initializeFirebase();
     const updlogRef = doc(firestore, 'bot_config', FIRESTORE_DOC_ID);
@@ -44,6 +45,7 @@ export async function handleInteraction(interaction, { client }) {
 
         let messageId = webhookData.messageId;
         const webhookClient = new WebhookClient({ url: webhookData.webhookUrl });
+        const avatarURL = await assetService.getAsset('LOG');
         
         // Posta primeiro em inglês como fallback seguro
         const embedEn = new EmbedBuilder()
@@ -53,15 +55,17 @@ export async function handleInteraction(interaction, { client }) {
             .setFooter({ text: `Lançado por: ${interaction.user.tag} | Traduzindo...` });
 
         let message;
+        const payloadEn = { username: titleEn, avatarURL, embeds: [embedEn] };
+
         if (messageId) {
              try {
-                message = await webhookClient.editMessage(messageId, { username: titleEn, embeds: [embedEn] });
+                message = await webhookClient.editMessage(messageId, payloadEn);
             } catch(e) {
                 logger.warn(`[updlog] Webhook não pôde editar a mensagem ${messageId}, enviando uma nova.`);
-                message = await webhookClient.send({ username: titleEn, embeds: [embedEn], wait: true });
+                message = await webhookClient.send({ ...payloadEn, wait: true });
             }
         } else {
-            message = await webhookClient.send({ username: titleEn, embeds: [embedEn], wait: true });
+            message = await webhookClient.send({ ...payloadEn, wait: true });
         }
         
         // Salva a referência da mensagem e conteúdo em inglês imediatamente
@@ -95,6 +99,7 @@ export async function handleInteraction(interaction, { client }) {
             
             await webhookClient.editMessage(message.id, {
                 username: translatedTitle,
+                avatarURL,
                 embeds: [embedPt]
             });
             

@@ -16,6 +16,21 @@ async function getOrCreateWebhook(channel, name, logger, assetService) {
         const webhooksInChannel = await channel.fetchWebhooks();
         let webhook = webhooksInChannel.find(wh => wh.name === name && wh.owner.id === channel.client.user.id);
         
+        // Se encontrarmos um webhook com o nome genérico, podemos adotá-lo
+        if(!webhook) {
+            webhook = webhooksInChannel.find(wh => wh.name.startsWith('Próxima Raid:') && wh.owner.id === channel.client.user.id);
+            if(webhook) await webhook.edit({ name });
+        }
+        if(!webhook) {
+             webhook = webhooksInChannel.find(wh => wh.name.includes('em 5 Min!') && wh.owner.id === channel.client.user.id);
+             if(webhook) await webhook.edit({ name });
+        }
+         if(!webhook) {
+             webhook = webhooksInChannel.find(wh => wh.name.includes('fechando em 10s!') && wh.owner.id === channel.client.user.id);
+             if(webhook) await webhook.edit({ name });
+        }
+
+
         if (webhook) {
             return webhook;
         }
@@ -91,13 +106,13 @@ async function handleRaidLifecycle(container) {
 
             // ESTADO: RAID ABRIU (DELETAR ANÚNCIO ANTERIOR E CRIAR NOVO)
             if (currentState === 'starting_soon' || currentState === 'new_cycle') {
-                // Deleta o webhook/anúncio antigo (5min) se existir
+                // Deleta a mensagem do anúncio anterior (de 5min)
                 if (announcerState.webhookUrl && announcerState.messageId) {
                     const oldWebhookClient = new WebhookClient({ url: announcerState.webhookUrl });
                     await oldWebhookClient.deleteMessage(announcerState.messageId).catch(e => logger.warn(`[${raidId}] Falha ao deletar mensagem antiga (5min): ${e.message}`));
                 }
 
-                // Cria um novo webhook para garantir a menção
+                // Cria um novo webhook temporário para a menção
                 const webhook = await getOrCreateWebhook(raidChannel, `🔥 A Raid Começou: ${raidId}!`, logger, assetService);
                 if (!webhook) return;
 
@@ -115,7 +130,7 @@ async function handleRaidLifecycle(container) {
                 
                 const roleMention = currentRaid.roleId ? `<@&${currentRaid.roleId}>` : '@everyone';
                 const messagePayload = { content: roleMention, embeds: [embed] };
-                if (gifUrl) messagePayload.content = `${gifUrl}\n${roleMention}`;
+                if (gifUrl) messagePayload.content = `${gifUrl} \n${roleMention}`;
                 
                 const openMessage = await webhook.send({ ...messagePayload, wait: true });
                 
@@ -123,7 +138,7 @@ async function handleRaidLifecycle(container) {
                 await setDoc(announcerRef, { state: 'open', raidId, webhookUrl: webhook.url, messageId: openMessage.id, startTimeMs: raidStartTimeMs });
                 logger.info(`[${raidId}] Anúncio de RAID ABERTA enviado.`);
             }
-            // ESTADO: RAID FECHANDO EM 10 SEGUNDOS (EDITAR MENSAGEM)
+            // ESTADO: RAID FECHANDO EM 10 SEGUNDOS (EDITAR MENSAGEM E WEBHOOK)
             else if (currentState === 'open' && now.getTime() >= tenSecondMark && announcerState.webhookUrl) {
                  const webhook = new WebhookClient({ url: announcerState.webhookUrl });
                  await webhook.edit({ name: `Raid ${raidId} fechando em 10s!` }).catch(e => logger.error(`[${raidId}] Falha ao editar nome do webhook para 10s: ${e.message}`));
@@ -132,7 +147,7 @@ async function handleRaidLifecycle(container) {
                     try {
                         const message = await webhook.fetchMessage(announcerState.messageId);
                         const originalEmbed = message.embeds[0];
-                        const updatedPayload = { content: `${gifUrl}\n${message.content.split('\n').pop()}`, embeds: [EmbedBuilder.from(originalEmbed).setFooter({ text: 'O portal está fechando!' })] };
+                        const updatedPayload = { content: `${gifUrl} \n${message.content.split('\n').pop()}`, embeds: [EmbedBuilder.from(originalEmbed).setFooter({ text: 'O portal está fechando!' })] };
                         await webhook.editMessage(announcerState.messageId, updatedPayload);
                     } catch(e) {
                          logger.error(`[${raidId}] Falha ao editar mensagem com GIF de 10s: ${e.message}`);
@@ -149,18 +164,29 @@ async function handleRaidLifecycle(container) {
             const fiveMinuteMark = raidStartTimeMs - 5 * 60 * 1000;
             const currentState = announcerState.state;
 
-            // ESTADO: É A PRÓXIMA RAID (CRIAR ANÚNCIO PERSISTENTE SE NÃO EXISTIR)
+            // ESTADO: É A PRÓXIMA RAID (CRIAR/EDITAR ANÚNCIO PERSISTENTE)
             if (currentState === 'finished' || announcerState.raidId !== raidId) {
                  const webhook = await getOrCreateWebhook(raidChannel, `Próxima Raid: ${raidId}`, logger, assetService);
                  if (!webhook) return;
                  
                  const gifUrl = await assetService.getAsset(`${raidId}PR`);
-                 const message = await webhook.send({ content: gifUrl || ' ', wait: true });
+                 let message;
+
+                if (announcerState.messageId) {
+                    try {
+                        message = await webhook.editMessage(announcerState.messageId, { content: gifUrl || ' ' });
+                    } catch {
+                        await webhook.deleteMessage(announcerState.messageId).catch(()=>{});
+                        message = await webhook.send({ content: gifUrl || ' ', wait: true });
+                    }
+                } else {
+                     message = await webhook.send({ content: gifUrl || ' ', wait: true });
+                }
 
                  await setDoc(announcerRef, { state: 'next_up', raidId, webhookUrl: webhook.url, messageId: message.id, startTimeMs: raidStartTimeMs });
                  logger.info(`[${raidId}] Anunciado como PRÓXIMA RAID.`);
             }
-            // ESTADO: PRÓXIMA RAID FALTANDO 5 MIN (EDITAR MENSAGEM)
+            // ESTADO: PRÓXIMA RAID FALTANDO 5 MIN (EDITAR MENSAGEM E WEBHOOK)
             else if (currentState === 'next_up' && announcerState.raidId === raidId && now.getTime() >= fiveMinuteMark && announcerState.webhookUrl) {
                 const webhook = new WebhookClient({ url: announcerState.webhookUrl });
                 await webhook.edit({ name: `Atenção! Raid ${raidId} em 5 Min!` }).catch(e => logger.error(`[${raidId}] Falha ao editar nome do webhook para 5min: ${e.message}`));
@@ -177,12 +203,8 @@ async function handleRaidLifecycle(container) {
         else if (announcerState.state && announcerState.state !== 'finished') {
              const timeSinceStart = now.getTime() - (announcerState.startTimeMs || 0);
              if (timeSinceStart > PORTAL_OPEN_DURATION_MS) {
-                logger.info(`[${announcerState.raidId}] Ciclo da raid finalizado. Limpando...`);
-                if (announcerState.webhookUrl && announcerState.messageId) {
-                     const webhook = new WebhookClient({ url: announcerState.webhookUrl });
-                     await webhook.deleteMessage(announcerState.messageId).catch(()=>{});
-                }
-                await setDoc(announcerRef, { state: 'finished', raidId: null, messageId: null, webhookUrl: null });
+                logger.info(`[${announcerState.raidId}] Ciclo da raid finalizado. Reiniciando...`);
+                 await updateDoc(announcerRef, { state: 'finished' });
              }
         }
 
@@ -198,5 +220,3 @@ export const schedule = '*/10 * * * * *'; // A cada 10 segundos
 export async function run(container) {
     await handleRaidLifecycle(container);
 }
-
-    

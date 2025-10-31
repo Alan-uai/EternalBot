@@ -21,7 +21,8 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction) {
     const { client } = interaction;
-    const { logger } = client.container;
+    const { logger, services } = client.container;
+    const { assetService } = services;
     
     if (!interaction.member.roles.cache.has(ADMIN_ROLE_ID)) {
         return interaction.reply({
@@ -69,19 +70,25 @@ export async function execute(interaction) {
         
         const formattedCodesList = updatedCodes.map(code => `• \`${code}\``).join('\n') || 'Nenhum código ativo no momento.';
         const content = `**Códigos Ativos do Jogo**\n\n${formattedCodesList}\n\n*Use /codes para ver esta lista.*`;
-
+        
+        const avatarURL = await assetService.getAsset('CD');
         const webhookClient = new WebhookClient({ url: currentData.webhookUrl });
         let message;
+        const payload = { 
+            content, 
+            username: 'Códigos Ativos', 
+            avatarURL 
+        };
 
         if (currentData.messageId) {
             try {
-                message = await webhookClient.editMessage(currentData.messageId, { content });
+                message = await webhookClient.editMessage(currentData.messageId, payload);
             } catch (error) {
                 logger.warn(`[updcodes] Não foi possível editar a mensagem de códigos (ID: ${currentData.messageId}). Criando uma nova.`);
-                message = await webhookClient.send({ content, wait: true });
+                message = await webhookClient.send({ ...payload, wait: true });
             }
         } else {
-            message = await webhookClient.send({ content, wait: true });
+            message = await webhookClient.send({ ...payload, wait: true });
         }
         
         await setDoc(codesRef, { 
