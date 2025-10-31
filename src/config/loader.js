@@ -2,7 +2,7 @@
 import 'dotenv/config';
 
 export function loadConfig(logger) {
-    const requiredEnv = ['DISCORD_TOKEN', 'CLIENT_ID', 'GUILD_ID'];
+    const requiredEnv = ['DISCORD_TOKEN', 'CLIENT_ID', 'GUILD_ID', 'CLOUDINARY_URL'];
     let hasError = false;
 
     for (const variable of requiredEnv) {
@@ -20,7 +20,7 @@ export function loadConfig(logger) {
         DISCORD_TOKEN: process.env.DISCORD_TOKEN,
         CLIENT_ID: process.env.CLIENT_ID,
         GUILD_ID: process.env.GUILD_ID,
-        CLOUDINARY_URL: 'https://res.cloudinary.com/dfpmsqyuc/image/upload/v1730310214/eternal-bot-assets',
+        CLOUDINARY_URL: process.env.CLOUDINARY_URL,
         // IDs de Canais
         CHAT_CHANNEL_ID: '1429309293076680744',
         MOD_CURATION_CHANNEL_ID: '1426968477482225716',
@@ -32,7 +32,7 @@ export function loadConfig(logger) {
         UPDLOG_CHANNEL_ID: '1426958336057675857',
         // IDs de Cargos
         ADMIN_ROLE_ID: '1429318984716521483',
-        VERIFIED_ROLE_ID: '1429278854874140734',
+        VERIFIED_ROLE_ID: '1429278854874140732',
         ALL_RAIDS_ROLE_ID: '1429360300594958397',
         // Outras Configs
         RAID_NOTIFICATION_ROLES: [
