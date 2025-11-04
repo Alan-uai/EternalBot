@@ -70,6 +70,10 @@ export async function loadJobs(container) {
                 run: runJob,
                 stop: () => { if(task.stop) task.stop() },
             });
+            // Execute o job uma vez na inicialização, se for um painel
+            if(jobModule.name.includes('Panel')) {
+                runJob();
+            }
 
         } catch (err) {
             logger.error(`Falha ao carregar o job ${file}:`, err);

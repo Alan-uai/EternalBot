@@ -32,6 +32,8 @@ export async function loadInteractions(container) {
     
     for (const folder of interactionFolders) {
         const folderPath = path.join(INTERACTIONS_PATH, folder);
+        if(!fs.statSync(folderPath).isDirectory()) continue;
+        
         const interactionFiles = fs.readdirSync(folderPath).filter(file => file.endsWith('.js'));
 
         for (const file of interactionFiles) {
