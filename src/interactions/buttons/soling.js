@@ -217,7 +217,7 @@ async function handlePostRequest(interaction, settings) {
             .setCustomId(`soling_confirm_${newRequestId}_${user.id}`)
             .setLabel(confirmLabel)
             .setStyle(ButtonStyle.Success)
-            .setEmoji('1240836511391485982');
+            .setEmoji('🤝');
 
         const finishButton = new ButtonBuilder()
             .setCustomId(`soling_finish_${newRequestId}_${user.id}`)
