@@ -1,4 +1,3 @@
-
 // src/interactions/buttons/soling.js
 import { ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, WebhookClient, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, AttachmentBuilder, ChannelType } from 'discord.js';
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, query, where, getDocs, writeBatch, arrayUnion, arrayRemove } from 'firebase/firestore';
@@ -61,9 +60,10 @@ function createStatusEmbed(requestData) {
 
 async function handleTypeSelection(interaction, type) {
     try {
+        await interaction.deferUpdate();
         const raids = getAvailableRaids();
         if (raids.length === 0) {
-            return interaction.update({ content: 'Não há raids disponíveis para selecionar no momento.', components: [] });
+            return interaction.followUp({ content: 'Não há raids disponíveis para selecionar no momento.', components: [], ephemeral: true });
         }
         const raidMenu = new StringSelectMenuBuilder()
             .setCustomId(`soling_raid_${type}`)
@@ -72,7 +72,7 @@ async function handleTypeSelection(interaction, type) {
 
         const row = new ActionRowBuilder().addComponents(raidMenu);
 
-        await interaction.update({
+        await interaction.editReply({
             content: 'Agora, selecione a raid:',
             components: [row],
         });
@@ -127,7 +127,10 @@ async function handleRaidSelection(interaction, type) {
 
 async function handlePostRequest(interaction, settings) {
     const replyOrFollowUp = async (options) => {
-         return await interaction.followUp({ ...options, ephemeral: true });
+        if (interaction.replied || interaction.deferred) {
+            return await interaction.followUp({ ...options, ephemeral: true });
+        }
+        return await interaction.reply({ ...options, ephemeral: true });
     };
 
     try {
@@ -256,12 +259,12 @@ async function handlePostRequest(interaction, settings) {
         
         await batch.commit();
         
-        await replyOrFollowUp({ content: 'Seu pedido foi postado com sucesso!' });
+        await interaction.editReply({ content: 'Seu pedido foi postado com sucesso!', components: [] });
 
         interaction.client.container.interactions.delete(`soling_temp_${interaction.user.id}`);
     } catch(error) {
         console.error("Erro em handlePostRequest:", error);
-        await interaction.followUp({ content: 'Ocorreu um erro ao postar seu pedido.', ephemeral: true }).catch(console.error);
+        await replyOrFollowUp({ content: 'Ocorreu um erro ao postar seu pedido.' }).catch(console.error);
     }
 }
 
@@ -379,13 +382,14 @@ async function openManualCountModal(interaction, requestId, ownerId) {
 async function handleManualCountSubmit(interaction, requestId) {
     await interaction.deferReply({ ephemeral: true });
     const count = parseInt(interaction.fields.getTextInputValue('count'), 10);
-    const action = interaction.fields.getTextInputValue('action').toUpperCase();
+    const actionRaw = interaction.fields.getTextInputValue('action') || '';
+    const action = actionRaw.trim().toUpperCase().charAt(0); // Pega 'A' ou 'R'
 
     if (isNaN(count) || count <= 0) {
         return interaction.editReply({ content: 'O número de membros deve ser um valor positivo.' });
     }
     if (action !== 'A' && action !== 'R') {
-        return interaction.editReply({ content: "Ação inválida. Use 'A' para adicionar ou 'R' para remover." });
+        return interaction.editReply({ content: "Ação inválida. Use 'Adicionar' (ou 'A') / 'Remover' (ou 'R')." });
     }
 
     const { firestore } = initializeFirebase();
