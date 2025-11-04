@@ -1,6 +1,6 @@
 // src/interactions/buttons/soling.js
 import { ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, WebhookClient, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, AttachmentBuilder, ChannelType } from 'discord.js';
-import { doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, query, where, getDocs, writeBatch, arrayUnion } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, query, where, getDocs, writeBatch, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
 import { getAvailableRaids } from '../../commands/utility/soling.js';
 import { createProfileImage } from '../../utils/createProfileImage.js';
@@ -31,6 +31,24 @@ async function getOrCreateWebhook(channel) {
     }
     return webhook;
 }
+
+// Função para criar/atualizar o Embed de Status
+function createStatusEmbed(requestData) {
+    const confirmedUsersList = requestData.confirmedUsers && requestData.confirmedUsers.length > 0
+        ? requestData.confirmedUsers.map(u => `• <@${u.userId}>`).join('\n')
+        : 'Ninguém confirmado ainda.';
+
+    return new EmbedBuilder()
+        .setColor(0x3498DB)
+        .setTitle(`Painel de Status: ${requestData.raidName}`)
+        .addFields(
+            { name: '👑 Dono do Anúncio', value: `<@${requestData.userId}>`, inline: true },
+            { name: '👥 Membros Confirmados', value: String(requestData.confirmedUsers?.length || 0), inline: true },
+            { name: '🙋 Lista de Participantes', value: confirmedUsersList }
+        )
+        .setTimestamp();
+}
+
 
 async function handleTypeSelection(interaction, type) {
     try {
@@ -75,48 +93,14 @@ async function handleRaidSelection(interaction, type) {
 
         interaction.client.container.interactions.set(`soling_temp_${interaction.user.id}`, { type, raid: selectedRaidLabel, robloxId: userData.robloxId || null });
         
-        if (dungeonSettings.alwaysSendLink && dungeonSettings.serverLink) {
-            await interaction.update({ content: 'Processando seu pedido...', components: [] });
-            await handlePostRequest(interaction, {
-                serverLink: dungeonSettings.serverLink,
-                alwaysSend: dungeonSettings.alwaysSendLink,
-                deleteAfter: dungeonSettings.deleteAfterMinutes,
-            }, true); // Pass true for isFollowUp
-        } else {
-            const modal = new ModalBuilder()
-                .setCustomId('soling_modal_submit')
-                .setTitle(`Pedido para: ${selectedRaidLabel}`);
-            
-            const serverLinkInput = new TextInputBuilder()
-                .setCustomId('server_link')
-                .setLabel("Link do seu servidor privado (Opcional)")
-                .setStyle(TextInputStyle.Short)
-                .setValue(dungeonSettings.serverLink || '')
-                .setRequired(false);
+        // Pula o modal e vai direto para a postagem
+        await interaction.update({ content: 'Processando seu pedido...', components: [] });
+        await handlePostRequest(interaction, {
+            serverLink: dungeonSettings.serverLink,
+            alwaysSend: dungeonSettings.alwaysSendLink,
+            deleteAfter: dungeonSettings.deleteAfterMinutes,
+        }, true); // Pass true for isFollowUp
 
-            const alwaysSendInput = new TextInputBuilder()
-                .setCustomId('always_send')
-                .setLabel("Sempre enviar o link acima? (sim/não)")
-                .setStyle(TextInputStyle.Short)
-                .setValue(dungeonSettings.alwaysSendLink ? 'sim' : 'não')
-                .setRequired(true);
-
-            const deleteAfterInput = new TextInputBuilder()
-                .setCustomId('delete_after')
-                .setLabel("Apagar post após X minutos (opcional)")
-                .setStyle(TextInputStyle.Short)
-                .setPlaceholder("Deixe em branco para não apagar")
-                .setValue(String(dungeonSettings.deleteAfterMinutes || ''))
-                .setRequired(false);
-
-            modal.addComponents(
-                new ActionRowBuilder().addComponents(serverLinkInput),
-                new ActionRowBuilder().addComponents(alwaysSendInput),
-                new ActionRowBuilder().addComponents(deleteAfterInput)
-            );
-
-            await interaction.showModal(modal);
-        }
     } catch(error) {
         console.error('Erro em handleRaidSelection:', error);
          try {
@@ -131,43 +115,12 @@ async function handleRaidSelection(interaction, type) {
     }
 }
 
-async function handleModalSubmit(interaction) {
-    try {
-        await interaction.deferReply({ ephemeral: true });
-        const serverLink = interaction.fields.getTextInputValue('server_link');
-        const alwaysSendStr = interaction.fields.getTextInputValue('always_send').toLowerCase();
-        const deleteAfterStr = interaction.fields.getTextInputValue('delete_after');
-
-        if (alwaysSendStr !== 'sim' && alwaysSendStr !== 'não') {
-            return interaction.editReply({ content: 'Valor inválido para "Sempre enviar o link?". Por favor, use "sim" ou "não".' });
-        }
-        
-        const deleteAfter = parseInt(deleteAfterStr, 10);
-        if (deleteAfterStr && (isNaN(deleteAfter) || deleteAfter <= 0)) {
-            return interaction.editReply({ content: 'O tempo para apagar deve ser um número positivo de minutos.' });
-        }
-        
-        await handlePostRequest(interaction, {
-            serverLink,
-            alwaysSend: alwaysSendStr === 'sim',
-            deleteAfter: deleteAfter || null
-        }, false); // Pass false for isFollowUp
-
-    } catch (error) {
-        console.error("Erro em handleModalSubmit:", error);
-        if (!interaction.replied && !interaction.deferred) {
-            await interaction.reply({ content: 'Ocorreu um erro ao processar seu pedido.', ephemeral: true }).catch(console.error);
-        } else {
-             await interaction.followUp({ content: 'Ocorreu um erro ao processar seu pedido.', ephemeral: true }).catch(console.error);
-        }
-    }
-}
 
 async function handlePostRequest(interaction, settings, isFollowUp = false) {
     const replyOrFollowUp = async (options) => {
         try {
             if (isFollowUp) {
-                // If the original interaction was updated (e.g. from a select menu), we need to use followup.
+                // Se a interação original já foi respondida (defer, update), usamos followup.
                 return await interaction.followUp(options);
             }
             if (interaction.replied || interaction.deferred) {
@@ -175,7 +128,6 @@ async function handlePostRequest(interaction, settings, isFollowUp = false) {
             }
             return await interaction.reply(options);
         } catch (e) {
-            // Fallback to followup if reply/editReply fails for any reason
              console.warn("Falha no reply/edit. Tentando followup. Erro:", e.message)
              return await interaction.followUp(options).catch(err => console.error("Falha no followup de fallback:", err));
         }
@@ -227,6 +179,21 @@ async function handlePostRequest(interaction, settings, isFollowUp = false) {
         const newRequestRef = doc(collection(firestore, 'dungeon_requests'));
         const newRequestId = newRequestRef.id;
 
+        const newRequestData = {
+            id: newRequestId,
+            userId: user.id,
+            username: user.username,
+            avatarUrl: user.displayAvatarURL(),
+            type: type,
+            raidName: raidNome,
+            createdAt: serverTimestamp(),
+            status: 'active',
+            confirmedUsers: [],
+            manualCount: 0
+        };
+
+        const statusEmbed = createStatusEmbed(newRequestData);
+
         let messageContent = '';
         if (type === 'help') {
             messageContent = `Buscando ajuda para solar a **${raidNome}**, ficarei grato com quem puder ajudar.`;
@@ -273,9 +240,12 @@ async function handlePostRequest(interaction, settings, isFollowUp = false) {
             content: messageContent,
             username: user.displayName,
             avatarURL: user.displayAvatarURL(),
+            embeds: [statusEmbed],
             components: [row],
             wait: true 
         });
+        
+        newRequestData.messageId = message.id; // Adiciona o ID da mensagem aos dados
         
         if (deleteAfter && message) {
             setTimeout(async () => {
@@ -288,18 +258,6 @@ async function handlePostRequest(interaction, settings, isFollowUp = false) {
             }, deleteAfter * 60 * 1000);
         }
 
-        const newRequestData = {
-            id: newRequestId,
-            userId: user.id,
-            username: user.username,
-            avatarUrl: user.displayAvatarURL(),
-            type: type,
-            raidName: raidNome,
-            messageId: message.id,
-            createdAt: serverTimestamp(),
-            status: 'active',
-            confirmedUsers: []
-        };
         batch.set(newRequestRef, newRequestData);
         
         await batch.commit();
@@ -318,87 +276,211 @@ async function handleConfirm(interaction, requestId, ownerId) {
     try {
         const { firestore } = initializeFirebase();
         const requestRef = doc(firestore, 'dungeon_requests', requestId);
-        const owner = await interaction.client.users.fetch(ownerId).catch(() => null);
-
-        if (interaction.user.id === ownerId) {
-            await interaction.deferReply({ ephemeral: true });
-            const requestSnap = await getDoc(requestRef);
-            if (!requestSnap.exists() || !requestSnap.data().confirmedUsers || requestSnap.data().confirmedUsers.length === 0) {
-                return interaction.editReply({ content: 'Ninguém confirmou presença ainda.' });
-            }
-            
-            const confirmedUsers = requestSnap.data().confirmedUsers;
-            const selectMenu = new StringSelectMenuBuilder()
-                .setCustomId(`soling_selectuser_${requestId}_${ownerId}`)
-                .setPlaceholder('Selecione um usuário para ver o perfil')
-                .addOptions(confirmedUsers.map(u => ({
-                    label: u.username,
-                    value: u.userId
-                })).slice(0, 25));
-            
-            const row = new ActionRowBuilder().addComponents(selectMenu);
-            await interaction.editReply({ content: 'Selecione um participante para ver seus dados:', components: [row] });
         
-        } else { 
-            await interaction.deferUpdate();
-            const newUser = { userId: interaction.user.id, username: interaction.user.username };
+        // Dono clicando no botão para abrir o painel de gerenciamento
+        if (interaction.user.id === ownerId) {
             const requestSnap = await getDoc(requestRef);
             if (!requestSnap.exists() || requestSnap.data().status !== 'active') {
-                 return interaction.followUp({ content: 'Este pedido de /soling não está mais ativo.', ephemeral: true });
+                return interaction.reply({ content: 'Este pedido de /soling não está mais ativo.', ephemeral: true });
             }
+            const confirmedUsers = requestSnap.data().confirmedUsers || [];
+            
+            const hubEmbed = new EmbedBuilder()
+                .setColor(0x0099FF)
+                .setTitle('Painel de Gerenciamento do Anúncio')
+                .setDescription('Use os botões e menus abaixo para gerenciar os participantes do seu anúncio.');
 
-            const confirmedUsers = requestSnap.data()?.confirmedUsers || [];
-            if (confirmedUsers.some(u => u.userId === newUser.userId)) {
-                return interaction.followUp({ content: 'Você já confirmou sua presença.', ephemeral: true });
+            const updateCountButton = new ButtonBuilder()
+                .setCustomId(`soling_managermanual_${requestId}_${ownerId}`)
+                .setLabel('Atualizar Contagem')
+                .setStyle(ButtonStyle.Primary)
+                .setEmoji('🔢');
+
+            const hubRow = new ActionRowBuilder().addComponents(updateCountButton);
+            const components = [hubRow];
+
+            if (confirmedUsers.length > 0) {
+                 const toggleUserMenu = new StringSelectMenuBuilder()
+                    .setCustomId(`soling_managertoggle_${requestId}_${ownerId}`)
+                    .setPlaceholder('Alternar confirmação de um usuário')
+                    .addOptions(confirmedUsers.map(u => ({ label: u.username, value: u.userId, description: 'Clique para confirmar/desconfirmar' })));
+                
+                const viewProfileMenu = new StringSelectMenuBuilder()
+                    .setCustomId(`soling_managerprofile_${requestId}_${ownerId}`)
+                    .setPlaceholder('Visualizar perfil de um participante')
+                    .addOptions(confirmedUsers.map(u => ({ label: u.username, value: u.userId })));
+                
+                components.push(new ActionRowBuilder().addComponents(toggleUserMenu));
+                components.push(new ActionRowBuilder().addComponents(viewProfileMenu));
             }
+            
+            await interaction.reply({ embeds: [hubEmbed], components, ephemeral: true });
+            return;
+        }
 
-            await updateDoc(requestRef, {
-                confirmedUsers: arrayUnion(newUser)
-            });
+        // Outro usuário confirmando presença
+        await interaction.deferUpdate();
+        const newUser = { userId: interaction.user.id, username: interaction.user.username };
+        const requestSnap = await getDoc(requestRef);
+        if (!requestSnap.exists() || requestSnap.data().status !== 'active') {
+             return interaction.followUp({ content: 'Este pedido de /soling não está mais ativo.', ephemeral: true });
+        }
 
-            if (owner) {
-                const ownerSettingsSnap = await getDoc(doc(firestore, 'users', ownerId));
-                const sendDm = ownerSettingsSnap.data()?.dungeonSettings?.notificationsEnabled ?? true;
-                if (sendDm) {
-                    try {
-                        await owner.send(`🙋‍♂️ **${interaction.user.username}** confirmou que vai ajudar no seu pedido de /soling para **${requestSnap.data().raidName}**!`);
-                    } catch (dmError) {
-                        console.warn(`Não foi possível notificar ${owner.tag} por DM.`);
-                    }
+        const confirmedUsers = requestSnap.data()?.confirmedUsers || [];
+        if (confirmedUsers.some(u => u.userId === newUser.userId)) {
+            return interaction.followUp({ content: 'Você já confirmou sua presença.', ephemeral: true });
+        }
+
+        // Atualiza o documento no Firestore
+        await updateDoc(requestRef, {
+            confirmedUsers: arrayUnion(newUser)
+        });
+
+        // Atualiza a mensagem original com o novo embed
+        const updatedData = { ...requestSnap.data(), confirmedUsers: [...confirmedUsers, newUser] };
+        const updatedEmbed = createStatusEmbed(updatedData);
+        await interaction.message.edit({ embeds: [updatedEmbed] });
+
+        // Notifica o dono via DM se ativado
+        const owner = await interaction.client.users.fetch(ownerId).catch(() => null);
+        if (owner) {
+            const ownerSettingsSnap = await getDoc(doc(firestore, 'users', ownerId));
+            const sendDm = ownerSettingsSnap.data()?.dungeonSettings?.notificationsEnabled ?? true;
+            if (sendDm) {
+                try {
+                    await owner.send(`🙋‍♂️ **${interaction.user.username}** confirmou presença no seu pedido de /soling para **${requestSnap.data().raidName}**!`);
+                } catch (dmError) {
+                    console.warn(`Não foi possível notificar ${owner.tag} por DM.`);
                 }
             }
-            await interaction.followUp({ content: 'Sua presença foi confirmada! O líder do grupo foi notificado.', ephemeral: true });
         }
+        await interaction.followUp({ content: 'Sua presença foi confirmada! O anúncio foi atualizado.', ephemeral: true });
+    
     } catch (error) {
          console.error("Erro em handleConfirm:", error);
          await interaction.followUp({ content: 'Ocorreu um erro ao confirmar presença.', ephemeral: true }).catch(console.error);
     }
 }
 
-async function handleSelectUser(interaction) {
+async function openManualCountModal(interaction, requestId) {
+    const modal = new ModalBuilder()
+        .setCustomId(`soling_modalsubmitmanual_${requestId}`)
+        .setTitle('Contagem Manual de Membros');
+
+    const countInput = new TextInputBuilder()
+        .setCustomId('count')
+        .setLabel('Número de membros')
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true);
+
+    const actionInput = new TextInputBuilder()
+        .setCustomId('action')
+        .setLabel("Ação (Adicionar/Remover)")
+        .setPlaceholder("Use 'A' para adicionar, 'R' para remover")
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true);
+
+    modal.addComponents(new ActionRowBuilder().addComponents(countInput), new ActionRowBuilder().addComponents(actionInput));
+    await interaction.showModal(modal);
+}
+
+async function handleManualCountSubmit(interaction, requestId) {
+    await interaction.deferUpdate();
+    const count = parseInt(interaction.fields.getTextInputValue('count'), 10);
+    const action = interaction.fields.getTextInputValue('action').toUpperCase();
+
+    if (isNaN(count) || count <= 0) {
+        return interaction.followUp({ content: 'O número de membros deve ser um valor positivo.', ephemeral: true });
+    }
+    if (action !== 'A' && action !== 'R') {
+        return interaction.followUp({ content: "Ação inválida. Use 'A' para adicionar ou 'R' para remover.", ephemeral: true });
+    }
+
+    const { firestore } = initializeFirebase();
+    const requestRef = doc(firestore, 'dungeon_requests', requestId);
+    const requestSnap = await getDoc(requestRef);
+
+    if (requestSnap.exists() && requestSnap.data().status === 'active') {
+        const currentManualCount = requestSnap.data().manualCount || 0;
+        const newManualCount = action === 'A' ? currentManualCount + count : Math.max(0, currentManualCount - count);
+
+        await updateDoc(requestRef, { manualCount: newManualCount });
+        
+        const webhookClient = new WebhookClient({ url: interaction.message.webhookId });
+        const originalMessage = await webhookClient.fetchMessage(requestSnap.data().messageId);
+        
+        const updatedData = { ...requestSnap.data(), manualCount: newManualCount };
+        const updatedEmbed = createStatusEmbed(updatedData);
+
+        await webhookClient.editMessage(requestSnap.data().messageId, { embeds: [updatedEmbed] });
+        await interaction.followUp({ content: `Contagem manual atualizada para ${newManualCount}.`, ephemeral: true });
+    } else {
+        await interaction.followUp({ content: 'O anúncio não está mais ativo.', ephemeral: true });
+    }
+}
+
+
+async function handleToggleUserConfirmation(interaction, requestId) {
+    await interaction.deferUpdate();
+    const { firestore } = initializeFirebase();
+    const requestRef = doc(firestore, 'dungeon_requests', requestId);
+    const userIdToToggle = interaction.values[0];
+
+    const requestSnap = await getDoc(requestRef);
+    if (!requestSnap.exists() || requestSnap.data().status !== 'active') {
+        return interaction.followUp({ content: 'Este anúncio não está mais ativo.', ephemeral: true });
+    }
+
+    const currentConfirmed = requestSnap.data().confirmedUsers || [];
+    const userObject = currentConfirmed.find(u => u.userId === userIdToToggle);
+
+    let newConfirmedList;
+    let feedbackMessage;
+
+    if (userObject) {
+        // Se o usuário está na lista, remove
+        await updateDoc(requestRef, { confirmedUsers: arrayRemove(userObject) });
+        newConfirmedList = currentConfirmed.filter(u => u.userId !== userIdToToggle);
+        feedbackMessage = `Usuário ${userObject.username} foi removido da lista de confirmados.`;
+    } else {
+        // Se o usuário não está na lista, adiciona (precisamos buscar o username)
+        const userToAdd = { userId: userIdToToggle, username: (await interaction.client.users.fetch(userIdToToggle)).username };
+        await updateDoc(requestRef, { confirmedUsers: arrayUnion(userToAdd) });
+        newConfirmedList = [...currentConfirmed, userToAdd];
+        feedbackMessage = `Usuário ${userToAdd.username} foi adicionado à lista de confirmados.`;
+    }
+
+    // Atualiza a mensagem do anúncio
+    const webhookClient = new WebhookClient({ url: interaction.message.webhookId });
+    const updatedData = { ...requestSnap.data(), confirmedUsers: newConfirmedList };
+    const updatedEmbed = createStatusEmbed(updatedData);
+    await webhookClient.editMessage(requestSnap.data().messageId, { embeds: [updatedEmbed] });
+
+    await interaction.followUp({ content: feedbackMessage, ephemeral: true });
+}
+
+async function handleSelectUserProfile(interaction, requestId) {
+    await interaction.deferReply({ ephemeral: true });
+    const { firestore } = initializeFirebase();
+    const selectedUserId = interaction.values[0];
+    const userRef = doc(firestore, 'users', selectedUserId);
+    const userSnap = await getDoc(userRef);
+
+    if (!userSnap.exists()) {
+        return interaction.editReply({ content: `O usuário selecionado ainda não possui um perfil no Guia Eterno.` });
+    }
     try {
-        await interaction.deferReply({ ephemeral: true });
-
-        const { firestore } = initializeFirebase();
-        const selectedUserId = interaction.values[0];
-        const userRef = doc(firestore, 'users', selectedUserId);
-        const userSnap = await getDoc(userRef);
-
-        if (!userSnap.exists()) {
-            return interaction.editReply({ content: `O usuário selecionado ainda não possui um perfil no Guia Eterno.` });
-        }
-
         const userData = userSnap.data();
         const discordUser = await interaction.client.users.fetch(selectedUserId);
-
         const profileImage = await createProfileImage(userData, discordUser);
         const attachment = new AttachmentBuilder(profileImage, { name: 'profile-image.png' });
         await interaction.editReply({ files: [attachment] });
-    } catch (e) {
-        console.error("Erro ao criar imagem de perfil no /soling (handleSelectUser):", e);
-        await interaction.editReply({ content: 'Ocorreu um erro ao gerar a imagem de perfil do usuário.'});
+    } catch(e) {
+        console.error("Erro ao mostrar perfil do usuário selecionado:", e);
+        await interaction.editReply({ content: 'Ocorreu um erro ao gerar o perfil do usuário.' });
     }
 }
+
 
 async function handleFinish(interaction, requestId, ownerId) {
     try {
@@ -456,13 +538,15 @@ export async function handleInteraction(interaction, container) {
             else if (action === 'confirm') await handleConfirm(interaction, params[0], params[1]);
             else if (action === 'finish') await handleFinish(interaction, params[0], params[1]);
             else if (action === 'copyid') await handleCopyId(interaction, params[0], params[1]);
+            else if (action === 'managermanual') await openManualCountModal(interaction, params[0]);
+
         } else if (interaction.isStringSelectMenu()) {
             if (action === 'raid') await handleRaidSelection(interaction, params[0]);
-            else if (action === 'selectuser') await handleSelectUser(interaction);
+            else if (action === 'managertoggle') await handleToggleUserConfirmation(interaction, params[0]);
+            else if (action === 'managerprofile') await handleSelectUserProfile(interaction, params[0]);
+            
         } else if (interaction.isModalSubmit()) {
-            if (interaction.customId === 'soling_modal_submit') {
-                await handleModalSubmit(interaction);
-            }
+            if (action === 'modalsubmitmanual') await handleManualCountSubmit(interaction, params[0]);
         }
     } catch (error) {
         console.error(`Erro no manipulador de interação de /soling (Ação: ${interaction.customId}):`, error);
