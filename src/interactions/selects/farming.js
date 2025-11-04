@@ -17,8 +17,8 @@ const WEEKDAYS_PT = {
 };
 
 const CATEGORY_NAMES = {
-    'w1-19': 'Raids dos Mundos 1-19',
-    'w20plus': 'Raids dos Mundos 20+',
+    'w1-19': 'Raids (Mundos 1-19)',
+    'w20plus': 'Raids (Mundos 20+)',
     'event': 'Raids de Evento'
 };
 
@@ -28,22 +28,35 @@ async function handleDaySelect(interaction) {
     const selectedDay = interaction.values[0];
     interaction.client.container.interactions.set(`farming_flow_${interaction.user.id}`, { day: selectedDay });
 
-    // Create time options (00:00 to 23:00)
-    const timeOptions = Array.from({ length: 24 }, (_, i) => {
+    // Time options - Part 1 (00:00 - 12:00)
+    const timeOptions1 = [];
+    for (let i = 0; i <= 12; i++) {
         const hour = i.toString().padStart(2, '0');
-        return { label: `${hour}:00`, value: `${hour}:00` };
-    });
+        timeOptions1.push({ label: `${hour}:00`, value: `${hour}:00` });
+        if (i < 12) timeOptions1.push({ label: `${hour}:30`, value: `${hour}:30` });
+    }
 
-    const timeMenu = new StringSelectMenuBuilder()
-        .setCustomId('farming_select_time')
-        .setPlaceholder('Selecione o horário de início...')
-        .addOptions(timeOptions);
+    // Time options - Part 2 (12:30 - 23:30)
+    const timeOptions2 = [];
+     for (let i = 12; i < 24; i++) {
+        if(i > 12) timeOptions2.push({ label: `${i}:00`, value: `${i}:00` });
+        if (i < 24) timeOptions2.push({ label: `${i}:30`, value: `${i}:30` });
+    }
 
-    const row = new ActionRowBuilder().addComponents(timeMenu);
+
+    const timeMenu1 = new StringSelectMenuBuilder()
+        .setCustomId('farming_select_time_1')
+        .setPlaceholder('Horário (00:00 - 12:00)')
+        .addOptions(timeOptions1);
+
+    const timeMenu2 = new StringSelectMenuBuilder()
+        .setCustomId('farming_select_time_2')
+        .setPlaceholder('Horário (12:30 - 23:30)')
+        .addOptions(timeOptions2);
 
     await interaction.update({
         content: `Dia selecionado: **${WEEKDAYS_PT[selectedDay]}**. Agora, escolha o horário de início do farm.`,
-        components: [row],
+        components: [new ActionRowBuilder().addComponents(timeMenu1), new ActionRowBuilder().addComponents(timeMenu2)],
     });
 }
 
@@ -59,19 +72,11 @@ async function handleTimeSelect(interaction) {
     
     Object.entries(categorizedRaids).forEach(([category, raids]) => {
         if (raids.length > 0) {
-            const chunkSize = 25;
-            for (let i = 0; i < raids.length; i += chunkSize) {
-                const chunk = raids.slice(i, i + chunkSize);
-                const menuLabel = raids.length > chunkSize
-                    ? `${CATEGORY_NAMES[category]} (Parte ${Math.floor(i / chunkSize) + 1})`
-                    : CATEGORY_NAMES[category];
-
-                const menu = new StringSelectMenuBuilder()
-                    .setCustomId(`farming_select_raid_${category}_${i}`)
-                    .setPlaceholder(menuLabel)
-                    .addOptions(chunk);
-                components.push(new ActionRowBuilder().addComponents(menu));
-            }
+            const menu = new StringSelectMenuBuilder()
+                .setCustomId(`farming_select_raid_${category}`)
+                .setPlaceholder(CATEGORY_NAMES[category])
+                .addOptions(raids.slice(0, 25)); // Garante que não ultrapasse o limite
+            components.push(new ActionRowBuilder().addComponents(menu));
         }
     });
 
@@ -194,15 +199,15 @@ async function handleParticipationToggle(interaction) {
 
 export async function handleInteraction(interaction) {
     if (interaction.isStringSelectMenu()) {
-        const [prefix, action, subAction, ...rest] = interaction.customId.split('_');
+        const [prefix, action, subAction] = interaction.customId.split('_');
 
         if (prefix !== customIdPrefix) return;
 
         switch (action) {
             case 'select':
                 if (subAction === 'day') await handleDaySelect(interaction);
-                if (subAction === 'time') await handleTimeSelect(interaction);
-                if (subAction === 'raid') await handleRaidSelect(interaction);
+                else if (subAction === 'time') await handleTimeSelect(interaction);
+                else if (subAction === 'raid') await handleRaidSelect(interaction);
                 break;
             case 'participate':
                  await handleParticipationToggle(interaction);
