@@ -35,16 +35,16 @@ async function getOrCreateWebhook(channel, webhookName, avatarUrl) {
             return null;
         }
     } else {
-        // Garante que o avatar esteja atualizado
-        if (webhook.avatarURL() !== avatarUrl) {
-            await webhook.edit({ avatar: avatarUrl });
+        // Garante que o avatar e o nome estejam atualizados
+        if (webhook.name !== webhookName || webhook.avatarURL() !== avatarUrl) {
+            await webhook.edit({ name: webhookName, avatar: avatarUrl });
         }
     }
     return webhook;
 }
 
 // Função para criar/atualizar o Embed de Status
-function createStatusEmbed(requestData, hostUser) {
+function createStatusEmbed(requestData, hostUser, hostRobloxId) {
     const confirmedUsersList = requestData.confirmedUsers && requestData.confirmedUsers.length > 0
         ? requestData.confirmedUsers.map(u => `• <@${u.userId}>`).join('\n')
         : 'Ninguém confirmado ainda.';
@@ -64,6 +64,13 @@ function createStatusEmbed(requestData, hostUser) {
     if (requestData.serverLink) {
         embed.addFields({ name: '🔗 Servidor Privado', value: `**[Clique aqui para entrar](${requestData.serverLink})**` });
     }
+
+    if(hostRobloxId) {
+         embed.addFields(
+            { name: '➡️ Conexão Roblox', value: `**[Perfil de ${hostUser.username}](${`https://www.roblox.com/users/${hostRobloxId}/profile`})**` },
+            { name: '🆔 ID Roblox', value: `\`${hostRobloxId}\`` }
+        );
+    }
     
     embed.addFields({ name: '➡️ Entrar no Jogo', value: `**[Clique aqui para ir para o jogo](${GAME_LINK})**` });
     
@@ -73,10 +80,10 @@ function createStatusEmbed(requestData, hostUser) {
 
 async function handleTypeSelection(interaction, type) {
     try {
-        await interaction.deferUpdate();
         const raids = getAvailableRaids();
         if (raids.length === 0) {
-            return interaction.followUp({ content: 'Não há raids disponíveis para selecionar no momento.', components: [], ephemeral: true });
+             await interaction.reply({ content: 'Não há raids disponíveis para selecionar no momento.', components: [], ephemeral: true });
+             return;
         }
         const raidMenu = new StringSelectMenuBuilder()
             .setCustomId(`soling_raid_${type}`)
@@ -85,9 +92,10 @@ async function handleTypeSelection(interaction, type) {
 
         const row = new ActionRowBuilder().addComponents(raidMenu);
 
-        await interaction.editReply({
+        await interaction.reply({
             content: 'Agora, selecione a raid:',
             components: [row],
+            ephemeral: true,
         });
     } catch(error) {
         console.error('Erro em handleTypeSelection:', error);
@@ -106,20 +114,15 @@ async function handleRaidSelection(interaction, type) {
         const userSnap = await getDoc(userRef);
         
         if (!userSnap.exists()) {
-             await interaction.reply({ content: 'Você precisa criar um perfil com o comando `/perfil` antes de usar esta função.', ephemeral: true, components: []});
+             await interaction.update({ content: 'Você precisa criar um perfil com o comando `/perfil` antes de usar esta função.', ephemeral: true, components: []});
              return;
         }
 
         const userData = userSnap.data();
-        const dungeonSettings = userData.dungeonSettings || {};
         
         interaction.client.container.interactions.set(`soling_temp_${interaction.user.id}`, { type, raid: selectedRaidLabel, robloxId: userData.robloxId || null });
         
-        await handlePostRequest(interaction, {
-            serverLink: dungeonSettings.serverLink,
-            alwaysSend: dungeonSettings.alwaysSendLink,
-            deleteAfter: dungeonSettings.deleteAfterMinutes,
-        });
+        await handlePostRequest(interaction);
 
     } catch(error) {
         console.error('Erro em handleRaidSelection:', error);
@@ -136,44 +139,42 @@ async function handleRaidSelection(interaction, type) {
 }
 
 
-async function handlePostRequest(interaction, settings) {
+async function handlePostRequest(interaction) {
     const replyOrFollowUp = async (options) => {
-        // Se a interação veio de um menu, ela já foi deferida, então precisamos responder
-        if (interaction.isStringSelectMenu()){
-            return await interaction.update({ ...options, ephemeral: true });
-        }
+        const ephemeralOptions = { ...options, ephemeral: true, components: [] };
         if (interaction.replied || interaction.deferred) {
-            return await interaction.followUp({ ...options, ephemeral: true });
+            return await interaction.followUp(ephemeralOptions);
         }
-        return await interaction.reply({ ...options, ephemeral: true });
+        return await interaction.reply(ephemeralOptions);
     };
 
     try {
-        await interaction.deferUpdate();
+        await interaction.deferReply({ephemeral: true});
 
         const { firestore } = initializeFirebase();
         const { assetService } = interaction.client.container.services;
 
         const tempData = interaction.client.container.interactions.get(`soling_temp_${interaction.user.id}`);
         if (!tempData) {
-            return replyOrFollowUp({ content: 'Sua sessão expirou. Por favor, use o comando /soling novamente.', components: [] });
+            return replyOrFollowUp({ content: 'Sua sessão expirou. Por favor, use o comando /soling novamente.' });
         }
         const { type, raid: raidNome, robloxId } = tempData;
-        const { serverLink, alwaysSend, deleteAfter } = settings;
         const user = interaction.user;
+        
+        const userSnap = await getDoc(doc(firestore, 'users', user.id));
+        const dungeonSettings = userSnap.exists() ? userSnap.data().dungeonSettings || {} : {};
         
         const solingChannel = await interaction.client.channels.fetch(SOLING_POST_CHANNEL_ID).catch(() => null);
         if (!solingChannel) {
-            return replyOrFollowUp({ content: 'O canal de postagem de /soling não foi encontrado.', components: [] });
+            return replyOrFollowUp({ content: 'O canal de postagem de /soling não foi encontrado.' });
         }
         
-        // Obter avatar da raid
         const assetPrefix = RAID_AVATAR_PREFIXES[raidNome] || 'Easy';
         const raidAvatarUrl = await assetService.getAsset(assetPrefix);
         
         const webhook = await getOrCreateWebhook(solingChannel, raidNome, raidAvatarUrl);
         if (!webhook) {
-             return replyOrFollowUp({ content: 'Não foi possível criar ou encontrar o webhook necessário para postar a mensagem.', components: [] });
+             return replyOrFollowUp({ content: 'Não foi possível criar ou encontrar o webhook necessário para postar a mensagem.' });
         }
         
         const requestsRef = collection(firestore, 'dungeon_requests');
@@ -194,10 +195,6 @@ async function handlePostRequest(interaction, settings) {
             }
             batch.update(requestDoc.ref, { status: 'closed' });
         }
-
-        const userRef = doc(firestore, 'users', user.id);
-        const newSettings = { serverLink: serverLink || null, alwaysSendLink: alwaysSend, deleteAfterMinutes: deleteAfter || null };
-        batch.set(userRef, { dungeonSettings: newSettings }, { merge: true });
         
         const newRequestRef = doc(collection(firestore, 'dungeon_requests'));
         const newRequestId = newRequestRef.id;
@@ -213,48 +210,49 @@ async function handlePostRequest(interaction, settings) {
             status: 'active',
             confirmedUsers: [],
             manualCount: 0,
-            serverLink: (alwaysSend && serverLink) ? serverLink : null,
-            webhookUrl: webhook.url, // Salva a URL do webhook usado
+            serverLink: (dungeonSettings.alwaysSendLink && dungeonSettings.serverLink) ? dungeonSettings.serverLink : null,
+            webhookUrl: webhook.url,
         };
         
         let messageContent = '';
         if (type === 'help') {
             messageContent = `Buscando ajuda para solar a **${raidNome}**, ficarei grato com quem puder ajudar.`;
-        } else { // hosting
+        } else {
             messageContent = `Solando a **${raidNome}** para quem precisar.`;
         }
 
-        const statusEmbed = createStatusEmbed(newRequestData, user);
+        const statusEmbed = createStatusEmbed(newRequestData, user, robloxId);
         
         const webhookClient = new WebhookClient({ url: webhook.url });
         
         const confirmLabel = type === 'help' ? 'Vou Ajudar' : 'Vou Precisar';
-        const confirmButton = new ButtonBuilder()
-            .setCustomId(`soling_confirm_${newRequestId}_${user.id}`)
-            .setLabel(confirmLabel)
-            .setStyle(ButtonStyle.Success)
-            .setEmoji('🤝');
-
-        const finishButton = new ButtonBuilder()
-            .setCustomId(`soling_finish_${newRequestId}_${user.id}`)
-            .setLabel('Finalizar')
-            .setStyle(ButtonStyle.Danger)
-            .setEmoji('🗑️');
         
-        const row = new ActionRowBuilder().addComponents(confirmButton, finishButton);
+        const row = new ActionRowBuilder();
+        row.addComponents(
+             new ButtonBuilder()
+                .setCustomId(`soling_confirm_${newRequestId}_${user.id}`)
+                .setLabel(confirmLabel)
+                .setStyle(ButtonStyle.Success)
+                .setEmoji('🤝'),
+            new ButtonBuilder()
+                .setCustomId(`soling_manage_${newRequestId}_${user.id}`)
+                .setLabel('Gerenciar Anúncio')
+                .setStyle(ButtonStyle.Primary)
+                .setEmoji('⚙️'),
+            new ButtonBuilder()
+                .setCustomId(`soling_finish_${newRequestId}_${user.id}`)
+                .setLabel('Finalizar')
+                .setStyle(ButtonStyle.Danger)
+                .setEmoji('🗑️')
+        );
 
         if (robloxId) {
-             const profileButton = new ButtonBuilder()
-                .setLabel('Ver Perfil (Web)')
-                .setStyle(ButtonStyle.Link)
-                .setURL(`https://www.roblox.com/users/${robloxId}/profile`);
-            
-            const copyIdButton = new ButtonBuilder()
-                .setCustomId(`soling_copyid_${user.id}_${robloxId}`)
-                .setLabel('Copiar ID')
-                .setStyle(ButtonStyle.Secondary);
-
-            row.addComponents(profileButton, copyIdButton);
+            row.addComponents(
+                new ButtonBuilder()
+                    .setCustomId(`soling_copyid_${newRequestId}_${robloxId}`)
+                    .setLabel('Copiar ID')
+                    .setStyle(ButtonStyle.Secondary)
+            );
         }
 
         const message = await webhookClient.send({
@@ -268,7 +266,7 @@ async function handlePostRequest(interaction, settings) {
         
         newRequestData.messageId = message.id;
         
-        if (deleteAfter && message) {
+        if (dungeonSettings.deleteAfterMinutes && message) {
             setTimeout(async () => {
                 try {
                     await webhookClient.deleteMessage(message.id);
@@ -276,14 +274,14 @@ async function handlePostRequest(interaction, settings) {
                 } catch (e) {
                     console.warn(`Não foi possível apagar a mensagem agendada (ID: ${message.id}): ${e.message}`);
                 }
-            }, deleteAfter * 60 * 1000);
+            }, dungeonSettings.deleteAfterMinutes * 60 * 1000);
         }
 
         batch.set(newRequestRef, newRequestData);
         
         await batch.commit();
         
-        await replyOrFollowUp({ content: 'Seu pedido foi postado com sucesso!', components: [] });
+        await interaction.editReply({ content: 'Seu pedido foi postado com sucesso!', components: [] });
 
         interaction.client.container.interactions.delete(`soling_temp_${interaction.user.id}`);
     } catch(error) {
@@ -292,51 +290,20 @@ async function handlePostRequest(interaction, settings) {
     }
 }
 
-
 async function handleConfirm(interaction, requestId, ownerId) {
     try {
+        await interaction.deferUpdate();
         const { firestore } = initializeFirebase();
         const requestRef = doc(firestore, 'dungeon_requests', requestId);
         
-        if (interaction.user.id === ownerId) {
-            const requestSnap = await getDoc(requestRef);
-            if (!requestSnap.exists() || requestSnap.data().status !== 'active') {
-                return interaction.reply({ content: 'Este pedido de /soling não está mais ativo.', ephemeral: true });
-            }
-            const confirmedUsers = requestSnap.data().confirmedUsers || [];
-            
-            const hubEmbed = new EmbedBuilder()
-                .setColor(0x0099FF)
-                .setTitle('Painel de Gerenciamento do Anúncio')
-                .setDescription('Use os botões e menus abaixo para gerenciar os participantes do seu anúncio.');
-
-            const manageMembersButton = new ButtonBuilder()
-                .setCustomId(`soling_managemembers_${requestId}_${ownerId}`)
-                .setLabel('Gerenciar Membros')
-                .setStyle(ButtonStyle.Primary)
-                .setEmoji('👥');
-            
-            const manualCountButton = new ButtonBuilder()
-                .setCustomId(`soling_managermanual_${requestId}_${ownerId}`)
-                .setLabel('Contagem Manual')
-                .setStyle(ButtonStyle.Secondary)
-                .setEmoji('🔢');
-
-            const hubRow = new ActionRowBuilder().addComponents(manageMembersButton, manualCountButton);
-            const components = [hubRow];
-            
-            await interaction.reply({ embeds: [hubEmbed], components, ephemeral: true });
-            return;
-        }
-
-        await interaction.deferUpdate();
         const newUser = { userId: interaction.user.id, username: interaction.user.username };
         const requestSnap = await getDoc(requestRef);
         if (!requestSnap.exists() || requestSnap.data().status !== 'active') {
              return interaction.followUp({ content: 'Este pedido de /soling não está mais ativo.', ephemeral: true });
         }
 
-        const confirmedUsers = requestSnap.data()?.confirmedUsers || [];
+        const requestData = requestSnap.data();
+        const confirmedUsers = requestData?.confirmedUsers || [];
         if (confirmedUsers.some(u => u.userId === newUser.userId)) {
             return interaction.followUp({ content: 'Você já confirmou sua presença.', ephemeral: true });
         }
@@ -346,8 +313,11 @@ async function handleConfirm(interaction, requestId, ownerId) {
         });
 
         const owner = await interaction.client.users.fetch(ownerId).catch(() => null);
-        const updatedData = { ...requestSnap.data(), confirmedUsers: [...confirmedUsers, newUser] };
-        const updatedEmbed = createStatusEmbed(updatedData, owner);
+        const userSnap = await getDoc(doc(firestore, 'users', ownerId));
+        const robloxId = userSnap.exists() ? userSnap.data().robloxId : null;
+
+        const updatedData = { ...requestData, confirmedUsers: [...confirmedUsers, newUser] };
+        const updatedEmbed = createStatusEmbed(updatedData, owner, robloxId);
         await interaction.message.edit({ embeds: [updatedEmbed] });
 
         if (owner) {
@@ -355,7 +325,7 @@ async function handleConfirm(interaction, requestId, ownerId) {
             const sendDm = ownerSettingsSnap.data()?.dungeonSettings?.notificationsEnabled ?? true;
             if (sendDm) {
                 try {
-                    await owner.send(`🙋‍♂️ **${interaction.user.username}** confirmou presença no seu pedido de /soling para **${requestSnap.data().raidName}**!`);
+                    await owner.send(`🙋‍♂️ **${interaction.user.username}** confirmou presença no seu pedido de /soling para **${requestData.raidName}**!`);
                 } catch (dmError) {
                     console.warn(`Não foi possível notificar ${owner.tag} por DM.`);
                 }
@@ -367,6 +337,41 @@ async function handleConfirm(interaction, requestId, ownerId) {
          console.error("Erro em handleConfirm:", error);
          await interaction.followUp({ content: 'Ocorreu um erro ao confirmar presença.', ephemeral: true }).catch(console.error);
     }
+}
+
+async function handleOpenManagementHub(interaction, requestId, ownerId) {
+    if (interaction.user.id !== ownerId) {
+        return interaction.reply({ content: 'Apenas o dono do anúncio pode usar esta função.', ephemeral: true });
+    }
+
+    const { firestore } = initializeFirebase();
+    const requestRef = doc(firestore, 'dungeon_requests', requestId);
+    const requestSnap = await getDoc(requestRef);
+
+    if (!requestSnap.exists() || requestSnap.data().status !== 'active') {
+        return interaction.reply({ content: 'Este anúncio não está mais ativo.', ephemeral: true });
+    }
+    
+    const hubEmbed = new EmbedBuilder()
+        .setColor(0x0099FF)
+        .setTitle('Painel de Gerenciamento do Anúncio')
+        .setDescription('Use os botões e menus abaixo para gerenciar os participantes do seu anúncio.');
+
+    const manageMembersButton = new ButtonBuilder()
+        .setCustomId(`soling_managemembers_${requestId}_${ownerId}`)
+        .setLabel('Gerenciar Lista')
+        .setStyle(ButtonStyle.Primary)
+        .setEmoji('👥');
+    
+    const manualCountButton = new ButtonBuilder()
+        .setCustomId(`soling_managermanual_${requestId}_${ownerId}`)
+        .setLabel('Contagem Manual')
+        .setStyle(ButtonStyle.Secondary)
+        .setEmoji('🔢');
+
+    const hubRow = new ActionRowBuilder().addComponents(manageMembersButton, manualCountButton);
+    
+    await interaction.reply({ embeds: [hubEmbed], components: [hubRow], ephemeral: true });
 }
 
 async function handleManageMembers(interaction, requestId, ownerId) {
@@ -436,7 +441,7 @@ async function handleManualCountSubmit(interaction, requestId) {
     await interaction.deferReply({ ephemeral: true });
     const count = parseInt(interaction.fields.getTextInputValue('count'), 10);
     const actionRaw = interaction.fields.getTextInputValue('action') || '';
-    const action = actionRaw.trim().toUpperCase().charAt(0); // Pega 'A' ou 'R'
+    const action = actionRaw.trim().toUpperCase().charAt(0);
 
     if (isNaN(count) || count <= 0) {
         return interaction.editReply({ content: 'O número de membros deve ser um valor positivo.' });
@@ -455,14 +460,17 @@ async function handleManualCountSubmit(interaction, requestId) {
 
         await updateDoc(requestRef, { manualCount: newManualCount });
         
-        const webhookUrl = requestSnap.data().webhookUrl;
-        const messageId = requestSnap.data().messageId;
+        const requestData = requestSnap.data();
+        const webhookUrl = requestData.webhookUrl;
+        const messageId = requestData.messageId;
 
         if (webhookUrl && messageId) {
             const webhookClient = new WebhookClient({ url: webhookUrl });
-            const owner = await interaction.client.users.fetch(requestSnap.data().userId).catch(() => null);
-            const updatedData = { ...requestSnap.data(), manualCount: newManualCount };
-            const updatedEmbed = createStatusEmbed(updatedData, owner);
+            const owner = await interaction.client.users.fetch(requestData.userId).catch(() => null);
+            const userSnap = await getDoc(doc(firestore, 'users', requestData.userId));
+            const robloxId = userSnap.exists() ? userSnap.data().robloxId : null;
+            const updatedData = { ...requestData, manualCount: newManualCount };
+            const updatedEmbed = createStatusEmbed(updatedData, owner, robloxId);
             await webhookClient.editMessage(messageId, { embeds: [updatedEmbed] }).catch(e => console.error("Falha ao editar mensagem do webhook:", e));
         }
 
@@ -487,7 +495,8 @@ async function handleToggleUserConfirmation(interaction, requestId, ownerId) {
         return interaction.followUp({ content: 'Este anúncio não está mais ativo.', ephemeral: true });
     }
 
-    const currentConfirmed = requestSnap.data().confirmedUsers || [];
+    const requestData = requestSnap.data();
+    const currentConfirmed = requestData.confirmedUsers || [];
     const userObject = currentConfirmed.find(u => u.userId === userIdToToggle);
 
     let newConfirmedList;
@@ -504,14 +513,16 @@ async function handleToggleUserConfirmation(interaction, requestId, ownerId) {
         feedbackMessage = `Usuário ${userToAdd.username} foi adicionado à lista de confirmados.`;
     }
     
-    const webhookUrl = requestSnap.data().webhookUrl;
-    const messageId = requestSnap.data().messageId;
+    const webhookUrl = requestData.webhookUrl;
+    const messageId = requestData.messageId;
 
     if(webhookUrl && messageId) {
         const webhookClient = new WebhookClient({ url: webhookUrl });
-        const owner = await interaction.client.users.fetch(requestSnap.data().userId).catch(() => null);
-        const updatedData = { ...requestSnap.data(), confirmedUsers: newConfirmedList };
-        const updatedEmbed = createStatusEmbed(updatedData, owner);
+        const owner = await interaction.client.users.fetch(ownerId).catch(() => null);
+        const userSnap = await getDoc(doc(firestore, 'users', ownerId));
+        const robloxId = userSnap.exists() ? userSnap.data().robloxId : null;
+        const updatedData = { ...requestData, confirmedUsers: newConfirmedList };
+        const updatedEmbed = createStatusEmbed(updatedData, owner, robloxId);
         await webhookClient.editMessage(messageId, { embeds: [updatedEmbed] }).catch(e => console.error("Falha ao editar mensagem do webhook:", e));
     }
 
@@ -580,12 +591,12 @@ async function handleFinish(interaction, requestId, ownerId) {
     }
 }
 
-async function handleCopyId(interaction, userId, robloxId) {
-    if (interaction.user.id !== userId) {
-        return interaction.reply({ content: 'Você não pode usar este botão.', ephemeral: true });
+async function handleCopyId(interaction, requestId, robloxId) {
+     if (!robloxId) {
+        return interaction.reply({ content: 'O anfitrião não tem um ID Roblox associado ao perfil.', ephemeral: true });
     }
     await interaction.reply({
-        content: `O ID Roblox de ${interaction.message.interaction.user.username} é:\n\`\`\`${robloxId}\`\`\``,
+        content: `O ID Roblox do anfitrião é:\n\`\`\`${robloxId}\`\`\``,
         ephemeral: true,
     });
 }
@@ -606,6 +617,8 @@ export async function handleInteraction(interaction, container) {
                 await handleFinish(interaction, params[0], params[1]);
             } else if (action === 'copyid') {
                 await handleCopyId(interaction, params[0], params[1]);
+            } else if (action === 'manage') {
+                await handleOpenManagementHub(interaction, params[0], params[1]);
             } else if (action === 'managemembers') {
                 await handleManageMembers(interaction, params[0], params[1]);
             } else if (action === 'managermanual') {
