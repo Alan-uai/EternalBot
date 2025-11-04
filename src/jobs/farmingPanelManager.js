@@ -69,10 +69,9 @@ export async function run(container) {
         const now = new Date();
         const currentDay = WEEKDAYS[now.getDay()];
         
-        // Cleanup old farms
         await cleanupOldFarms(firestore, now.getDay(), logger);
 
-        const farms = await getFarmsForDay(firestore, currentDay);
+        const allFarmsToday = await getFarmsForDay(firestore, currentDay);
         
         const panelWebhookDocRef = doc(firestore, 'bot_config', PANEL_DOC_ID);
         const docSnap = await getDoc(panelWebhookDocRef);
@@ -93,39 +92,67 @@ export async function run(container) {
         
         const webhookClient = new WebhookClient({ url: webhookUrl });
 
-        const embed = new EmbedBuilder()
-            .setColor(0x5865F2)
-            .setAuthor({ name: `🗓️ Farms Agendados para Hoje (${WEEKDAYS_PT[currentDay]})` })
-            .setTimestamp()
-            .setFooter({ text: 'Use o menu abaixo para participar ou desmarcar.' });
-
-        if (farms.length === 0) {
-            embed.setDescription('Nenhum farm agendado para hoje. Use o comando `/farming` para criar um!');
+        const embeds = [];
+        if (allFarmsToday.length === 0) {
+            const emptyEmbed = new EmbedBuilder()
+                .setColor(0x5865F2)
+                .setDescription('Nenhum farm agendado para hoje. Use o comando `/farming` para criar um!');
+            embeds.push(emptyEmbed);
         } else {
-            let description = '';
-            farms.forEach(farm => {
-                description += `**${farm.time} - ${farm.raidName}** (Host: ${farm.hostUsername})\n`;
-                description += `> Quantidade: ~${farm.quantity} | Participantes: ${farm.participants.length}\n\n`;
-            });
-            embed.setDescription(description);
+            const farmsByHost = allFarmsToday.reduce((acc, farm) => {
+                if (!acc[farm.hostId]) {
+                    acc[farm.hostId] = {
+                        hostUsername: farm.hostUsername,
+                        farms: []
+                    };
+                }
+                acc[farm.hostId].farms.push(farm);
+                return acc;
+            }, {});
+
+            for (const hostId in farmsByHost) {
+                const hostData = farmsByHost[hostId];
+                const hostUser = await client.users.fetch(hostId).catch(() => ({
+                    username: hostData.hostUsername,
+                    displayAvatarURL: () => client.user.displayAvatarURL()
+                }));
+
+                const hostEmbed = new EmbedBuilder()
+                    .setColor(0x3498DB)
+                    .setAuthor({ name: `Farms de ${hostUser.username}`, iconURL: hostUser.displayAvatarURL() })
+                    .setTimestamp();
+                
+                hostData.farms.forEach(farm => {
+                    hostEmbed.addFields({
+                        name: `Raid: ${farm.raidName} às ${farm.time}`,
+                        value: `> Quantidade Média: **${farm.quantity}**\n> Participantes: **${farm.participants.length}**`,
+                        inline: false
+                    });
+                });
+                embeds.push(hostEmbed);
+            }
         }
         
         // Participation Menu
         const participationMenu = new StringSelectMenuBuilder()
             .setCustomId('farming_participate')
             .setPlaceholder('Clique para participar de um farm...')
-            .setOptions(farms.length > 0 ? farms.map(farm => ({
+            .setOptions(allFarmsToday.length > 0 ? allFarmsToday.map(farm => ({
                 label: `${farm.time} - ${farm.raidName}`,
                 description: `Host: ${farm.hostUsername} | ${farm.participants.length} participante(s)`,
                 value: farm.id,
-            })) : [{label: 'Nenhum farm hoje', value: 'no_farm', default: true}]);
+            })) : [{label: 'Nenhum farm hoje', value: 'no_farm' }]);
+
+        if (participationMenu.options.length === 0) {
+            participationMenu.addOptions({label: 'Nenhum farm disponível para hoje', value: 'none'}).setDisabled(true);
+        }
 
         const row = new ActionRowBuilder().addComponents(participationMenu);
 
         const payload = {
-            username: `Farms de ${WEEKDAYS_PT[currentDay]}`,
+            username: `Painel de Farms - ${WEEKDAYS_PT[currentDay]}`,
             avatarURL: client.user.displayAvatarURL(),
-            embeds: [embed],
+            embeds: embeds,
             components: [row],
         };
 
@@ -133,7 +160,6 @@ export async function run(container) {
             try {
                 await webhookClient.editMessage(messageId, payload);
             } catch (error) {
-                // If message doesn't exist, create a new one
                 const newMessage = await webhookClient.send(payload);
                 await setDoc(panelWebhookDocRef, { messageId: newMessage.id }, { merge: true });
             }
