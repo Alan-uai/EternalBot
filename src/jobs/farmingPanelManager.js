@@ -59,7 +59,8 @@ async function cleanupOldFarms(firestore, currentDayIndex, logger) {
 
 async function handleAnnouncements(container, farms) {
     const { client, config, logger, services } = container;
-    const { firestore, assetService } = services;
+    const { firebase, assetService } = services;
+    const { firestore } = firebase;
     
     const now = new Date();
     const fiveMinutesFromNow = new Date(now.getTime() + 5 * 60 * 1000);
@@ -147,7 +148,8 @@ export const schedule = '*/60 * * * * *'; // A cada minuto
 
 export async function run(container) {
     const { client, config, logger, services } = container;
-    const { firestore, imageGenerator } = services;
+    const { firebase, imageGenerator } = services;
+    const { firestore } = firebase;
 
     try {
         const now = new Date();
