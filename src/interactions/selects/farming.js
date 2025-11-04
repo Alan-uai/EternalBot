@@ -33,14 +33,18 @@ async function handleDaySelect(interaction) {
     for (let i = 0; i <= 12; i++) {
         const hour = i.toString().padStart(2, '0');
         timeOptions1.push({ label: `${hour}:00`, value: `${hour}:00` });
-        if (i < 12) timeOptions1.push({ label: `${hour}:30`, value: `${hour}:30` });
+        if (i < 12) { // Adiciona os :30 para as horas antes das 12:00
+            timeOptions1.push({ label: `${hour}:30`, value: `${hour}:30` });
+        }
     }
 
     // Time options - Part 2 (12:30 - 23:30)
     const timeOptions2 = [];
      for (let i = 12; i < 24; i++) {
-        if(i > 12) timeOptions2.push({ label: `${i}:00`, value: `${i}:00` });
-        if (i < 24) timeOptions2.push({ label: `${i}:30`, value: `${i}:30` });
+        timeOptions2.push({ label: `${i}:30`, value: `${i}:30` });
+        if (i < 23) {
+            timeOptions2.push({ label: `${i + 1}:00`, value: `${i + 1}:00` });
+        }
     }
 
 
