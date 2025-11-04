@@ -5,6 +5,9 @@ import { initializeFirebase } from '../../firebase/index.js';
 import { createProfileImage } from '../../utils/createProfileImage.js';
 
 const FORMULARIO_CHANNEL_ID = '1429260045371310200';
+const COMMUNITY_HELP_CHANNEL_ID = '1426957344897761282';
+const ALLOWED_CHANNELS = [FORMULARIO_CHANNEL_ID, COMMUNITY_HELP_CHANNEL_ID];
+
 const CUSTOM_ID_PREFIX = 'iniciar-perfil';
 const FORM_BUTTON_ID = `${CUSTOM_ID_PREFIX}_abrir`;
 const IMPORT_BUTTON_ID = `${CUSTOM_ID_PREFIX}_importar`;
@@ -33,8 +36,8 @@ export const data = new SlashCommandBuilder()
     .setDescription('Inicia o processo de criação e atualização de perfil de jogador.');
 
 export async function execute(interaction) {
-    if (interaction.channelId !== FORMULARIO_CHANNEL_ID) {
-        return interaction.reply({ content: `Este comando só pode ser usado no canal <#${FORMULARIO_CHANNEL_ID}>.`, ephemeral: true });
+    if (!ALLOWED_CHANNELS.includes(interaction.channelId)) {
+        return interaction.reply({ content: `Este comando só pode ser usado nos canais <#${FORMULARIO_CHANNEL_ID}> ou <#${COMMUNITY_HELP_CHANNEL_ID}>.`, ephemeral: true });
     }
 
     const row = new ActionRowBuilder()

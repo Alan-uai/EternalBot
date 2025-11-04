@@ -4,11 +4,19 @@ import { findOrCreateUserChannel, createInventoryThreads } from './iniciar-perfi
 import { doc, getDoc } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
 
+const FORMULARIO_CHANNEL_ID = '1429260045371310200';
+const COMMUNITY_HELP_CHANNEL_ID = '1426957344897761282';
+const ALLOWED_CHANNELS = [FORMULARIO_CHANNEL_ID, COMMUNITY_HELP_CHANNEL_ID];
+
 export const data = new SlashCommandBuilder()
     .setName('atualizar-perfil')
     .setDescription('Verifica e cria tópicos/painéis ausentes no seu canal de perfil.');
 
 export async function execute(interaction) {
+     if (!ALLOWED_CHANNELS.includes(interaction.channelId)) {
+        return interaction.reply({ content: `Este comando só pode ser usado nos canais <#${FORMULARIO_CHANNEL_ID}> ou <#${COMMUNITY_HELP_CHANNEL_ID}>.`, ephemeral: true });
+    }
+    
     await interaction.deferReply({ ephemeral: true });
 
     const user = interaction.user;
