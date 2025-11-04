@@ -37,13 +37,15 @@ function createStatusEmbed(requestData) {
     const confirmedUsersList = requestData.confirmedUsers && requestData.confirmedUsers.length > 0
         ? requestData.confirmedUsers.map(u => `• <@${u.userId}>`).join('\n')
         : 'Ninguém confirmado ainda.';
+    
+    const totalMembers = (requestData.confirmedUsers?.length || 0) + (requestData.manualCount || 0);
 
     return new EmbedBuilder()
         .setColor(0x3498DB)
         .setTitle(`Painel de Status: ${requestData.raidName}`)
         .addFields(
             { name: '👑 Dono do Anúncio', value: `<@${requestData.userId}>`, inline: true },
-            { name: '👥 Membros Confirmados', value: String(requestData.confirmedUsers?.length || 0), inline: true },
+            { name: '👥 Membros Confirmados', value: String(totalMembers), inline: true },
             { name: '🙋 Lista de Participantes', value: confirmedUsersList }
         )
         .setTimestamp();
@@ -90,16 +92,16 @@ async function handleRaidSelection(interaction, type) {
 
         const userData = userSnap.data();
         const dungeonSettings = userData.dungeonSettings || {};
-
+        
         interaction.client.container.interactions.set(`soling_temp_${interaction.user.id}`, { type, raid: selectedRaidLabel, robloxId: userData.robloxId || null });
         
-        // Pula o modal e vai direto para a postagem
-        await interaction.update({ content: 'Processando seu pedido...', components: [] });
+        // Defer the original select menu interaction before passing it to the next step
+        await interaction.deferUpdate();
         await handlePostRequest(interaction, {
             serverLink: dungeonSettings.serverLink,
             alwaysSend: dungeonSettings.alwaysSendLink,
             deleteAfter: dungeonSettings.deleteAfterMinutes,
-        }, true); // Pass true for isFollowUp
+        });
 
     } catch(error) {
         console.error('Erro em handleRaidSelection:', error);
@@ -116,28 +118,17 @@ async function handleRaidSelection(interaction, type) {
 }
 
 
-async function handlePostRequest(interaction, settings, isFollowUp = false) {
+async function handlePostRequest(interaction, settings) {
+    // This function will now always use followup because the original interaction is handled before this
     const replyOrFollowUp = async (options) => {
-        try {
-            if (isFollowUp) {
-                // Se a interação original já foi respondida (defer, update), usamos followup.
-                return await interaction.followUp(options);
-            }
-            if (interaction.replied || interaction.deferred) {
-                return await interaction.editReply(options);
-            }
-            return await interaction.reply(options);
-        } catch (e) {
-             console.warn("Falha no reply/edit. Tentando followup. Erro:", e.message)
-             return await interaction.followUp(options).catch(err => console.error("Falha no followup de fallback:", err));
-        }
+         return await interaction.followUp({ ...options, ephemeral: true });
     };
 
     try {
         const { firestore } = initializeFirebase();
         const tempData = interaction.client.container.interactions.get(`soling_temp_${interaction.user.id}`);
         if (!tempData) {
-            return replyOrFollowUp({ content: 'Sua sessão expirou. Por favor, use o comando /soling novamente.', ephemeral: true });
+            return replyOrFollowUp({ content: 'Sua sessão expirou. Por favor, use o comando /soling novamente.' });
         }
         const { type, raid: raidNome, robloxId } = tempData;
         const { serverLink, alwaysSend, deleteAfter } = settings;
@@ -145,12 +136,12 @@ async function handlePostRequest(interaction, settings, isFollowUp = false) {
         
         const solingChannel = await interaction.client.channels.fetch(SOLING_POST_CHANNEL_ID).catch(() => null);
         if (!solingChannel) {
-            return replyOrFollowUp({ content: 'O canal de postagem de /soling não foi encontrado.', ephemeral: true });
+            return replyOrFollowUp({ content: 'O canal de postagem de /soling não foi encontrado.' });
         }
         
         const webhook = await getOrCreateWebhook(solingChannel);
         if (!webhook) {
-             return replyOrFollowUp({ content: 'Não foi possível criar ou encontrar o webhook necessário para postar a mensagem.', ephemeral: true });
+             return replyOrFollowUp({ content: 'Não foi possível criar ou encontrar o webhook necessário para postar a mensagem.' });
         }
         
         const requestsRef = collection(firestore, 'dungeon_requests');
@@ -163,8 +154,9 @@ async function handlePostRequest(interaction, settings, isFollowUp = false) {
             const oldRequestData = requestDoc.data();
             try {
                  if (oldRequestData.messageId) {
-                    const oldMessage = await solingChannel.messages.fetch(oldRequestData.messageId).catch(()=>null);
-                    if(oldMessage) await oldMessage.delete();
+                    // Use a new webhook client to delete the old message
+                    const oldWebhookClient = new WebhookClient({url: webhook.url});
+                    await oldWebhookClient.deleteMessage(oldRequestData.messageId).catch(()=>{});
                 }
             } catch(e) {
                  console.warn(`Não foi possível deletar a mensagem antiga de /soling (ID: ${oldRequestData.messageId}). Pode já ter sido removida.`, e.message);
@@ -245,7 +237,7 @@ async function handlePostRequest(interaction, settings, isFollowUp = false) {
             wait: true 
         });
         
-        newRequestData.messageId = message.id; // Adiciona o ID da mensagem aos dados
+        newRequestData.messageId = message.id;
         
         if (deleteAfter && message) {
             setTimeout(async () => {
@@ -262,12 +254,12 @@ async function handlePostRequest(interaction, settings, isFollowUp = false) {
         
         await batch.commit();
         
-        await replyOrFollowUp({ content: 'Seu pedido foi postado com sucesso!', ephemeral: true });
+        await replyOrFollowUp({ content: 'Seu pedido foi postado com sucesso!' });
 
         interaction.client.container.interactions.delete(`soling_temp_${interaction.user.id}`);
     } catch(error) {
         console.error("Erro em handlePostRequest:", error);
-        await replyOrFollowUp({ content: 'Ocorreu um erro ao postar seu pedido.', ephemeral: true });
+        await interaction.followUp({ content: 'Ocorreu um erro ao postar seu pedido.', ephemeral: true }).catch(console.error);
     }
 }
 
@@ -385,15 +377,15 @@ async function openManualCountModal(interaction, requestId) {
 }
 
 async function handleManualCountSubmit(interaction, requestId) {
-    await interaction.deferUpdate();
+    await interaction.deferReply({ ephemeral: true });
     const count = parseInt(interaction.fields.getTextInputValue('count'), 10);
     const action = interaction.fields.getTextInputValue('action').toUpperCase();
 
     if (isNaN(count) || count <= 0) {
-        return interaction.followUp({ content: 'O número de membros deve ser um valor positivo.', ephemeral: true });
+        return interaction.editReply({ content: 'O número de membros deve ser um valor positivo.' });
     }
     if (action !== 'A' && action !== 'R') {
-        return interaction.followUp({ content: "Ação inválida. Use 'A' para adicionar ou 'R' para remover.", ephemeral: true });
+        return interaction.editReply({ content: "Ação inválida. Use 'A' para adicionar ou 'R' para remover." });
     }
 
     const { firestore } = initializeFirebase();
@@ -406,16 +398,19 @@ async function handleManualCountSubmit(interaction, requestId) {
 
         await updateDoc(requestRef, { manualCount: newManualCount });
         
-        const webhookClient = new WebhookClient({ url: interaction.message.webhookId });
-        const originalMessage = await webhookClient.fetchMessage(requestSnap.data().messageId);
+        // Fetch the message from the channel using the message ID
+        const solingChannel = await interaction.client.channels.fetch(SOLING_POST_CHANNEL_ID);
+        const originalMessage = await solingChannel.messages.fetch(requestSnap.data().messageId).catch(() => null);
         
-        const updatedData = { ...requestSnap.data(), manualCount: newManualCount };
-        const updatedEmbed = createStatusEmbed(updatedData);
+        if (originalMessage) {
+            const updatedData = { ...requestSnap.data(), manualCount: newManualCount };
+            const updatedEmbed = createStatusEmbed(updatedData);
+            await originalMessage.edit({ embeds: [updatedEmbed] });
+        }
 
-        await webhookClient.editMessage(requestSnap.data().messageId, { embeds: [updatedEmbed] });
-        await interaction.followUp({ content: `Contagem manual atualizada para ${newManualCount}.`, ephemeral: true });
+        await interaction.editReply({ content: `Contagem manual atualizada para ${newManualCount}.` });
     } else {
-        await interaction.followUp({ content: 'O anúncio não está mais ativo.', ephemeral: true });
+        await interaction.editReply({ content: 'O anúncio não está mais ativo.' });
     }
 }
 
@@ -451,10 +446,13 @@ async function handleToggleUserConfirmation(interaction, requestId) {
     }
 
     // Atualiza a mensagem do anúncio
-    const webhookClient = new WebhookClient({ url: interaction.message.webhookId });
-    const updatedData = { ...requestSnap.data(), confirmedUsers: newConfirmedList };
-    const updatedEmbed = createStatusEmbed(updatedData);
-    await webhookClient.editMessage(requestSnap.data().messageId, { embeds: [updatedEmbed] });
+    const solingChannel = await interaction.client.channels.fetch(SOLING_POST_CHANNEL_ID);
+    const originalMessage = await solingChannel.messages.fetch(requestSnap.data().messageId).catch(()=>null);
+    if(originalMessage) {
+        const updatedData = { ...requestSnap.data(), confirmedUsers: newConfirmedList };
+        const updatedEmbed = createStatusEmbed(updatedData);
+        await originalMessage.edit({ embeds: [updatedEmbed] });
+    }
 
     await interaction.followUp({ content: feedbackMessage, ephemeral: true });
 }
