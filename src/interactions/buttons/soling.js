@@ -75,12 +75,19 @@ function createStatusEmbed(requestData, hostUser, hostRobloxId) {
 }
 
 async function handleTypeSelection(interaction, type) {
-     await interaction.deferUpdate();
+    const replyOrFollowUp = async (options) => {
+        const ephemeralOptions = { ...options, ephemeral: true };
+        if (interaction.replied || interaction.deferred) {
+            return await interaction.followUp(ephemeralOptions);
+        }
+        return await interaction.reply(ephemeralOptions);
+    };
+
     try {
+        await interaction.deferUpdate();
         const raids = getAvailableRaids();
         if (raids.length === 0) {
-             await interaction.followUp({ content: 'Não há raids disponíveis para selecionar no momento.', ephemeral: true });
-             return;
+            return replyOrFollowUp({ content: 'Não há raids disponíveis para selecionar no momento.' });
         }
         const raidMenu = new StringSelectMenuBuilder()
             .setCustomId(`soling_raid_${type}`)
@@ -96,15 +103,18 @@ async function handleTypeSelection(interaction, type) {
         });
     } catch(error) {
         console.error('Erro em handleTypeSelection:', error);
-        if (!interaction.replied && !interaction.deferred) {
-            await interaction.reply({ content: 'Ocorreu um erro ao selecionar o tipo.', ephemeral: true }).catch(console.error);
-        } else {
-            await interaction.followUp({ content: 'Ocorreu um erro ao selecionar o tipo.', ephemeral: true }).catch(console.error);
-        }
+        await replyOrFollowUp({ content: 'Ocorreu um erro ao selecionar o tipo.' }).catch(console.error);
     }
 }
 
 async function handleRaidSelection(interaction, type) {
+    const replyOrFollowUp = async (options) => {
+        const ephemeralOptions = { ...options, ephemeral: true, components: [] };
+         if (interaction.replied || interaction.deferred) {
+            return await interaction.followUp(ephemeralOptions);
+        }
+        return await interaction.reply(ephemeralOptions);
+    };
     try {
         await interaction.deferUpdate();
         const { firestore } = initializeFirebase();
@@ -116,8 +126,7 @@ async function handleRaidSelection(interaction, type) {
         const userSnap = await getDoc(userRef);
         
         if (!userSnap.exists()) {
-             await interaction.followUp({ content: 'Você precisa criar um perfil com o comando `/perfil` antes de usar esta função.', ephemeral: true, components: []});
-             return;
+             return replyOrFollowUp({ content: 'Você precisa criar um perfil com o comando `/perfil` antes de usar esta função.' });
         }
 
         const userData = userSnap.data();
@@ -128,25 +137,21 @@ async function handleRaidSelection(interaction, type) {
 
     } catch(error) {
         console.error('Erro em handleRaidSelection:', error);
-         try {
-            if (!interaction.replied && !interaction.deferred) {
-                await interaction.reply({ content: 'Ocorreu um erro ao selecionar a raid.', ephemeral: true }).catch(console.error);
-            } else {
-                await interaction.followUp({ content: 'Ocorreu um erro ao selecionar a raid.', ephemeral: true }).catch(console.error);
-            }
-        } catch (e) {
-            console.error("Erro duplo em handleRaidSelection (followup):", e)
-        }
+        await replyOrFollowUp({ content: 'Ocorreu um erro ao selecionar a raid.' }).catch(console.error);
     }
 }
 
 async function handlePostRequest(interaction) {
     const replyOrFollowUp = async (options) => {
         const ephemeralOptions = { ...options, ephemeral: true, components: [] };
-        if (!interaction.replied && !interaction.deferred) {
-            return await interaction.reply(ephemeralOptions);
+        // Interactions from a menu select must use followUp after deferUpdate
+        if (interaction.isStringSelectMenu()) {
+            return await interaction.followUp(ephemeralOptions);
         }
-        return await interaction.followUp(ephemeralOptions);
+        if (interaction.replied || interaction.deferred) {
+            return await interaction.followUp(ephemeralOptions);
+        }
+        return await interaction.reply(ephemeralOptions);
     };
 
     try {
@@ -213,13 +218,8 @@ async function handlePostRequest(interaction) {
             webhookUrl: webhook.url,
         };
         
-        let messageContent = '';
-        if (type === 'help') {
-            messageContent = `Buscando ajuda para solar a **${raidNome}**, ficarei grato com quem puder ajudar.`;
-        } else {
-            messageContent = `Solando a **${raidNome}** para quem precisar.`;
-        }
-
+        let messageContent = `Postado por <@${user.id}>`;
+        
         const statusEmbed = createStatusEmbed(newRequestData, user, robloxId);
         
         const webhookClient = new WebhookClient({ url: webhook.url });
@@ -235,7 +235,7 @@ async function handlePostRequest(interaction) {
                     .setEmoji('🤝'),
                 new ButtonBuilder()
                     .setCustomId(`soling_manage_${newRequestId}_${user.id}`)
-                    .setLabel('Gerenciar Anúncio')
+                    .setLabel('Gerenciar')
                     .setStyle(ButtonStyle.Primary)
                     .setEmoji('⚙️'),
                 new ButtonBuilder()
@@ -285,11 +285,11 @@ async function handleConfirm(interaction, requestId, ownerId) {
         const { firestore } = initializeFirebase();
         const requestRef = doc(firestore, 'dungeon_requests', requestId);
         
+        // Ação do dono: abrir menu para gerenciar lista
         if (interaction.user.id === ownerId) {
-            // Ação do dono: abrir menu para gerenciar lista
             await handleManageMembers(interaction, requestId, ownerId, true);
         } else {
-            // Ação de usuário comum: confirmar presença
+             // Ação de usuário comum: confirmar presença
             await interaction.deferUpdate();
             const newUser = { userId: interaction.user.id, username: interaction.user.username };
             const requestSnap = await getDoc(requestRef);
@@ -361,7 +361,7 @@ async function handleOpenManagementModal(interaction, requestId, ownerId) {
     await interaction.showModal(modal);
 }
 
-async function handleManageMembers(interaction, requestId, ownerId, forRemoval = false) {
+async function handleManageMembers(interaction, requestId, ownerId) {
     if (interaction.user.id !== ownerId) {
         return interaction.reply({ content: 'Apenas o dono do anúncio pode usar esta função.', ephemeral: true });
     }
@@ -380,12 +380,12 @@ async function handleManageMembers(interaction, requestId, ownerId, forRemoval =
     }
 
     const selectMenu = new StringSelectMenuBuilder()
-        .setCustomId(forRemoval ? `soling_managertoggle_${requestId}_${ownerId}` : `soling_managerprofile_${requestId}_${ownerId}`)
-        .setPlaceholder(forRemoval ? 'Remover um usuário da lista...' : 'Visualizar perfil de um participante')
+        .setCustomId(`soling_managertoggle_${requestId}_${ownerId}`)
+        .setPlaceholder('Remover um usuário da lista...')
         .addOptions(confirmedUsers.map(u => ({ label: u.username, value: u.userId })));
 
     await interaction.editReply({
-        content: 'Selecione um usuário para gerenciar.',
+        content: 'Selecione um usuário para remover da lista. Clicar em um usuário o removerá.',
         components: [new ActionRowBuilder().addComponents(selectMenu)],
         ephemeral: true,
     });
@@ -455,27 +455,42 @@ async function handleToggleUserConfirmation(interaction, requestId, ownerId) {
     const currentConfirmed = requestData.confirmedUsers || [];
     const userObject = currentConfirmed.find(u => u.userId === userIdToToggle);
 
+    let newConfirmedList;
+    let replyMessage;
+
     if (userObject) {
+        // Se o usuário está na lista, remove
         await updateDoc(requestRef, { confirmedUsers: arrayRemove(userObject) });
-        const newConfirmedList = currentConfirmed.filter(u => u.userId !== userIdToToggle);
-        
-        const webhookUrl = requestData.webhookUrl;
-        const messageId = requestData.messageId;
-
-        if(webhookUrl && messageId) {
-            const webhookClient = new WebhookClient({ url: webhookUrl });
-            const owner = await interaction.client.users.fetch(ownerId).catch(() => null);
-            const userSnap = await getDoc(doc(firestore, 'users', ownerId));
-            const robloxId = userSnap.exists() ? userSnap.data().robloxId : null;
-            const updatedData = { ...requestData, confirmedUsers: newConfirmedList };
-            const updatedEmbed = createStatusEmbed(updatedData, owner, robloxId);
-            await webhookClient.editMessage(messageId, { embeds: [updatedEmbed] }).catch(e => console.error("Falha ao editar mensagem do webhook:", e));
-        }
-
-        await interaction.followUp({ content: `Usuário ${userObject.username} foi removido da lista.`, ephemeral: true });
+        newConfirmedList = currentConfirmed.filter(u => u.userId !== userIdToToggle);
+        replyMessage = `Usuário ${userObject.username} foi removido da lista.`;
     } else {
-        await interaction.followUp({ content: 'O usuário selecionado não foi encontrado na lista.', ephemeral: true });
+        // Se o usuário não está na lista (isso não deveria acontecer com o fluxo atual, mas por segurança), adiciona
+        const userToAdd = await interaction.client.users.fetch(userIdToToggle).catch(() => null);
+        if (userToAdd) {
+            const newUserObject = { userId: userToAdd.id, username: userToAdd.username };
+            await updateDoc(requestRef, { confirmedUsers: arrayUnion(newUserObject) });
+            newConfirmedList = [...currentConfirmed, newUserObject];
+            replyMessage = `Usuário ${userToAdd.username} foi adicionado à lista.`;
+        } else {
+            return interaction.followUp({ content: 'Não foi possível encontrar o usuário para adicionar.', ephemeral: true });
+        }
     }
+    
+    // Atualiza a mensagem do webhook
+    const webhookUrl = requestData.webhookUrl;
+    const messageId = requestData.messageId;
+
+    if(webhookUrl && messageId) {
+        const webhookClient = new WebhookClient({ url: webhookUrl });
+        const owner = await interaction.client.users.fetch(ownerId).catch(() => null);
+        const userSnap = await getDoc(doc(firestore, 'users', ownerId));
+        const robloxId = userSnap.exists() ? userSnap.data().robloxId : null;
+        const updatedData = { ...requestData, confirmedUsers: newConfirmedList };
+        const updatedEmbed = createStatusEmbed(updatedData, owner, robloxId);
+        await webhookClient.editMessage(messageId, { embeds: [updatedEmbed] }).catch(e => console.error("Falha ao editar mensagem do webhook:", e));
+    }
+
+    await interaction.followUp({ content: replyMessage, ephemeral: true });
 }
 
 async function handleFinish(interaction, requestId, ownerId) {
