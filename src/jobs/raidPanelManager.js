@@ -12,7 +12,7 @@ const RAID_AVATAR_PREFIXES = {
     'Insane': 'Isne',
     'Crazy': 'Czy',
     'Nightmare': 'Mare',
-    'Leaf Raid (1800)': 'Lf'
+    'Leaf Raid': 'Lf'
 };
 
 async function getRaidStatusPanelData(container) {
@@ -25,7 +25,7 @@ async function getRaidStatusPanelData(container) {
     let gifUrl = null;
     if (nextRaid && assetService) {
         // Busca o GIF da próxima raid
-        const assetPrefix = RAID_AVATAR_PREFIXES[nextRaid.raidId] || 'Esy';
+        const assetPrefix = RAID_AVATAR_PREFIXES[nextRaid.raidId] || 'Easy';
         gifUrl = await assetService.getAsset(`${assetPrefix}PR`); 
     }
 

@@ -8,6 +8,7 @@ export const raidRequirementsArticle = {
 **Raids Solo (1 Jogador):**
 *   **Gleam Raid (Mundo 15):** Uma raid de desafio individual.
 *   **Raid Sins (Mundo 12):** Outra raid projetada para um único jogador.
+*   **Mundo Raid (Lobby 2):** Uma raid de desafio individual, desbloqueada com o Mundo 21.
 
 **Raids em Grupo (até 4 Jogadores):**
 *   Todas as outras raids não mencionadas como "solo" permitem a participação de até 4 jogadores.

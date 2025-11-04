@@ -14,7 +14,7 @@ const RAID_AVATAR_PREFIXES = {
     'Insane': 'Isne',
     'Crazy': 'Czy',
     'Nightmare': 'Mare',
-    'Leaf Raid (1800)': 'Lf'
+    'Leaf Raid': 'Lf'
 };
 
 async function getOrCreatePersistentWebhook(client, config, logger) {
@@ -78,7 +78,7 @@ async function handleRaidLifecycle(container) {
 
         if (currentRaid) {
             const { raid, raidId, startTimeMs, tenSecondMark } = currentRaid;
-            const assetPrefix = RAID_AVATAR_PREFIXES[raidId] || 'Esy';
+            const assetPrefix = RAID_AVATAR_PREFIXES[raidId] || 'Easy';
             const isNewCycle = announcerState.raidId !== raidId || announcerState.state !== 'open';
 
             if (isNewCycle && announcerState.state !== 'closing_soon') {
@@ -133,7 +133,7 @@ async function handleRaidLifecycle(container) {
             }
         } else if (nextRaid) {
             const { raidId, fiveMinuteMark } = nextRaid;
-            const assetPrefix = RAID_AVATAR_PREFIXES[raidId] || 'Esy';
+            const assetPrefix = RAID_AVATAR_PREFIXES[raidId] || 'Easy';
             const isDifferentRaid = announcerState.raidId !== raidId || announcerState.state === 'finished';
 
             if (isDifferentRaid) {

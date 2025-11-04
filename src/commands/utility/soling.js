@@ -11,11 +11,14 @@ export const data = new SlashCommandBuilder()
 
 export function getAvailableRaids() {
     const raids = new Set();
-    
+    const soloRaids = ['Gleam Raid', 'Raid Sins', 'Mundo Raid']; // Raids individuais a serem excluídas
+
+    // Adiciona raids do Lobby 1
     lobbyDungeonsArticle.tables.lobbySchedule.rows.forEach(raid => {
         raids.add(raid['Dificuldade']);
     });
 
+    // Adiciona raids do Lobby 2 (e outras) a partir dos requisitos
     raidRequirementsArticle.tables.requirements.rows.forEach(row => {
         Object.keys(row).forEach(key => {
             if (key !== 'Wave' && row[key] && !raids.has(key)) {
@@ -24,10 +27,12 @@ export function getAvailableRaids() {
         });
     });
 
-    return Array.from(raids).map(raidName => ({
-        label: raidName,
-        value: raidName.toLowerCase().replace(/ /g, '_'),
-    }));
+    return Array.from(raids)
+        .filter(raidName => !soloRaids.includes(raidName)) // Filtra as raids solo
+        .map(raidName => ({
+            label: raidName,
+            value: raidName.toLowerCase().replace(/ /g, '_'),
+        }));
 }
 
 

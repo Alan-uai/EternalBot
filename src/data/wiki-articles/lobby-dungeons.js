@@ -16,7 +16,7 @@ export const lobbyDungeonsArticle = {
         { 'Horário': 'XX:30', 'Dificuldade': 'Insane', 'Vida Último Boss': '90DD-130DD', 'Dano Mínimo': '60Ud', 'Dano Recomendado': '100Ud', 'Tempo Otimizado': '1m 12s', 'roleId': '1429357528168271894' },
         { 'Horário': 'XX:40', 'Dificuldade': 'Crazy', 'Vida Último Boss': '90Qnd-35Nvd', 'Dano Mínimo': '300qnd', 'Dano Recomendado': '1Nvd', 'Tempo Otimizado': '1m 12s', 'roleId': '1429357529044877312' },
         { 'Horário': 'XX:50', 'Dificuldade': 'Nightmare', 'Vida Último Boss': '40VG-50VG', 'Dano Mínimo': '500spg', 'Dano Recomendado': '700SPG', 'Tempo Otimizado': '', 'roleId': '1429357529317511279' },
-        { 'Horário': 'XX:15', 'Dificuldade': 'Leaf Raid (1800)', 'Vida Último Boss': '///////// ', 'Dano Mínimo': '18qntg', 'Dano Recomendado': '50QNTG', 'Tempo Otimizado': '', 'roleId': '1429357530106298428' },
+        { 'Horário': 'XX:15', 'Dificuldade': 'Leaf Raid', 'Vida Último Boss': '///////// ', 'Dano Mínimo': '18qntg', 'Dano Recomendado': '50QNTG', 'Tempo Otimizado': '', 'roleId': '1429357530106298428' },
       ],
     },
   },

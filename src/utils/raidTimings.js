@@ -5,7 +5,7 @@ const PORTAL_OPEN_DURATION_SECONDS = 2 * 60; // 2 minutos
 
 const RAID_EMOJIS = {
     'Easy': '🟢', 'Medium': '🟡', 'Hard': '🔴', 'Insane': '⚔️', 
-    'Crazy': '🔥', 'Nightmare': '💀', 'Leaf Raid (1800)': '🌿'
+    'Crazy': '🔥', 'Nightmare': '💀', 'Leaf Raid': '🌿'
 };
 
 export function getRaidTimings() {
