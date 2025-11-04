@@ -29,8 +29,23 @@ export async function execute(interaction) {
         return interaction.reply({ content: `Este comando só pode ser usado nos canais <#${FORMULARIO_CHANNEL_ID}> ou <#${COMMUNITY_HELP_CHANNEL_ID}>.`, ephemeral: true });
     }
     
-    const targetUser = interaction.options.getUser('usuario') || interaction.user;
+    const targetUser = interaction.options.getUser('usuario');
 
+    // Se nenhum usuário é especificado, mostra os botões de interação para o autor.
+    if (!targetUser) {
+        const row = new ActionRowBuilder()
+            .addComponents(
+                new ButtonBuilder().setCustomId(FORM_BUTTON_ID).setLabel('Criar / Atualizar Perfil').setStyle(ButtonStyle.Primary).setEmoji('📝'),
+                new ButtonBuilder().setCustomId(IMPORT_BUTTON_ID).setLabel('Importar do Site').setStyle(ButtonStyle.Success).setEmoji('🔄')
+            );
+        return interaction.reply({
+            content: '**Gerenciador de Perfil do Guia Eterno**\n\n- Use os botões para criar ou atualizar suas informações.\n- Se quiser apenas visualizar seu perfil, use o comando novamente e mencione a si mesmo na opção `usuario`.',
+            components: [row],
+            ephemeral: true,
+        });
+    }
+
+    // Se um usuário é especificado, mostra o perfil dele.
     await interaction.deferReply({ ephemeral: targetUser.id !== interaction.user.id });
     
     const { firestore } = initializeFirebase();
@@ -38,21 +53,7 @@ export async function execute(interaction) {
     const userSnap = await getDoc(userRef);
 
     if (!userSnap.exists()) {
-        // Se o alvo não for o autor da interação e não tiver perfil
-        if (targetUser.id !== interaction.user.id) {
-             return interaction.editReply(`O usuário ${targetUser.username} ainda não tem um perfil no Guia Eterno.`);
-        }
-        // Se for o autor, mostra os botões para criar o perfil
-        const row = new ActionRowBuilder()
-            .addComponents(
-                new ButtonBuilder().setCustomId(FORM_BUTTON_ID).setLabel('Criar / Atualizar Perfil').setStyle(ButtonStyle.Primary).setEmoji('📝'),
-                new ButtonBuilder().setCustomId(IMPORT_BUTTON_ID).setLabel('Importar do Site').setStyle(ButtonStyle.Success).setEmoji('🔄')
-            );
-        return interaction.editReply({
-            content: `**Bem-vindo ao Gerenciador de Perfil!**\n\nVocê ainda não tem um perfil. Use os botões abaixo para começar.`,
-            components: [row],
-            ephemeral: true,
-        });
+        return interaction.editReply(`O usuário ${targetUser.username} ainda não tem um perfil no Guia Eterno.`);
     }
     
     try {
