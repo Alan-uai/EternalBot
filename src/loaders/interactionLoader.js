@@ -41,14 +41,19 @@ export async function loadInteractions(container) {
             try {
                 const handlerModule = await import(`file://${filePath}?t=${Date.now()}`);
                 
-                const validationError = validateInteraction(handlerModule, file);
-                if(validationError){
-                    logger.warn(validationError);
-                    continue;
-                }
+                // Adicionado para registrar múltiplos prefixos se o handler exportar um array
+                const prefixes = Array.isArray(handlerModule.customIdPrefix) ? handlerModule.customIdPrefix : [handlerModule.customIdPrefix];
 
-                interactions.set(handlerModule.customIdPrefix, handlerModule.handleInteraction);
-                logger.info(`Manipulador de interação carregado para o prefixo: ${handlerModule.customIdPrefix}`);
+                for (const prefix of prefixes) {
+                    const validationMod = { ...handlerModule, customIdPrefix: prefix };
+                    const validationError = validateInteraction(validationMod, file);
+                    if(validationError){
+                        logger.warn(validationError);
+                        continue;
+                    }
+                    interactions.set(prefix, handlerModule.handleInteraction);
+                    logger.info(`Manipulador de interação carregado para o prefixo: ${prefix}`);
+                }
                 
             } catch (err) {
                 logger.error(`Falha ao carregar o manipulador de interação ${file}:`, err);
