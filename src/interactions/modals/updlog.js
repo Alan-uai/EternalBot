@@ -21,14 +21,14 @@ const translationPrompt = ai.definePrompt({
     prompt: `Sua única tarefa é traduzir o texto a seguir para Português-BR. Mantenha a formatação Markdown original (quebras de linha, negrito, etc.). Contexto: "{{{context}}}". Texto para traduzir: "{{{text}}}"`,
 });
 
-export async function handleInteraction(interaction, { client }) {
+export async function handleInteraction(interaction, container) {
     if (!interaction.isModalSubmit() || interaction.customId !== customIdPrefix) return;
 
     await interaction.deferReply({ ephemeral: true });
 
     const titleEn = interaction.fields.getTextInputValue('updlog_title');
     const contentEn = interaction.fields.getTextInputValue('updlog_content');
-    const { logger, services } = client.container;
+    const { logger, services } = container;
     const { assetService } = services;
 
     const { firestore } = initializeFirebase();

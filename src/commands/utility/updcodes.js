@@ -1,5 +1,5 @@
 // src/commands/utility/updcodes.js
-import { SlashCommandBuilder, PermissionsBitField, WebhookClient, ChannelType } from 'discord.js';
+import { SlashCommandBuilder, PermissionsBitField, WebhookClient } from 'discord.js';
 import { initializeFirebase } from '../../firebase/index.js';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 
@@ -19,9 +19,8 @@ export const data = new SlashCommandBuilder()
             .setDescription('Marque como verdadeiro para remover os códigos informados. Padrão: falso.')
             .setRequired(false));
 
-export async function execute(interaction) {
-    const { client } = interaction;
-    const { logger, services } = client.container;
+export async function execute(interaction, container) {
+    const { logger, services } = container;
     const { assetService } = services;
     
     if (!interaction.member.roles.cache.has(ADMIN_ROLE_ID)) {
@@ -46,25 +45,26 @@ export async function execute(interaction) {
 
     try {
         const docSnap = await getDoc(codesRef);
-        let currentData = docSnap.exists() ? docSnap.data() : { codes: [] };
+        const webhookData = docSnap.exists() ? docSnap.data() : {};
         
-        if (!currentData.webhookUrl) {
-            logger.error(`[updcodes] URL do webhook '${FIRESTORE_DOC_ID}' não encontrada no Firestore. O comando não pode prosseguir.`);
+        if (!webhookData.webhookUrl) {
+            logger.error(`[updcodes] URL do webhook '${FIRESTORE_DOC_ID}' não encontrada no Firestore.`);
             return interaction.editReply('ERRO: A URL do webhook para este comando não foi encontrada. O bot pode precisar ser reiniciado.');
         }
 
+        let currentCodes = webhookData.codes || [];
         let updatedCodes;
         let replyMessage;
         
         if (shouldRemove) {
-            updatedCodes = currentData.codes.filter(code => !codesToProcess.includes(code));
+            updatedCodes = currentCodes.filter(code => !codesToProcess.includes(code));
             replyMessage = `Códigos removidos com sucesso: \`${codesToProcess.join(', ')}\``;
         } else {
-            const uniqueNewCodes = codesToProcess.filter(code => !currentData.codes.includes(code));
+            const uniqueNewCodes = codesToProcess.filter(code => !currentCodes.includes(code));
             if (uniqueNewCodes.length === 0) {
                 return interaction.editReply('Todos os códigos fornecidos já existem na lista.');
             }
-            updatedCodes = [...currentData.codes, ...uniqueNewCodes];
+            updatedCodes = [...currentCodes, ...uniqueNewCodes];
             replyMessage = `Códigos adicionados com sucesso: \`${uniqueNewCodes.join(', ')}\``;
         }
         
@@ -72,28 +72,33 @@ export async function execute(interaction) {
         const content = `**Códigos Ativos do Jogo**\n\n${formattedCodesList}\n\n*Use /codes para ver esta lista.*`;
         
         const avatarURL = await assetService.getAsset('CD');
-        const webhookClient = new WebhookClient({ url: currentData.webhookUrl });
-        let message;
+        const webhookClient = new WebhookClient({ url: webhookData.webhookUrl });
+        
         const payload = { 
             content, 
             username: 'Códigos Ativos', 
             avatarURL 
         };
 
-        if (currentData.messageId) {
+        let messageId = webhookData.messageId;
+        let message;
+
+        if (messageId) {
             try {
-                message = await webhookClient.editMessage(currentData.messageId, payload);
+                message = await webhookClient.editMessage(messageId, payload);
             } catch (error) {
-                logger.warn(`[updcodes] Não foi possível editar a mensagem de códigos (ID: ${currentData.messageId}). Criando uma nova.`);
+                logger.warn(`[updcodes] Não foi possível editar a mensagem de códigos (ID: ${messageId}). Criando uma nova.`);
                 message = await webhookClient.send({ ...payload, wait: true });
+                messageId = message.id; // Atualiza o ID da mensagem
             }
         } else {
             message = await webhookClient.send({ ...payload, wait: true });
+            messageId = message.id; // Define o ID da nova mensagem
         }
         
         await setDoc(codesRef, { 
             codes: updatedCodes,
-            messageId: message.id,
+            messageId: messageId, // Salva o ID da mensagem (nova ou editada)
         }, { merge: true });
 
         await interaction.editReply(replyMessage);

@@ -18,7 +18,7 @@ export async function execute(interaction) {
 
     const modal = new ModalBuilder()
         .setCustomId('updlog_modal')
-        .setTitle('Novo Log de Atualização (Em Inglês)');
+        .setTitle('Novo Log de Atualização');
 
     const titleInput = new TextInputBuilder()
         .setCustomId('updlog_title')

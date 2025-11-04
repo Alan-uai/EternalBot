@@ -15,7 +15,8 @@ export async function execute(interaction) {
         }
         try {
             if (command.execute) {
-                await command.execute(interaction); // Removido container daqui
+                // Passa a interação e o container para a função execute do comando
+                await command.execute(interaction, client.container); 
             }
         } catch (error) {
             logger.error(`Erro ao executar o comando /${interaction.commandName}:`, error);
@@ -38,7 +39,7 @@ export async function execute(interaction) {
         if (handler) {
             const [prefix, handlerFn] = handler;
             try {
-                // Passa o container para o manipulador
+                // Passa a interação e o container para o manipulador
                 await handlerFn(interaction, client.container);
             } catch (error) {
                 logger.error(`Erro ao lidar com a interação ${customId}:`, error);
@@ -54,5 +55,3 @@ export async function execute(interaction) {
         }
     }
 }
-
-    
