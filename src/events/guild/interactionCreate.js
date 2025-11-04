@@ -44,10 +44,14 @@ export async function execute(interaction) {
             } catch (error) {
                 logger.error(`Erro ao lidar com a interação ${customId}:`, error);
                 const errorMessage = 'Ocorreu um erro ao processar sua ação.';
-                if (interaction.replied || interaction.deferred) {
-                    await interaction.followUp({ content: errorMessage, ephemeral: true }).catch(e => logger.error("Falha ao enviar followUp de erro de interação:", e));
-                } else {
-                    await interaction.reply({ content: errorMessage, ephemeral: true }).catch(e => logger.error("Falha ao enviar reply de erro de interação:", e));
+                try {
+                    if (interaction.replied || interaction.deferred) {
+                        await interaction.followUp({ content: errorMessage, ephemeral: true }).catch(e => logger.error("Falha ao enviar followUp de erro de interação:", e));
+                    } else {
+                        await interaction.reply({ content: errorMessage, ephemeral: true }).catch(e => logger.error("Falha ao enviar reply de erro de interação:", e));
+                    }
+                } catch(e) {
+                    logger.error(`Erro duplo ao tentar responder a uma interação falha: ${e}`);
                 }
             }
         } else {
