@@ -1,8 +1,8 @@
 // src/interactions/buttons/soling.js
-import { SlashCommandBuilder, ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, WebhookClient, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, AttachmentBuilder, ChannelType } from 'discord.js';
+import { ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, WebhookClient, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, AttachmentBuilder, ChannelType } from 'discord.js';
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, query, where, getDocs, writeBatch, arrayUnion } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
-import { getAvailableRaids } from '../../commands/utility/soling.js'; // Importa a função
+import { getAvailableRaids } from '../../commands/utility/soling.js';
 import { createProfileImage } from '../../utils/createProfileImage.js';
 
 export const customIdPrefix = 'soling';
@@ -278,7 +278,6 @@ async function handlePostRequest(interaction, settings) {
     }
 }
 
-
 async function handleConfirm(interaction, requestId, ownerId) {
     try {
         const { firestore } = initializeFirebase();
@@ -385,6 +384,7 @@ async function handleCopyId(interaction, userId, robloxId) {
 export async function handleInteraction(interaction) {
     try {
         const [command, action, ...params] = interaction.customId.split('_');
+        
         if (command !== 'soling') return;
 
         if (interaction.isButton()) {
@@ -396,7 +396,6 @@ export async function handleInteraction(interaction) {
             if (action === 'raid') await handleRaidSelection(interaction, params[0]);
             else if (action === 'selectuser') await handleSelectUser(interaction);
         } else if (interaction.isModalSubmit()) {
-            // Roteamento para o modal de submissão
             if (interaction.customId === 'soling_modal_submit') {
                 await handleModalSubmit(interaction);
             }
