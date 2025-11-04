@@ -8,7 +8,7 @@ const PERSISTENT_WEBHOOK_NAME = 'Anunciador de Raids';
 const PORTAL_OPEN_DURATION_SECONDS = 2 * 60;
 
 const RAID_AVATAR_PREFIXES = {
-    'Easy': 'Esy',
+    'Easy': 'Easy',
     'Medium': 'Med',
     'Hard': 'Hd',
     'Insane': 'Isne',
@@ -78,7 +78,7 @@ async function handleRaidLifecycle(container) {
 
         if (currentRaid) {
             const { raid, raidId, startTimeMs, tenSecondMark } = currentRaid;
-            const avatarPrefix = RAID_AVATAR_PREFIXES[raidId] || 'Esy';
+            const assetPrefix = RAID_AVATAR_PREFIXES[raidId] || 'Esy';
             const isNewCycle = announcerState.raidId !== raidId || announcerState.state !== 'open';
 
             if (isNewCycle && announcerState.state !== 'closing_soon') {
@@ -87,11 +87,11 @@ async function handleRaidLifecycle(container) {
                 if (announcerState.messageId) {
                     await webhookClient.deleteMessage(announcerState.messageId).catch(e => logger.warn(`[${raidId}] Não foi possível deletar a mensagem anterior: ${e.message}`));
                 }
-
-                const openAvatar = await assetService.getAsset(`${avatarPrefix}A`);
+                
+                const openAvatar = await assetService.getAsset(`${assetPrefix}A`);
                 await webhook.edit({ name: `🔥 A Raid Começou: ${raidId}!`, avatar: openAvatar });
 
-                const gifUrl = await assetService.getAsset('Open');
+                const gifUrl = await assetService.getAsset(`${assetPrefix}A`);
                 const embed = new EmbedBuilder()
                     .setImage(gifUrl)
                     .setColor(0xFF4B4B)
@@ -112,10 +112,10 @@ async function handleRaidLifecycle(container) {
                 logger.info(`[${raidId}] Anúncio de RAID ABERTA enviado.`);
 
             } else if (announcerState.state === 'open' && Date.now() >= tenSecondMark) {
-                 const closingAvatar = await assetService.getAsset(`${avatarPrefix}F`);
+                 const closingAvatar = await assetService.getAsset(`${assetPrefix}F`);
                  await webhook.edit({ name: `Raid ${raidId} fechando em 10s!`, avatar: closingAvatar });
                 
-                const gifUrl = await assetService.getAsset('Closing');
+                const gifUrl = await assetService.getAsset(`${assetPrefix}F`);
                 const closingEmbed = new EmbedBuilder()
                     .setImage(gifUrl)
                     .setColor(0x000000)
@@ -133,14 +133,14 @@ async function handleRaidLifecycle(container) {
             }
         } else if (nextRaid) {
             const { raidId, fiveMinuteMark } = nextRaid;
-            const avatarPrefix = RAID_AVATAR_PREFIXES[raidId] || 'Esy';
+            const assetPrefix = RAID_AVATAR_PREFIXES[raidId] || 'Esy';
             const isDifferentRaid = announcerState.raidId !== raidId || announcerState.state === 'finished';
 
             if (isDifferentRaid) {
-                const nextAvatar = await assetService.getAsset(`${avatarPrefix}PR`);
+                const nextAvatar = await assetService.getAsset(`${assetPrefix}PR`);
                 await webhook.edit({ name: `Próxima Raid: ${raidId}`, avatar: nextAvatar });
                  
-                const gifUrl = await assetService.getAsset('Next');
+                const gifUrl = await assetService.getAsset(`${assetPrefix}PR`);
                 const embed = new EmbedBuilder()
                     .setImage(gifUrl)
                     .setColor(0x2F3136)
@@ -161,10 +161,10 @@ async function handleRaidLifecycle(container) {
                 logger.info(`[${raidId}] Anunciado como PRÓXIMA RAID.`);
             
             } else if (announcerState.state === 'next_up' && Date.now() >= fiveMinuteMark) {
-                const fiveMinAvatar = await assetService.getAsset(`${avatarPrefix}5m`);
+                const fiveMinAvatar = await assetService.getAsset(`${assetPrefix}5m`);
                 await webhook.edit({ name: `Atenção! Raid ${raidId} em 5 Min!`, avatar: fiveMinAvatar });
 
-                const gifUrl = await assetService.getAsset('5Min');
+                const gifUrl = await assetService.getAsset(`${assetPrefix}5m`);
                 const embed = new EmbedBuilder()
                     .setImage(gifUrl)
                     .setColor(0xFFA500)
