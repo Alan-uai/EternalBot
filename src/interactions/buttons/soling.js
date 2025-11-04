@@ -1,3 +1,4 @@
+
 // src/interactions/buttons/soling.js
 import { ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, WebhookClient, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, AttachmentBuilder, ChannelType } from 'discord.js';
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, query, where, getDocs, writeBatch, arrayUnion, arrayRemove } from 'firebase/firestore';
@@ -40,7 +41,7 @@ function createStatusEmbed(requestData) {
     
     const totalMembers = (requestData.confirmedUsers?.length || 0) + (requestData.manualCount || 0);
 
-    return new EmbedBuilder()
+    const embed = new EmbedBuilder()
         .setColor(0x3498DB)
         .setTitle(`Painel de Status: ${requestData.raidName}`)
         .addFields(
@@ -49,6 +50,12 @@ function createStatusEmbed(requestData) {
             { name: '🙋 Lista de Participantes', value: confirmedUsersList }
         )
         .setTimestamp();
+    
+    if (requestData.serverLink) {
+        embed.addFields({ name: '🔗 Servidor Privado', value: `**[Clique aqui para entrar](${requestData.serverLink})**` });
+    }
+    
+    return embed;
 }
 
 
@@ -77,6 +84,8 @@ async function handleTypeSelection(interaction, type) {
 
 async function handleRaidSelection(interaction, type) {
      try {
+        await interaction.deferUpdate();
+
         const { firestore } = initializeFirebase();
         const selectedRaidValue = interaction.values[0];
         const raids = getAvailableRaids();
@@ -86,7 +95,7 @@ async function handleRaidSelection(interaction, type) {
         const userSnap = await getDoc(userRef);
         
         if (!userSnap.exists()) {
-             await interaction.update({ content: 'Você precisa criar um perfil com o comando `/perfil` antes de usar esta função.', components: []});
+             await interaction.followUp({ content: 'Você precisa criar um perfil com o comando `/perfil` antes de usar esta função.', ephemeral: true, components: []});
              return;
         }
 
@@ -95,8 +104,6 @@ async function handleRaidSelection(interaction, type) {
         
         interaction.client.container.interactions.set(`soling_temp_${interaction.user.id}`, { type, raid: selectedRaidLabel, robloxId: userData.robloxId || null });
         
-        // Defer the original select menu interaction before passing it to the next step
-        await interaction.deferUpdate();
         await handlePostRequest(interaction, {
             serverLink: dungeonSettings.serverLink,
             alwaysSend: dungeonSettings.alwaysSendLink,
@@ -119,7 +126,6 @@ async function handleRaidSelection(interaction, type) {
 
 
 async function handlePostRequest(interaction, settings) {
-    // This function will now always use followup because the original interaction is handled before this
     const replyOrFollowUp = async (options) => {
          return await interaction.followUp({ ...options, ephemeral: true });
     };
@@ -154,7 +160,6 @@ async function handlePostRequest(interaction, settings) {
             const oldRequestData = requestDoc.data();
             try {
                  if (oldRequestData.messageId) {
-                    // Use a new webhook client to delete the old message
                     const oldWebhookClient = new WebhookClient({url: webhook.url});
                     await oldWebhookClient.deleteMessage(oldRequestData.messageId).catch(()=>{});
                 }
@@ -181,21 +186,18 @@ async function handlePostRequest(interaction, settings) {
             createdAt: serverTimestamp(),
             status: 'active',
             confirmedUsers: [],
-            manualCount: 0
+            manualCount: 0,
+            serverLink: (alwaysSend && serverLink) ? serverLink : null
         };
-
-        const statusEmbed = createStatusEmbed(newRequestData);
-
+        
         let messageContent = '';
         if (type === 'help') {
             messageContent = `Buscando ajuda para solar a **${raidNome}**, ficarei grato com quem puder ajudar.`;
         } else { // hosting
-            messageContent = `Solando a **${raidNome}** para quem precisar, só entrar pelo link.`;
+            messageContent = `Solando a **${raidNome}** para quem precisar.`;
         }
 
-        if (alwaysSend && serverLink) {
-            messageContent += `\n\n**Servidor:** ${serverLink}`;
-        }
+        const statusEmbed = createStatusEmbed(newRequestData);
         
         const webhookClient = new WebhookClient({ url: webhook.url });
         
@@ -269,7 +271,6 @@ async function handleConfirm(interaction, requestId, ownerId) {
         const { firestore } = initializeFirebase();
         const requestRef = doc(firestore, 'dungeon_requests', requestId);
         
-        // Dono clicando no botão para abrir o painel de gerenciamento
         if (interaction.user.id === ownerId) {
             const requestSnap = await getDoc(requestRef);
             if (!requestSnap.exists() || requestSnap.data().status !== 'active') {
@@ -310,7 +311,6 @@ async function handleConfirm(interaction, requestId, ownerId) {
             return;
         }
 
-        // Outro usuário confirmando presença
         await interaction.deferUpdate();
         const newUser = { userId: interaction.user.id, username: interaction.user.username };
         const requestSnap = await getDoc(requestRef);
@@ -323,17 +323,14 @@ async function handleConfirm(interaction, requestId, ownerId) {
             return interaction.followUp({ content: 'Você já confirmou sua presença.', ephemeral: true });
         }
 
-        // Atualiza o documento no Firestore
         await updateDoc(requestRef, {
             confirmedUsers: arrayUnion(newUser)
         });
 
-        // Atualiza a mensagem original com o novo embed
         const updatedData = { ...requestSnap.data(), confirmedUsers: [...confirmedUsers, newUser] };
         const updatedEmbed = createStatusEmbed(updatedData);
         await interaction.message.edit({ embeds: [updatedEmbed] });
 
-        // Notifica o dono via DM se ativado
         const owner = await interaction.client.users.fetch(ownerId).catch(() => null);
         if (owner) {
             const ownerSettingsSnap = await getDoc(doc(firestore, 'users', ownerId));
@@ -354,7 +351,10 @@ async function handleConfirm(interaction, requestId, ownerId) {
     }
 }
 
-async function openManualCountModal(interaction, requestId) {
+async function openManualCountModal(interaction, requestId, ownerId) {
+     if (interaction.user.id !== ownerId) {
+        return interaction.reply({ content: 'Apenas o dono do anúncio pode usar este botão.', ephemeral: true });
+    }
     const modal = new ModalBuilder()
         .setCustomId(`soling_modalsubmitmanual_${requestId}`)
         .setTitle('Contagem Manual de Membros');
@@ -398,7 +398,6 @@ async function handleManualCountSubmit(interaction, requestId) {
 
         await updateDoc(requestRef, { manualCount: newManualCount });
         
-        // Fetch the message from the channel using the message ID
         const solingChannel = await interaction.client.channels.fetch(SOLING_POST_CHANNEL_ID);
         const originalMessage = await solingChannel.messages.fetch(requestSnap.data().messageId).catch(() => null);
         
@@ -433,19 +432,16 @@ async function handleToggleUserConfirmation(interaction, requestId) {
     let feedbackMessage;
 
     if (userObject) {
-        // Se o usuário está na lista, remove
         await updateDoc(requestRef, { confirmedUsers: arrayRemove(userObject) });
         newConfirmedList = currentConfirmed.filter(u => u.userId !== userIdToToggle);
         feedbackMessage = `Usuário ${userObject.username} foi removido da lista de confirmados.`;
     } else {
-        // Se o usuário não está na lista, adiciona (precisamos buscar o username)
         const userToAdd = { userId: userIdToToggle, username: (await interaction.client.users.fetch(userIdToToggle)).username };
         await updateDoc(requestRef, { confirmedUsers: arrayUnion(userToAdd) });
         newConfirmedList = [...currentConfirmed, userToAdd];
         feedbackMessage = `Usuário ${userToAdd.username} foi adicionado à lista de confirmados.`;
     }
 
-    // Atualiza a mensagem do anúncio
     const solingChannel = await interaction.client.channels.fetch(SOLING_POST_CHANNEL_ID);
     const originalMessage = await solingChannel.messages.fetch(requestSnap.data().messageId).catch(()=>null);
     if(originalMessage) {
@@ -536,7 +532,7 @@ export async function handleInteraction(interaction, container) {
             else if (action === 'confirm') await handleConfirm(interaction, params[0], params[1]);
             else if (action === 'finish') await handleFinish(interaction, params[0], params[1]);
             else if (action === 'copyid') await handleCopyId(interaction, params[0], params[1]);
-            else if (action === 'managermanual') await openManualCountModal(interaction, params[0]);
+            else if (action === 'managermanual') await openManualCountModal(interaction, params[0], params[1]);
 
         } else if (interaction.isStringSelectMenu()) {
             if (action === 'raid') await handleRaidSelection(interaction, params[0]);
