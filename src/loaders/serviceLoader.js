@@ -2,6 +2,7 @@
 import { initializeFirebase } from '../firebase/index.js';
 import { loadKnowledgeBase } from '../knowledge-base.js';
 import { AssetService } from '../services/assetService.js';
+import { ImageGenerationService } from '../services/imageGenerationService.js';
 
 export async function loadServices(container) {
     const { logger, services, config } = container;
@@ -39,5 +40,13 @@ export async function loadServices(container) {
     } catch (error) {
         logger.error('Falha ao inicializar o serviço de Assets:', error);
         // Não relança o erro para permitir que o bot funcione sem assets visuais
+    }
+    
+    // Image Generation Service
+     try {
+        services.imageGenerator = new ImageGenerationService(services.assetService, logger);
+        logger.info('Serviço de Geração de Imagem inicializado.');
+    } catch(error) {
+        logger.error('Falha ao inicializar o serviço de Geração de Imagem:', error);
     }
 }

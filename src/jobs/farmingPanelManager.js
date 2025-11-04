@@ -1,6 +1,6 @@
 // src/jobs/farmingPanelManager.js
-import { EmbedBuilder, WebhookClient, ActionRowBuilder, StringSelectMenuBuilder } from 'discord.js';
-import { doc, getDoc, setDoc, collection, query, where, getDocs, deleteDoc, writeBatch } from 'firebase/firestore';
+import { EmbedBuilder, WebhookClient, ActionRowBuilder, StringSelectMenuBuilder, AttachmentBuilder } from 'discord.js';
+import { doc, getDoc, setDoc, collection, query, where, getDocs, deleteDoc, writeBatch, updateDoc } from 'firebase/firestore';
 
 const PANEL_DOC_ID = 'farmingPanel';
 const WEEKDAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
@@ -57,13 +57,97 @@ async function cleanupOldFarms(firestore, currentDayIndex, logger) {
     }
 }
 
+async function handleAnnouncements(container, farms) {
+    const { client, config, logger, services } = container;
+    const { firestore, assetService } = services;
+    
+    const now = new Date();
+    const fiveMinutesFromNow = new Date(now.getTime() + 5 * 60 * 1000);
+
+    for (const farm of farms) {
+        const [hour, minute] = farm.time.split(':');
+        const farmTime = new Date(now);
+        farmTime.setHours(hour, minute, 0, 0);
+
+        const farmTimeMs = farmTime.getTime();
+
+        // 5-minute warning
+        if (farmTime > now && farmTime <= fiveMinutesFromNow && !farm.announced5m) {
+            const channel = await client.channels.fetch(config.FARMING_PANEL_CHANNEL_ID).catch(() => null);
+            if(channel) {
+                const host = await client.users.fetch(farm.hostId).catch(() => null);
+                const userSnap = await getDoc(doc(firestore, 'users', farm.hostId));
+                const serverLink = userSnap.exists() ? userSnap.data()?.dungeonSettings?.serverLink : null;
+
+                const embed = new EmbedBuilder()
+                    .setColor(0xFFA500)
+                    .setAuthor({ name: `Farm de ${host?.username || farm.hostUsername}`, iconURL: host?.displayAvatarURL() })
+                    .setTitle(`A Raid ${farm.raidName} começa em 5 minutos!`)
+                    .setDescription('Prepare-se para o farm!');
+                if (serverLink) {
+                    embed.addFields({ name: '🔗 Servidor Privado', value: `**[Clique aqui para entrar](${serverLink})**` });
+                }
+
+                const webhook = new WebhookClient({ url: farm.webhookUrl });
+                const announcementMessage = await webhook.send({
+                    username: `5m | ${farm.raidName}`,
+                    embeds: [embed],
+                    wait: true
+                });
+
+                await updateDoc(doc(firestore, 'scheduled_farms', farm.id), { 
+                    announced5m: true,
+                    announcementId: announcementMessage.id
+                });
+                logger.info(`[farmingPanel] Anúncio de 5 minutos enviado para a raid ${farm.raidName}.`);
+            }
+        }
+
+        // "Open" announcement
+        if (farmTime <= now && !farm.announcedOpen) {
+            const channel = await client.channels.fetch(config.FARMING_PANEL_CHANNEL_ID).catch(() => null);
+            if(channel) {
+                const webhook = new WebhookClient({ url: farm.webhookUrl });
+                
+                // Delete the 5-minute warning message if it exists
+                if (farm.announcementId) {
+                    await webhook.deleteMessage(farm.announcementId).catch(e => logger.warn(`[farmingPanel] Não foi possível deletar a mensagem de 5min: ${e.message}`));
+                }
+
+                const host = await client.users.fetch(farm.hostId).catch(() => null);
+                const userSnap = await getDoc(doc(firestore, 'users', farm.hostId));
+                const serverLink = userSnap.exists() ? userSnap.data()?.dungeonSettings?.serverLink : null;
+
+                const embed = new EmbedBuilder()
+                    .setColor(0x00FF00)
+                    .setAuthor({ name: `Farm de ${host?.username || farm.hostUsername}`, iconURL: host?.displayAvatarURL() })
+                    .setTitle(`✅ Farm Aberto: ${farm.raidName}`)
+                    .setDescription('O farm começou! Boa sorte!');
+                 if (serverLink) {
+                    embed.addFields({ name: '🔗 Servidor Privado', value: `**[Clique aqui para entrar](${serverLink})**` });
+                }
+
+                await webhook.send({
+                    username: `${farm.raidName} Aberta`,
+                    embeds: [embed],
+                    content: farm.participants.map(id => `<@${id}>`).join(' ')
+                });
+
+                await updateDoc(doc(firestore, 'scheduled_farms', farm.id), { 
+                    announcedOpen: true 
+                });
+                logger.info(`[farmingPanel] Anúncio de ABERTURA enviado para a raid ${farm.raidName}.`);
+            }
+        }
+    }
+}
 
 export const name = 'farmingPanelManager';
 export const schedule = '*/60 * * * * *'; // A cada minuto
 
 export async function run(container) {
     const { client, config, logger, services } = container;
-    const { firestore } = services.firebase;
+    const { firestore, imageGenerator } = services;
 
     try {
         const now = new Date();
@@ -71,16 +155,24 @@ export async function run(container) {
         
         await cleanupOldFarms(firestore, now.getDay(), logger);
 
-        const allFarmsToday = await getFarmsForDay(firestore, currentDay);
+        const allFarmsForWeek = [];
+        for (const day of WEEKDAYS) {
+            allFarmsForWeek.push(...await getFarmsForDay(firestore, day));
+        }
+
+        const allFarmsToday = allFarmsForWeek.filter(farm => farm.dayOfWeek === currentDay);
         
+        // Handle announcements
+        await handleAnnouncements(container, allFarmsToday);
+
         const panelWebhookDocRef = doc(firestore, 'bot_config', PANEL_DOC_ID);
         const docSnap = await getDoc(panelWebhookDocRef);
         
         let webhookUrl = docSnap.exists() ? docSnap.data().webhookUrl : null;
         let messageId = docSnap.exists() ? docSnap.data().messageId : null;
 
+        const channel = await client.channels.fetch(config.FARMING_PANEL_CHANNEL_ID);
         if (!webhookUrl) {
-            const channel = await client.channels.fetch(config.FARMING_PANEL_CHANNEL_ID);
             const webhooks = await channel.fetchWebhooks();
             let webhook = webhooks.find(wh => wh.name.startsWith('Farms de'));
             if (!webhook) {
@@ -91,6 +183,10 @@ export async function run(container) {
         }
         
         const webhookClient = new WebhookClient({ url: webhookUrl });
+
+        // Generate schedule image
+        const scheduleImage = await imageGenerator.createScheduleImage(allFarmsForWeek);
+        const attachment = new AttachmentBuilder(scheduleImage, { name: 'schedule.png' });
 
         const embeds = [];
         if (allFarmsToday.length === 0) {
@@ -141,7 +237,7 @@ export async function run(container) {
                 label: `${farm.time} - ${farm.raidName}`,
                 description: `Host: ${farm.hostUsername} | ${farm.participants.length} participante(s)`,
                 value: farm.id,
-            })) : [{label: 'Nenhum farm hoje', value: 'no_farm' }]);
+            })) : [{label: 'Nenhum farm hoje', value: 'no_farm'}]);
 
         if (participationMenu.options.length === 0) {
             participationMenu.addOptions({label: 'Nenhum farm disponível para hoje', value: 'none'}).setDisabled(true);
@@ -154,6 +250,7 @@ export async function run(container) {
             avatarURL: client.user.displayAvatarURL(),
             embeds: embeds,
             components: [row],
+            files: [attachment]
         };
 
         if (messageId) {
