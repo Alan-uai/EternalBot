@@ -1,5 +1,5 @@
 // src/interactions/buttons/soling.js
-import { ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, WebhookClient, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, AttachmentBuilder, ChannelType } from 'discord.js';
+import { ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, WebhookClient, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, AttachmentBuilder, ChannelType, OverwriteType } from 'discord.js';
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, query, where, getDocs, writeBatch, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
 import { getAvailableRaids } from '../../commands/utility/soling.js';
@@ -8,6 +8,7 @@ import { createProfileImage } from '../../utils/createProfileImage.js';
 export const customIdPrefix = 'soling';
 
 const SOLING_POST_CHANNEL_ID = '1429295597374144563';
+const VOICE_CHANNEL_CATEGORY_ID = '1426957344897761281';
 const ADMIN_ROLE_ID = '1429318984716521483';
 const GAME_LINK = 'https://www.roblox.com/games/90462358603255/15-Min-Anime-Eternal';
 
@@ -46,14 +47,14 @@ function createStatusEmbed(requestData, hostUser, hostRobloxId) {
         ? requestData.confirmedUsers.map(u => `• <@${u.userId}>`).join('\n')
         : 'Ninguém confirmado ainda.';
     
-    const totalMembers = (requestData.confirmedUsers?.length || 0) + (requestData.manualCount || 0);
+    const totalMembers = 1 + (requestData.confirmedUsers?.length || 0) + (requestData.manualCount || 0);
 
     const embed = new EmbedBuilder()
         .setColor(0x3498DB)
         .setAuthor({ name: `Anúncio de ${hostUser.username}`, iconURL: hostUser.displayAvatarURL() })
         .setTitle(`Painel de Status: ${requestData.raidName}`)
         .addFields(
-            { name: '👥 Membros Confirmados', value: String(totalMembers), inline: true },
+            { name: '👥 Membros Confirmados', value: `**${totalMembers} / 10**`, inline: true },
             { name: '🙋 Lista de Participantes', value: confirmedUsersList }
         )
         .setTimestamp();
@@ -75,19 +76,11 @@ function createStatusEmbed(requestData, hostUser, hostRobloxId) {
 }
 
 async function handleTypeSelection(interaction, type) {
-    const replyOrFollowUp = async (options) => {
-        const ephemeralOptions = { ...options, ephemeral: true };
-        if (interaction.replied || interaction.deferred) {
-            return await interaction.followUp(ephemeralOptions);
-        }
-        return await interaction.reply(ephemeralOptions);
-    };
-
     try {
         await interaction.deferUpdate();
         const raids = getAvailableRaids();
         if (raids.length === 0) {
-            return replyOrFollowUp({ content: 'Não há raids disponíveis para selecionar no momento.' });
+            return interaction.followUp({ content: 'Não há raids disponíveis para selecionar no momento.', ephemeral: true });
         }
         const raidMenu = new StringSelectMenuBuilder()
             .setCustomId(`soling_raid_${type}`)
@@ -103,20 +96,14 @@ async function handleTypeSelection(interaction, type) {
         });
     } catch(error) {
         console.error('Erro em handleTypeSelection:', error);
-        await replyOrFollowUp({ content: 'Ocorreu um erro ao selecionar o tipo.' }).catch(console.error);
     }
 }
 
 async function handleRaidSelection(interaction, type) {
-    const replyOrFollowUp = async (options) => {
-        const ephemeralOptions = { ...options, ephemeral: true, components: [] };
-         if (interaction.replied || interaction.deferred) {
-            return await interaction.followUp(ephemeralOptions);
-        }
-        return await interaction.reply(ephemeralOptions);
-    };
     try {
+        // We must acknowledge the interaction immediately
         await interaction.deferUpdate();
+        
         const { firestore } = initializeFirebase();
         const selectedRaidValue = interaction.values[0];
         const raids = getAvailableRaids();
@@ -126,29 +113,31 @@ async function handleRaidSelection(interaction, type) {
         const userSnap = await getDoc(userRef);
         
         if (!userSnap.exists()) {
-             return replyOrFollowUp({ content: 'Você precisa criar um perfil com o comando `/perfil` antes de usar esta função.' });
+             return interaction.followUp({ content: 'Você precisa criar um perfil com o comando `/perfil` antes de usar esta função.', ephemeral: true });
         }
 
         const userData = userSnap.data();
         
         interaction.client.container.interactions.set(`soling_temp_${interaction.user.id}`, { type, raid: selectedRaidLabel, robloxId: userData.robloxId || null });
         
+        // Pass the interaction object to the next function
         await handlePostRequest(interaction);
 
     } catch(error) {
         console.error('Erro em handleRaidSelection:', error);
-        await replyOrFollowUp({ content: 'Ocorreu um erro ao selecionar a raid.' }).catch(console.error);
+         try {
+            await interaction.followUp({ content: 'Ocorreu um erro ao selecionar a raid.', ephemeral: true }).catch(console.error);
+        } catch (e) {
+            console.error("Falha ao enviar followUp de erro em handleRaidSelection:", e);
+        }
     }
 }
 
 async function handlePostRequest(interaction) {
-    const replyOrFollowUp = async (options) => {
+     const replyOrFollowUp = async (options) => {
         const ephemeralOptions = { ...options, ephemeral: true, components: [] };
-        // Interactions from a menu select must use followUp after deferUpdate
-        if (interaction.isStringSelectMenu()) {
-            return await interaction.followUp(ephemeralOptions);
-        }
         if (interaction.replied || interaction.deferred) {
+            // Since we deferred the update in the previous step, we use followUp
             return await interaction.followUp(ephemeralOptions);
         }
         return await interaction.reply(ephemeralOptions);
@@ -182,22 +171,13 @@ async function handlePostRequest(interaction) {
         }
         
         const requestsRef = collection(firestore, 'dungeon_requests');
-        const q = query(requestsRef, where("userId", "==", user.id), where("status", "==", "active"), where("type", "==", type));
+        const q = query(requestsRef, where("userId", "==", user.id), where("status", "==", "active"));
         const oldRequestsSnap = await getDocs(q);
 
         const batch = writeBatch(firestore);
 
         for (const requestDoc of oldRequestsSnap.docs) {
-            const oldRequestData = requestDoc.data();
-            try {
-                 if (oldRequestData.messageId && oldRequestData.webhookUrl) {
-                    const oldWebhookClient = new WebhookClient({url: oldRequestData.webhookUrl});
-                    await oldWebhookClient.deleteMessage(oldRequestData.messageId).catch(()=>{});
-                }
-            } catch(e) {
-                 console.warn(`Não foi possível deletar a mensagem antiga de /soling (ID: ${oldRequestData.messageId}). Pode já ter sido removida.`, e.message);
-            }
-            batch.update(requestDoc.ref, { status: 'closed' });
+            await cleanupRaidResources(interaction.client, requestDoc.data(), batch);
         }
         
         const newRequestRef = doc(collection(firestore, 'dungeon_requests'));
@@ -216,6 +196,8 @@ async function handlePostRequest(interaction) {
             manualCount: 0,
             serverLink: (dungeonSettings.alwaysSendLink && dungeonSettings.serverLink) ? dungeonSettings.serverLink : null,
             webhookUrl: webhook.url,
+            voiceChannelId: null,
+            threadId: null,
         };
         
         let messageContent = `Postado por <@${user.id}>`;
@@ -257,14 +239,10 @@ async function handlePostRequest(interaction) {
         newRequestData.messageId = message.id;
         
         if (dungeonSettings.deleteAfterMinutes && message) {
-            setTimeout(async () => {
-                try {
-                    await webhookClient.deleteMessage(message.id);
-                    await updateDoc(newRequestRef, { status: 'closed' });
-                } catch (e) {
-                    console.warn(`Não foi possível apagar a mensagem agendada (ID: ${message.id}): ${e.message}`);
-                }
+             const timeoutId = setTimeout(async () => {
+                await cleanupRaidResources(interaction.client, newRequestData);
             }, dungeonSettings.deleteAfterMinutes * 60 * 1000);
+            newRequestData.timeoutId = timeoutId.toString();
         }
 
         batch.set(newRequestRef, newRequestData);
@@ -277,6 +255,98 @@ async function handlePostRequest(interaction) {
     } catch(error) {
         console.error("Erro em handlePostRequest:", error);
         await replyOrFollowUp({ content: 'Ocorreu um erro ao postar seu pedido.' }).catch(console.error);
+    }
+}
+
+async function manageRaidChannelsAndThreads(interaction, requestRef, newlyConfirmedUser = null) {
+    const { client } = interaction;
+    const { firestore } = initializeFirebase();
+    const requestSnap = await getDoc(requestRef);
+    if (!requestSnap.exists()) return;
+
+    let requestData = requestSnap.data();
+    const owner = await client.users.fetch(requestData.userId).catch(() => null);
+    const totalMembers = 1 + (requestData.confirmedUsers?.length || 0) + (requestData.manualCount || 0);
+
+    // Auto-close if full
+    if (totalMembers >= 10) {
+        await cleanupRaidResources(client, requestData);
+        if (owner) {
+             try {
+                await owner.send(`Sua raid para **${requestData.raidName}** foi fechada automaticamente porque atingiu 10 membros.`);
+            } catch (e) {
+                console.warn(`Não foi possível notificar ${owner.tag} por DM sobre o fechamento da raid.`);
+            }
+        }
+        return;
+    }
+
+    // Create channels if party is starting
+    if (totalMembers > 1 && !requestData.voiceChannelId) {
+        const guild = interaction.guild;
+        const channelName = `Raid de ${owner.username}`.substring(0, 100);
+        
+        try {
+            // Create Voice Channel
+            const voiceChannel = await guild.channels.create({
+                name: channelName,
+                type: ChannelType.GuildVoice,
+                parent: VOICE_CHANNEL_CATEGORY_ID,
+                userLimit: 10,
+                permissionOverwrites: [{
+                    id: guild.roles.everyone,
+                    deny: ['ViewChannel'],
+                }, {
+                    id: owner.id,
+                    allow: ['ViewChannel', 'Connect'],
+                }],
+            });
+
+            // Create Private Thread
+            const thread = await interaction.channel.threads.create({
+                name: `Chat - ${channelName}`,
+                autoArchiveDuration: 60,
+                type: ChannelType.PrivateThread,
+                reason: `Chat privado para a raid de ${owner.username}`,
+            });
+
+            // Add owner to thread and send initial message
+            await thread.members.add(owner.id);
+            await thread.send({ content: `Bem-vindos à sua raid! O canal de voz é <#${voiceChannel.id}>` });
+
+            await updateDoc(requestRef, {
+                voiceChannelId: voiceChannel.id,
+                threadId: thread.id
+            });
+            requestData.voiceChannelId = voiceChannel.id;
+            requestData.threadId = thread.id;
+
+             // Add the newly confirmed user and grant permissions
+            if (newlyConfirmedUser) {
+                await voiceChannel.permissionOverwrites.edit(newlyConfirmedUser.id, {
+                    ViewChannel: true,
+                    Connect: true,
+                });
+                await thread.members.add(newlyConfirmedUser.id);
+            }
+        } catch (error) {
+            console.error("Erro ao criar canal de voz ou tópico:", error);
+        }
+    }
+    // If channels already exist, just add the new user
+    else if (requestData.voiceChannelId && newlyConfirmedUser) {
+        const voiceChannel = await client.channels.fetch(requestData.voiceChannelId).catch(() => null);
+        const thread = await interaction.channel.threads.fetch(requestData.threadId).catch(() => null);
+        
+        if (voiceChannel) {
+            await voiceChannel.permissionOverwrites.edit(newlyConfirmedUser.id, {
+                ViewChannel: true,
+                Connect: true
+            }).catch(e => console.error("Erro ao dar permissão no canal de voz:", e));
+        }
+        if (thread) {
+            await thread.members.add(newlyConfirmedUser.id).catch(e => console.error("Erro ao adicionar membro no tópico:", e));
+        }
     }
 }
 
@@ -307,13 +377,16 @@ async function handleConfirm(interaction, requestId, ownerId) {
                 confirmedUsers: arrayUnion(newUser)
             });
 
+            // Gerenciar canais e atualizar embed
+            await manageRaidChannelsAndThreads(interaction, requestRef, interaction.user);
+            const updatedSnap = await getDoc(requestRef);
+            const updatedData = updatedSnap.data();
             const owner = await interaction.client.users.fetch(ownerId).catch(() => null);
             const userSnap = await getDoc(doc(firestore, 'users', ownerId));
             const robloxId = userSnap.exists() ? userSnap.data().robloxId : null;
-
-            const updatedData = { ...requestData, confirmedUsers: [...confirmedUsers, newUser] };
             const updatedEmbed = createStatusEmbed(updatedData, owner, robloxId);
             await interaction.message.edit({ embeds: [updatedEmbed] });
+
 
             if (owner) {
                 const ownerSettingsSnap = await getDoc(doc(firestore, 'users', ownerId));
@@ -381,7 +454,7 @@ async function handleManageMembers(interaction, requestId, ownerId) {
 
     const selectMenu = new StringSelectMenuBuilder()
         .setCustomId(`soling_managertoggle_${requestId}_${ownerId}`)
-        .setPlaceholder('Remover um usuário da lista...')
+        .setPlaceholder('Alternar presença de um usuário...')
         .addOptions(confirmedUsers.map(u => ({ label: u.username, value: u.userId })));
 
     await interaction.editReply({
@@ -416,20 +489,23 @@ async function handleManualCountSubmit(interaction, requestId) {
 
         await updateDoc(requestRef, { manualCount: newManualCount });
         
-        const requestData = requestSnap.data();
-        const webhookUrl = requestData.webhookUrl;
-        const messageId = requestData.messageId;
+        await manageRaidChannelsAndThreads(interaction, requestRef);
+        const updatedSnap = await getDoc(requestRef);
+        const updatedData = updatedSnap.data();
 
-        if (webhookUrl && messageId) {
-            const webhookClient = new WebhookClient({ url: webhookUrl });
-            const owner = await interaction.client.users.fetch(requestData.userId).catch(() => null);
-            const userSnap = await getDoc(doc(firestore, 'users', requestData.userId));
-            const robloxId = userSnap.exists() ? userSnap.data().robloxId : null;
-            const updatedData = { ...requestSnap.data(), manualCount: newManualCount };
-            const updatedEmbed = createStatusEmbed(updatedData, owner, robloxId);
-            await webhookClient.editMessage(messageId, { embeds: [updatedEmbed] }).catch(e => console.error("Falha ao editar mensagem do webhook:", e));
+        if (updatedData.status === 'active') { // Check if it wasn't closed by manageRaidChannels
+            const webhookUrl = updatedData.webhookUrl;
+            const messageId = updatedData.messageId;
+
+            if (webhookUrl && messageId) {
+                const webhookClient = new WebhookClient({ url: webhookUrl });
+                const owner = await interaction.client.users.fetch(updatedData.userId).catch(() => null);
+                const userSnap = await getDoc(doc(firestore, 'users', updatedData.userId));
+                const robloxId = userSnap.exists() ? userSnap.data().robloxId : null;
+                const updatedEmbed = createStatusEmbed(updatedData, owner, robloxId);
+                await webhookClient.editMessage(messageId, { embeds: [updatedEmbed] }).catch(e => console.error("Falha ao editar mensagem do webhook:", e));
+            }
         }
-
         await interaction.editReply({ content: `Contagem manual atualizada para ${newManualCount}.` });
     } else {
         await interaction.editReply({ content: 'O anúncio não está mais ativo.' });
@@ -455,43 +531,70 @@ async function handleToggleUserConfirmation(interaction, requestId, ownerId) {
     const currentConfirmed = requestData.confirmedUsers || [];
     const userObject = currentConfirmed.find(u => u.userId === userIdToToggle);
 
-    let newConfirmedList;
-    let replyMessage;
-
     if (userObject) {
         // Se o usuário está na lista, remove
         await updateDoc(requestRef, { confirmedUsers: arrayRemove(userObject) });
-        newConfirmedList = currentConfirmed.filter(u => u.userId !== userIdToToggle);
-        replyMessage = `Usuário ${userObject.username} foi removido da lista.`;
-    } else {
-        // Se o usuário não está na lista (isso não deveria acontecer com o fluxo atual, mas por segurança), adiciona
-        const userToAdd = await interaction.client.users.fetch(userIdToToggle).catch(() => null);
-        if (userToAdd) {
-            const newUserObject = { userId: userToAdd.id, username: userToAdd.username };
-            await updateDoc(requestRef, { confirmedUsers: arrayUnion(newUserObject) });
-            newConfirmedList = [...currentConfirmed, newUserObject];
-            replyMessage = `Usuário ${userToAdd.username} foi adicionado à lista.`;
-        } else {
-            return interaction.followUp({ content: 'Não foi possível encontrar o usuário para adicionar.', ephemeral: true });
+        
+        // Remove user from voice channel and thread
+        const userToRemove = await interaction.client.users.fetch(userIdToToggle).catch(()=>null);
+        if (userToRemove) {
+            const voiceChannel = await interaction.client.channels.fetch(requestData.voiceChannelId).catch(()=>null);
+            if(voiceChannel) await voiceChannel.permissionOverwrites.delete(userToRemove.id);
+
+            const thread = await interaction.channel.threads.fetch(requestData.threadId).catch(()=>null);
+            if(thread) await thread.members.remove(userToRemove.id);
         }
-    }
+    } 
     
     // Atualiza a mensagem do webhook
-    const webhookUrl = requestData.webhookUrl;
-    const messageId = requestData.messageId;
+    const updatedSnap = await getDoc(requestRef);
+    const updatedData = updatedSnap.data();
+    const webhookUrl = updatedData.webhookUrl;
+    const messageId = updatedData.messageId;
 
     if(webhookUrl && messageId) {
         const webhookClient = new WebhookClient({ url: webhookUrl });
         const owner = await interaction.client.users.fetch(ownerId).catch(() => null);
         const userSnap = await getDoc(doc(firestore, 'users', ownerId));
         const robloxId = userSnap.exists() ? userSnap.data().robloxId : null;
-        const updatedData = { ...requestData, confirmedUsers: newConfirmedList };
         const updatedEmbed = createStatusEmbed(updatedData, owner, robloxId);
         await webhookClient.editMessage(messageId, { embeds: [updatedEmbed] }).catch(e => console.error("Falha ao editar mensagem do webhook:", e));
     }
 
-    await interaction.followUp({ content: replyMessage, ephemeral: true });
+    await interaction.followUp({ content: `Presença de ${userObject.username} foi removida.`, ephemeral: true });
 }
+
+async function cleanupRaidResources(client, requestData, batch) {
+    const localBatch = batch || writeBatch(initializeFirebase().firestore);
+    
+    // Delete webhook message
+    if (requestData.messageId && requestData.webhookUrl) {
+        const webhookClient = new WebhookClient({ url: requestData.webhookUrl });
+        await webhookClient.deleteMessage(requestData.messageId).catch(() => null);
+    }
+
+    // Delete voice channel
+    if (requestData.voiceChannelId) {
+        const voiceChannel = await client.channels.fetch(requestData.voiceChannelId).catch(() => null);
+        if (voiceChannel) await voiceChannel.delete('Raid finalizada.');
+    }
+
+    // Delete thread
+    if (requestData.threadId) {
+        const thread = await client.channels.fetch(requestData.threadId).catch(() => null);
+        if (thread) await thread.delete('Raid finalizada.');
+    }
+    
+    // Mark request as closed in Firestore
+    const requestRef = doc(initializeFirebase().firestore, 'dungeon_requests', requestData.id);
+    localBatch.update(requestRef, { status: 'closed' });
+
+    // If batch was passed, it will be committed by the calling function.
+    if (!batch) {
+        await localBatch.commit();
+    }
+}
+
 
 async function handleFinish(interaction, requestId, ownerId) {
     try {
@@ -510,16 +613,8 @@ async function handleFinish(interaction, requestId, ownerId) {
         const requestSnap = await getDoc(requestRef);
 
         if (requestSnap.exists() && requestSnap.data().status === 'active') {
-            await updateDoc(requestRef, { status: 'closed' });
-            
-            const messageId = requestSnap.data().messageId;
-            const webhookUrl = requestSnap.data().webhookUrl;
-
-            if (messageId && webhookUrl) {
-                const webhookClient = new WebhookClient({ url: webhookUrl });
-                await webhookClient.deleteMessage(messageId).catch(() => null);
-            }
-             await interaction.followUp({ content: 'Seu anúncio de /soling foi finalizado e removido.', ephemeral: true });
+            await cleanupRaidResources(interaction.client, requestSnap.data());
+             await interaction.followUp({ content: 'Seu anúncio de /soling e os canais associados foram finalizados.', ephemeral: true });
         } else {
              await interaction.followUp({ content: 'Este anúncio já foi finalizado.', ephemeral: true });
         }
