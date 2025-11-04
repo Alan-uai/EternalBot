@@ -14,8 +14,15 @@ const GAME_LINK = 'https://www.roblox.com/games/90462358603255/15-Min-Anime-Eter
 
 const RAID_AVATAR_PREFIXES = {
     'Easy': 'Easy', 'Medium': 'Med', 'Hard': 'Hd', 'Insane': 'Isne',
-    'Crazy': 'Czy', 'Nightmare': 'Mare', 'Leaf Raid': 'Lf'
+    'Crazy': 'Czy', 'Nightmare': 'Mare', 'Leaf Raid': 'Leaf'
 };
+
+const CATEGORY_NAMES = {
+    'w1-19': 'Raids dos Mundos 1-19',
+    'w20plus': 'Raids dos Mundos 20+',
+    'event': 'Raids de Evento'
+};
+
 
 async function getOrCreateWebhook(channel, webhookName, avatarUrl) {
     if (!channel || channel.type !== ChannelType.GuildText) return null;
@@ -78,41 +85,55 @@ function createStatusEmbed(requestData, hostUser, hostRobloxId) {
 async function handleTypeSelection(interaction, type) {
     try {
         await interaction.deferUpdate();
-        const raids = getAvailableRaids();
-        if (raids.length === 0) {
+        const categorizedRaids = getAvailableRaids();
+        const components = [];
+
+        Object.entries(categorizedRaids).forEach(([category, raids]) => {
+            if (raids.length > 0) {
+                // Se a categoria tiver mais de 25 raids, ela precisa ser dividida
+                const chunkSize = 25;
+                for (let i = 0; i < raids.length; i += chunkSize) {
+                    const chunk = raids.slice(i, i + chunkSize);
+                    const menuLabel = raids.length > chunkSize 
+                        ? `${CATEGORY_NAMES[category]} (Parte ${Math.floor(i / chunkSize) + 1})`
+                        : CATEGORY_NAMES[category];
+                    
+                    const menu = new StringSelectMenuBuilder()
+                        .setCustomId(`soling_raid_${type}_${category}_${i}`)
+                        .setPlaceholder(menuLabel)
+                        .addOptions(chunk);
+                    components.push(new ActionRowBuilder().addComponents(menu));
+                }
+            }
+        });
+
+        if (components.length === 0) {
             return interaction.followUp({ content: 'Não há raids disponíveis para selecionar no momento.', ephemeral: true });
         }
-
-        const components = [];
-        const chunkSize = 25;
-        for (let i = 0; i < raids.length; i += chunkSize) {
-            const chunk = raids.slice(i, i + chunkSize);
-            const menu = new StringSelectMenuBuilder()
-                .setCustomId(`soling_raid_${type}_${i / chunkSize}`)
-                .setPlaceholder(`Selecione a raid... (Parte ${i / chunkSize + 1})`)
-                .addOptions(chunk);
-            components.push(new ActionRowBuilder().addComponents(menu));
-        }
-
+        
         await interaction.followUp({
             content: 'Agora, selecione a raid:',
             components,
             ephemeral: true,
         });
+
     } catch(error) {
         console.error('Erro em handleTypeSelection:', error);
     }
 }
 
+
 async function handleRaidSelection(interaction, type) {
     try {
-        // We must acknowledge the interaction immediately
         await interaction.deferUpdate();
         
         const { firestore } = initializeFirebase();
         const selectedRaidValue = interaction.values[0];
-        const raids = getAvailableRaids();
-        const selectedRaidLabel = raids.find(r => r.value === selectedRaidValue)?.label || selectedRaidValue;
+        
+        // Obter todas as raids novamente para encontrar o label
+        const categorizedRaids = getAvailableRaids();
+        const allRaidsFlat = Object.values(categorizedRaids).flat();
+        const selectedRaidLabel = allRaidsFlat.find(r => r.value === selectedRaidValue)?.label || selectedRaidValue;
 
         const userRef = doc(firestore, 'users', interaction.user.id);
         const userSnap = await getDoc(userRef);
@@ -125,7 +146,6 @@ async function handleRaidSelection(interaction, type) {
         
         interaction.client.container.interactions.set(`soling_temp_${interaction.user.id}`, { type, raid: selectedRaidLabel, robloxId: userData.robloxId || null });
         
-        // Pass the interaction object to the next function
         await handlePostRequest(interaction);
 
     } catch(error) {
@@ -142,7 +162,6 @@ async function handlePostRequest(interaction) {
      const replyOrFollowUp = async (options) => {
         const ephemeralOptions = { ...options, ephemeral: true, components: [] };
         if (interaction.replied || interaction.deferred) {
-            // Since we deferred the update in the previous step, we use followUp
             return await interaction.followUp(ephemeralOptions);
         }
         return await interaction.reply(ephemeralOptions);
@@ -650,7 +669,7 @@ export async function handleInteraction(interaction, container) {
             }
 
         } else if (interaction.isStringSelectMenu()) {
-            const type = params[0];
+             const type = params[0];
             if (action === 'raid') {
                 await handleRaidSelection(interaction, type); 
             } else if (action === 'managertoggle') {

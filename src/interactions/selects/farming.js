@@ -16,6 +16,13 @@ const WEEKDAYS_PT = {
     sunday: 'Domingo',
 };
 
+const CATEGORY_NAMES = {
+    'w1-19': 'Raids dos Mundos 1-19',
+    'w20plus': 'Raids dos Mundos 20+',
+    'event': 'Raids de Evento'
+};
+
+
 // Handle Day Selection
 async function handleDaySelect(interaction) {
     const selectedDay = interaction.values[0];
@@ -47,18 +54,26 @@ async function handleTimeSelect(interaction) {
     flowData.time = selectedTime;
     interaction.client.container.interactions.set(`farming_flow_${interaction.user.id}`, flowData);
     
-    const raids = getAvailableRaids();
+    const categorizedRaids = getAvailableRaids();
     const components = [];
-    const chunkSize = 25;
+    
+    Object.entries(categorizedRaids).forEach(([category, raids]) => {
+        if (raids.length > 0) {
+            const chunkSize = 25;
+            for (let i = 0; i < raids.length; i += chunkSize) {
+                const chunk = raids.slice(i, i + chunkSize);
+                const menuLabel = raids.length > chunkSize
+                    ? `${CATEGORY_NAMES[category]} (Parte ${Math.floor(i / chunkSize) + 1})`
+                    : CATEGORY_NAMES[category];
 
-    for (let i = 0; i < raids.length; i += chunkSize) {
-        const chunk = raids.slice(i, i + chunkSize);
-        const menu = new StringSelectMenuBuilder()
-            .setCustomId(`farming_select_raid_${i / chunkSize}`)
-            .setPlaceholder(`Selecione a raid... (Parte ${i / chunkSize + 1})`)
-            .addOptions(chunk);
-        components.push(new ActionRowBuilder().addComponents(menu));
-    }
+                const menu = new StringSelectMenuBuilder()
+                    .setCustomId(`farming_select_raid_${category}_${i}`)
+                    .setPlaceholder(menuLabel)
+                    .addOptions(chunk);
+                components.push(new ActionRowBuilder().addComponents(menu));
+            }
+        }
+    });
 
     await interaction.update({
         content: `Horário: **${selectedTime}**. Agora, escolha qual raid vocês irão farmar.`,
@@ -69,8 +84,10 @@ async function handleTimeSelect(interaction) {
 // Handle Raid Selection
 async function handleRaidSelect(interaction) {
     const selectedRaidValue = interaction.values[0];
-    const raids = getAvailableRaids();
-    const selectedRaidLabel = raids.find(r => r.value === selectedRaidValue)?.label || selectedRaidValue;
+    
+    const categorizedRaids = getAvailableRaids();
+    const allRaidsFlat = Object.values(categorizedRaids).flat();
+    const selectedRaidLabel = allRaidsFlat.find(r => r.value === selectedRaidValue)?.label || selectedRaidValue;
 
     const flowData = interaction.client.container.interactions.get(`farming_flow_${interaction.user.id}`);
     flowData.raidName = selectedRaidLabel;
@@ -177,7 +194,7 @@ async function handleParticipationToggle(interaction) {
 
 export async function handleInteraction(interaction) {
     if (interaction.isStringSelectMenu()) {
-        const [prefix, action, subAction, menuIndex] = interaction.customId.split('_');
+        const [prefix, action, subAction, ...rest] = interaction.customId.split('_');
 
         if (prefix !== customIdPrefix) return;
 
