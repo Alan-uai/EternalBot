@@ -31,7 +31,7 @@ export async function execute(interaction) {
     
     const targetUser = interaction.options.getUser('usuario') || interaction.user;
 
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ ephemeral: targetUser.id !== interaction.user.id });
     
     const { firestore } = initializeFirebase();
     const userRef = doc(firestore, 'users', targetUser.id);
@@ -73,5 +73,3 @@ export async function execute(interaction) {
         return interaction.editReply('Ocorreu um erro ao gerar a imagem de perfil do usuário.');
     }
 }
-
-    

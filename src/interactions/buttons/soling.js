@@ -59,12 +59,13 @@ async function handleRaidSelection(interaction, type) {
         const raids = getAvailableRaids();
         const selectedRaidLabel = raids.find(r => r.value === selectedRaidValue)?.label || selectedRaidValue;
 
-        interaction.client.container.interactions.set(`soling_temp_${interaction.user.id}`, { type, raid: selectedRaidLabel });
-        
         const userRef = doc(firestore, 'users', interaction.user.id);
         const userSnap = await getDoc(userRef);
-        const dungeonSettings = userSnap.exists() ? userSnap.data().dungeonSettings || {} : {};
+        const userData = userSnap.exists() ? userSnap.data() : {};
+        const dungeonSettings = userData.dungeonSettings || {};
 
+        interaction.client.container.interactions.set(`soling_temp_${interaction.user.id}`, { type, raid: selectedRaidLabel, robloxId: userData.robloxId || null });
+        
         if (dungeonSettings.alwaysSendLink && dungeonSettings.serverLink) {
             await handlePostRequest(interaction, {
                 serverLink: dungeonSettings.serverLink,
@@ -158,20 +159,20 @@ async function handlePostRequest(interaction, settings) {
         const { firestore } = initializeFirebase();
         const tempData = interaction.client.container.interactions.get(`soling_temp_${interaction.user.id}`);
         if (!tempData) {
-            return interaction.editReply({ content: 'Sua sessão expirou. Por favor, use o comando /soling novamente.' });
+            return interaction.followUp({ content: 'Sua sessão expirou. Por favor, use o comando /soling novamente.', ephemeral: true });
         }
-        const { type, raid: raidNome } = tempData;
+        const { type, raid: raidNome, robloxId } = tempData;
         const { serverLink, alwaysSend, deleteAfter } = settings;
         const user = interaction.user;
         
         const solingChannel = await interaction.client.channels.fetch(SOLING_POST_CHANNEL_ID).catch(() => null);
         if (!solingChannel) {
-            return interaction.editReply({ content: 'O canal de postagem de /soling não foi encontrado.' });
+            return interaction.followUp({ content: 'O canal de postagem de /soling não foi encontrado.', ephemeral: true });
         }
         
         const webhook = await getOrCreateWebhook(solingChannel);
         if (!webhook) {
-             return interaction.editReply({ content: 'Não foi possível criar ou encontrar o webhook necessário para postar a mensagem.' });
+             return interaction.followUp({ content: 'Não foi possível criar ou encontrar o webhook necessário para postar a mensagem.', ephemeral: true });
         }
         
         const requestsRef = collection(firestore, 'dungeon_requests');
@@ -192,8 +193,6 @@ async function handlePostRequest(interaction, settings) {
         }
 
         const userRef = doc(firestore, 'users', user.id);
-        const userSnap = await getDoc(userRef);
-        const userData = userSnap.exists() ? userSnap.data() : {};
         const newSettings = { serverLink: serverLink || null, alwaysSendLink: alwaysSend, deleteAfterMinutes: deleteAfter || null };
         batch.set(userRef, { dungeonSettings: newSettings }, { merge: true });
         
@@ -228,14 +227,14 @@ async function handlePostRequest(interaction, settings) {
         
         const row = new ActionRowBuilder().addComponents(confirmButton, finishButton);
 
-        if (userData.robloxId) {
+        if (robloxId) {
              const profileButton = new ButtonBuilder()
                 .setLabel('Ver Perfil (Web)')
                 .setStyle(ButtonStyle.Link)
-                .setURL(`https://www.roblox.com/users/${userData.robloxId}/profile`);
+                .setURL(`https://www.roblox.com/users/${robloxId}/profile`);
             
             const copyIdButton = new ButtonBuilder()
-                .setCustomId(`soling_copyid_${user.id}_${userData.robloxId}`)
+                .setCustomId(`soling_copyid_${user.id}_${robloxId}`)
                 .setLabel('Copiar ID')
                 .setStyle(ButtonStyle.Secondary);
 
@@ -274,14 +273,21 @@ async function handlePostRequest(interaction, settings) {
         
         await batch.commit();
         
-        await interaction.editReply({ content: 'Seu pedido foi postado com sucesso!' });
+        const finalReplyContent = interaction.isModalSubmit() ? { content: 'Seu pedido foi postado com sucesso!' } : { content: 'Seu pedido foi postado com sucesso!', ephemeral: true };
+        if (interaction.isModalSubmit()) {
+            await interaction.editReply(finalReplyContent);
+        } else {
+             await interaction.followUp(finalReplyContent);
+        }
+
         interaction.client.container.interactions.delete(`soling_temp_${interaction.user.id}`);
     } catch(error) {
         console.error("Erro em handlePostRequest:", error);
-        if (!interaction.replied && !interaction.deferred) {
-            await interaction.reply({ content: 'Ocorreu um erro ao postar seu pedido.', ephemeral: true }).catch(console.error);
+        const errorMessage = { content: 'Ocorreu um erro ao postar seu pedido.', ephemeral: true };
+         if (interaction.replied || interaction.deferred) {
+            await interaction.followUp(errorMessage).catch(console.error);
         } else {
-            await interaction.followUp({ content: 'Ocorreu um erro ao postar seu pedido.', ephemeral: true }).catch(console.error);
+            await interaction.reply(errorMessage).catch(console.error);
         }
     }
 }
@@ -437,5 +443,3 @@ export async function handleInteraction(interaction, container) {
         }
     }
 }
-
-    
