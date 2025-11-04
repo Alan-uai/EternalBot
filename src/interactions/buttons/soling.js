@@ -8,32 +8,43 @@ import { createProfileImage } from '../../utils/createProfileImage.js';
 export const customIdPrefix = 'soling';
 
 const SOLING_POST_CHANNEL_ID = '1429295597374144563';
-const WEBHOOK_NAME = 'Soling Bot';
 const ADMIN_ROLE_ID = '1429318984716521483';
+const GAME_LINK = 'https://www.roblox.com/games/90462358603255/15-Min-Anime-Eternal';
 
-async function getOrCreateWebhook(channel) {
+const RAID_AVATAR_PREFIXES = {
+    'Easy': 'Easy', 'Medium': 'Med', 'Hard': 'Hd', 'Insane': 'Isne',
+    'Crazy': 'Czy', 'Nightmare': 'Mare', 'Leaf Raid (1800)': 'Lf'
+    // Adicionar outros prefixos conforme necessário
+};
+
+async function getOrCreateWebhook(channel, webhookName, avatarUrl) {
     if (!channel || channel.type !== ChannelType.GuildText) return null;
     const webhooks = await channel.fetchWebhooks().catch(() => new Map());
-    let webhook = webhooks.find(wh => wh.name === WEBHOOK_NAME && wh.owner.id === channel.client.user.id);
+    let webhook = webhooks.find(wh => wh.name === webhookName && wh.owner.id === channel.client.user.id);
 
     if (!webhook) {
         try {
             webhook = await channel.createWebhook({
-                name: WEBHOOK_NAME,
-                avatar: channel.client.user.displayAvatarURL(),
-                reason: 'Webhook para o sistema de /soling'
+                name: webhookName,
+                avatar: avatarUrl,
+                reason: `Webhook para o sistema de /soling para a raid ${webhookName}`
             });
-            console.log(`Webhook '${WEBHOOK_NAME}' criado no canal ${channel.name}.`);
+            console.log(`Webhook '${webhookName}' criado no canal ${channel.name}.`);
         } catch (error) {
-            console.error("Erro ao criar o webhook:", error);
+            console.error(`Erro ao criar o webhook '${webhookName}':`, error);
             return null;
+        }
+    } else {
+        // Garante que o avatar esteja atualizado
+        if (webhook.avatarURL() !== avatarUrl) {
+            await webhook.edit({ avatar: avatarUrl });
         }
     }
     return webhook;
 }
 
 // Função para criar/atualizar o Embed de Status
-function createStatusEmbed(requestData) {
+function createStatusEmbed(requestData, hostUser) {
     const confirmedUsersList = requestData.confirmedUsers && requestData.confirmedUsers.length > 0
         ? requestData.confirmedUsers.map(u => `• <@${u.userId}>`).join('\n')
         : 'Ninguém confirmado ainda.';
@@ -42,9 +53,9 @@ function createStatusEmbed(requestData) {
 
     const embed = new EmbedBuilder()
         .setColor(0x3498DB)
+        .setAuthor({ name: `Anúncio de ${hostUser.username}`, iconURL: hostUser.displayAvatarURL() })
         .setTitle(`Painel de Status: ${requestData.raidName}`)
         .addFields(
-            { name: '👑 Dono do Anúncio', value: `<@${requestData.userId}>`, inline: true },
             { name: '👥 Membros Confirmados', value: String(totalMembers), inline: true },
             { name: '🙋 Lista de Participantes', value: confirmedUsersList }
         )
@@ -53,6 +64,8 @@ function createStatusEmbed(requestData) {
     if (requestData.serverLink) {
         embed.addFields({ name: '🔗 Servidor Privado', value: `**[Clique aqui para entrar](${requestData.serverLink})**` });
     }
+    
+    embed.addFields({ name: '➡️ Entrar no Jogo', value: `**[Clique aqui para ir para o jogo](${GAME_LINK})**` });
     
     return embed;
 }
@@ -84,8 +97,6 @@ async function handleTypeSelection(interaction, type) {
 
 async function handleRaidSelection(interaction, type) {
      try {
-        await interaction.deferUpdate();
-
         const { firestore } = initializeFirebase();
         const selectedRaidValue = interaction.values[0];
         const raids = getAvailableRaids();
@@ -95,7 +106,7 @@ async function handleRaidSelection(interaction, type) {
         const userSnap = await getDoc(userRef);
         
         if (!userSnap.exists()) {
-             await interaction.followUp({ content: 'Você precisa criar um perfil com o comando `/perfil` antes de usar esta função.', ephemeral: true, components: []});
+             await interaction.reply({ content: 'Você precisa criar um perfil com o comando `/perfil` antes de usar esta função.', ephemeral: true, components: []});
              return;
         }
 
@@ -127,6 +138,10 @@ async function handleRaidSelection(interaction, type) {
 
 async function handlePostRequest(interaction, settings) {
     const replyOrFollowUp = async (options) => {
+        // Se a interação veio de um menu, ela já foi deferida, então precisamos responder
+        if (interaction.isStringSelectMenu()){
+            return await interaction.update({ ...options, ephemeral: true });
+        }
         if (interaction.replied || interaction.deferred) {
             return await interaction.followUp({ ...options, ephemeral: true });
         }
@@ -134,10 +149,14 @@ async function handlePostRequest(interaction, settings) {
     };
 
     try {
+        await interaction.deferUpdate();
+
         const { firestore } = initializeFirebase();
+        const { assetService } = interaction.client.container.services;
+
         const tempData = interaction.client.container.interactions.get(`soling_temp_${interaction.user.id}`);
         if (!tempData) {
-            return replyOrFollowUp({ content: 'Sua sessão expirou. Por favor, use o comando /soling novamente.' });
+            return replyOrFollowUp({ content: 'Sua sessão expirou. Por favor, use o comando /soling novamente.', components: [] });
         }
         const { type, raid: raidNome, robloxId } = tempData;
         const { serverLink, alwaysSend, deleteAfter } = settings;
@@ -145,12 +164,16 @@ async function handlePostRequest(interaction, settings) {
         
         const solingChannel = await interaction.client.channels.fetch(SOLING_POST_CHANNEL_ID).catch(() => null);
         if (!solingChannel) {
-            return replyOrFollowUp({ content: 'O canal de postagem de /soling não foi encontrado.' });
+            return replyOrFollowUp({ content: 'O canal de postagem de /soling não foi encontrado.', components: [] });
         }
         
-        const webhook = await getOrCreateWebhook(solingChannel);
+        // Obter avatar da raid
+        const assetPrefix = RAID_AVATAR_PREFIXES[raidNome] || 'Easy';
+        const raidAvatarUrl = await assetService.getAsset(assetPrefix);
+        
+        const webhook = await getOrCreateWebhook(solingChannel, raidNome, raidAvatarUrl);
         if (!webhook) {
-             return replyOrFollowUp({ content: 'Não foi possível criar ou encontrar o webhook necessário para postar a mensagem.' });
+             return replyOrFollowUp({ content: 'Não foi possível criar ou encontrar o webhook necessário para postar a mensagem.', components: [] });
         }
         
         const requestsRef = collection(firestore, 'dungeon_requests');
@@ -162,8 +185,8 @@ async function handlePostRequest(interaction, settings) {
         for (const requestDoc of oldRequestsSnap.docs) {
             const oldRequestData = requestDoc.data();
             try {
-                 if (oldRequestData.messageId) {
-                    const oldWebhookClient = new WebhookClient({url: webhook.url});
+                 if (oldRequestData.messageId && oldRequestData.webhookUrl) {
+                    const oldWebhookClient = new WebhookClient({url: oldRequestData.webhookUrl});
                     await oldWebhookClient.deleteMessage(oldRequestData.messageId).catch(()=>{});
                 }
             } catch(e) {
@@ -190,7 +213,8 @@ async function handlePostRequest(interaction, settings) {
             status: 'active',
             confirmedUsers: [],
             manualCount: 0,
-            serverLink: (alwaysSend && serverLink) ? serverLink : null
+            serverLink: (alwaysSend && serverLink) ? serverLink : null,
+            webhookUrl: webhook.url, // Salva a URL do webhook usado
         };
         
         let messageContent = '';
@@ -200,7 +224,7 @@ async function handlePostRequest(interaction, settings) {
             messageContent = `Solando a **${raidNome}** para quem precisar.`;
         }
 
-        const statusEmbed = createStatusEmbed(newRequestData);
+        const statusEmbed = createStatusEmbed(newRequestData, user);
         
         const webhookClient = new WebhookClient({ url: webhook.url });
         
@@ -235,8 +259,8 @@ async function handlePostRequest(interaction, settings) {
 
         const message = await webhookClient.send({
             content: messageContent,
-            username: user.displayName,
-            avatarURL: user.displayAvatarURL(),
+            username: webhook.name,
+            avatarURL: webhook.avatarURL(),
             embeds: [statusEmbed],
             components: [row],
             wait: true 
@@ -247,7 +271,7 @@ async function handlePostRequest(interaction, settings) {
         if (deleteAfter && message) {
             setTimeout(async () => {
                 try {
-                    await solingChannel.messages.delete(message.id);
+                    await webhookClient.deleteMessage(message.id);
                     await updateDoc(newRequestRef, { status: 'closed' });
                 } catch (e) {
                     console.warn(`Não foi possível apagar a mensagem agendada (ID: ${message.id}): ${e.message}`);
@@ -259,7 +283,7 @@ async function handlePostRequest(interaction, settings) {
         
         await batch.commit();
         
-        await interaction.editReply({ content: 'Seu pedido foi postado com sucesso!', components: [] });
+        await replyOrFollowUp({ content: 'Seu pedido foi postado com sucesso!', components: [] });
 
         interaction.client.container.interactions.delete(`soling_temp_${interaction.user.id}`);
     } catch(error) {
@@ -286,29 +310,20 @@ async function handleConfirm(interaction, requestId, ownerId) {
                 .setTitle('Painel de Gerenciamento do Anúncio')
                 .setDescription('Use os botões e menus abaixo para gerenciar os participantes do seu anúncio.');
 
-            const updateCountButton = new ButtonBuilder()
-                .setCustomId(`soling_managermanual_${requestId}_${ownerId}`)
-                .setLabel('Atualizar Contagem')
+            const manageMembersButton = new ButtonBuilder()
+                .setCustomId(`soling_managemembers_${requestId}_${ownerId}`)
+                .setLabel('Gerenciar Membros')
                 .setStyle(ButtonStyle.Primary)
+                .setEmoji('👥');
+            
+            const manualCountButton = new ButtonBuilder()
+                .setCustomId(`soling_managermanual_${requestId}_${ownerId}`)
+                .setLabel('Contagem Manual')
+                .setStyle(ButtonStyle.Secondary)
                 .setEmoji('🔢');
 
-            const hubRow = new ActionRowBuilder().addComponents(updateCountButton);
+            const hubRow = new ActionRowBuilder().addComponents(manageMembersButton, manualCountButton);
             const components = [hubRow];
-
-            if (confirmedUsers.length > 0) {
-                 const toggleUserMenu = new StringSelectMenuBuilder()
-                    .setCustomId(`soling_managertoggle_${requestId}_${ownerId}`)
-                    .setPlaceholder('Alternar confirmação de um usuário')
-                    .addOptions(confirmedUsers.map(u => ({ label: u.username, value: u.userId, description: 'Clique para confirmar/desconfirmar' })));
-                
-                const viewProfileMenu = new StringSelectMenuBuilder()
-                    .setCustomId(`soling_managerprofile_${requestId}_${ownerId}`)
-                    .setPlaceholder('Visualizar perfil de um participante')
-                    .addOptions(confirmedUsers.map(u => ({ label: u.username, value: u.userId })));
-                
-                components.push(new ActionRowBuilder().addComponents(toggleUserMenu));
-                components.push(new ActionRowBuilder().addComponents(viewProfileMenu));
-            }
             
             await interaction.reply({ embeds: [hubEmbed], components, ephemeral: true });
             return;
@@ -330,11 +345,11 @@ async function handleConfirm(interaction, requestId, ownerId) {
             confirmedUsers: arrayUnion(newUser)
         });
 
+        const owner = await interaction.client.users.fetch(ownerId).catch(() => null);
         const updatedData = { ...requestSnap.data(), confirmedUsers: [...confirmedUsers, newUser] };
-        const updatedEmbed = createStatusEmbed(updatedData);
+        const updatedEmbed = createStatusEmbed(updatedData, owner);
         await interaction.message.edit({ embeds: [updatedEmbed] });
 
-        const owner = await interaction.client.users.fetch(ownerId).catch(() => null);
         if (owner) {
             const ownerSettingsSnap = await getDoc(doc(firestore, 'users', ownerId));
             const sendDm = ownerSettingsSnap.data()?.dungeonSettings?.notificationsEnabled ?? true;
@@ -354,6 +369,44 @@ async function handleConfirm(interaction, requestId, ownerId) {
     }
 }
 
+async function handleManageMembers(interaction, requestId, ownerId) {
+    if (interaction.user.id !== ownerId) {
+        return interaction.reply({ content: 'Apenas o dono do anúncio pode usar esta função.', ephemeral: true });
+    }
+
+    const { firestore } = initializeFirebase();
+    const requestRef = doc(firestore, 'dungeon_requests', requestId);
+    const requestSnap = await getDoc(requestRef);
+
+    if (!requestSnap.exists() || requestSnap.data().status !== 'active') {
+        return interaction.reply({ content: 'Este anúncio não está mais ativo.', ephemeral: true });
+    }
+
+    const confirmedUsers = requestSnap.data().confirmedUsers || [];
+    if (confirmedUsers.length === 0) {
+        return interaction.reply({ content: 'Nenhum usuário confirmou presença para gerenciar.', ephemeral: true });
+    }
+
+    const toggleUserMenu = new StringSelectMenuBuilder()
+        .setCustomId(`soling_managertoggle_${requestId}_${ownerId}`)
+        .setPlaceholder('Confirmar/Desconfirmar um usuário')
+        .addOptions(confirmedUsers.map(u => ({ label: u.username, value: u.userId, description: 'Clique para alternar a confirmação.' })));
+    
+    const viewProfileMenu = new StringSelectMenuBuilder()
+        .setCustomId(`soling_managerprofile_${requestId}_${ownerId}`)
+        .setPlaceholder('Visualizar perfil de um participante')
+        .addOptions(confirmedUsers.map(u => ({ label: u.username, value: u.userId })));
+
+    await interaction.reply({
+        content: 'Selecione um usuário para gerenciar.',
+        components: [
+            new ActionRowBuilder().addComponents(toggleUserMenu),
+            new ActionRowBuilder().addComponents(viewProfileMenu)
+        ],
+        ephemeral: true,
+    });
+}
+
 async function openManualCountModal(interaction, requestId, ownerId) {
      if (interaction.user.id !== ownerId) {
         return interaction.reply({ content: 'Apenas o dono do anúncio pode usar este botão.', ephemeral: true });
@@ -371,7 +424,7 @@ async function openManualCountModal(interaction, requestId, ownerId) {
     const actionInput = new TextInputBuilder()
         .setCustomId('action')
         .setLabel("Ação (Adicionar/Remover)")
-        .setPlaceholder("Use 'A' para adicionar, 'R' para remover")
+        .setPlaceholder("Use 'Adicionar' ou 'A', 'Remover' ou 'R'")
         .setStyle(TextInputStyle.Short)
         .setRequired(true);
 
@@ -402,13 +455,15 @@ async function handleManualCountSubmit(interaction, requestId) {
 
         await updateDoc(requestRef, { manualCount: newManualCount });
         
-        const solingChannel = await interaction.client.channels.fetch(SOLING_POST_CHANNEL_ID);
-        const originalMessage = await solingChannel.messages.fetch(requestSnap.data().messageId).catch(() => null);
-        
-        if (originalMessage) {
+        const webhookUrl = requestSnap.data().webhookUrl;
+        const messageId = requestSnap.data().messageId;
+
+        if (webhookUrl && messageId) {
+            const webhookClient = new WebhookClient({ url: webhookUrl });
+            const owner = await interaction.client.users.fetch(requestSnap.data().userId).catch(() => null);
             const updatedData = { ...requestSnap.data(), manualCount: newManualCount };
-            const updatedEmbed = createStatusEmbed(updatedData);
-            await originalMessage.edit({ embeds: [updatedEmbed] });
+            const updatedEmbed = createStatusEmbed(updatedData, owner);
+            await webhookClient.editMessage(messageId, { embeds: [updatedEmbed] }).catch(e => console.error("Falha ao editar mensagem do webhook:", e));
         }
 
         await interaction.editReply({ content: `Contagem manual atualizada para ${newManualCount}.` });
@@ -418,7 +473,10 @@ async function handleManualCountSubmit(interaction, requestId) {
 }
 
 
-async function handleToggleUserConfirmation(interaction, requestId) {
+async function handleToggleUserConfirmation(interaction, requestId, ownerId) {
+    if (interaction.user.id !== ownerId) {
+        return interaction.reply({ content: 'Apenas o dono do anúncio pode usar esta função.', ephemeral: true });
+    }
     await interaction.deferUpdate();
     const { firestore } = initializeFirebase();
     const requestRef = doc(firestore, 'dungeon_requests', requestId);
@@ -445,19 +503,25 @@ async function handleToggleUserConfirmation(interaction, requestId) {
         newConfirmedList = [...currentConfirmed, userToAdd];
         feedbackMessage = `Usuário ${userToAdd.username} foi adicionado à lista de confirmados.`;
     }
+    
+    const webhookUrl = requestSnap.data().webhookUrl;
+    const messageId = requestSnap.data().messageId;
 
-    const solingChannel = await interaction.client.channels.fetch(SOLING_POST_CHANNEL_ID);
-    const originalMessage = await solingChannel.messages.fetch(requestSnap.data().messageId).catch(()=>null);
-    if(originalMessage) {
+    if(webhookUrl && messageId) {
+        const webhookClient = new WebhookClient({ url: webhookUrl });
+        const owner = await interaction.client.users.fetch(requestSnap.data().userId).catch(() => null);
         const updatedData = { ...requestSnap.data(), confirmedUsers: newConfirmedList };
-        const updatedEmbed = createStatusEmbed(updatedData);
-        await originalMessage.edit({ embeds: [updatedEmbed] });
+        const updatedEmbed = createStatusEmbed(updatedData, owner);
+        await webhookClient.editMessage(messageId, { embeds: [updatedEmbed] }).catch(e => console.error("Falha ao editar mensagem do webhook:", e));
     }
 
     await interaction.followUp({ content: feedbackMessage, ephemeral: true });
 }
 
-async function handleSelectUserProfile(interaction, requestId) {
+async function handleSelectUserProfile(interaction, requestId, ownerId) {
+    if (interaction.user.id !== ownerId) {
+        return interaction.reply({ content: 'Apenas o dono do anúncio pode usar esta função.', ephemeral: true });
+    }
     await interaction.deferReply({ ephemeral: true });
     const { firestore } = initializeFirebase();
     const selectedUserId = interaction.values[0];
@@ -498,11 +562,13 @@ async function handleFinish(interaction, requestId, ownerId) {
 
         if (requestSnap.exists() && requestSnap.data().status === 'active') {
             await updateDoc(requestRef, { status: 'closed' });
+            
             const messageId = requestSnap.data().messageId;
-            const solingChannel = await interaction.client.channels.fetch(SOLING_POST_CHANNEL_ID);
-            const messageToDelete = await solingChannel.messages.fetch(messageId).catch(() => null);
-            if (messageToDelete) {
-                await messageToDelete.delete();
+            const webhookUrl = requestSnap.data().webhookUrl;
+
+            if (messageId && webhookUrl) {
+                const webhookClient = new WebhookClient({ url: webhookUrl });
+                await webhookClient.deleteMessage(messageId).catch(() => null);
             }
              await interaction.followUp({ content: 'Seu anúncio de /soling foi finalizado e removido.', ephemeral: true });
         } else {
@@ -532,19 +598,33 @@ export async function handleInteraction(interaction, container) {
         if (command !== 'soling') return;
 
         if (interaction.isButton()) {
-            if (action === 'type') await handleTypeSelection(interaction, params[0]);
-            else if (action === 'confirm') await handleConfirm(interaction, params[0], params[1]);
-            else if (action === 'finish') await handleFinish(interaction, params[0], params[1]);
-            else if (action === 'copyid') await handleCopyId(interaction, params[0], params[1]);
-            else if (action === 'managermanual') await openManualCountModal(interaction, params[0], params[1]);
+            if (action === 'type') {
+                await handleTypeSelection(interaction, params[0]);
+            } else if (action === 'confirm') {
+                await handleConfirm(interaction, params[0], params[1]);
+            } else if (action === 'finish') {
+                await handleFinish(interaction, params[0], params[1]);
+            } else if (action === 'copyid') {
+                await handleCopyId(interaction, params[0], params[1]);
+            } else if (action === 'managemembers') {
+                await handleManageMembers(interaction, params[0], params[1]);
+            } else if (action === 'managermanual') {
+                await openManualCountModal(interaction, params[0], params[1]);
+            }
 
         } else if (interaction.isStringSelectMenu()) {
-            if (action === 'raid') await handleRaidSelection(interaction, params[0]);
-            else if (action === 'managertoggle') await handleToggleUserConfirmation(interaction, params[0]);
-            else if (action === 'managerprofile') await handleSelectUserProfile(interaction, params[0]);
+            if (action === 'raid') {
+                await handleRaidSelection(interaction, params[0]);
+            } else if (action === 'managertoggle') {
+                await handleToggleUserConfirmation(interaction, params[0], params[1]);
+            } else if (action === 'managerprofile') {
+                await handleSelectUserProfile(interaction, params[0], params[1]);
+            }
             
         } else if (interaction.isModalSubmit()) {
-            if (action === 'modalsubmitmanual') await handleManualCountSubmit(interaction, params[0]);
+            if (action === 'modalsubmitmanual') {
+                await handleManualCountSubmit(interaction, params[0]);
+            }
         }
     } catch (error) {
         console.error(`Erro no manipulador de interação de /soling (Ação: ${interaction.customId}):`, error);
