@@ -1,8 +1,9 @@
 // src/interactions/buttons/iniciar-perfil.js
-import { ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
+import { ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, AttachmentBuilder } from 'discord.js';
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, query, where, getDocs } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
-import { findOrCreateUserChannel, createInventoryThreads, CUSTOM_ID_PREFIX, FORM_BUTTON_ID, IMPORT_BUTTON_ID, FORM_MODAL_ID, IMPORT_MODAL_ID } from '../../commands/utility/iniciar-perfil.js';
+import { createProfileImage } from '../../utils/createProfileImage.js';
+import { CUSTOM_ID_PREFIX, FORM_BUTTON_ID, IMPORT_BUTTON_ID, FORM_MODAL_ID, IMPORT_MODAL_ID } from '../../commands/utility/iniciar-perfil.js';
 
 export const customIdPrefix = CUSTOM_ID_PREFIX;
 
@@ -127,16 +128,17 @@ async function handleFormSubmit(interaction) {
             credits: 0
         });
     }
-
-    const channel = await findOrCreateUserChannel(interaction, user);
-    if (!channel) {
-        return interaction.editReply('Seu perfil foi atualizado, mas houve um erro ao criar seu canal privado. Por favor, contate um administrador.');
-    }
     
     const updatedUserSnap = await getDoc(userRef);
-    await createInventoryThreads(channel, updatedUserSnap.data(), user);
     
-    await interaction.editReply(`Seu perfil foi atualizado com sucesso! Seus painéis de inventário foram criados e atualizados nos tópicos do seu canal privado: <#${channel.id}>`);
+    try {
+        const profileImage = await createProfileImage(updatedUserSnap.data(), user);
+        const attachment = new AttachmentBuilder(profileImage, { name: 'profile-image.png' });
+        await interaction.editReply({ content: 'Seu perfil foi atualizado com sucesso!', files: [attachment] });
+    } catch (e) {
+        console.error("Erro ao criar imagem de perfil no /iniciar-perfil (submit):", e);
+        await interaction.editReply('Seu perfil foi salvo, mas ocorreu um erro ao gerar a imagem de exibição.');
+    }
 }
 
 async function handleImportSubmit(interaction) {
@@ -172,15 +174,17 @@ async function handleImportSubmit(interaction) {
     } else {
         await setDoc(discordUserRef, { ...profileDataToUpdate, createdAt: serverTimestamp() }, { merge: true });
     }
+    
+    const updatedUserSnap = await getDoc(discordUserRef);
 
-    const channel = await findOrCreateUserChannel(interaction, discordUser);
-    if (!channel) {
-         return interaction.editReply('Seu perfil foi importado, mas houve um erro ao criar seu canal privado. Por favor, contate um administrador.');
+    try {
+        const profileImage = await createProfileImage(updatedUserSnap.data(), discordUser);
+        const attachment = new AttachmentBuilder(profileImage, { name: 'profile-image.png' });
+        await interaction.editReply({ content: 'Seu perfil foi importado com sucesso!', files: [attachment] });
+    } catch (e) {
+        console.error("Erro ao criar imagem de perfil no /iniciar-perfil (import):", e);
+        await interaction.editReply('Seu perfil foi importado, mas ocorreu um erro ao gerar a imagem de exibição.');
     }
-    
-    await createInventoryThreads(channel, { ...userSnap.data(), ...profileDataToUpdate }, discordUser);
-    
-    await interaction.editReply(`Seu perfil foi importado com sucesso! Seus painéis de inventário foram criados e atualizados nos tópicos do seu canal privado: <#${channel.id}>`);
 }
 
 export async function handleInteraction(interaction) {

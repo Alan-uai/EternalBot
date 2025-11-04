@@ -30,7 +30,7 @@ export async function execute(oldMember, newMember) {
 
     // --- Lógica para Cargo de Verificado (Bloxlink) ---
     if (!hadVerifiedRole && hasVerifiedRole) {
-        logger.info(`Usuário ${newMember.user.tag} recebeu o cargo de verificado. Processando perfil...`);
+        logger.info(`Usuário ${newMember.user.tag} recebeu o cargo de verificado. Processando perfil no banco de dados...`);
         const userRef = doc(firestore, 'users', newMember.id);
         const userSnap = await getDoc(userRef);
 
@@ -67,9 +67,9 @@ export async function execute(oldMember, newMember) {
                     createdAt: serverTimestamp(),
                 };
                 await setDoc(userRef, newUserProfile);
-                logger.info(`Perfil criado automaticamente para o usuário verificado: ${newMember.user.tag} (Roblox ID: ${robloxId || 'não encontrado'})`);
+                logger.info(`Perfil criado automaticamente no DB para o usuário verificado: ${newMember.user.tag} (Roblox ID: ${robloxId || 'não encontrado'})`);
             } catch (error) {
-                logger.error(`Falha ao criar perfil automático para ${newMember.id}:`, error);
+                logger.error(`Falha ao criar perfil automático no DB para ${newMember.id}:`, error);
             }
         }
     }
