@@ -1,13 +1,15 @@
 // src/interactions/buttons/iniciar-perfil.js
-import { ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, AttachmentBuilder } from 'discord.js';
+import { ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, AttachmentBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, query, where, getDocs } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
 import { createProfileImage } from '../../utils/createProfileImage.js';
-import { CUSTOM_ID_PREFIX, FORM_BUTTON_ID, IMPORT_BUTTON_ID, FORM_MODAL_ID, IMPORT_MODAL_ID } from '../../commands/utility/iniciar-perfil.js';
+import { CUSTOM_ID_PREFIX, FORM_MODAL_ID, IMPORT_MODAL_ID } from '../../commands/utility/perfil.js';
+import { openDungeonSettingsModal } from './dungeonconfig.js'; // Importar a função
 
 export const customIdPrefix = CUSTOM_ID_PREFIX;
+const NOTIFICATION_BUTTON_PREFIX = `${CUSTOM_ID_PREFIX}_notify`;
 
-async function handleOpenFormButton(interaction) {
+export async function openProfileForm(interaction) {
     const { firestore } = initializeFirebase();
     const userRef = doc(firestore, 'users', interaction.user.id);
     const userSnap = await getDoc(userRef);
@@ -134,9 +136,17 @@ async function handleFormSubmit(interaction) {
     try {
         const profileImage = await createProfileImage(updatedUserSnap.data(), user);
         const attachment = new AttachmentBuilder(profileImage, { name: 'profile-image.png' });
-        await interaction.editReply({ content: 'Seu perfil foi atualizado com sucesso!', files: [attachment] });
+        
+        const managementRow = new ActionRowBuilder()
+            .addComponents(
+                new ButtonBuilder().setCustomId(`${CUSTOM_ID_PREFIX}_update_${user.id}`).setLabel('Atualizar Perfil').setStyle(ButtonStyle.Primary).setEmoji('📝'),
+                new ButtonBuilder().setCustomId(`${CUSTOM_ID_PREFIX}_dungeonconfig_${user.id}`).setLabel('Config. Dungeon').setStyle(ButtonStyle.Secondary).setEmoji('⚙️'),
+                new ButtonBuilder().setCustomId(`${NOTIFICATION_BUTTON_PREFIX}_toggle_${user.id}`).setLabel('Notificações').setStyle(ButtonStyle.Secondary).setEmoji('🔔')
+            );
+            
+        await interaction.editReply({ content: 'Seu perfil foi atualizado com sucesso!', files: [attachment], components: [managementRow] });
     } catch (e) {
-        console.error("Erro ao criar imagem de perfil no /iniciar-perfil (submit):", e);
+        console.error("Erro ao criar imagem de perfil no /perfil (submit):", e);
         await interaction.editReply('Seu perfil foi salvo, mas ocorreu um erro ao gerar a imagem de exibição.');
     }
 }
@@ -180,20 +190,85 @@ async function handleImportSubmit(interaction) {
     try {
         const profileImage = await createProfileImage(updatedUserSnap.data(), discordUser);
         const attachment = new AttachmentBuilder(profileImage, { name: 'profile-image.png' });
-        await interaction.editReply({ content: 'Seu perfil foi importado com sucesso!', files: [attachment] });
+        
+        const managementRow = new ActionRowBuilder()
+            .addComponents(
+                new ButtonBuilder().setCustomId(`${CUSTOM_ID_PREFIX}_update_${discordUser.id}`).setLabel('Atualizar Perfil').setStyle(ButtonStyle.Primary).setEmoji('📝'),
+                new ButtonBuilder().setCustomId(`${CUSTOM_ID_PREFIX}_dungeonconfig_${discordUser.id}`).setLabel('Config. Dungeon').setStyle(ButtonStyle.Secondary).setEmoji('⚙️'),
+                new ButtonBuilder().setCustomId(`${NOTIFICATION_BUTTON_PREFIX}_toggle_${discordUser.id}`).setLabel('Notificações').setStyle(ButtonStyle.Secondary).setEmoji('🔔')
+            );
+            
+        await interaction.editReply({ content: 'Seu perfil foi importado com sucesso!', files: [attachment], components: [managementRow] });
     } catch (e) {
-        console.error("Erro ao criar imagem de perfil no /iniciar-perfil (import):", e);
+        console.error("Erro ao criar imagem de perfil no /perfil (import):", e);
         await interaction.editReply('Seu perfil foi importado, mas ocorreu um erro ao gerar a imagem de exibição.');
     }
 }
 
+async function handleNotificationToggle(interaction, targetUserId) {
+     if (interaction.user.id !== targetUserId) {
+        return interaction.reply({ content: 'Você só pode alterar suas próprias configurações.', ephemeral: true });
+    }
+    
+    const row = new ActionRowBuilder()
+        .addComponents(
+            new ButtonBuilder().setCustomId(`${NOTIFICATION_BUTTON_PREFIX}_enable`).setLabel('Ativar DMs').setStyle(ButtonStyle.Success),
+            new ButtonBuilder().setCustomId(`${NOTIFICATION_BUTTON_PREFIX}_disable`).setLabel('Desativar DMs').setStyle(ButtonStyle.Danger),
+        );
+
+    await interaction.reply({
+        content: 'Deseja ativar ou desativar as notificações por DM para eventos como confirmações no /soling?',
+        components: [row],
+        ephemeral: true,
+    });
+}
+
+async function handleNotificationUpdate(interaction, enable) {
+    await interaction.deferUpdate();
+    const { firestore } = initializeFirebase();
+    const userRef = doc(firestore, 'users', interaction.user.id);
+    
+    try {
+        await setDoc(userRef, { 
+            dungeonSettings: { notificationsEnabled: enable }
+        }, { merge: true });
+        
+        const message = enable ? 'Notificações por DM ativadas com sucesso!' : 'Notificações por DM desativadas.';
+        await interaction.editReply({ content: message, components: [] });
+
+    } catch (error) {
+        console.error("Erro ao atualizar configuração de notificação:", error);
+        await interaction.editReply({ content: 'Ocorreu um erro ao salvar sua preferência.', components: [] });
+    }
+}
+
+
 export async function handleInteraction(interaction) {
     if (interaction.isButton()) {
-        if (interaction.customId === FORM_BUTTON_ID) {
-            await handleOpenFormButton(interaction);
-        } else if (interaction.customId === IMPORT_BUTTON_ID) {
-            await handleOpenImportModal(interaction);
+        const [prefix, action, targetUserId] = interaction.customId.split('_');
+        
+        if (prefix !== CUSTOM_ID_PREFIX) return;
+
+        if (action === 'abrir') await openProfileForm(interaction);
+        else if (action === 'importar') await handleOpenImportModal(interaction);
+        else if (action === 'update') {
+            if (interaction.user.id !== targetUserId) return interaction.reply({ content: 'Você só pode atualizar seu próprio perfil.', ephemeral: true });
+            await openProfileForm(interaction);
         }
+        else if (action === 'dungeonconfig') {
+            if (interaction.user.id !== targetUserId) return interaction.reply({ content: 'Você só pode configurar suas próprias dungeons.', ephemeral: true });
+            await openDungeonSettingsModal(interaction);
+        }
+        else if (action === 'notify') {
+             if (interaction.customId === `${NOTIFICATION_BUTTON_PREFIX}_toggle_${targetUserId}`) {
+                await handleNotificationToggle(interaction, targetUserId);
+             } else if (interaction.customId === `${NOTIFICATION_BUTTON_PREFIX}_enable`) {
+                await handleNotificationUpdate(interaction, true);
+             } else if (interaction.customId === `${NOTIFICATION_BUTTON_PREFIX}_disable`) {
+                await handleNotificationUpdate(interaction, false);
+             }
+        }
+        
     } else if (interaction.isModalSubmit()) {
         if (interaction.customId === FORM_MODAL_ID) {
             await handleFormSubmit(interaction);
@@ -202,3 +277,5 @@ export async function handleInteraction(interaction) {
         }
     }
 }
+
+    

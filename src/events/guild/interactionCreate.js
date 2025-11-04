@@ -15,7 +15,7 @@ export async function execute(interaction) {
         }
         try {
             if (command.execute) {
-                await command.execute(interaction, { client });
+                await command.execute(interaction); // Removido container daqui
             }
         } catch (error) {
             logger.error(`Erro ao executar o comando /${interaction.commandName}:`, error);
@@ -33,11 +33,13 @@ export async function execute(interaction) {
         const customId = interaction.customId;
         
         // Tenta encontrar um manipulador que corresponda ao início do customId
-        const handler = interactions.find((_, key) => customId.startsWith(key));
+        const handler = Array.from(interactions.entries()).find(([prefix]) => customId.startsWith(prefix));
         
         if (handler) {
+            const [prefix, handlerFn] = handler;
             try {
-                await handler(interaction, { client });
+                // Passa o container para o manipulador
+                await handlerFn(interaction, client.container);
             } catch (error) {
                 logger.error(`Erro ao lidar com a interação ${customId}:`, error);
                 const errorMessage = 'Ocorreu um erro ao processar sua ação.';
@@ -52,3 +54,5 @@ export async function execute(interaction) {
         }
     }
 }
+
+    

@@ -59,7 +59,7 @@ async function handleRaidSelection(interaction, type) {
         const raids = getAvailableRaids();
         const selectedRaidLabel = raids.find(r => r.value === selectedRaidValue)?.label || selectedRaidValue;
 
-        interaction.client.interactions.set(`soling_temp_${interaction.user.id}`, { type, raid: selectedRaidLabel });
+        interaction.client.container.interactions.set(`soling_temp_${interaction.user.id}`, { type, raid: selectedRaidLabel });
         
         const userRef = doc(firestore, 'users', interaction.user.id);
         const userSnap = await getDoc(userRef);
@@ -114,17 +114,18 @@ async function handleRaidSelection(interaction, type) {
 
 async function handleModalSubmit(interaction) {
     try {
+        await interaction.deferReply({ ephemeral: true });
         const serverLink = interaction.fields.getTextInputValue('server_link');
         const alwaysSendStr = interaction.fields.getTextInputValue('always_send').toLowerCase();
         const deleteAfterStr = interaction.fields.getTextInputValue('delete_after');
 
         if (alwaysSendStr !== 'sim' && alwaysSendStr !== 'não') {
-            return interaction.reply({ content: 'Valor inválido para "Sempre enviar o link?". Por favor, use "sim" ou "não".', ephemeral: true });
+            return interaction.editReply({ content: 'Valor inválido para "Sempre enviar o link?". Por favor, use "sim" ou "não".' });
         }
         
         const deleteAfter = parseInt(deleteAfterStr, 10);
         if (deleteAfterStr && (isNaN(deleteAfter) || deleteAfter <= 0)) {
-            return interaction.reply({ content: 'O tempo para apagar deve ser um número positivo de minutos.', ephemeral: true });
+            return interaction.editReply({ content: 'O tempo para apagar deve ser um número positivo de minutos.' });
         }
         
         await handlePostRequest(interaction, {
@@ -135,20 +136,27 @@ async function handleModalSubmit(interaction) {
 
     } catch (error) {
         console.error("Erro em handleModalSubmit:", error);
+        if (interaction.replied || interaction.deferred) {
+            await interaction.followUp({ content: 'Ocorreu um erro ao processar seu pedido.', ephemeral: true }).catch(console.error);
+        } else {
+            await interaction.reply({ content: 'Ocorreu um erro ao processar seu pedido.', ephemeral: true }).catch(console.error);
+        }
     }
 }
 
 async function handlePostRequest(interaction, settings) {
     if (interaction.isModalSubmit()) {
-         await interaction.deferReply({ ephemeral: true });
-    }
-    else if (interaction.isStringSelectMenu()) {
+         // já foi deferido
+    } else if (interaction.isStringSelectMenu()) {
         await interaction.update({ content: 'Processando seu pedido...', components: [] });
+    } else {
+        await interaction.deferReply({ ephemeral: true });
     }
+
 
     try {
         const { firestore } = initializeFirebase();
-        const tempData = interaction.client.interactions.get(`soling_temp_${interaction.user.id}`);
+        const tempData = interaction.client.container.interactions.get(`soling_temp_${interaction.user.id}`);
         if (!tempData) {
             return interaction.editReply({ content: 'Sua sessão expirou. Por favor, use o comando /soling novamente.' });
         }
@@ -267,7 +275,7 @@ async function handlePostRequest(interaction, settings) {
         await batch.commit();
         
         await interaction.editReply({ content: 'Seu pedido foi postado com sucesso!' });
-        interaction.client.interactions.delete(`soling_temp_${interaction.user.id}`);
+        interaction.client.container.interactions.delete(`soling_temp_${interaction.user.id}`);
     } catch(error) {
         console.error("Erro em handlePostRequest:", error);
         if (!interaction.replied && !interaction.deferred) {
@@ -278,11 +286,13 @@ async function handlePostRequest(interaction, settings) {
     }
 }
 
+
 async function handleConfirm(interaction, requestId, ownerId) {
     try {
         const { firestore } = initializeFirebase();
         const requestRef = doc(firestore, 'dungeon_requests', requestId);
-        
+        const owner = await interaction.client.users.fetch(ownerId).catch(() => null);
+
         if (interaction.user.id === ownerId) {
             await interaction.deferReply({ ephemeral: true });
             const requestSnap = await getDoc(requestRef);
@@ -305,9 +315,27 @@ async function handleConfirm(interaction, requestId, ownerId) {
         } else { 
             await interaction.deferUpdate();
             const newUser = { userId: interaction.user.id, username: interaction.user.username };
+            const requestSnap = await getDoc(requestRef);
+            const confirmedUsers = requestSnap.data()?.confirmedUsers || [];
+            if (confirmedUsers.some(u => u.userId === newUser.userId)) {
+                return interaction.followUp({ content: 'Você já confirmou sua presença.', ephemeral: true });
+            }
+
             await updateDoc(requestRef, {
                 confirmedUsers: arrayUnion(newUser)
             });
+
+            if (owner) {
+                const ownerSettingsSnap = await getDoc(doc(firestore, 'users', ownerId));
+                const sendDm = ownerSettingsSnap.data()?.dungeonSettings?.notificationsEnabled ?? true;
+                if (sendDm) {
+                    try {
+                        await owner.send(`🙋‍♂️ **${interaction.user.username}** confirmou que vai ajudar no seu pedido de /soling para **${requestSnap.data().raidName}**!`);
+                    } catch (dmError) {
+                        console.warn(`Não foi possível notificar ${owner.tag} por DM.`);
+                    }
+                }
+            }
             await interaction.followUp({ content: 'Sua presença foi confirmada! O líder do grupo foi notificado.', ephemeral: true });
         }
     } catch (error) {
@@ -381,7 +409,7 @@ async function handleCopyId(interaction, userId, robloxId) {
 }
 
 
-export async function handleInteraction(interaction) {
+export async function handleInteraction(interaction, container) {
     try {
         const [command, action, ...params] = interaction.customId.split('_');
         
@@ -409,3 +437,5 @@ export async function handleInteraction(interaction) {
         }
     }
 }
+
+    
