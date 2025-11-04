@@ -48,10 +48,11 @@ async function createPrivateThread(interaction, type) {
         await thread.members.add(interaction.user.id);
 
         const modRole = config.MODERATOR_ROLE_ID;
-        await thread.send({ content: `<@&${modRole}>, um novo ${type.toLowerCase()} foi aberto por <@${interaction.user.id}>.` });
+        // Notificação no canal principal, mencionando o tópico
+        await threadChannel.send({ content: `<@&${modRole}>, um novo ${type.toLowerCase()} foi aberto por <@${interaction.user.id}> em <#${thread.id}>.` });
         
         // Envia a mensagem de guia no tópico
-        const webhook = await thread.createWebhook({ name: 'Dicas', reason: 'Guia para o tópico' });
+        const webhook = await thread.createWebhook({ name: 'Dicas para Seguir', reason: 'Guia para o tópico' });
         await webhook.send({
             content: `**Por favor, para agilizar o atendimento, forneça o máximo de detalhes possível.**\n> Para denúncias: envie o ID do usuário, prints, vídeos e uma descrição clara do ocorrido.\n> Para tickets: descreva seu problema ou dúvida detalhadamente.`,
             username: 'Dicas para Seguir'
