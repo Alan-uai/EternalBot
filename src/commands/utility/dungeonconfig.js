@@ -3,6 +3,8 @@ import { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } fro
 
 export const CUSTOM_ID_PREFIX = 'dungeonconfig';
 export const SOLING_CONFIG_BUTTON_ID = `${CUSTOM_ID_PREFIX}_soling_open`;
+export const FARMING_CONFIG_BUTTON_ID = `${CUSTOM_ID_PREFIX}_farming_open`;
+
 
 export const data = new SlashCommandBuilder()
     .setName('dungeonconfig')
@@ -17,14 +19,14 @@ export async function execute(interaction) {
                 .setStyle(ButtonStyle.Primary)
                 .setEmoji('⚙️'),
             new ButtonBuilder()
-                .setCustomId(`${CUSTOM_ID_PREFIX}_farming_open`)
-                .setLabel('Farming (Em Breve)')
+                .setCustomId(FARMING_CONFIG_BUTTON_ID)
+                .setLabel('Gerenciar Farms')
                 .setStyle(ButtonStyle.Secondary)
-                .setDisabled(true)
+                .setEmoji('📅')
         );
 
     await interaction.reply({
-        content: 'Selecione qual painel de configuração de dungeon você deseja abrir:',
+        content: 'Selecione qual painel de configuração você deseja abrir:',
         components: [row],
         ephemeral: true,
     });
