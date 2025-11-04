@@ -14,7 +14,7 @@ const GAME_LINK = 'https://www.roblox.com/games/90462358603255/15-Min-Anime-Eter
 
 const RAID_AVATAR_PREFIXES = {
     'Easy': 'Easy', 'Medium': 'Med', 'Hard': 'Hd', 'Insane': 'Isne',
-    'Crazy': 'Czy', 'Nightmare': 'Mare', 'Leaf Raid (1800)': 'Lf'
+    'Crazy': 'Czy', 'Nightmare': 'Mare', 'Leaf Raid': 'Lf'
 };
 
 async function getOrCreateWebhook(channel, webhookName, avatarUrl) {
@@ -82,16 +82,21 @@ async function handleTypeSelection(interaction, type) {
         if (raids.length === 0) {
             return interaction.followUp({ content: 'Não há raids disponíveis para selecionar no momento.', ephemeral: true });
         }
-        const raidMenu = new StringSelectMenuBuilder()
-            .setCustomId(`soling_raid_${type}`)
-            .setPlaceholder('Selecione a raid desejada...')
-            .addOptions(raids.slice(0, 25));
 
-        const row = new ActionRowBuilder().addComponents(raidMenu);
+        const components = [];
+        const chunkSize = 25;
+        for (let i = 0; i < raids.length; i += chunkSize) {
+            const chunk = raids.slice(i, i + chunkSize);
+            const menu = new StringSelectMenuBuilder()
+                .setCustomId(`soling_raid_${type}_${i / chunkSize}`)
+                .setPlaceholder(`Selecione a raid... (Parte ${i / chunkSize + 1})`)
+                .addOptions(chunk);
+            components.push(new ActionRowBuilder().addComponents(menu));
+        }
 
         await interaction.followUp({
             content: 'Agora, selecione a raid:',
-            components: [row],
+            components,
             ephemeral: true,
         });
     } catch(error) {
@@ -645,12 +650,11 @@ export async function handleInteraction(interaction, container) {
             }
 
         } else if (interaction.isStringSelectMenu()) {
-            const requestId = params[0];
-            const ownerId = params[1];
-
+            const type = params[0];
             if (action === 'raid') {
-                await handleRaidSelection(interaction, requestId); // requestId aqui é o 'type'
+                await handleRaidSelection(interaction, type); 
             } else if (action === 'managertoggle') {
+                const [requestId, ownerId] = params;
                 await handleToggleUserConfirmation(interaction, requestId, ownerId);
             }
             

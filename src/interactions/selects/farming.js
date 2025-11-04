@@ -48,18 +48,21 @@ async function handleTimeSelect(interaction) {
     interaction.client.container.interactions.set(`farming_flow_${interaction.user.id}`, flowData);
     
     const raids = getAvailableRaids();
-    const raidOptions = raids.map(raid => ({ label: raid.label, value: raid.value }));
+    const components = [];
+    const chunkSize = 25;
 
-    const raidMenu = new StringSelectMenuBuilder()
-        .setCustomId('farming_select_raid')
-        .setPlaceholder('Selecione a raid para farmar...')
-        .addOptions(raidOptions.slice(0, 25)); // Max 25 options
-
-    const row = new ActionRowBuilder().addComponents(raidMenu);
+    for (let i = 0; i < raids.length; i += chunkSize) {
+        const chunk = raids.slice(i, i + chunkSize);
+        const menu = new StringSelectMenuBuilder()
+            .setCustomId(`farming_select_raid_${i / chunkSize}`)
+            .setPlaceholder(`Selecione a raid... (Parte ${i / chunkSize + 1})`)
+            .addOptions(chunk);
+        components.push(new ActionRowBuilder().addComponents(menu));
+    }
 
     await interaction.update({
         content: `Horário: **${selectedTime}**. Agora, escolha qual raid vocês irão farmar.`,
-        components: [row],
+        components,
     });
 }
 
@@ -174,13 +177,12 @@ async function handleParticipationToggle(interaction) {
 
 export async function handleInteraction(interaction) {
     if (interaction.isStringSelectMenu()) {
-        const [prefix, action] = interaction.customId.split('_');
+        const [prefix, action, subAction, menuIndex] = interaction.customId.split('_');
 
         if (prefix !== customIdPrefix) return;
 
         switch (action) {
             case 'select':
-                const subAction = interaction.customId.split('_')[2];
                 if (subAction === 'day') await handleDaySelect(interaction);
                 if (subAction === 'time') await handleTimeSelect(interaction);
                 if (subAction === 'raid') await handleRaidSelect(interaction);
