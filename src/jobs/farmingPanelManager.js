@@ -74,6 +74,10 @@ async function handleAnnouncements(container, farms) {
 
         // 5-minute warning
         if (farmTime > now && farmTime <= fiveMinutesFromNow && !farm.announced5m) {
+            if (!farm.webhookUrl) {
+                logger.warn(`[farmingPanel] Webhook URL ausente para o farm ${farm.id}. Anúncio de 5min ignorado.`);
+                continue;
+            }
             const channel = await client.channels.fetch(config.FARMING_PANEL_CHANNEL_ID).catch(() => null);
             if(channel) {
                 const host = await client.users.fetch(farm.hostId).catch(() => null);
@@ -106,6 +110,10 @@ async function handleAnnouncements(container, farms) {
 
         // "Open" announcement
         if (farmTime <= now && !farm.announcedOpen) {
+             if (!farm.webhookUrl) {
+                logger.warn(`[farmingPanel] Webhook URL ausente para o farm ${farm.id}. Anúncio de ABERTURA ignorado.`);
+                continue;
+            }
             const channel = await client.channels.fetch(config.FARMING_PANEL_CHANNEL_ID).catch(() => null);
             if(channel) {
                 const webhook = new WebhookClient({ url: farm.webhookUrl });
