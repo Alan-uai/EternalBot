@@ -1,10 +1,31 @@
 // src/commands/utility/popular.js
 import { SlashCommandBuilder, PermissionsBitField } from 'discord.js';
 import { initializeFirebase } from '../../firebase/index.js';
-import { collection, doc, setDoc, writeBatch, getDocs, query } from 'firebase/firestore';
+import { collection, doc, setDoc, writeBatch } from 'firebase/firestore';
 import { allWikiArticles } from '../../data/wiki-data.js';
 
 const ADMIN_ROLE_ID = '1429318984716521483';
+
+function normalizeId(name) {
+    if (!name) return null;
+    return name.toLowerCase().replace(/ /g, '-').replace(/[^a-z0-9-]/g, '');
+}
+
+async function populateCollection(batch, firestore, collectionName, items) {
+    if (!items || !Array.isArray(items)) return 0;
+    
+    let count = 0;
+    for (const item of items) {
+        const itemId = normalizeId(item.id || item.name);
+        if (!itemId) continue;
+        
+        const itemRef = doc(firestore, collectionName, itemId);
+        batch.set(itemRef, item);
+        count++;
+    }
+    return count;
+}
+
 
 export const data = new SlashCommandBuilder()
     .setName('popular')
@@ -31,19 +52,14 @@ export async function execute(interaction) {
         for (const article of allWikiArticles) {
             const articleId = article.id;
             
-            // Se o 'article' é um dado de mundo (tem 'npcs', 'pets', etc.)
             if (articleId.startsWith('world-')) {
                 const worldNumber = articleId.split('-')[1];
-                const paddedWorldId = worldNumber.padStart(3, '0'); // Correção: Adiciona zeros à esquerda
+                const paddedWorldId = worldNumber.padStart(3, '0');
                 const worldRef = doc(firestore, 'worlds', paddedWorldId);
 
-                // Separa os dados do documento principal das sub-coleções
                 const { npcs, pets, powers, accessories, dungeons, shadows, stands, ghouls, obelisks, ...worldData } = article;
                 
-                batch.set(worldRef, {
-                    name: article.title, // Adiciona o nome do mundo ao documento principal
-                    ...worldData 
-                });
+                batch.set(worldRef, { name: article.title, ...worldData });
                 count++;
 
                 const subCollections = { npcs, pets, powers, accessories, dungeons, shadows, stands, ghouls, obelisks };
@@ -51,8 +67,7 @@ export async function execute(interaction) {
                 for (const [key, items] of Object.entries(subCollections)) {
                     if (items && Array.isArray(items)) {
                         for (const item of items) {
-                            // Garante que o item tenha um ID, se não tiver, usa o nome
-                            const itemId = item.id || item.name.toLowerCase().replace(/ /g, '-').replace(/[^a-z0-9-]/g, '');
+                            const itemId = normalizeId(item.id || item.name);
                             if (!itemId) continue;
 
                             const itemRef = doc(firestore, `worlds/${paddedWorldId}/${key}`, itemId);
@@ -60,10 +75,9 @@ export async function execute(interaction) {
                             batch.set(itemRef, itemData);
                             count++;
 
-                            // Lida com a sub-sub-coleção 'stats' para poderes
                             if (key === 'powers' && stats && Array.isArray(stats)) {
                                 for(const stat of stats) {
-                                    const statId = stat.id || stat.name.toLowerCase().replace(/ /g, '-').replace(/[^a-z0-9-]/g, '');
+                                    const statId = normalizeId(stat.id || stat.name);
                                     if (!statId) continue;
 
                                     const statRef = doc(firestore, `worlds/${paddedWorldId}/powers/${itemId}/stats`, statId);
@@ -74,9 +88,27 @@ export async function execute(interaction) {
                         }
                     }
                 }
-            } 
-            // Se for um artigo da wiki (guia, etc.), salva na coleção 'wikiContent'
+            } else if (article.tables) {
+                 // Trata outros artigos com tabelas como coleções
+                if (article.id === 'stands-world-16') {
+                    count += await populateCollection(batch, firestore, 'stands', article.tables.stands.rows);
+                } else if (article.id === 'titans-world-11') {
+                     count += await populateCollection(batch, firestore, 'titans', article.tables.baseTitans.rows);
+                } else if (article.id === 'shadows-guide') {
+                     count += await populateCollection(batch, firestore, 'shadows_bonus', article.tables.shadowBonuses.rows);
+                } else if (article.id === 'scythes-world-21') {
+                    count += await populateCollection(batch, firestore, 'scythes', article.tables.scythes.rows);
+                } else if (article.id === 'jewelry-crafting') {
+                    count += await populateCollection(batch, firestore, 'jewelry_bonuses', article.tables.jewelryBonuses.rows);
+                } else {
+                    // Artigos genéricos vão para wikiContent
+                    const wikiRef = doc(firestore, 'wikiContent', articleId);
+                    batch.set(wikiRef, article);
+                    count++;
+                }
+            }
             else {
+                // Artigos sem tabelas estruturadas vão para wikiContent
                 const wikiRef = doc(firestore, 'wikiContent', articleId);
                 batch.set(wikiRef, article);
                 count++;

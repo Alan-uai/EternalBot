@@ -1,7 +1,7 @@
 // src/interactions/selects/farming.js
-import { ActionRowBuilder, StringSelectMenuBuilder } from 'discord.js';
+import { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { getAvailableRaids } from '../../commands/utility/soling.js';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, getDoc, doc, updateDoc } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
 
 export const customIdPrefix = 'farming';
@@ -73,29 +73,36 @@ async function handleRaidSelect(interaction) {
     flowData.raidName = selectedRaidLabel;
     interaction.client.container.interactions.set(`farming_flow_${interaction.user.id}`, flowData);
     
-    // Create quantity options
-    const quantityOptions = Array.from({ length: 10 }, (_, i) => {
-        const quantity = (i + 1) * 5;
-        return { label: `${quantity} raids`, value: String(quantity) };
-    });
+    const modal = new ModalBuilder()
+        .setCustomId('farming_quantity_modal')
+        .setTitle('Quantidade de Raids');
 
-    const quantityMenu = new StringSelectMenuBuilder()
-        .setCustomId('farming_select_quantity')
-        .setPlaceholder('Selecione a quantidade média de raids...')
-        .addOptions(quantityOptions);
+    const quantityInput = new TextInputBuilder()
+        .setCustomId('quantity')
+        .setLabel("Quantidade média de raids?")
+        .setStyle(TextInputStyle.Short)
+        .setPlaceholder("Ex: 10")
+        .setRequired(true);
 
-    const row = new ActionRowBuilder().addComponents(quantityMenu);
+    modal.addComponents(new ActionRowBuilder().addComponents(quantityInput));
 
-    await interaction.update({
-        content: `Raid: **${selectedRaidLabel}**. Por último, informe a quantidade média de raids que planejam fazer.`,
-        components: [row],
-    });
+    await interaction.showModal(modal);
 }
 
-// Handle Quantity Selection and Finalize
-async function handleQuantitySelect(interaction) {
-    const selectedQuantity = parseInt(interaction.values[0], 10);
+// Handle Modal Submit
+async function handleQuantitySubmit(interaction) {
+    const selectedQuantityStr = interaction.fields.getTextInputValue('quantity');
+    const selectedQuantity = parseInt(selectedQuantityStr, 10);
+    
+     if (isNaN(selectedQuantity) || selectedQuantity <= 0) {
+        return interaction.reply({ content: 'A quantidade deve ser um número positivo.', ephemeral: true });
+    }
+
     const flowData = interaction.client.container.interactions.get(`farming_flow_${interaction.user.id}`);
+    
+    const { firestore } = initializeFirebase();
+    const userSnap = await getDoc(doc(firestore, 'users', interaction.user.id));
+    const webhookUrl = userSnap.exists() ? userSnap.data()?.dungeonSettings?.farmWebhookUrl : null;
     
     const newFarm = {
         hostId: interaction.user.id,
@@ -104,29 +111,29 @@ async function handleQuantitySelect(interaction) {
         time: flowData.time,
         raidName: flowData.raidName,
         quantity: selectedQuantity,
-        participants: [interaction.user.id], // Host is automatically a participant
+        participants: [interaction.user.id],
         createdAt: serverTimestamp(),
+        webhookUrl: webhookUrl, // Add webhook url to farm data
     };
 
     try {
-        const { firestore } = initializeFirebase();
         await addDoc(collection(firestore, 'scheduled_farms'), newFarm);
 
-        await interaction.update({
+        await interaction.reply({
             content: `✅ **Farm agendado com sucesso!**\nO painel de farms será atualizado em breve com seu agendamento.\n\n- **Dia:** ${WEEKDAYS_PT[newFarm.dayOfWeek]}\n- **Horário:** ${newFarm.time}\n- **Raid:** ${newFarm.raidName}\n- **Quantidade:** ${newFarm.quantity}`,
-            components: [],
+            ephemeral: true,
         });
     } catch (error) {
         console.error("Erro ao salvar farm agendado:", error);
-        await interaction.update({
+        await interaction.reply({
             content: '❌ Ocorreu um erro ao tentar agendar seu farm. Por favor, tente novamente.',
-            components: [],
+            ephemeral: true,
         });
     } finally {
-        // Clean up the temporary data
         interaction.client.container.interactions.delete(`farming_flow_${interaction.user.id}`);
     }
 }
+
 
 // Handle participation toggle from the panel
 async function handleParticipationToggle(interaction) {
@@ -166,24 +173,27 @@ async function handleParticipationToggle(interaction) {
 }
 
 export async function handleInteraction(interaction) {
-    if (!interaction.isStringSelectMenu()) return;
+    if (interaction.isStringSelectMenu()) {
+        const [prefix, action] = interaction.customId.split('_');
 
-    const [prefix, action] = interaction.customId.split('_');
+        if (prefix !== customIdPrefix) return;
 
-    if (prefix !== customIdPrefix) return;
-
-    switch (action) {
-        case 'select':
-            const subAction = interaction.customId.split('_')[2];
-            if (subAction === 'day') await handleDaySelect(interaction);
-            if (subAction === 'time') await handleTimeSelect(interaction);
-            if (subAction === 'raid') await handleRaidSelect(interaction);
-            if (subAction === 'quantity') await handleQuantitySelect(interaction);
-            break;
-        case 'participate':
-             await handleParticipationToggle(interaction);
-            break;
-        default:
-            break;
+        switch (action) {
+            case 'select':
+                const subAction = interaction.customId.split('_')[2];
+                if (subAction === 'day') await handleDaySelect(interaction);
+                if (subAction === 'time') await handleTimeSelect(interaction);
+                if (subAction === 'raid') await handleRaidSelect(interaction);
+                break;
+            case 'participate':
+                 await handleParticipationToggle(interaction);
+                break;
+            default:
+                break;
+        }
+    } else if (interaction.isModalSubmit()) {
+         if (interaction.customId === 'farming_quantity_modal') {
+            await handleQuantitySubmit(interaction);
+        }
     }
 }

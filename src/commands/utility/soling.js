@@ -11,7 +11,7 @@ export const data = new SlashCommandBuilder()
 
 export function getAvailableRaids() {
     const raids = new Set();
-    const soloRaids = ['Gleam Raid', 'Raid Sins', 'Mundo Raid']; // Raids individuais a serem excluídas
+    const soloRaids = ['Gleam Raid', 'Raid Sins', 'Mundo Raid', 'Mundo']; // Raids individuais a serem excluídas
 
     // Adiciona raids do Lobby 1
     lobbyDungeonsArticle.tables.lobbySchedule.rows.forEach(raid => {
