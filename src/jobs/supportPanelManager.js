@@ -1,7 +1,7 @@
 // src/jobs/supportPanelManager.js
 import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, WebhookClient } from 'discord.js';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { SUPPORT_BUTTON_IDS } from '../commands/utility/gerenciar.js';
+import { SUPPORT_BUTTON_IDS } from '../interactions/buttons/gerenciar.js';
 
 const PANEL_DOC_ID = 'supportPanel';
 const PERSISTENT_WEBHOOK_NAME = 'Suporte | Denúncias | Formulários';

@@ -1,8 +1,15 @@
 // src/interactions/buttons/gerenciar.js
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, EmbedBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
-import { SUPPORT_BUTTON_IDS } from '../../commands/utility/gerenciar.js';
 
 export const customIdPrefix = 'support';
+
+// DEFININDO OS IDs AQUI PARA SEREM EXPORTADOS
+export const SUPPORT_BUTTON_IDS = {
+    REPORT: `${customIdPrefix}_report`,
+    TICKET: `${customIdPrefix}_ticket`,
+    APPLY: `${customIdPrefix}_apply`
+};
+
 
 const APPLICATION_MODAL_IDS = {
     FARMING: 'application_farming_modal',
