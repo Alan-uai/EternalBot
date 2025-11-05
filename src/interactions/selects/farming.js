@@ -144,9 +144,6 @@ async function handleQuantitySelect(interaction) {
     }
 
     const { firestore } = initializeFirebase();
-    // Fetch the user's settings to get the webhook URL
-    const userSnap = await getDoc(doc(firestore, 'users', interaction.user.id));
-    const webhookUrl = userSnap.exists() ? userSnap.data()?.dungeonSettings?.farmWebhookUrl : null;
     
     const newFarm = {
         hostId: interaction.user.id,
@@ -157,7 +154,6 @@ async function handleQuantitySelect(interaction) {
         quantity: selectedQuantity,
         participants: [interaction.user.id],
         createdAt: serverTimestamp(),
-        webhookUrl: webhookUrl || null, // Ensure it's null if not found
     };
 
     try {

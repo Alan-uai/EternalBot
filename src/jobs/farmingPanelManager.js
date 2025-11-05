@@ -3,6 +3,7 @@ import { EmbedBuilder, WebhookClient, ActionRowBuilder, StringSelectMenuBuilder,
 import { doc, getDoc, setDoc, collection, query, where, getDocs, deleteDoc, writeBatch, updateDoc } from 'firebase/firestore';
 
 const PANEL_DOC_ID = 'farmingPanel';
+const ANNOUNCER_DOC_ID = 'farmAnnouncer'; // Novo ID para o webhook central
 const WEEKDAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 const WEEKDAYS_PT = {
     monday: 'Segunda-feira',
@@ -59,10 +60,21 @@ async function cleanupOldFarms(firestore, currentDayIndex, logger) {
 
 async function handleAnnouncements(container, farms) {
     const { client, config, logger, services } = container;
-    const { firebase, assetService } = services;
+    const { firebase } = services;
     const { firestore } = firebase;
     
-    const now = new Date();
+    // Get the central webhook for farm announcements
+    const announcerDocRef = doc(firestore, 'bot_config', ANNOUNCER_DOC_ID);
+    const announcerDoc = await getDoc(announcerDocRef);
+    if (!announcerDoc.exists() || !announcerDoc.data().webhookUrl) {
+        logger.warn(`[farmingPanel] Webhook de anúncio de farm (${ANNOUNCER_DOC_ID}) não encontrado. Nenhum anúncio será enviado.`);
+        return;
+    }
+    const webhookUrl = announcerDoc.data().webhookUrl;
+    const webhookClient = new WebhookClient({ url: webhookUrl });
+
+    // Timezone correction: UTC-3
+    const now = new Date(new Date().getTime() - 3 * 60 * 60 * 1000);
     const fiveMinutesFromNow = new Date(now.getTime() + 5 * 60 * 1000);
 
     for (const farm of farms) {
@@ -70,14 +82,8 @@ async function handleAnnouncements(container, farms) {
         const farmTime = new Date(now);
         farmTime.setHours(hour, minute, 0, 0);
 
-        const farmTimeMs = farmTime.getTime();
-
         // 5-minute warning
         if (farmTime > now && farmTime <= fiveMinutesFromNow && !farm.announced5m) {
-            if (!farm.webhookUrl) {
-                logger.warn(`[farmingPanel] Webhook URL ausente para o farm ${farm.id}. Anúncio de 5min ignorado.`);
-                continue;
-            }
             const channel = await client.channels.fetch(config.FARMING_PANEL_CHANNEL_ID).catch(() => null);
             if(channel) {
                 const host = await client.users.fetch(farm.hostId).catch(() => null);
@@ -93,8 +99,7 @@ async function handleAnnouncements(container, farms) {
                     embed.addFields({ name: '🔗 Servidor Privado', value: `**[Clique aqui para entrar](${serverLink})**` });
                 }
 
-                const webhook = new WebhookClient({ url: farm.webhookUrl });
-                const announcementMessage = await webhook.send({
+                const announcementMessage = await webhookClient.send({
                     username: `5m | ${farm.raidName}`,
                     embeds: [embed],
                     wait: true
@@ -110,17 +115,11 @@ async function handleAnnouncements(container, farms) {
 
         // "Open" announcement
         if (farmTime <= now && !farm.announcedOpen) {
-             if (!farm.webhookUrl) {
-                logger.warn(`[farmingPanel] Webhook URL ausente para o farm ${farm.id}. Anúncio de ABERTURA ignorado.`);
-                continue;
-            }
             const channel = await client.channels.fetch(config.FARMING_PANEL_CHANNEL_ID).catch(() => null);
             if(channel) {
-                const webhook = new WebhookClient({ url: farm.webhookUrl });
-                
                 // Delete the 5-minute warning message if it exists
                 if (farm.announcementId) {
-                    await webhook.deleteMessage(farm.announcementId).catch(e => logger.warn(`[farmingPanel] Não foi possível deletar a mensagem de 5min: ${e.message}`));
+                    await webhookClient.deleteMessage(farm.announcementId).catch(e => logger.warn(`[farmingPanel] Não foi possível deletar a mensagem de 5min: ${e.message}`));
                 }
 
                 const host = await client.users.fetch(farm.hostId).catch(() => null);
@@ -136,7 +135,7 @@ async function handleAnnouncements(container, farms) {
                     embed.addFields({ name: '🔗 Servidor Privado', value: `**[Clique aqui para entrar](${serverLink})**` });
                 }
 
-                await webhook.send({
+                await webhookClient.send({
                     username: `${farm.raidName} Aberta`,
                     embeds: [embed],
                     content: farm.participants.map(id => `<@${id}>`).join(' ')
@@ -160,7 +159,7 @@ export async function run(container) {
     const { firestore } = firebase;
 
     try {
-        const now = new Date();
+        const now = new Date(new Date().getTime() - 3 * 60 * 60 * 1000);
         const currentDay = WEEKDAYS[now.getDay()];
         
         await cleanupOldFarms(firestore, now.getDay(), logger);
