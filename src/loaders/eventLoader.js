@@ -17,9 +17,6 @@ function validateEvent(mod, file) {
 export async function loadEvents(container) {
     const { client, logger } = container;
 
-    // Remove todos os listeners existentes para permitir o recarregamento
-    client.removeAllListeners();
-    
     if (!fs.existsSync(EVENTS_PATH)) {
         logger.warn(`Diretório de eventos não encontrado em ${EVENTS_PATH}`);
         return;
@@ -45,6 +42,11 @@ export async function loadEvents(container) {
                 
                 // Passa o container para o wrapper
                 const wrapper = (...args) => event.execute(...args, container);
+
+                // Remove o listener antigo para este evento específico antes de adicionar um novo.
+                // Isso evita o problema de duplicação de listeners durante hot-reloads.
+                client.removeListener(event.name, client.listeners(event.name)[0] || (() => {}));
+
 
                 if (event.once) {
                     client.once(event.name, wrapper);

@@ -2,9 +2,9 @@
 export const world17Data = {
   id: 'world-17',
   title: 'Mundo 17 - Ilha Ghoul',
-  summary: 'Mundo sombrio que introduz os Ghouls, lutadores com bônus de energia e dano, e o sistema de Kagunes.',
-  content: 'Este mundo introduz os Ghouls, um tipo especial de lutador que pode ser equipado. Eles fornecem bônus de energia e dano, e suas Kagunes (as "armas" dos ghouls) podem ter diferentes raridades, cada uma com status variados. Não há um "nível máximo" para a Kagune em si; o poder vem da raridade do Ghoul que você equipa.',
-  tags: ['ghoul', 'kagune', 'mundo 17', '17', 'guia', 'geral'],
+  summary: 'Mundo sombrio que introduz os Ghouls, lutadores com bônus de energia e dano, e o sistema de Kagunes, que possui raridades e níveis próprios.',
+  content: 'Este mundo introduz os Ghouls, um tipo especial de lutador que pode ser equipado. O poder principal aqui é a Kagune, que possui seu próprio sistema de raridade (que define o multiplicador de dano base) e um sistema de leveling (que aumenta o dano final).',
+  tags: ['ghoul', 'kagune', 'mundo 17', '17', 'guia', 'geral', 'leveling'],
   npcs: [
     { name: 'Ghoul Rank C', rank: 'E', exp: 6e12, hp: '1QnTG' },
     { name: 'Ghoul Rank B', rank: 'D', exp: 9e12, hp: '10QnTG' },
@@ -19,19 +19,40 @@ export const world17Data = {
     { name: 'Kagune Rinkaku', rank: 'Incomum', rarity: 'Incomum', energy_bonus: '0.34x' },
     { name: 'Coruja de Um Olho', rank: 'Raro', rarity: 'Raro', energy_bonus: '0.51x' },
   ],
+  ghouls: [
+      { name: 'Ghoul Comum', rarity: 'Comum', energy_bonus: '5%', damage_bonus: '1%' },
+      { name: 'Ghoul Incomum', rarity: 'Incomum', energy_bonus: '7.5%', damage_bonus: '1.5%' },
+      { name: 'Ghoul Raro', rarity: 'Raro', energy_bonus: '10%', damage_bonus: '2%' },
+      { name: 'Ghoul Épico', rarity: 'Épico', energy_bonus: '12.5%', damage_bonus: '2.5%' },
+      { name: 'Ghoul Lendário', rarity: 'Lendário', energy_bonus: '15%', damage_bonus: '3%' },
+      { name: 'Ghoul Mítico', rarity: 'Mítico', energy_bonus: '20%', damage_bonus: '5%' },
+      { name: 'Ghoul Phantom', rarity: 'Phantom', energy_bonus: '25%', damage_bonus: '7.5%' },
+      { name: 'Ghoul Supremo', rarity: 'Supremo', energy_bonus: '30%', damage_bonus: '10%' },
+  ],
+  powers: [
+      {
+          name: "Kagune Leveling",
+          type: "progression",
+          statType: "damage",
+          maxLevel: 50,
+          maxBoost: "+50% Damage (total)",
+          unlockCost: "Varia (usa Flesh Token)",
+          description: "Sistema de leveling para o poder Kagune, que aumenta seu dano base. O custo é em Flesh Tokens."
+      }
+  ],
   tables: {
-    ghouls: {
-        headers: ['Nome', 'Raridade', 'Bônus de Energia', 'Bônus de Dano'],
-        rows: [
-            { 'Nome': 'Ghoul Comum', 'Raridade': 'Comum', 'Bônus de Energia': '5%', 'Bônus de Dano': '1%' },
-            { 'Nome': 'Ghoul Incomum', 'Raridade': 'Incomum', 'Bônus de Energia': '7.5%', 'Bônus de Dano': '1.5%' },
-            { 'Nome': 'Ghoul Raro', 'Raridade': 'Raro', 'Bônus de Energia': '10%', 'Bônus de Dano': '2%' },
-            { 'Nome': 'Ghoul Épico', 'Raridade': 'Épico', 'Bônus de Energia': '12.5%', 'Bônus de Dano': '2.5%' },
-            { 'Nome': 'Ghoul Lendário', 'Raridade': 'Lendário', 'Bônus de Energia': '15%', 'Bônus de Dano': '3%' },
-            { 'Nome': 'Ghoul Mítico', 'Raridade': 'Mítico', 'Bônus de Energia': '20%', 'Bônus de Dano': '5%' },
-            { 'Nome': 'Ghoul Phantom', 'Raridade': 'Phantom', 'Bônus de Energia': '25%', 'Bônus de Dano': '7.5%' },
-            { 'Nome': 'Ghoul Supremo', 'Raridade': 'Supremo', 'Bônus de Energia': '30%', 'Bônus de Dano': '10%' },
-        ]
-    }
+      kaguneRarities: {
+          headers: ['Kagune', 'Raridade', 'Multiplicador de Dano'],
+          rows: [
+              { 'Kagune': 'Retto', 'Raridade': 'Comum', 'Multiplicador de Dano': '1x' },
+              { 'Kagune': 'Hakuro', 'Raridade': 'Incomum', 'Multiplicador de Dano': '1.5x' },
+              { 'Kagune': 'Shinku', 'Raridade': 'Raro', 'Multiplicador de Dano': '2x' },
+              { 'Kagune': 'Tetsuba', 'Raridade': 'Épico', 'Multiplicador de Dano': '3x' },
+              { 'Kagune': 'Shidare', 'Raridade': 'Lendário', 'Multiplicador de Dano': '5x' },
+              { 'Kagune': 'Hakuja', 'Raridade': 'Mítico', 'Multiplicador de Dano': '7x' },
+              { 'Kagune': 'Mukade', 'Raridade': 'Phantom', 'Multiplicador de Dano': '9x' },
+              { 'Kagune': 'Koumyaku', 'Raridade': 'Supremo', 'Multiplicador de Dano': '12x' },
+          ]
+      }
   }
 };
