@@ -14,11 +14,6 @@ export const world17Data = {
     { name: 'Kaneki', rank: 'S', exp: 4.2e13, hp: '343UTG' },
     { name: 'Arama', rank: 'SS', exp: 8.4e13, hp: '686UTG', drops: { aura: { name: 'Aura de Ghoul', probability: 0.05 } }, videoUrl: 'https://cdn.discordapp.com/attachments/1430337273794265250/1430338887196213278/ScreenRecording_10-21-2025_10-58-38_1.mov?ex=68fa1325&is=68f8c1a5&hm=9a34e7f09b898166e0819f706849d7fe410364eac27e09760790a9052a9042c3&' },
   ],
-  pets: [
-    { name: 'Máscara Ghoul', rank: 'Comum', rarity: 'Comum', energy_bonus: '0.17x' },
-    { name: 'Kagune Rinkaku', rank: 'Incomum', rarity: 'Incomum', energy_bonus: '0.34x' },
-    { name: 'Coruja de Um Olho', rank: 'Raro', rarity: 'Raro', energy_bonus: '0.51x' },
-  ],
   powers: [
     {
       name: "Poder do Investigador",
@@ -66,9 +61,8 @@ export const world17Data = {
         type: "progression",
         statType: "damage",
         maxLevel: 50,
-        maxBoost: "Varia com a raridade da Kagune",
         unlockCost: "Flesh Token",
-        description: "Sistema de leveling para o Poder do Kagune (dano), usando Flesh Tokens. O nível máximo é 50."
+        description: "Sistema de leveling para o Poder do Kagune (dano), usando Flesh Tokens. O nível máximo é 50 e o bônus final de dano varia com a raridade da Kagune."
     }
   ],
   accessories: [
@@ -78,7 +72,22 @@ export const world17Data = {
       world: 'Mundo 17', 
       boss: 'Ghoul Raid', 
       rarity: 'Variável',
-      description: `Um acessório que dropa da Ghoul Raid. Os bônus variam com a raridade:\nComum: 1x\nIncomum: 1.2x\nÉpico: 1.6x\nRaro: 1.4x\nLendário: 1.8x\nMítico: 2.0x\nPhantom: 2.4x\nSupremo: 3.0x`
+      description: 'Um acessório que dropa da Ghoul Raid. Os bônus são iguais para Energia, Dano e Moedas, e variam com a raridade.',
+      tables: {
+        bonuses: {
+          headers: ['Raridade', 'Bônus de Energia', 'Bônus de Dano', 'Bônus de Moedas'],
+          rows: [
+            { 'Raridade': 'Comum', 'Bônus de Energia': '1x', 'Bônus de Dano': '1x', 'Bônus de Moedas': '1x' },
+            { 'Raridade': 'Incomum', 'Bônus de Energia': '1.2x', 'Bônus de Dano': '1.2x', 'Bônus de Moedas': '1.2x' },
+            { 'Raridade': 'Raro', 'Bônus de Energia': '1.4x', 'Bônus de Dano': '1.4x', 'Bônus de Moedas': '1.4x' },
+            { 'Raridade': 'Épico', 'Bônus de Energia': '1.6x', 'Bônus de Dano': '1.6x', 'Bônus de Moedas': '1.6x' },
+            { 'Raridade': 'Lendário', 'Bônus de Energia': '1.8x', 'Bônus de Dano': '1.8x', 'Bônus de Moedas': '1.8x' },
+            { 'Raridade': 'Mítico', 'Bônus de Energia': '2.0x', 'Bônus de Dano': '2.0x', 'Bônus de Moedas': '2.0x' },
+            { 'Raridade': 'Phantom', 'Bônus de Energia': '2.4x', 'Bônus de Dano': '2.4x', 'Bônus de Moedas': '2.4x' },
+            { 'Raridade': 'Supremo', 'Bônus de Energia': '3.0x', 'Bônus de Dano': '3.0x', 'Bônus de Moedas': '3.0x' },
+          ]
+        }
+      }
     }
   ],
   dungeons: [
