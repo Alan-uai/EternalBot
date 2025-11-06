@@ -1,5 +1,5 @@
 // src/interactions/buttons/curate.js
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, StringSelectMenuBuilder, TextInputBuilder, TextStyle } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, StringSelectMenuBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { updateKnowledgeBase } from '../../ai/flows/update-knowledge-base.js';
 
 export const customIdPrefix = 'curate';
@@ -139,10 +139,13 @@ async function handleLearnSubmit(interaction, { client }) {
 export async function handleInteraction(interaction, container) {
     const [prefix, action, ...params] = interaction.customId.split('_');
 
+    if (prefix !== 'curate') return;
+
     if (interaction.isButton()) {
         if (action === 'fixed') {
             await handleFixed(interaction, container);
         } else if (action === 'learn') {
+            const curationMessageId = params[0];
             await handleApproveAndLearn(interaction, container);
         } else if (action === 'approve') {
             await handleApproveOnly(interaction, container);
