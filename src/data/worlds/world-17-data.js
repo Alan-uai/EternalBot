@@ -2,9 +2,9 @@
 export const world17Data = {
   id: 'world-17',
   title: 'Mundo 17 - Ilha dos Investigadores',
-  summary: 'Mundo sombrio que introduz os poderes de Investigadores e Kagunes, e a progressão de Damage Cells.',
-  content: 'Este mundo introduz dois novos tipos de poderes gacha: Investigadores (energia) e Kagunes (dano). A progressão principal é através do poder "Damage Cells".',
-  tags: ['investigadores', 'kagune', 'mundo 17', '17', 'guia', 'geral', 'damage cells'],
+  summary: 'Mundo sombrio que introduz os poderes de Investigadores e Kagunes, a progressão de Damage Cells, e a Ghoul Raid.',
+  content: 'Este mundo introduz dois novos tipos de poderes gacha: Investigadores (energia) e Kagunes (dano). As progressões principais são através dos poderes "Damage Cells" e "Kagune Leveling".',
+  tags: ['investigadores', 'kagune', 'mundo 17', '17', 'guia', 'geral', 'damage cells', 'ghoul raid', 'ghoul mask'],
   npcs: [
     { name: 'Ghoul Rank C', rank: 'E', exp: 6e12, hp: '1QnTG' },
     { name: 'Ghoul Rank B', rank: 'D', exp: 9e12, hp: '10QnTG' },
@@ -60,6 +60,32 @@ export const world17Data = {
         maxBoost: "1.10x Damage",
         unlockCost: "Varia",
         description: "Poder de progressão que aumenta o dano."
+    },
+    {
+        name: "Kagune Leveling",
+        type: "progression",
+        statType: "damage",
+        maxLevel: 50,
+        maxBoost: "Varia com a raridade da Kagune",
+        unlockCost: "Flesh Token",
+        description: "Sistema de leveling para o Poder do Kagune (dano), usando Flesh Tokens. O nível máximo é 50."
     }
   ],
+  accessories: [
+    { 
+      id: 'ghoul-mask', 
+      name: 'Ghoul Mask', 
+      world: 'Mundo 17', 
+      boss: 'Ghoul Raid', 
+      rarity: 'Variável',
+      description: `Um acessório que dropa da Ghoul Raid. Os bônus variam com a raridade:\nComum: 1x\nIncomum: 1.2x\nÉpico: 1.6x\nRaro: 1.4x\nLendário: 1.8x\nMítico: 2.0x\nPhantom: 2.4x\nSupremo: 3.0x`
+    }
+  ],
+  dungeons: [
+    { 
+      name: 'Ghoul Raid', 
+      boss: 'Desconhecido', 
+      description: 'Uma raid no Mundo 17 onde se pode obter o acessório Ghoul Mask e Flesh Tokens.'
+    }
+  ]
 };
