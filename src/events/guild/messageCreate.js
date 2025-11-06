@@ -67,17 +67,14 @@ export async function execute(message) {
                 const questionMessageInModChannel = await modChannel.messages.fetch(originalCurationMessageId);
 
                 if (questionMessageInModChannel) {
-                    // Armazena múltiplas respostas sugeridas
                     let suggestedAnswers = client.container.interactions.get(`suggested_answers_${originalCurationMessageId}`) || [];
                     suggestedAnswers.push({
                         user: message.author.username,
                         userId: message.author.id,
-                        content: message.content,
-                        approved: false // Novo estado
+                        content: message.content
                     });
                     client.container.interactions.set(`suggested_answers_${originalCurationMessageId}`, suggestedAnswers);
-
-                    // Cria ou atualiza o menu de seleção
+                    
                     const selectMenu = new StringSelectMenuBuilder()
                         .setCustomId(`curate_select_${originalCurationMessageId}`)
                         .setPlaceholder('Analisar uma resposta sugerida...')
@@ -88,19 +85,14 @@ export async function execute(message) {
                         })));
                     
                     const menuRow = new ActionRowBuilder().addComponents(selectMenu);
+                    const buttonRow = questionMessageInModChannel.components[0];
                     
-                    const originalEmbed = questionMessageInModChannel.embeds[0];
-                    const updatedEmbed = EmbedBuilder.from(originalEmbed)
-                         .setColor(0xFFA500) // Laranja para "respostas pendentes"
+                    const updatedEmbed = EmbedBuilder.from(questionMessageInModChannel.embeds[0])
+                         .setColor(0xFFA500)
                          .setFooter({ text: `${suggestedAnswers.length} resposta(s) da comunidade aguardando análise.`});
 
-                    // Adiciona o botão de "Corrigido" se for a primeira resposta
-                    const components = questionMessageInModChannel.components.length > 1 
-                        ? [menuRow, questionMessageInModChannel.components[1]] 
-                        : [menuRow, questionMessageInModChannel.components[0]]; // Mantém o botão 'Corrigido'
-                    
-                    await questionMessageInModChannel.edit({ embeds: [updatedEmbed], components: components });
-                    await message.react('👍'); // React to the helpful message
+                    await questionMessageInModChannel.edit({ embeds: [updatedEmbed], components: [menuRow, buttonRow] });
+                    await message.react('👍');
                 }
             }
         } catch (error) {
