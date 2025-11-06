@@ -62,7 +62,7 @@ export const world17Data = {
         statType: "damage",
         maxLevel: 50,
         unlockCost: "Flesh Token",
-        description: "Sistema de leveling para o Poder do Kagune (dano), usando Flesh Tokens. O nível máximo é 50 e o bônus final de dano varia com a raridade da Kagune."
+        description: "Sistema de leveling para o Poder do Kagune (dano), usando Flesh Tokens. O nível máximo é 50 e o bônus final de dano varia com a raridade da Kagune. No nível máximo (50) com uma Kagune de raridade Suprema, o bônus de dano é 18x."
     }
   ],
   accessories: [
