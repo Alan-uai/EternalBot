@@ -87,7 +87,7 @@ export const world2Data = {
     }
   ],
   accessories: [
-    { id: 'bandana-pirata', name: 'Bandana Pirata', world: 'Mundo 2', boss: 'Capitão Pirata', rarity: 'Incomum', coins_bonus: '0.05' }
+    { id: 'armless-cloak', name: 'Armless Cloak', world: 'Mundo 2', boss: 'Shanks', rarity: 'Phantom', damage_bonus: '0.1x' }
   ],
   dungeons: [
     { 
@@ -113,3 +113,5 @@ export const world2Data = {
     }
   ]
 }
+
+    
