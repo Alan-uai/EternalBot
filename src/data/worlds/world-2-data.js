@@ -5,13 +5,13 @@ export const world2Data = {
   summary: 'Mundo temático de piratas, focado em moedas e dano. Introduz o chefe Shanks.',
   content: 'Mundo temático de piratas. Aqui é possível fabricar la espada Phantom "Venomstrike" no "Sword Exchanger", usando 20 espadas Míticas "Redmourne", 10B de Moedas e 5 Cristais Vermelhos (dano).',
   npcs: [
-    { name: 'Nomi', rank: 'E', exp: 150, hp: '100M' },
-    { name: 'Usup', rank: 'D', exp: 250, hp: '500M' },
-    { name: 'Robins', rank: 'C', exp: 400, hp: '1B' },
-    { name: 'Senji', rank: 'B', exp: 600, hp: '10B' },
-    { name: 'Zaro', rank: 'A', exp: 850, hp: '50B' },
-    { name: 'Luffy', rank: 'S', exp: 1200, hp: '2.5sx' },
-    { name: 'Shanks', rank: 'SS', exp: 2500, hp: '5sx', drops: { aura: { name: 'Aura do Imperador Vermelho', probability: 0.05 } }, videoUrl: 'https://cdn.discordapp.com/attachments/1430337273794265250/1430337623989157898/ScreenRecording_10-21-2025_10-30-18_1.mov?ex=68fa11f7&is=68f8c077&hm=545bf96550f91648d3cb19976024f9177520781ec5a21df3210a4c85af955e54&' },
+    { name: 'Nomi', rank: 'E', exp: 150, hp: '4.5B', drops: { coins: { amount: 'x500', probability: 1 }, pirate_crew_token: { amount: 'x1-5', probability: 0.1 }, sword_token: { amount: 'x1-5', probability: 0.1 }, haki_token: { amount: 'x1-5', probability: 0.1 }, exp: { amount: 'x9', probability: 1 }, avatar_soul: { amount: 1, probability: 0.1 } } },
+    { name: 'Usup', rank: 'D', exp: 250, hp: '70B', drops: { coins: { amount: 'x1k', probability: 1 }, pirate_crew_token: { amount: 'x1-5', probability: 0.1 }, sword_token: { amount: 'x1-5', probability: 0.1 }, haki_token: { amount: 'x1-5', probability: 0.1 }, exp: { amount: 'x10', probability: 1 }, avatar_soul: { amount: 1, probability: 0.11 } } },
+    { name: 'Robins', rank: 'C', exp: 400, hp: '250B', drops: { coins: { amount: 'x1.5k', probability: 1 }, pirate_crew_token: { amount: 'x1-5', probability: 0.1 }, sword_token: { amount: 'x1-5', probability: 0.1 }, haki_token: { amount: 'x1-5', probability: 0.1 }, exp: { amount: 'x11', probability: 1 }, avatar_soul: { amount: 1, probability: 0.125 } } },
+    { name: 'Senji', rank: 'B', exp: 600, hp: '1.2T', drops: { coins: { amount: 'x2k', probability: 1 }, pirate_crew_token: { amount: 'x1-5', probability: 0.1 }, sword_token: { amount: 'x1-5', probability: 0.1 }, haki_token: { amount: 'x1-5', probability: 0.1 }, exp: { amount: 'x12', probability: 1 }, avatar_soul: { amount: 1, probability: 0.15 } } },
+    { name: 'Zaro', rank: 'A', exp: 850, hp: '12T', drops: { coins: { amount: 'x2.5k', probability: 1 }, demon_fruit_token: { amount: 'x1-5', probability: 0.1 }, sword_token: { amount: 'x1-5', probability: 0.1 }, haki_token: { amount: 'x1-5', probability: 0.1 }, exp: { amount: 'x13', probability: 1 }, avatar_soul: { amount: 1, probability: 0.20 } } },
+    { name: 'Loffy', rank: 'S', exp: 1200, hp: '120T', drops: { coins: { amount: 'x3k', probability: 1 }, demon_fruit_token: { amount: 'x1-5', probability: 0.1 }, sword_token: { amount: 'x1-5', probability: 0.1 }, haki_token: { amount: 'x1-5', probability: 0.1 }, exp: { amount: 'x14', probability: 1 }, avatar_soul: { amount: 1, probability: 0.25 } } },
+    { name: 'Shanks', rank: 'SS', exp: 2500, hp: '5sx', drops: { coins: { amount: 'x7k', probability: 1 }, demon_fruit_token: { amount: 'x3-5', probability: 0.1 }, pirate_crew_token: { amount: 'x3-5', probability: 0.1 }, haki_token: { amount: 'x3-5', probability: 0.1 }, exp: { amount: 'x30', probability: 1 }, avatar_soul: { amount: 1, probability: 0.5 }, armless_cloak: { probability: 0.25 }, red_emperor_aura: { probability: 0.01 } }, videoUrl: 'https://cdn.discordapp.com/attachments/1430337273794265250/1430337623989157898/ScreenRecording_10-21-2025_10-30-18_1.mov?ex=68fa11f7&is=68f8c077&hm=545bf96550f91648d3cb19976024f9177520781ec5a21df3210a4c85af955e54&' },
   ],
   pets: [
     { name: 'Nomi', rarity: 'Comum', energy_bonus: '8' },
@@ -19,7 +19,7 @@ export const world2Data = {
     { name: 'Robins', rarity: 'Raro', energy_bonus: '23' },
     { name: 'Senji', rarity: 'Épico', energy_bonus: '30' },
     { name: 'Zaro', rarity: 'Lendário', energy_bonus: '38' },
-    { name: 'Luffy', rarity: 'Mítico', energy_bonus: '50' },
+    { name: 'Loffy', rarity: 'Mítico', energy_bonus: '50' },
     { name: 'Shanks', rarity: 'Phantom', energy_bonus: '113' },
   ],
   powers: [
@@ -57,8 +57,8 @@ export const world2Data = {
     {
         name: "Demon Fruit",
         type: "gacha",
-        statType: "mixed",
         description: "Também são conhecidas como Akuma no Mi.",
+        statType: "mixed",
         unlockCost: "1.5k",
         stats: [
             { name: "Bomb Fruit", statType: "energy", multiplier: "2x", rarity: "Comum" },
@@ -71,8 +71,8 @@ export const world2Data = {
             { name: "String Fruit", statType: "energy", multiplier: "9x", rarity: "Épico" },
             { name: "Human Fruit", statType: "energy", multiplier: "10x", rarity: "Lendário" },
             { name: "Dark Fruit", statType: "energy", multiplier: "11x", rarity: "Lendário" },
-            { name: "Quake Fruit", statType: "energy", multiplier: "12x", rarity: "Mítico" },
             { name: "Money Fruit", statType: "coin", multiplier: "1x", rarity: "Mítico" },
+            { name: "Quake Fruit", statType: "energy", multiplier: "12x", rarity: "Mítico" },
             { name: "Phoenix Fruit", statType: "energy", multiplier: "15x", rarity: "Mítico" },
             { name: "Dough Fruit", statType: "damage", multiplier: "10x", rarity: "Phantom" }
         ]
