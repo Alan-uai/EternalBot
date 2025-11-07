@@ -5,13 +5,13 @@ export const world1Data = {
   summary: 'O mundo inicial e hub central do jogo. Lar do Kid Kohan, do Lobby de Dungeons, do local de Prestígio e das missões iniciais.',
   content: 'O Mundo 1 é a área principal onde você encontrará a maioria dos sistemas de progressão do jogo. É aqui que se localiza o Lobby de Dungeons, o local de Prestígio, a loja de comidas (egg, chocolate, milk, donuts, hot sausage), os baús de recompensa (diário, comum, comunidade, vip, premium) e os placares de líderes (leaderboards).',
   npcs: [
-    { name: 'Kriluni', rank: 'E', exp: 1, hp: '5k', drops: { coins: { amount: 'x50', probability: 1 }, dragon_race_token: { amount: 'x1-5', probability: 0.1 }, exp: { amount: 'x1', probability: 1 }, avatar_soul: { amount: 1, probability: 0.1 }, avatar: { probability: 0.01 } } },
-    { name: 'Ymicha', rank: 'D', exp: 2, hp: '230k', drops: { coins: { amount: 'x100', probability: 1 }, dragon_race_token: { amount: 'x1-5', probability: 0.1 }, exp: { amount: 'x2', probability: 1 }, avatar_soul: { amount: 1, probability: 0.11 }, avatar: { probability: 0.01 } } },
-    { name: 'Tian Shan', rank: 'C', exp: 3, hp: '5M', drops: { coins: { amount: 'x150', probability: 1 }, dragon_race_token: { amount: 'x1-5', probability: 0.1 }, exp: { amount: 'x3', probability: 1 }, avatar_soul: { amount: 1, probability: 0.125 }, avatar: { probability: 0.01 } } },
-    { name: 'Kohan', rank: 'B', exp: 4, hp: '30M', drops: { coins: { amount: 'x200', probability: 1 }, dragon_race_token: { amount: 'x1-5', probability: 0.1 }, exp: { amount: 'x4', probability: 1 }, avatar_soul: { amount: 1, probability: 0.15 }, avatar: { probability: 0.01 } } },
-    { name: 'Picco', rank: 'A', exp: 5, hp: '100M', drops: { coins: { amount: 'x250', probability: 1 }, dragon_race_token: { amount: 'x1-5', probability: 0.1 }, exp: { amount: 'x5', probability: 1 }, avatar_soul: { amount: 1, probability: 0.20 }, avatar: { probability: 0.01 } } },
-    { name: 'Koku', rank: 'S', exp: 6, hp: '240M', drops: { coins: { amount: 'x300', probability: 1 }, saiyan_token: { amount: 'x3-5', probability: 0.1 }, exp: { amount: 'x6', probability: 1 }, avatar_soul: { amount: 1, probability: 0.25 }, avatar: { probability: 0.01 } } },
-    { name: 'Kid Kohan', rank: 'SS', exp: 15, hp: '2.5Qd', drops: { coins: { amount: 'x700', probability: 1 }, saiyan_token: { amount: 'x3-5', probability: 0.1 }, dragon_race_token: { amount: 'x3-5', probability: 0.1 }, exp: { amount: 'x15', probability: 1 }, avatar_soul: { amount: 1, probability: 0.5 }, four_star_hat: { probability: 0.25 }, luck_aura: { probability: 0.01 }, avatar: { probability: 0.01 } }, videoUrl: 'https://cdn.discordapp.com/attachments/1430337273794265250/1430337506850902126/ScreenRecording_10-21-2025_10-29-41_1.mov?ex=68fa11dc&is=68f8c05c&hm=427738471ba4c03c65ded4771f410444eb190deb54be08eecc33c0ff00286c7f&' },
+    { name: 'Kriluni', rank: 'E', exp: 1, hp: '5k', drops: { coins: { amount: 'x50', probability: 1 }, dragon_race_token: { amount: 'x1-5', probability: 0.1 }, exp: { amount: 'x1', probability: 1 }, avatar: { probability: 0.01 } } },
+    { name: 'Ymicha', rank: 'D', exp: 2, hp: '230k', drops: { coins: { amount: 'x100', probability: 1 }, dragon_race_token: { amount: 'x1-5', probability: 0.1 }, exp: { amount: 'x2', probability: 1 }, avatar: { probability: 0.01 } } },
+    { name: 'Tian Shan', rank: 'C', exp: 3, hp: '5M', drops: { coins: { amount: 'x150', probability: 1 }, dragon_race_token: { amount: 'x1-5', probability: 0.1 }, exp: { amount: 'x3', probability: 1 }, avatar: { probability: 0.01 } } },
+    { name: 'Kohan', rank: 'B', exp: 4, hp: '30M', drops: { coins: { amount: 'x200', probability: 1 }, dragon_race_token: { amount: 'x1-5', probability: 0.1 }, exp: { amount: 'x4', probability: 1 }, avatar: { probability: 0.01 } } },
+    { name: 'Picco', rank: 'A', exp: 5, hp: '100M', drops: { coins: { amount: 'x250', probability: 1 }, dragon_race_token: { amount: 'x1-5', probability: 0.1 }, exp: { amount: 'x5', probability: 1 }, avatar: { probability: 0.01 } } },
+    { name: 'Koku', rank: 'S', exp: 6, hp: '240M', drops: { coins: { amount: 'x300', probability: 1 }, saiyan_token: { amount: 'x3-5', probability: 0.1 }, exp: { amount: 'x6', probability: 1 }, avatar: { probability: 0.01 } } },
+    { name: 'Kid Kohan', rank: 'SS', exp: 15, hp: '2.5Qd', drops: { coins: { amount: 'x700', probability: 1 }, saiyan_token: { amount: 'x3-5', probability: 0.1 }, dragon_race_token: { amount: 'x3-5', probability: 0.1 }, exp: { amount: 'x15', probability: 1 }, four_star_hat: { probability: 0.25 }, luck_aura: { probability: 0.01 }, avatar: { probability: 0.01 } }, videoUrl: 'https://cdn.discordapp.com/attachments/1430337273794265250/1430337506850902126/ScreenRecording_10-21-2025_10-29-41_1.mov?ex=68fa11dc&is=68f8c05c&hm=427738471ba4c03c65ded4771f410444eb190deb54be08eecc33c0ff00286c7f&' },
   ],
   pets: [
     { name: 'Kriluni', rarity: 'Comum', energy_bonus: '3' },
@@ -187,6 +187,29 @@ export const world1Data = {
         name: 'Missão Diária #7',
         requirement: 'Derrotar 50 inimigos na Masmorra.',
         rewards: ['1x Chave de Incursão', '1x Chave de Mundo', '1x Chave de Masmorra']
+    }
+  ],
+  obelisks: [
+    {
+      id: 'dragon-obelisk',
+      name: 'Dragon Obelisk',
+      description: 'Um obelisco comum que fornece bônus permanentes após completar uma missão.',
+      mission: {
+        name: 'Missão #1',
+        requirement: 'Derrotar Kid Kohan 10 vezes.',
+        rewards: [
+          { name: 'Obelisk Part', amount: 1 },
+          { name: 'Star Luck', amount: '5%' },
+          { name: 'Experiência', amount: '1.5k' },
+          { name: 'Alma do Avatar', amount: 100 },
+          { name: 'Poção de Energia', amount: 1 }
+        ]
+      },
+      boosts: [
+        { type: 'Energy Multiply', value: '0.15x' },
+        { type: 'Damage Multiply', value: '0.25x' },
+        { type: 'Exp Percent', value: '3.5%' }
+      ]
     }
   ]
 };
