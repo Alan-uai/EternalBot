@@ -3,6 +3,7 @@ export const world2Data = {
   id: 'world-2',
   title: 'Mundo 2 - Ilha do Moinho',
   summary: 'Mundo temático de piratas, focado em moedas e dano. Introduz o chefe Shanks.',
+  content: 'Mundo temático de piratas. Aqui é possível fabricar a espada Phantom "Venomstrike" no "Sword Exchanger", usando 20 espadas Míticas "Redmourne", 10B de Moedas e 5 Cristais Vermelhos (dano).',
   npcs: [
     { name: 'Marinheiro Pirata', rank: 'E', exp: 150, hp: '100M' },
     { name: 'Espadachim Pirata', rank: 'D', exp: 250, hp: '500M' },
@@ -19,29 +20,42 @@ export const world2Data = {
   ],
   powers: [
     {
-      name: 'Poder do Pirata',
+      name: 'Pirate Crew',
       type: 'gacha',
-      statType: 'coin',
+      statType: 'energy',
       unlockCost: '1k',
       stats: [
-        { name: 'Tesouro Pequeno', multiplier: '1.2x', rarity: 'Comum', probability: 45 },
-        { name: 'Tesouro Grande', multiplier: '1.8x', rarity: 'Raro', probability: 15 },
-        { name: 'Conquistador', multiplier: '2.5x', rarity: 'Phantom', probability: 0.4 },
+        { name: 'Whitebeard Pirates', multiplier: '2x', rarity: 'Comum' },
+        { name: 'Cross Guild', multiplier: '3x', rarity: 'Incomum' },
+        { name: 'Big Mom Pirates', multiplier: '4x', rarity: 'Raro' },
+        { name: 'Beast Pirates', multiplier: '5x', rarity: 'Épico' },
+        { name: 'Blackbeard Pirates', multiplier: '8x', rarity: 'Lendário' },
+        { name: 'Straw Hat Pirates', multiplier: '10x', rarity: 'Mítico' },
+        { name: 'Red-Haired Pirates', multiplier: '12x', rarity: 'Phantom' },
       ],
     },
     {
-      name: 'Força do Espadachim',
-      type: 'progression',
+      name: 'Chef Power',
+      type: 'gacha',
       statType: 'damage',
-      maxLevel: 15,
-      maxBoost: '15% Damage',
-      unlockCost: '5k',
+      unlockCost: 'Varia',
+      description: 'Obtido na Restaurant Raid.',
+      stats: [
+        { name: 'Common Chef', multiplier: '1x', rarity: 'Comum' },
+        { name: 'Uncommon Chef', multiplier: '1.5x', rarity: 'Incomum' },
+        { name: 'Rare Chef', multiplier: '2x', rarity: 'Raro' },
+        { name: 'Epic Chef', multiplier: '3x', rarity: 'Épico' },
+        { name: 'Legendary Chef', multiplier: '5x', rarity: 'Lendário' },
+        { name: 'Mythical Chef', multiplier: '7x', rarity: 'Mítico' },
+        { name: 'Phantom Chef', multiplier: '10x', rarity: 'Phantom' },
+      ],
     },
   ],
   accessories: [
     { id: 'bandana-pirata', name: 'Bandana Pirata', world: 'Mundo 2', boss: 'Capitão Pirata', rarity: 'Incomum', coins_bonus: '0.05' }
   ],
   dungeons: [
-    { name: 'Caverna do Tesouro', boss: 'Rei dos Mares', description: 'Uma caverna cheia de tesouros guardada por um monstro marinho.'}
+    { name: 'Caverna do Tesouro', boss: 'Rei dos Mares', description: 'Uma caverna cheia de tesouros guardada por um monstro marinho.'},
+    { name: 'Restaurant Raid', boss: 'Big Mom', description: 'Uma raid com 1000 waves onde se obtém o Chef Power.'}
   ]
 };
