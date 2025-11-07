@@ -111,7 +111,7 @@ export const world2Data = {
     { 
       name: 'Restaurant Raid', 
       boss: 'Big Mom', 
-      description: 'Uma raid com 1000 waves onde se obtém o Chef Power.',
+      description: 'Uma raid com 1000 waves. A cada piso, há uma chance de obter tokens (simulado pela "Restaurant Box") e o Chef Power (simulado pela "Chef Power Box"). A Lunch Box é um item que dropa fisicamente para ser aberto depois. Auras e poções de drop podem aumentar a quantidade de tokens obtidos por piso.',
       rewards: {
         general: [
             { item: 'Avatar Soul', amount: 'x1', probability: 0.25 },
@@ -160,7 +160,6 @@ export const world2Data = {
             { 'Conquista': 'Restaurant Raid V', 'Requisito': 'Reach Wave 50', 'Bônus': '5% Damage' },
             { 'Conquista': 'Restaurant Raid VI', 'Requisito': 'Reach Wave 100', 'Bônus': '100 Credits' },
             { 'Conquista': 'Restaurant Raid VII', 'Requisito': 'Reach Wave 200', 'Bônus': '10% Damage' },
-            { 'Conquista': 'Restaurant Raid VIII', 'Requisito': 'Reach Wave 300', 'Bônus': '15% Star Luck' },
             { 'Conquista': 'Restaurant Raid IX', 'Requisito': 'Reach Wave 500', 'Bônus': '15% Damage' },
             { 'Conquista': 'Restaurant Raid X', 'Requisito': 'Reach Wave 750', 'Bônus': '20% Star Luck' },
             { 'Conquista': 'Restaurant Raid XI', 'Requisito': 'Reach Wave 1000', 'Bônus': '150 Credits' },
