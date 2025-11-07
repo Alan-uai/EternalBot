@@ -15,22 +15,52 @@ export const world3Data = {
     { name: 'Hime', rarity: 'Comum', energy_bonus: '19' },
     { name: 'Ichige', rarity: 'Incomum', energy_bonus: '38' },
     { name: 'Uryua', rarity: 'Raro', energy_bonus: '56' },
-    { name: 'Rakiu', rarity: 'Raro', energy_bonus: '75' },
-    { name: 'Yoichi', rarity: 'Épico', energy_bonus: '94' },
+    { name: 'Rakiu', rarity: 'Épico', energy_bonus: '75' },
+    { name: 'Yoichi', rarity: 'Lendário', energy_bonus: '94' },
     { name: 'Kahara', rarity: 'Mítico', energy_bonus: '125' },
     { name: 'Eizen', rarity: 'Phantom', energy_bonus: '281' },
   ],
   powers: [
     {
-      name: 'Shinigami Power',
+      name: 'Reiatsu Color',
       type: 'gacha',
       statType: 'energy',
       unlockCost: '10k',
       stats: [
-        { name: 'Shikai', multiplier: '1.5x', rarity: 'Comum', probability: 40 },
-        { name: 'Bankai', multiplier: '2.5x', rarity: 'Raro', probability: 10 },
-        { name: 'Final Getsuga Tenshou', multiplier: '4x', rarity: 'Phantom', probability: 0.3, energy_crit_bonus: '1.00%' },
+        { name: 'Gray Reiatsu', multiplier: '2x', rarity: 'Comum' },
+        { name: 'Green Reiatsu', multiplier: '3x', rarity: 'Incomum' },
+        { name: 'Blue Reiatsu', multiplier: '4x', rarity: 'Raro' },
+        { name: 'Pink Reiatsu', multiplier: '5x', rarity: 'Épico' },
+        { name: 'Yellow Reiatsu', multiplier: '8x', rarity: 'Lendário' },
+        { name: 'Red Reiatsu', multiplier: '10x', rarity: 'Mítico' },
+        { name: 'Black Reiatsu', multiplier: '12x', rarity: 'Phantom' },
       ],
+    },
+    {
+      name: 'Zanpakuto',
+      type: 'gacha',
+      statType: 'damage',
+      unlockCost: '10k',
+      stats: [
+        { name: 'Common', multiplier: '2x', rarity: 'Comum' },
+        { name: 'Uncommon', multiplier: '3x', rarity: 'Incomum' },
+        { name: 'Rare', multiplier: '4x', rarity: 'Raro' },
+        { name: 'Epic', multiplier: '5x', rarity: 'Épico' },
+        { name: 'Legendary', multiplier: '6x', rarity: 'Lendário' },
+        { name: 'Mythical', multiplier: '7.5x', rarity: 'Mítico' },
+        { name: 'Phantom', multiplier: '10x', rarity: 'Phantom' },
+      ],
+    },
+    {
+        name: "Spiritual Pressure",
+        type: "progression",
+        statType: "mixed",
+        maxLevel: 210,
+        boosts: [
+            { type: "damage", value: "1.01x" },
+            { type: "energy", value: "1.11x" }
+        ],
+        unlockCost: "Varia"
     },
     {
       name: 'Hero License Quest',
