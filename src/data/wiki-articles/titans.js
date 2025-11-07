@@ -27,7 +27,7 @@ export const titansArticle = {
         { 'Titã (1 Estrela)': 'Beast Titan', 'Tempo de Ataque': '1s', 'Dano de Ataque': '22.5%' },
         { 'Titã (1 Estrela)': 'Armored Titan', 'Tempo de Ataque': '1s', 'Dano de Ataque': '30%' },
         { 'Titã (1 Estrela)': 'Warhammer Titan', 'Tempo de Ataque': '1s', 'Dano de Ataque': '37.5%' },
-        { 'Titã (1 Estrela)': 'Attack Titan', 'Tempo de Ataque': '1s', 'Dano de Ataque': '45.0%' },
+        { 'Titã (1 Estrela)': 'Attack Titan', 'Tempo de Ataque': '1s', 'Dano de Ataque': '45%' },
         { 'Titã (1 Estrela)': 'Colossal Titan', 'Tempo de Ataque': '1s', 'Dano de Ataque': '60%' },
       ],
     },
