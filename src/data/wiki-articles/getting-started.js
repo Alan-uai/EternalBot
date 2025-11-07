@@ -23,7 +23,10 @@ No jogo, a cor de fundo do nome de um item indica sua raridade:
 *   **Hub Central:** O Mundo 1 é a área principal onde você encontrará a maioria dos sistemas de progressão do jogo.
 *   **Lobby de Dungeons:** Acesse uma variedade de dungeons especiais que ocorrem em horários fixos. As dungeons de lobby são: **Fácil, Média, Difícil, Insana, Louca, Pesadelo e Folha**.
 *   **Local de Prestígio:** É aqui que você pode prestigiar seu personagem para ganhar bônus permanentes e aumentar seu limite de nível.
-*   **Placares de Líderes e Missões Diárias:** Confira os melhores jogadores e complete missões diárias para obter recompensas valiosas.
+*   **Placares de Líderes (Leaderboards):** Confira os melhores jogadores em diversas categorias.
+*   **Missões Diárias:** Complete missões diárias para obter recompensas valiosas.
+*   **Loja de Comidas:** Compre consumíveis como Ovo, Chocolate, Leite, Donuts e Salsicha Quente para bônus temporários.
+*   **Baús de Recompensa:** Abra baús gratuitos (Comum, Comunidade) e pagos (VIP, Premium) para obter itens.
 *   **Dungeon do Mundo - Torneio:** A primeira dungeon específica do mundo, o Torneio, vai até a Sala 550.
 *   **Raids de Evento:** Eventos sazonais, como a **Halloween Raid**, também acontecem aqui.`,
     tags: ['iniciante', 'guia', 'novo jogador', 'classe', 'mundo 1', 'geral', '1', 'raridade', 'lobby', 'prestígio'],
