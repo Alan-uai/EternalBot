@@ -64,11 +64,11 @@ export const world2Data = {
             { name: "Magma Fruit", statType: "energy", multiplier: "7x", rarity: "Épico" },
             { name: "Revive Fruit", statType: "energy", multiplier: "8x", rarity: "Épico" },
             { name: "String Fruit", statType: "energy", multiplier: "9x", rarity: "Épico" },
-            { name: "Human Fruit", statType: "energy", multiplier: "10x", rarity: "Épico" },
+            { name: "Human Fruit", statType: "energy", multiplier: "10x", rarity: "Lendário" },
             { name: "Dark Fruit", statType: "energy", multiplier: "11x", rarity: "Lendário" },
             { name: "Quake Fruit", statType: "energy", multiplier: "12x", rarity: "Mítico" },
             { name: "Money Fruit", statType: "coin", multiplier: "1x", rarity: "Mítico" },
-            { name: "Phoenix Fruit", statType: "energy", multiplier: "15x", rarity: "Raro" },
+            { name: "Phoenix Fruit", statType: "energy", multiplier: "15x", rarity: "Mítico" },
             { name: "Dough Fruit", statType: "damage", multiplier: "10x", rarity: "Phantom" }
         ]
     },
@@ -88,4 +88,4 @@ export const world2Data = {
     { name: 'Caverna do Tesouro', boss: 'Rei dos Mares', description: 'Uma caverna cheia de tesouros guardada por um monstro marinho.'},
     { name: 'Restaurant Raid', boss: 'Big Mom', description: 'Uma raid com 1000 waves onde se obtém o Chef Power.'}
   ]
-};
+}
