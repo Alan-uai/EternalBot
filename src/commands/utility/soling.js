@@ -41,7 +41,7 @@ export function getAvailableRaids() {
         }
     });
     
-    // Adiciona raids do Halloween/Graveyard (Mundo 1)
+    // Adiciona raids do Halloween (Mundo 1)
     world1Data.dungeons.forEach(dungeon => {
         if (!soloRaids.includes(dungeon.name)) {
              allRaids.set(dungeon.name, {
@@ -51,6 +51,17 @@ export function getAvailableRaids() {
             });
         }
     });
+    
+    // Adiciona Graveyard Defense manualmente como evento
+    const graveyardRaidName = 'Graveyard Defense';
+    if (!allRaids.has(graveyardRaidName)) {
+        allRaids.set(graveyardRaidName, {
+            label: graveyardRaidName,
+            value: graveyardRaidName.toLowerCase().replace(/ /g, '_'),
+            category: 'event'
+        });
+    }
+
 
     // Adiciona raids do Mundo 20
     world20Data.dungeons.forEach(dungeon => {
