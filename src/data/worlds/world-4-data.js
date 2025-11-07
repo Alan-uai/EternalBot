@@ -74,8 +74,8 @@ export const world4Data = {
         name: 'Missão #1',
         requirement: 'Derrotar 30 Itodo',
         rewards: [
-            { name: 'World Key', amount: 1 },
             { name: 'Luck Potion', amount: 1 },
+            { name: 'World Key', amount: 1 },
             { name: 'Exp', amount: '1.17k' }
         ]
     },
