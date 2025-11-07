@@ -56,7 +56,7 @@ export const world2Data = {
         statType: "mixed",
         unlockCost: "1.5k",
         stats: [
-            { name: "Bomb Fruit", statType: "energy", multiplier: "2x", rarity: "Supremo" },
+            { name: "Bomb Fruit", statType: "energy", multiplier: "2x", rarity: "Comum" },
             { name: "Rubber Fruit", statType: "energy", multiplier: "3x", rarity: "Comum" },
             { name: "Sand Fruit", statType: "energy", multiplier: "4x", rarity: "Incomum" },
             { name: "Flame Fruit", statType: "energy", multiplier: "5x", rarity: "Incomum" },
@@ -64,12 +64,12 @@ export const world2Data = {
             { name: "Magma Fruit", statType: "energy", multiplier: "7x", rarity: "Épico" },
             { name: "Revive Fruit", statType: "energy", multiplier: "8x", rarity: "Épico" },
             { name: "String Fruit", statType: "energy", multiplier: "9x", rarity: "Épico" },
-            { name: "Human Fruit", statType: "coin", multiplier: "10x", rarity: "Lendário" },
-            { name: "Dark Fruit", statType: "coin", multiplier: "11x", rarity: "Lendário" },
-            { name: "Quake Fruit", statType: "damage", multiplier: "12x", rarity: "Mítico" },
-            { name: "Money Fruit", statType: "coin", multiplier: "1x", rarity: "Lendário" },
+            { name: "Human Fruit", statType: "energy", multiplier: "10x", rarity: "Épico" },
+            { name: "Dark Fruit", statType: "energy", multiplier: "11x", rarity: "Lendário" },
+            { name: "Quake Fruit", statType: "energy", multiplier: "12x", rarity: "Mítico" },
+            { name: "Money Fruit", statType: "coin", multiplier: "1x", rarity: "Mítico" },
             { name: "Phoenix Fruit", statType: "energy", multiplier: "15x", rarity: "Raro" },
-            { name: "Dough Fruit", statType: "energy", multiplier: "10x", rarity: "Phantom" }
+            { name: "Dough Fruit", statType: "damage", multiplier: "10x", rarity: "Phantom" }
         ]
     },
     {
