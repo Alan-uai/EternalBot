@@ -2,7 +2,7 @@
 export const world18Data = {
   id: 'world-18',
   title: 'Mundo 18 - Ilha da Motosserra',
-  summary: 'Mundo caótico com demônios e a Chainsaw Defense.',
+  summary: 'Mundo caótico com demônios, a Chainsaw Defense e o Ghost Power.',
   npcs: [
     { name: 'Zombie Devil', rank: 'E', exp: 3e13, hp: '1SpTG' },
     { name: 'Bat Devil', rank: 'D', exp: 4.5e13, hp: '10SpTG' },
@@ -20,6 +20,22 @@ export const world18Data = {
   ],
   powers: [
     {
+      name: 'Halloween Ghost Power',
+      type: 'gacha',
+      statType: 'energy',
+      description: 'Poder de energia do evento de Halloween, evoluído com "Eyes".',
+      stats: [
+        { name: 'Common Ghost', rarity: 'Common', stats: '0.5x', stats_lvl_100: '1x', cost: '11k Eyes' },
+        { name: 'Uncommon Ghost', rarity: 'Uncommon', stats: '1x', stats_lvl_100: '2x', cost: '21k Eyes' },
+        { name: 'Rare Ghost', rarity: 'Rare', stats: '1.5x', stats_lvl_100: '3x', cost: '31k Eyes' },
+        { name: 'Epic Ghost', rarity: 'Epic', stats: '2.5x', stats_lvl_100: '5x', cost: '41k Eyes' },
+        { name: 'Legendary Ghost', rarity: 'Legendary', stats: '3.5x', stats_lvl_100: '6.47x', cost: '50k Eyes' },
+        { name: 'Mythic Ghost', rarity: 'Mythic', stats: '5.5x', stats_lvl_100: '9.62x', cost: '60k Eyes' },
+        { name: 'Phantom Ghost', rarity: 'Phantom', stats: '7.5x', stats_lvl_100: '11.2x', cost: '70k Eyes' },
+        { name: 'Supreme Ghost', rarity: 'Supreme', stats: '10x', stats_lvl_100: '15x', cost: '200k Eyes' },
+      ],
+    },
+    {
       name: 'Hero License Quest',
       type: 'progression',
       statType: 'mixed',
@@ -30,5 +46,3 @@ export const world18Data = {
       { name: 'Chainsaw Defense', boss: 'Gun Devil', description: 'Uma raid de defesa contra hordas de demônios.'}
   ]
 };
-
-    
