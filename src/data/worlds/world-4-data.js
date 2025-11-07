@@ -3,6 +3,7 @@ export const world4Data = {
   id: 'world-4',
   title: 'Mundo 4 - Ilha dos Feiticeiros',
   summary: 'Um mundo infernal focado em dano e drops, com o chefe Sakuni.',
+  content: 'Mundo temático de Shinigamis. É aqui que os jogadores encontram a primeira espada de energia do jogo, a Zangetsu.',
   npcs: [
     { name: 'Itodo', rank: 'E', exp: 5000, hp: '100qd' },
     { name: 'Nebara', rank: 'D', exp: 7000, hp: '1Qn' },
@@ -93,7 +94,6 @@ export const world4Data = {
         requirement: 'Derrotar 20 Magum',
         rewards: [
             { name: 'World Key', amount: 1 },
-            { name: 'Pet Chest', amount: 1 },
             { name: 'Drop Percent', amount: '4%' },
             { name: 'Exp', amount: '2.58k' }
         ]
@@ -103,7 +103,6 @@ export const world4Data = {
         requirement: 'Derrotar 15 Meki',
         rewards: [
             { name: 'World Key', amount: 1 },
-            { name: 'Pet Chest', amount: 1 },
             { name: 'Drop Percent', amount: '4%' },
             { name: 'Exp', amount: '3.37k' }
         ]
@@ -125,8 +124,8 @@ export const world4Data = {
         rewards: [
             { name: 'Avatar Soul', amount: 10 },
             { name: 'Pet Chest', amount: 1 },
-            { name: 'World Key', amount: 1 },
             { name: 'Cursed Token', amount: 10 },
+            { name: 'World Key', amount: 1 },
             { name: 'Drop Percent', amount: '5%' },
             { name: 'Exp', amount: '4.8k' }
         ]
