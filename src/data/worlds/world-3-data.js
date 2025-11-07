@@ -45,5 +45,65 @@ export const world3Data = {
   ],
   dungeons: [
       { name: 'Las Noches', boss: 'Ulquiorra', description: 'O palácio dos Arrancars em Hueco Mundo.'}
+  ],
+  missions: [
+    {
+        name: 'Missão #1',
+        requirement: 'Derrotar 30 Hime',
+        rewards: [
+            { name: 'World Key', amount: 1 },
+            { name: 'Reiatsu Token', amount: 10 },
+            { name: 'Exp', amount: '630' }
+        ]
+    },
+    {
+        name: 'Missão #2',
+        requirement: 'Derrotar 25 Ichige',
+        rewards: [
+            { name: 'World Key', amount: 1 },
+            { name: 'Reiatsu Token', amount: 15 },
+            { name: 'Exp', amount: '800' }
+        ]
+    },
+    {
+        name: 'Missão #3',
+        requirement: 'Derrotar 20 Uryua',
+        rewards: [
+            { name: 'World Key', amount: 1 },
+            { name: 'Pet Chest', amount: 1 },
+            { name: 'Drop Percent', amount: '3%' },
+            { name: 'Exp', amount: '1.3k' }
+        ]
+    },
+    {
+        name: 'Missão #4',
+        requirement: 'Derrotar 15 Rakiu',
+        rewards: [
+            { name: 'World Key', amount: 1 },
+            { name: 'Drop Percent', amount: '3%' },
+            { name: 'Exp', amount: '1.8k' }
+        ]
+    },
+    {
+        name: 'Missão #5',
+        requirement: 'Derrotar 10 Yoichi',
+        rewards: [
+            { name: 'Avatar Soul', amount: 5 },
+            { name: 'Reiatsu Token', amount: 10 },
+            { name: 'World Key', amount: 1 },
+            { name: 'Exp', amount: '2.5k' }
+        ]
+    },
+    {
+        name: 'Missão #6',
+        requirement: 'Derrotar 5 Kahara',
+        rewards: [
+            { name: 'Avatar Soul', amount: 10 },
+            { name: 'Pet Chest', amount: 1 },
+            { name: 'Reiatsu Token', amount: 10 },
+            { name: 'World Key', amount: 1 },
+            { name: 'Exp', amount: '2.6k' }
+        ]
+    }
   ]
 };
