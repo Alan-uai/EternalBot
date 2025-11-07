@@ -42,6 +42,9 @@ A Halloween Bag funciona de forma similar ao poder "Adolla" do Mundo 19. Você c
 
 ### Dica de Farm
 Em média, completar a Raid de Halloween **duas vezes** ou obter cerca de **30.000 a 40.000 Halloween Candies** é suficiente para evoluir a Halloween Bag até sua forma Lendária com nível máximo.
+
+### Fighters do Evento
+Existem dois tipos de zumbis no jogo. Os de Energia são exclusivos do evento de Halloween. Os de Dano são encontrados no Mundo 25.
 `,
   tags: ['guia', 'evento', 'halloween', 'raid', 'halloween bag', 'progressão', 'mundo 1', 'energia', 'dano', 'moedas', 'imp tail', 'zombie'],
   tables: {
