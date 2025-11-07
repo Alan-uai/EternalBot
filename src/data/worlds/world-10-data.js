@@ -19,7 +19,7 @@ export const world10Data = {
   ],
   powers: [
     {
-      name: 'Poder Cibernético',
+      name: 'Cyborg Power',
       type: 'progression',
       statType: 'energy',
       maxLevel: 30,

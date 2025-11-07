@@ -19,7 +19,7 @@ export const world6Data = {
   ],
   powers: [
     {
-      name: 'Poder da Terra',
+      name: 'Earth Power',
       type: 'progression',
       statType: 'mixed',
       maxLevel: 25,

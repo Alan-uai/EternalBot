@@ -19,7 +19,7 @@ export const world3Data = {
   ],
   powers: [
     {
-      name: 'Poder Shinigami',
+      name: 'Shinigami Power',
       type: 'gacha',
       statType: 'energy',
       unlockCost: '10k',

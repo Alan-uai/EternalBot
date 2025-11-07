@@ -59,15 +59,15 @@ export const world1Data = {
       statType: 'mixed',
       description: "Uma questline da Classe F iniciada no Mundo 1. Suas missões se estendem por vários mundos (1-5 e Lobby) e o jogador só pode aceitar uma missão desta categoria por vez.",
       missions: [
-          { name: 'F Class Quest #1', world: 1, requirement: 'Derrotar 100 Kriluni', rewards: [{name: 'Chave de Missão', amount: 1}, {name: 'Poção de Sorte', amount: 1}, {name: 'Poção de Dano', amount: 1}, {name: 'Poção de Energia', amount: 1}] },
-          { name: 'F Class Quest #2', world: 1, requirement: 'Coletar 100 Frutas do Dragão', rewards: [] },
-          { name: 'F Class Quest #3', world: 2, requirement: 'Coletar 500 Pedaços de Moinho', rewards: [{name: 'Chave de Missão', amount: 1}, {name: 'Baú de Pet', amount: 1}] },
+          { name: 'F Class Quest #1', world: 1, requirement: 'Derrotar 100 Kriluni', rewards: [{name: 'Mission Key', amount: 1}, {name: 'Luck Potion', amount: 1}, {name: 'Damage Potion', amount: 1}, {name: 'Energy Potion', amount: 1}] },
+          { name: 'F Class Quest #2', world: 1, requirement: 'Coletar 100 Dragon Race Token', rewards: [] },
+          { name: 'F Class Quest #3', world: 2, requirement: 'Coletar 500 Windmill Piece', rewards: [{name: 'Mission Key', amount: 1}, {name: 'Pet Chest', amount: 1}] },
           { name: 'F Class Quest #4', world: 2, requirement: 'Derrotar 75 Robins', rewards: [] },
-          { name: 'F Class Quest #5', world: 3, requirement: 'Derrotar 75 Shinigami Novato', rewards: [{name: 'Chave de Missão', amount: 1}, {name: 'Poção de Energia', amount: 1}] },
-          { name: 'F Class Quest #6', world: 3, requirement: 'Coletar 75 Almas de Hollow', rewards: [{name: 'Poção de Moeda', amount: 1}, {name: 'Chave de Mundo', amount: 1}] },
-          { name: 'F Class Quest #7', world: 5, requirement: 'Derrotar 50 Hashira', rewards: [{name: 'Chave de Missão', amount: 1}, {name: 'Chave de Incursão', amount: 1}] },
-          { name: 'F Class Quest #8', world: 5, requirement: 'Derrotar 25 Rangoki', rewards: [{name: 'Chave de Incursão', amount: 1}, {name: 'Baú de Arma', amount: 1}] },
-          { name: 'F Class Quest #9', world: 'Lobby 1', requirement: 'Chegar ao piso 50 na Dungeon Easy (Lobby 1)', rewards: [{name: 'Ticket de Missão', amount: 1}, {name: 'Créditos', amount: 15}, {name: 'Baú de Pet', amount: 1}] }
+          { name: 'F Class Quest #5', world: 3, requirement: 'Derrotar 75 Shinigami Novato', rewards: [{name: 'Mission Key', amount: 1}, {name: 'Energy Potion', amount: 1}] },
+          { name: 'F Class Quest #6', world: 3, requirement: 'Coletar 75 Hollow Soul', rewards: [{name: 'Coin Potion', amount: 1}, {name: 'World Key', amount: 1}] },
+          { name: 'F Class Quest #7', world: 5, requirement: 'Derrotar 50 Hashira', rewards: [{name: 'Mission Key', amount: 1}, {name: 'Raid Key', amount: 1}] },
+          { name: 'F Class Quest #8', world: 5, requirement: 'Derrotar 25 Rangoki', rewards: [{name: 'Raid Key', amount: 1}, {name: 'Weapon Chest', amount: 1}] },
+          { name: 'F Class Quest #9', world: 'Lobby 1', requirement: 'Chegar ao piso 50 na Dungeon Easy (Lobby 1)', rewards: [{name: 'Mission Ticket', amount: 1}, {name: 'Credits', amount: 15}, {name: 'Pet Chest', amount: 1}] }
       ]
     }
   ],
@@ -163,43 +163,6 @@ export const world1Data = {
         description: 'Uma raid de evento em sua própria ilha, focada em defender contra hordas de mortos-vivos.'
       }
   ],
-  dailyQuests: [
-    {
-        name: 'Missão Diária #1',
-        requirement: 'Derrotar 50 inimigos na Masmorra.',
-        rewards: ['1x Poção de Sorte', '1x Poção de Moeda', '1x Poção de Dano']
-    },
-    {
-        name: 'Missão Diária #2',
-        requirement: 'Derrotar 50 inimigos na Masmorra.',
-        rewards: ['1x Poção de Alma', '1x Chave de Masmorra']
-    },
-    {
-        name: 'Missão Diária #3',
-        requirement: 'Derrotar 50 inimigos na Masmorra.',
-        rewards: ['1x Baú de Pet', '1x Chave de Masmorra']
-    },
-    {
-        name: 'Missão Diária #4',
-        requirement: 'Derrotar 50 inimigos na Masmorra.',
-        rewards: ['1x Poção de Energia', '1x Chave de Masmorra']
-    },
-    {
-        name: 'Missão Diária #5',
-        requirement: 'Derrotar 50 inimigos na Masmorra.',
-        rewards: ['1x Poção de Alma', '1x Poção de Dano']
-    },
-    {
-        name: 'Missão Diária #6',
-        requirement: 'Derrotar 50 inimigos na Masmorra.',
-        rewards: ['2x Chave de Mundo', '1x Chave de Masmorra']
-    },
-    {
-        name: 'Missão Diária #7',
-        requirement: 'Derrotar 50 inimigos na Masmorra.',
-        rewards: ['1x Chave de Incursão', '1x Chave de Mundo', '1x Chave de Masmorra']
-    }
-  ],
   obelisks: [
     {
       id: 'dragon-obelisk',
@@ -212,8 +175,8 @@ export const world1Data = {
           { name: 'Obelisk Part', amount: 1 },
           { name: 'Star Luck', amount: '5%' },
           { name: 'Experiência', amount: '1.5k' },
-          { name: 'Alma do Avatar', amount: 100 },
-          { name: 'Poção de Energia', amount: 1 }
+          { name: 'Avatar Soul', amount: 100 },
+          { name: 'Energy Potion', amount: 1 }
         ]
       },
       boosts: [
@@ -228,58 +191,58 @@ export const world1Data = {
         name: 'Missão #1',
         requirement: 'Derrotar 30 Kriluni',
         rewards: [
-            { name: 'Chave de Mundo', amount: 1 },
-            { name: 'Token de Raça Dragão', amount: 1 },
-            { name: 'Experiência', amount: '30' }
+            { name: 'World Key', amount: 1 },
+            { name: 'Dragon Race Token', amount: 1 },
+            { name: 'Exp', amount: '30' }
         ]
     },
     {
         name: 'Missão #2',
         requirement: 'Derrotar 25 Ymicha',
         rewards: [
-            { name: 'Chave de Mundo', amount: 1 },
-            { name: 'Token de Raça Dragão', amount: 15 },
-            { name: 'Experiência', amount: '100' }
+            { name: 'World Key', amount: 1 },
+            { name: 'Dragon Race Token', amount: 15 },
+            { name: 'Exp', amount: '100' }
         ]
     },
     {
         name: 'Missão #3',
         requirement: 'Derrotar 20 Tian Shan',
         rewards: [
-            { name: 'Chave de Mundo', amount: 1 },
+            { name: 'World Key', amount: 1 },
             { name: 'Drop Percent', amount: '1%' },
-            { name: 'Experiência', amount: '180' }
+            { name: 'Exp', amount: '180' }
         ]
     },
     {
         name: 'Missão #4',
         requirement: 'Derrotar 15 Kohan',
         rewards: [
-            { name: 'Chave de Mundo', amount: 1 },
-            { name: 'Token de Raça Dragão', amount: 1 },
-            { name: 'Experiência', amount: '300' }
+            { name: 'World Key', amount: 1 },
+            { name: 'Dragon Race Token', amount: 1 },
+            { name: 'Exp', amount: '300' }
         ]
     },
     {
         name: 'Missão #5',
         requirement: 'Derrotar 10 Picco',
         rewards: [
-            { name: 'Alma do Avatar', amount: 5 },
-            { name: 'Token de Raça Dragão', amount: 1 },
-            { name: 'Chave de Mundo', amount: 1 },
-            { name: 'Experiência', amount: '450' }
+            { name: 'Avatar Soul', amount: 5 },
+            { name: 'Dragon Race Token', amount: 1 },
+            { name: 'World Key', amount: 1 },
+            { name: 'Exp', amount: '450' }
         ]
     },
     {
         name: 'Missão #6',
         requirement: 'Derrotar 5 Koku',
         rewards: [
-            { name: 'Alma do Avatar', amount: 10 },
-            { name: 'Baú de Pet', amount: 1 },
-            { name: 'Token de Saiyajin', amount: 15 },
+            { name: 'Avatar Soul', amount: 10 },
+            { name: 'Pet Chest', amount: 1 },
+            { name: 'Saiyan Token', amount: 15 },
             { name: 'Drop Percent', amount: '2%' },
-            { name: 'Chave de Mundo', amount: 1 },
-            { name: 'Experiência', amount: '600' }
+            { name: 'World Key', amount: 1 },
+            { name: 'Exp', amount: '600' }
         ]
     }
   ]

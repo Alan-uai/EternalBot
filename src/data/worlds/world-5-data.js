@@ -19,14 +19,14 @@ export const world5Data = {
   ],
   powers: [
     {
-      name: 'Respiração',
+      name: 'Breathing',
       type: 'gacha',
       statType: 'energy',
       unlockCost: '250k',
       stats: [
-        { name: 'Respiração da Água', multiplier: '1.8x', rarity: 'Comum', probability: 35 },
-        { name: 'Respiração do Trovão', multiplier: '2.2x', rarity: 'Incomum', probability: 25 },
-        { name: 'Respiração do Sol', multiplier: '5x', rarity: 'Phantom', probability: 0.2, energy_crit_bonus: '1.50%' },
+        { name: 'Water Breathing', multiplier: '1.8x', rarity: 'Comum', probability: 35 },
+        { name: 'Thunder Breathing', multiplier: '2.2x', rarity: 'Incomum', probability: 25 },
+        { name: 'Sun Breathing', multiplier: '5x', rarity: 'Phantom', probability: 0.2, energy_crit_bonus: '1.50%' },
       ],
     }
   ]

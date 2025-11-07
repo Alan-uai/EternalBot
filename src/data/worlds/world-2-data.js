@@ -93,7 +93,7 @@ export const world2Data = {
     { 
       name: 'Restaurant Raid', 
       boss: 'Big Mom', 
-      description: 'Uma raid com 1000 waves. A cada piso, há uma chance de obter tokens (simulado pela "Restaurant Box") e o Chef Power (simulado pela "Chef Power Box"). A Lunch Box é um item que dropa fisicamente para ser aberto depois. Auras e poções de drop podem aumentar a quantidade de tokens obtidos por piso.',
+      description: 'Uma raid com 1000 waves. As recompensas de tokens (da "Restaurant Box") e o "Chef Power" são simulados a cada andar da raid. A "Lunch Box" é o único item de caixa que dropa fisicamente para ser aberto depois. Bônus de drop, como Auras e poções, podem aumentar a quantidade de tokens obtidos por andar.',
       rewards: {
         general: [
             { item: 'Avatar Soul', amount: 'x1', probability: 0.25 },
@@ -160,9 +160,9 @@ export const world2Data = {
         rewards: [
           { name: 'Obelisk Part', amount: 1 },
           { name: 'Star Luck', amount: '5%' },
-          { name: 'Experiência', amount: '3k' },
-          { name: 'Alma do Avatar', amount: 100 },
-          { name: 'Poção de Energia', amount: 1 }
+          { name: 'Exp', amount: '3k' },
+          { name: 'Avatar Soul', amount: 100 },
+          { name: 'Energy Potion', amount: 1 }
         ]
       },
       boosts: [
@@ -177,59 +177,59 @@ export const world2Data = {
         name: 'Missão #1',
         requirement: 'Derrotar 30 Nomi',
         rewards: [
-            { name: 'Poder de Chef', amount: 1 },
-            { name: 'Chave de Mundo', amount: 1 },
-            { name: 'Experiência', amount: '270' }
+            { name: 'Chef Power', amount: 1 },
+            { name: 'World Key', amount: 1 },
+            { name: 'Exp', amount: '270' }
         ]
     },
     {
         name: 'Missão #2',
         requirement: 'Derrotar 25 Usup',
         rewards: [
-            { name: 'Poder de Chef', amount: 1 },
-            { name: 'Chave de Mundo', amount: 1 },
-            { name: 'Experiência', amount: '500' }
+            { name: 'Chef Power', amount: 1 },
+            { name: 'World Key', amount: 1 },
+            { name: 'Exp', amount: '500' }
         ]
     },
     {
         name: 'Missão #3',
         requirement: 'Derrotar 20 Robins',
         rewards: [
-            { name: 'Alma do Avatar', amount: 5 },
-            { name: 'Poder de Chef', amount: 2 },
-            { name: 'Chave de Mundo', amount: 1 },
-            { name: 'Experiência', amount: '650' }
+            { name: 'Avatar Soul', amount: 5 },
+            { name: 'Chef Power', amount: 2 },
+            { name: 'World Key', amount: 1 },
+            { name: 'Exp', amount: '650' }
         ]
     },
     {
         name: 'Missão #4',
         requirement: 'Derrotar 15 Senji',
         rewards: [
-            { name: 'Chave de Mundo', amount: 1 },
+            { name: 'World Key', amount: 1 },
             { name: 'Drop Percent', amount: '2%' },
-            { name: 'Experiência', amount: '900' }
+            { name: 'Exp', amount: '900' }
         ]
     },
     {
         name: 'Missão #5',
         requirement: 'Derrotar 10 Zaro',
         rewards: [
-            { name: 'Alma do Avatar', amount: 10 },
-            { name: 'Poder de Chef', amount: 2 },
-            { name: 'Token de Pirata', amount: 10 },
-            { name: 'Chave de Mundo', amount: 1 },
-            { name: 'Experiência', amount: '1.1k' }
+            { name: 'Avatar Soul', amount: 10 },
+            { name: 'Chef Power', amount: 2 },
+            { name: 'Pirate Crew Token', amount: 10 },
+            { name: 'World Key', amount: 1 },
+            { name: 'Exp', amount: '1.1k' }
         ]
     },
     {
         name: 'Missão #6',
         requirement: 'Derrotar 5 Loffy',
         rewards: [
-            { name: 'Baú de Pet', amount: 1 },
+            { name: 'Pet Chest', amount: 1 },
             { name: 'Drop Percent', amount: '3%' },
             { name: 'Joia', amount: 1 },
-            { name: 'Chave de Mundo', amount: 1 },
-            { name: 'Experiência', amount: '1.3k' }
+            { name: 'World Key', amount: 1 },
+            { name: 'Exp', amount: '1.3k' }
         ]
     }
   ]

@@ -1,3 +1,4 @@
+
 // src/interactions/buttons/curate.js
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, StringSelectMenuBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { updateKnowledgeBase } from '../../ai/flows/update-knowledge-base.js';
@@ -7,17 +8,38 @@ export const customIdPrefix = 'curate';
 async function handleFixed(interaction, { client }) {
     const { logger } = client.container;
     const helpMessageId = interaction.customId.split('_')[2];
-    const curationMessageId = client.container.interactions.get(`curation_id_for_help_${helpMessageId}`);
     
+    // Deleta a mensagem de ajuda para manter o canal limpo
+    try {
+        const helpChannel = await client.channels.fetch(client.container.config.COMMUNITY_HELP_CHANNEL_ID);
+        const helpMessage = await helpChannel.messages.fetch(helpMessageId);
+        await helpMessage.delete();
+    } catch(e) {
+        logger.warn(`Não foi possível deletar a mensagem de ajuda com ID ${helpMessageId}. Pode já ter sido deletada.`);
+    }
+
+    const curationMessageId = client.container.interactions.get(`curation_id_for_help_${helpMessageId}`);
     if (!curationMessageId) {
         return interaction.reply({ content: "Não foi possível encontrar a mensagem de curadoria original associada a esta resposta.", ephemeral: true });
     }
+
+    // Deleta a mensagem de curadoria
+     try {
+        const modChannel = await client.channels.fetch(client.container.config.MOD_CURATION_CHANNEL_ID);
+        const curationMessage = await modChannel.messages.fetch(curationMessageId);
+        await curationMessage.delete();
+    } catch(e) {
+        logger.warn(`Não foi possível deletar a mensagem de curadoria com ID ${curationMessageId}. Pode já ter sido deletada.`);
+    }
     
+    // Limpa os dados de interação
+    client.container.interactions.delete(`curation_id_for_help_${helpMessageId}`);
+    client.container.interactions.delete(`suggested_answers_${curationMessageId}`);
+
     const suggestedAnswers = client.container.interactions.get(`suggested_answers_${curationMessageId}`);
     
     if (!suggestedAnswers || suggestedAnswers.length === 0) {
-        // Se não houver respostas, apenas informe o moderador e não faça mais nada.
-        return interaction.reply({ content: "Não há respostas da comunidade para aprovar. Nenhuma ação adicional é necessária.", ephemeral: true });
+        return interaction.reply({ content: "Pergunta marcada como resolvida/sem resposta. As mensagens foram removidas.", ephemeral: true });
     }
 
     const selectMenu = new StringSelectMenuBuilder()
@@ -161,3 +183,5 @@ export async function handleInteraction(interaction, container) {
         }
     }
 }
+
+    

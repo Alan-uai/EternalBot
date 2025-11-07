@@ -1,3 +1,4 @@
+
 // src/jobs/raidAnnouncer.js
 import { EmbedBuilder, WebhookClient } from 'discord.js';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
@@ -161,3 +162,5 @@ export const schedule = '*/10 * * * * *';
 export async function run(container) {
     await handleRaidLifecycle(container);
 }
+
+    

@@ -19,7 +19,7 @@ export const world4Data = {
   ],
   powers: [
     {
-      name: 'Poder Demoníaco',
+      name: 'Demon Power',
       type: 'gacha',
       statType: 'damage',
       unlockCost: '50k',
@@ -30,7 +30,7 @@ export const world4Data = {
       ],
     },
     {
-      name: 'Sorte do Demônio',
+      name: 'Demon Luck',
       type: 'progression',
       statType: 'luck',
       maxLevel: 20,
@@ -42,3 +42,5 @@ export const world4Data = {
       { id: 'chifres-demonio', name: 'Chifres de Demônio', world: 'Mundo 4', boss: 'Lorde Demônio', rarity: 'Épico', damage_bonus: '0.05x' }
   ]
 };
+
+    

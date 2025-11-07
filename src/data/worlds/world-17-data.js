@@ -16,7 +16,7 @@ export const world17Data = {
   ],
   powers: [
     {
-      name: "Poder do Investigador",
+      name: "Investigator Power",
       type: "gacha",
       statType: "energy",
       unlockCost: "Varia (usa Quinque)",
@@ -32,7 +32,7 @@ export const world17Data = {
       ]
     },
     {
-        name: "Poder do Kagune",
+        name: "Kagune Power",
         type: "gacha",
         statType: "damage",
         unlockCost: "Varia (usa Yen)",
@@ -62,7 +62,7 @@ export const world17Data = {
         statType: "damage",
         maxLevel: 50,
         unlockCost: "Flesh Token",
-        description: "Sistema de leveling para o Poder do Kagune (dano), usando Flesh Tokens. O nível máximo é 50 e o bônus final de dano varia com a raridade da Kagune. No nível máximo (50) com uma Kagune de raridade Suprema, o bônus de dano é 18x."
+        description: "Sistema de leveling para o Kagune Power (dano), usando Flesh Tokens. O nível máximo é 50 e o bônus final de dano varia com a raridade da Kagune. No nível máximo (50) com uma Kagune de raridade Suprema, o bônus de dano é 18x."
     }
   ],
   accessories: [
@@ -98,3 +98,5 @@ export const world17Data = {
     }
   ]
 };
+
+    
