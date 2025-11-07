@@ -13,13 +13,13 @@ export const world4Data = {
     { name: 'Sakuni', rank: 'SS', exp: 60000, hp: '120Sp', drops: { aura: { name: 'Aura do Rei do Fogo', probability: 0.05 } }, videoUrl: 'https://cdn.discordapp.com/attachments/1430337273794265250/1430337777840554126/ScreenRecording_10-21-2025_10-31-17_1.mov?ex=68fa121c&is=68f8c09c&hm=4701c56efe6c8b63f39d235ca2353f417c474b290038f6c2874b44537ce6ead1&' },
   ],
   pets: [
-    { name: 'Itodo', rank: 'Comum', rarity: 'Comum', energy_bonus: '0.04x' },
-    { name: 'Nebara', rank: 'Incomum', rarity: 'Incomum', energy_bonus: '0.08x' },
-    { name: 'Magum', rank: 'Raro', rarity: 'Raro', energy_bonus: '0.12x' },
-    { name: 'Meki', rank: 'Épico', rarity: 'Épico', energy_bonus: '0.12x' },
-    { name: 'Tage', rank: 'Lendário', rarity: 'Lendário', energy_bonus: '0.12x' },
-    { name: 'Gajo', rank: 'Mítico', rarity: 'Mítico', energy_bonus: '0.12x' },
-    { name: 'Sakuni', rank: 'Phantom', rarity: 'Phantom', energy_bonus: '0.12x' },
+    { name: 'Itodo', rarity: 'Comum', energy_bonus: '47' },
+    { name: 'Nebara', rarity: 'Incomum', energy_bonus: '94' },
+    { name: 'Magum', rarity: 'Raro', energy_bonus: '141' },
+    { name: 'Meki', rarity: 'Épico', energy_bonus: '188' },
+    { name: 'Tage', rarity: 'Lendário', energy_bonus: '234' },
+    { name: 'Gajo', rarity: 'Mítico', energy_bonus: '313' },
+    { name: 'Sakuni', rarity: 'Phantom', energy_bonus: '703' },
   ],
   powers: [
     {
@@ -75,9 +75,8 @@ export const world4Data = {
         requirement: 'Derrotar 30 Itodo',
         rewards: [
             { name: 'World Key', amount: 1 },
-            { name: 'Cursed Token', amount: 5 },
-            { name: 'Star Luck', amount: '1.17%' },
-            { name: 'Exp', amount: '2k' }
+            { name: 'Luck Potion', amount: 1 },
+            { name: 'Exp', amount: '1.17k' }
         ]
     },
     {
