@@ -19,28 +19,50 @@ export const world4Data = {
   ],
   powers: [
     {
-      name: 'Demon Power',
+      name: 'Curses',
       type: 'gacha',
-      statType: 'damage',
-      unlockCost: '50k',
+      statType: 'energy',
+      unlockCost: 'Varia',
+      description: "Poder de energia obtido na Cursed Raid.",
       stats: [
-        { name: 'Chamas Negras', multiplier: '1.3x', rarity: 'Comum', probability: 40 },
-        { name: 'Fogo Infernal', multiplier: '2.0x', rarity: 'Raro', probability: 12 },
-        { name: 'Rei Demônio', multiplier: '3.5x', rarity: 'Phantom', probability: 0.25 },
-      ],
+        { name: 'Blazing Cataclysm', multiplier: '2x', rarity: 'Comum' },
+        { name: 'Nullborn Phantom', multiplier: '3x', rarity: 'Incomum' },
+        { name: 'Infernal Crater', multiplier: '4x', rarity: 'Raro' },
+        { name: 'Abyssal Tide', multiplier: '5x', rarity: 'Épico' },
+        { name: 'Verdant Calamity', multiplier: '8x', rarity: 'Lendário' },
+        { name: 'Soulbender', multiplier: '10x', rarity: 'Mítico' },
+        { name: 'Wandered Mind', multiplier: '12x', rarity: 'Phantom' }
+      ]
     },
     {
-      name: 'Demon Luck',
-      type: 'progression',
-      statType: 'luck',
-      maxLevel: 20,
-      maxBoost: '25% Drop Chance',
-      unlockCost: '100k',
+      name: 'Cursed Power',
+      type: 'gacha',
+      statType: 'mixed',
+      unlockCost: 'Varia',
+      description: "Poder de dano e crítico de energia obtido na Cursed Raid.",
+      stats: [
+        { name: 'Common Curse', statType: 'damage', multiplier: '0.6x', rarity: 'Comum' },
+        { name: 'Uncommon Curse', statType: 'damage', multiplier: '0.8x', rarity: 'Incomum' },
+        { name: 'Rare Curse', statType: 'damage', multiplier: '1x', rarity: 'Raro', energy_crit_bonus: '1.00%' },
+        { name: 'Epic Curse', statType: 'damage', multiplier: '2x', rarity: 'Épico', energy_crit_bonus: '2.00%' },
+        { name: 'Legendary Curse', statType: 'damage', multiplier: '3x', rarity: 'Lendário', energy_crit_bonus: '3.00%' },
+        { name: 'Mythical Curse', statType: 'damage', multiplier: '4x', rarity: 'Mítico', energy_crit_bonus: '4.00%' },
+        { name: 'Phantom Curse', statType: 'damage', multiplier: '5x', rarity: 'Phantom', energy_crit_bonus: '5.00%' }
+      ]
     },
+    {
+      name: 'Cursed Progression',
+      type: 'progression',
+      statType: 'damage',
+      maxLevel: 410,
+      maxBoost: '4.10x Damage',
+      unlockCost: 'Varia',
+    }
   ],
   accessories: [
       { id: 'chifres-demonio', name: 'Chifres de Demônio', world: 'Mundo 4', boss: 'Lorde Demônio', rarity: 'Épico', damage_bonus: '0.05x' }
+  ],
+  dungeons: [
+      { name: 'Cursed Raid', boss: 'Desconhecido', description: 'Uma raid onde se obtém os poderes Curses e Cursed Power.'}
   ]
 };
-
-    
