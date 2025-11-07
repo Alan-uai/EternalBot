@@ -176,10 +176,6 @@ export async function execute(message) {
                 }
             }
             
-            if (replyContent.length > 2000) {
-                replyContent = replyContent.substring(0, 1997) + '...';
-            }
-
             const feedbackRow = new ActionRowBuilder()
                 .addComponents(
                     new ButtonBuilder().setCustomId(`feedback_like_${message.id}`).setLabel('👍').setStyle(ButtonStyle.Success),

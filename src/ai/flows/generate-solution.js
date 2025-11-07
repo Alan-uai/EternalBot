@@ -1,4 +1,5 @@
 
+
 // src/ai/flows/generate-solution.js
 import { ai } from '../genkit.js';
 import { z } from 'zod';
@@ -10,7 +11,7 @@ const getGameDataTool = ai.defineTool(
     description: 'Get information about game content like powers, NPCs, pets, accessories, or dungeons from a specific world.',
     inputSchema: z.object({
       worldName: z.string().describe('The name of the world to search in (e.g., "World 1", "Windmill Island").'),
-      category: z.string().describe('The category of information to get (e.g., "powers", "npcs", "pets", "accessories", "dungeons").'),
+      category: z.string().describe('The category of information to get (e.g., "powers", "npcs", "pets", "accessories", "dungeons", "missions").'),
       itemName: z.string().optional().describe('The specific name of the item to look for (e.g., "Grand Elder Power"). Be flexible; if an exact match fails, try a partial name.'),
     }),
     outputSchema: z.unknown(),
@@ -118,7 +119,12 @@ Sua resposta DEVE ser um objeto JSON contendo a chave "structuredResponse", que 
     *   O bônus de energia combinado do avatar (nível 1 e 150) e do pet incluído.
     *   Compare esse bônus com outras fontes de energia que o jogador poderia obter com esforço similar (ex: farmar pets de um mundo específico).
     *   Conclua se o "custo-benefício" em termos de ganho de energia é bom para o jogador médio, explicando o porquê.
-
+10. **Diferença de Missões:** É CRUCIAL que você entenda a diferença entre "Missões de Mundo" e "Hero License Quest".
+    *   **Missões de Mundo:** São as missões principais de cada mundo, identificadas por números (ex: "Missão #1", "Missão #2"). Elas concedem **Chaves de Mundo** e são o método principal para desbloquear o próximo mundo. Quando um usuário perguntar sobre "missão do mundo X" ou "como passar do mundo Y", você deve priorizar a busca por informações na seção "missions" dos dados do mundo.
+    *   **Hero License Quest:** É uma questline **separada e secundária** para obter um poder específico. Ela se espalha por vários mundos, mas **NÃO** é o caminho para progredir entre os mundos. Não mencione a "Hero License Quest" a menos que o usuário pergunte especificamente sobre ela.
+11. **Drops de Itens:** Entenda a fonte de cada item.
+    *   **Avatares ([Av]):** Dropam de NPCs com 1% de chance.
+    *   **Pets (Champions):** São obtidos exclusivamente nas Estrelas (Stars) de cada mundo. Eles **NÃO** dropam de NPCs.
 
 ### REGRAS DE CÁLCULO E FORMATAÇÃO (OBRIGATÓRIO)
 - O jogo tem 21 mundos, cada um com conteúdo exclusivo.
