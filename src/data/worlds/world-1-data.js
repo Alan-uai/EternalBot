@@ -106,7 +106,13 @@ export const world1Data = {
                 { 'Conquista': 'Tournament Raid XXXIII', 'Requisito': 'Reach Wave 620', 'Bônus': '10% Damage' },
                 { 'Conquista': 'Tournament Raid XXXIV', 'Requisito': 'Reach Wave 640', 'Bônus': '5% Star Luck' },
                 { 'Conquista': 'Tournament Raid XXXV', 'Requisito': 'Reach Wave 660', 'Bônus': '10% Energy' },
-                { 'Conquista': 'Tournament Raid XXXVI', 'Requisito': 'Reach Wave 680', 'Bônus': '10% Damage' }
+                { 'Conquista': 'Tournament Raid XXXVI', 'Requisito': 'Reach Wave 680', 'Bônus': '10% Damage' },
+                { 'Conquista': 'Tournament Raid XXXVII', 'Requisito': 'Reach Wave 700', 'Bônus': '5% Star Luck' },
+                { 'Conquista': 'Tournament Raid XXXVIII', 'Requisito': 'Reach Wave 720', 'Bônus': '10% Energy' },
+                { 'Conquista': 'Tournament Raid XXXIX', 'Requisito': 'Reach Wave 740', 'Bônus': '10% Damage' },
+                { 'Conquista': 'Tournament Raid XL', 'Requisito': 'Reach Wave 760', 'Bônus': '5% Star Luck' },
+                { 'Conquista': 'Tournament Raid XLI', 'Requisito': 'Reach Wave 780', 'Bônus': '10% Energy' },
+                { 'Conquista': 'Tournament Raid XLII', 'Requisito': 'Reach Wave 800', 'Bônus': '10% Damage' }
             ]
         }
       },
