@@ -57,7 +57,19 @@ export const world1Data = {
       name: 'Hero License Quest',
       type: 'progression',
       statType: 'mixed',
-      description: "Missão de Licença de Herói (Rank F - Comum), com tarefas localizadas neste mundo."
+      description: "Missão de Licença de Herói (Rank F - Comum), com tarefas localizadas neste mundo.",
+      missions: [
+          {
+              name: 'F Class Quest #1',
+              requirement: 'Derrotar 100 Kriluni',
+              rewards: [{name: 'Chave de Missão', amount: 1}, {name: 'Poção de Sorte', amount: 1}, {name: 'Poção de Dano', amount: 1}, {name: 'Poção de Energia', amount: 1}]
+          },
+           {
+              name: 'F Class Quest #2',
+              requirement: 'Coletar 100 Frutas do Dragão',
+              rewards: []
+          }
+      ]
     }
   ],
   accessories: [

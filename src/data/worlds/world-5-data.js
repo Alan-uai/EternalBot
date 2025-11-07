@@ -33,7 +33,26 @@ export const world5Data = {
       name: 'Hero License Quest',
       type: 'progression',
       statType: 'mixed',
-      description: "Missão de Licença de Herói (Rank E), com tarefas neste mundo."
+      description: "Missão de Licença de Herói (Rank E), com tarefas neste mundo.",
+      missions: [
+          {
+              name: 'F Class Quest #5',
+              requirement: 'Derrotar 50 Hashira',
+              rewards: [{name: 'Chave de Missão', amount: 1}, {name: 'Chave de Incursão', amount: 1}]
+          },
+          {
+              name: 'F Class Quest #6',
+              requirement: 'Derrotar 25 Rangoki',
+              rewards: [{name: 'Chave de Incursão', amount: 1}, {name: 'Baú de Arma', amount: 1}]
+          },
+          {
+              name: 'F Class Quest #7',
+              requirement: 'Completar a Masmorra "Infinity Castle" 50 vezes',
+              rewards: [{name: 'Ticket de Missão', amount: 1}, {name: 'Créditos', amount: 15}, {name: 'Baú de Pet', amount: 1}]
+          }
+      ]
     }
   ]
 };
+
+    
