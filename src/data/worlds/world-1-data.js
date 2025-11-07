@@ -151,5 +151,42 @@ export const world1Data = {
         boss: 'Necromancer',
         description: 'Uma raid de evento em sua própria ilha, focada em defender contra hordas de mortos-vivos.'
       }
+  ],
+  dailyQuests: [
+    {
+        name: 'Missão Diária #1',
+        requirement: 'Derrotar 50 inimigos na Masmorra.',
+        rewards: ['1x Poção de Sorte', '1x Poção de Moeda', '1x Poção de Dano']
+    },
+    {
+        name: 'Missão Diária #2',
+        requirement: 'Derrotar 50 inimigos na Masmorra.',
+        rewards: ['1x Poção de Alma', '1x Chave de Masmorra']
+    },
+    {
+        name: 'Missão Diária #3',
+        requirement: 'Derrotar 50 inimigos na Masmorra.',
+        rewards: ['1x Baú de Pet', '1x Chave de Masmorra']
+    },
+    {
+        name: 'Missão Diária #4',
+        requirement: 'Derrotar 50 inimigos na Masmorra.',
+        rewards: ['1x Poção de Energia', '1x Chave de Masmorra']
+    },
+    {
+        name: 'Missão Diária #5',
+        requirement: 'Derrotar 50 inimigos na Masmorra.',
+        rewards: ['1x Poção de Alma', '1x Poção de Dano']
+    },
+    {
+        name: 'Missão Diária #6',
+        requirement: 'Derrotar 50 inimigos na Masmorra.',
+        rewards: ['2x Chave de Mundo', '1x Chave de Masmorra']
+    },
+    {
+        name: 'Missão Diária #7',
+        requirement: 'Derrotar 50 inimigos na Masmorra.',
+        rewards: ['1x Chave de Incursão', '1x Chave de Mundo', '1x Chave de Masmorra']
+    }
   ]
 };
