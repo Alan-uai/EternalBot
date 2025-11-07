@@ -19,23 +19,34 @@ export const world1Data = {
   ],
   powers: [
     {
-      name: 'Poder do Monstro',
+      name: 'Dragon Race',
       type: 'gacha',
       statType: 'energy',
       unlockCost: '100',
       stats: [
-        { name: 'Poder Adormecido', multiplier: '1.1x', rarity: 'Comum', probability: 50 },
-        { name: 'Poder Desperto', multiplier: '1.5x', rarity: 'Raro', probability: 10 },
-        { name: 'Fúria do Monstro', multiplier: '2x', rarity: 'Phantom', probability: 0.5, energy_crit_bonus: '0.50%' },
+        { name: 'Human', multiplier: '2x', rarity: 'Comum' },
+        { name: 'Android', multiplier: '3x', rarity: 'Incomum' },
+        { name: 'Namekian', multiplier: '4x', rarity: 'Raro' },
+        { name: 'Frost Demon', multiplier: '5x', rarity: 'Épico' },
+        { name: 'Majin', multiplier: '8x', rarity: 'Lendário' },
+        { name: 'Half-Saiyan', multiplier: '10x', rarity: 'Mítico' },
+        { name: 'Saiyan', multiplier: '12x', rarity: 'Phantom' },
       ],
     },
     {
-      name: 'Sorte do Iniciante',
-      type: 'progression',
-      statType: 'luck',
-      maxLevel: 10,
-      maxBoost: '10% Star Luck',
-      unlockCost: '500',
+      name: 'Saiyan Evolution',
+      type: 'gacha',
+      statType: 'energy',
+      unlockCost: '1000',
+      stats: [
+        { name: 'Great Ape', multiplier: '2x', rarity: 'Comum' },
+        { name: 'Super Saiyan Grad 1', multiplier: '3x', rarity: 'Incomum' },
+        { name: 'Super Saiyan Grad 1', multiplier: '4x', rarity: 'Raro' },
+        { name: 'Super Saiyan Grad 1', multiplier: '5x', rarity: 'Épico' },
+        { name: 'Full Powe Super Saiyan', multiplier: '8x', rarity: 'Lendário' },
+        { name: 'Super Sayian 2', multiplier: '10x', rarity: 'Mítico' },
+        { name: 'Super Saiyan 3', multiplier: '12x', rarity: 'Phantom' },
+      ],
     },
      {
       name: 'Hero License Quest',
@@ -51,5 +62,3 @@ export const world1Data = {
       { name: 'Halloween Raid', boss: 'Pumpkin King', description: 'Uma raid de evento com temática de Halloween.'}
   ]
 };
-
-    
