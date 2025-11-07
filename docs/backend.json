@@ -505,10 +505,13 @@
       "properties": {
         "id": { "type": "string" },
         "name": { "type": "string", "description": "The name of the Stand." },
-        "rarity": { "type": "string", "description": "The rarity of the Stand." },
-        "energy_bonus": { "type": "string", "description": "The energy bonus provided by the Stand." }
+        "atk_spd": { "type": "string" },
+        "base_damage": { "type": "string" },
+        "one_star_damage": { "type": "string" },
+        "two_star_damage": { "type": "string" },
+        "three_star_damage": { "type": "string" }
       },
-      "required": ["id", "name", "rarity", "energy_bonus"]
+      "required": ["id", "name"]
     },
     "Obelisk": {
       "title": "Obelisk",
@@ -832,3 +835,5 @@
     "reasoning": "The Firestore structure is organized with 'worlds' as the top-level collection to logically separate game content. Each world document contains sub-collections for 'powers', 'npcs', 'pets', 'dungeons', 'accessories', 'shadows' and 'stands', creating a hierarchical and scalable data model. This allows for efficient querying of specific game data. For example, to get all shadows for 'World 7', you query the '/worlds/world7/shadows' sub-collection. A new top-level collection 'achievements' is added to store all game achievements, which is separate from world-specific data."
   }
 }
+
+    
