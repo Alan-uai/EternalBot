@@ -83,17 +83,17 @@ export const world4Data = {
         name: 'Missão #2',
         requirement: 'Derrotar 25 Nebara',
         rewards: [
-            { name: 'Cursed Token', amount: 10 },
             { name: 'World Key', amount: 1 },
-            { name: 'Exp', amount: '2.01k' }
+            { name: 'Drop Percent', amount: '4%' },
+            { name: 'Exp', amount: '2.05k' }
         ]
     },
     {
         name: 'Missão #3',
         requirement: 'Derrotar 20 Magum',
         rewards: [
-            { name: 'Pet Chest', amount: 1 },
             { name: 'World Key', amount: 1 },
+            { name: 'Pet Chest', amount: 1 },
             { name: 'Drop Percent', amount: '4%' },
             { name: 'Exp', amount: '2.58k' }
         ]
@@ -102,8 +102,8 @@ export const world4Data = {
         name: 'Missão #4',
         requirement: 'Derrotar 15 Meki',
         rewards: [
-            { name: 'Pet Chest', amount: 1 },
             { name: 'World Key', amount: 1 },
+            { name: 'Pet Chest', amount: 1 },
             { name: 'Drop Percent', amount: '4%' },
             { name: 'Exp', amount: '3.37k' }
         ]
