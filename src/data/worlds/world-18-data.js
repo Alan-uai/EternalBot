@@ -30,3 +30,5 @@ export const world18Data = {
       { name: 'Chainsaw Defense', boss: 'Gun Devil', description: 'Uma raid de defesa contra hordas de demônios.'}
   ]
 };
+
+    

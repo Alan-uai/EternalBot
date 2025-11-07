@@ -40,3 +40,5 @@ export const world15Data = {
       { name: 'Gleam Raid', boss: 'The Gleam Eyes', description: 'Uma raid de desafio individual com 10 ondas.'}
   ]
 };
+
+    
