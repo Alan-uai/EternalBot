@@ -177,7 +177,7 @@ export const world2Data = {
         name: 'Missão #1',
         requirement: 'Derrotar 30 Nomi',
         rewards: [
-            { name: 'Chef Power', amount: 1 },
+            { name: 'Chef Power Token', amount: 1 },
             { name: 'World Key', amount: 1 },
             { name: 'Exp', amount: '270' }
         ]
@@ -186,7 +186,7 @@ export const world2Data = {
         name: 'Missão #2',
         requirement: 'Derrotar 25 Usup',
         rewards: [
-            { name: 'Chef Power', amount: 1 },
+            { name: 'Chef Power Token', amount: 1 },
             { name: 'World Key', amount: 1 },
             { name: 'Exp', amount: '500' }
         ]
@@ -196,7 +196,7 @@ export const world2Data = {
         requirement: 'Derrotar 20 Robins',
         rewards: [
             { name: 'Avatar Soul', amount: 5 },
-            { name: 'Chef Power', amount: 2 },
+            { name: 'Chef Power Token', amount: 2 },
             { name: 'World Key', amount: 1 },
             { name: 'Exp', amount: '650' }
         ]
@@ -215,7 +215,7 @@ export const world2Data = {
         requirement: 'Derrotar 10 Zaro',
         rewards: [
             { name: 'Avatar Soul', amount: 10 },
-            { name: 'Chef Power', amount: 2 },
+            { name: 'Chef Power Token', amount: 2 },
             { name: 'Pirate Crew Token', amount: 10 },
             { name: 'World Key', amount: 1 },
             { name: 'Exp', amount: '1.1k' }
