@@ -15,16 +15,17 @@ No jogo, a cor de fundo do nome de um item indica sua raridade:
 *   **Azul:** Raro
 *   **Lilás/Magenta:** Épico
 *   **Amarelo:** Lendário
-*   **Red:** Mítico
+*   **Vermelho:** Mítico
 *   **Roxo:** Phantom
 *   **Laranja/Arco-íris:** Supreme
 
 **Principais Atividades no Mundo 1:**
-*   **Placares de Líderes Globais:** Confira os melhores jogadores do mundo e veja sua posição.
-*   **Subir de Rank e Nível de Avatar:** O Mundo 1 é onde você aumentará seu Rank e o nível de seus avatares.
-*   **Baús e Missões Diárias:** Encontre e colete baús e complete missões diárias para obter recompensas valiosas.
-*   **Dungeon do Mundo - Torneio:** Sua primeira dungeon específica do mundo é o Torneio, que vai até a Sala 550.
-*   **Lobby de Dungeons:** Acesse uma variedade de dungeons especiais, que são diferentes das dungeons encontradas em cada mundo. As dungeons de lobby são: **Fácil, Média, Difícil, Insana, Louca, Pesadelo e Folha**. Todas as outras raids e dungeons pertencem a mundos específicos.`,
-    tags: ['iniciante', 'guia', 'novo jogador', 'classe', 'mundo 1', 'geral', '1', 'raridade'],
+*   **Hub Central:** O Mundo 1 é a área principal onde você encontrará a maioria dos sistemas de progressão do jogo.
+*   **Lobby de Dungeons:** Acesse uma variedade de dungeons especiais que ocorrem em horários fixos. As dungeons de lobby são: **Fácil, Média, Difícil, Insana, Louca, Pesadelo e Folha**.
+*   **Local de Prestígio:** É aqui que você pode prestigiar seu personagem para ganhar bônus permanentes e aumentar seu limite de nível.
+*   **Placares de Líderes e Missões Diárias:** Confira os melhores jogadores e complete missões diárias para obter recompensas valiosas.
+*   **Dungeon do Mundo - Torneio:** A primeira dungeon específica do mundo, o Torneio, vai até a Sala 550.
+*   **Raids de Evento:** Eventos sazonais, como a **Halloween Raid**, também acontecem aqui.`,
+    tags: ['iniciante', 'guia', 'novo jogador', 'classe', 'mundo 1', 'geral', '1', 'raridade', 'lobby', 'prestígio'],
     imageUrl: 'wiki-1',
 };
