@@ -87,6 +87,26 @@ export const world2Data = {
   ],
   dungeons: [
     { name: 'Caverna do Tesouro', boss: 'Rei dos Mares', description: 'Uma caverna cheia de tesouros guardada por um monstro marinho.'},
-    { name: 'Restaurant Raid', boss: 'Big Mom', description: 'Uma raid com 1000 waves onde se obtém o Chef Power.'}
+    { 
+      name: 'Restaurant Raid', 
+      boss: 'Big Mom', 
+      description: 'Uma raid com 1000 waves onde se obtém o Chef Power.',
+      achievements: {
+        headers: ['Conquista', 'Requisito', 'Bônus'],
+        rows: [
+            { 'Conquista': 'Restaurant Raid I', 'Requisito': 'Reach Wave 10', 'Bônus': '5% Damage' },
+            { 'Conquista': 'Restaurant Raid II', 'Requisito': 'Reach Wave 20', 'Bônus': '5% Star Luck' },
+            { 'Conquista': 'Restaurant Raid III', 'Requisito': 'Reach Wave 30', 'Bônus': '5% Damage' },
+            { 'Conquista': 'Restaurant Raid IV', 'Requisito': 'Reach Wave 40', 'Bônus': '5% Star Luck' },
+            { 'Conquista': 'Restaurant Raid V', 'Requisito': 'Reach Wave 50', 'Bônus': '5% Damage' },
+            { 'Conquista': 'Restaurant Raid VI', 'Requisito': 'Reach Wave 100', 'Bônus': '100 Credits' },
+            { 'Conquista': 'Restaurant Raid VII', 'Requisito': 'Reach Wave 200', 'Bônus': '10% Damage' },
+            { 'Conquista': 'Restaurant Raid VIII', 'Requisito': 'Reach Wave 300', 'Bônus': '15% Star Luck' },
+            { 'Conquista': 'Restaurant Raid IX', 'Requisito': 'Reach Wave 500', 'Bônus': '15% Damage' },
+            { 'Conquista': 'Restaurant Raid X', 'Requisito': 'Reach Wave 750', 'Bônus': '20% Star Luck' },
+            { 'Conquista': 'Restaurant Raid XI', 'Requisito': 'Reach Wave 1000', 'Bônus': '150 Credits' },
+        ]
+      }
+    }
   ]
 }
