@@ -119,7 +119,39 @@ export const world1Data = {
       { 
         name: 'Halloween Raid', 
         boss: 'Pumpkin King', 
-        description: 'Uma raid de evento com temática de Halloween. Contém o Halloween Crafting para criar Spooky Portions (2.5x de bônus) e o sistema de evolução da Halloween Bag.'
+        description: 'Uma raid de evento com temática de Halloween. Contém o Halloween Crafting para criar Spooky Portions (2.5x de bônus) e o sistema de evolução da Halloween Bag.',
+        achievements: {
+            headers: ['Conquista', 'Requisito', 'Bônus'],
+            rows: [
+                { 'Conquista': 'Halloween Raid I', 'Requisito': 'Reach Wave 50', 'Bônus': '1% Candy Drop' },
+                { 'Conquista': 'Halloween Raid II', 'Requisito': 'Reach Wave 100', 'Bônus': '2% Candy Drop' },
+                { 'Conquista': 'Halloween Raid III', 'Requisito': 'Reach Wave 150', 'Bônus': '3% Candy Drop' },
+                { 'Conquista': 'Halloween Raid IV', 'Requisito': 'Reach Wave 200', 'Bônus': '4% Candy Drop' },
+                { 'Conquista': 'Halloween Raid V', 'Requisito': 'Reach Wave 250', 'Bônus': '5% Candy Drop' },
+                { 'Conquista': 'Halloween Raid VI', 'Requisito': 'Reach Wave 300', 'Bônus': '6% Candy Drop' },
+                { 'Conquista': 'Halloween Raid VII', 'Requisito': 'Reach Wave 350', 'Bônus': '7% Candy Drop' },
+                { 'Conquista': 'Halloween Raid VIII', 'Requisito': 'Reach Wave 400', 'Bônus': '8% Candy Drop' },
+                { 'Conquista': 'Halloween Raid IX', 'Requisito': 'Reach Wave 450', 'Bônus': '9% Candy Drop' },
+                { 'Conquista': 'Halloween Raid X', 'Requisito': 'Reach Wave 500', 'Bônus': '10% Candy Drop' },
+                { 'Conquista': 'Halloween Raid XI', 'Requisito': 'Reach Wave 550', 'Bônus': '11% Candy Drop' },
+                { 'Conquista': 'Halloween Raid XII', 'Requisito': 'Reach Wave 600', 'Bônus': '12% Candy Drop' },
+                { 'Conquista': 'Halloween Raid XIII', 'Requisito': 'Reach Wave 650', 'Bônus': '13% Candy Drop' },
+                { 'Conquista': 'Halloween Raid XIV', 'Requisito': 'Reach Wave 700', 'Bônus': '14% Candy Drop' },
+                { 'Conquista': 'Halloween Raid XV', 'Requisito': 'Reach Wave 750', 'Bônus': '15% Candy Drop' },
+                { 'Conquista': 'Halloween Raid XVI', 'Requisito': 'Reach Wave 800', 'Bônus': '16% Candy Drop' },
+                { 'Conquista': 'Halloween Raid XVII', 'Requisito': 'Reach Wave 850', 'Bônus': '17% Candy Drop' },
+                { 'Conquista': 'Halloween Raid XVIII', 'Requisito': 'Reach Wave 900', 'Bônus': '18% Candy Drop' },
+                { 'Conquista': 'Halloween Raid XIX', 'Requisito': 'Reach Wave 950', 'Bônus': '19% Candy Drop' },
+                { 'Conquista': 'Halloween Raid XX', 'Requisito': 'Reach Wave 1000', 'Bônus': 'Halloween Bag' },
+            ]
+        }
+      },
+      {
+        name: 'Graveyard Defense',
+        boss: 'Necromancer',
+        description: 'Uma raid de evento em sua própria ilha, focada em defender contra hordas de mortos-vivos.'
       }
   ]
 };
+
+    
