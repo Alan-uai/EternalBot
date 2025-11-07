@@ -16,7 +16,8 @@ async function handleFixed(interaction, { client }) {
     const suggestedAnswers = client.container.interactions.get(`suggested_answers_${curationMessageId}`);
     
     if (!suggestedAnswers || suggestedAnswers.length === 0) {
-        return interaction.reply({ content: "Não há respostas da comunidade para aprovar para este tópico.", ephemeral: true });
+        // Se não houver respostas, apenas informe o moderador e não faça mais nada.
+        return interaction.reply({ content: "Não há respostas da comunidade para aprovar. Nenhuma ação adicional é necessária.", ephemeral: true });
     }
 
     const selectMenu = new StringSelectMenuBuilder()

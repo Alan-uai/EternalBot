@@ -52,17 +52,18 @@ export async function execute(interaction) {
         for (const article of allWikiArticles) {
             const articleId = article.id;
             
-            if (articleId.startsWith('world-')) {
-                const worldNumber = articleId.split('-')[1];
+            if (article.id.startsWith('world-')) {
+                const worldNumber = article.id.split('-')[1];
                 const paddedWorldId = worldNumber.padStart(3, '0');
                 const worldRef = doc(firestore, 'worlds', paddedWorldId);
 
-                const { npcs, pets, powers, accessories, dungeons, shadows, stands, ghouls, obelisks, ...worldData } = article;
+                // Separa os dados do mundo das sub-coleções
+                const { npcs, pets, powers, accessories, dungeons, shadows, stands, ghouls, obelisks, missions, dailyQuests, ...worldData } = article;
                 
                 batch.set(worldRef, { name: article.title, ...worldData });
                 count++;
 
-                const subCollections = { npcs, pets, powers, accessories, dungeons, shadows, stands, ghouls, obelisks };
+                const subCollections = { npcs, pets, powers, accessories, dungeons, shadows, stands, ghouls, obelisks, missions, dailyQuests };
 
                 for (const [key, items] of Object.entries(subCollections)) {
                     if (items && Array.isArray(items)) {
@@ -75,6 +76,7 @@ export async function execute(interaction) {
                             batch.set(itemRef, itemData);
                             count++;
 
+                            // Lógica para sub-sub-coleções como 'stats' de 'powers'
                             if (key === 'powers' && stats && Array.isArray(stats)) {
                                 for(const stat of stats) {
                                     const statId = normalizeId(stat.id || stat.name);
@@ -88,7 +90,7 @@ export async function execute(interaction) {
                         }
                     }
                 }
-            } else if (article.tables) {
+            } else if (article.tables) { // Apenas processa se o artigo tiver tabelas
                  // Trata outros artigos com tabelas como coleções
                 if (article.id === 'stands-world-16') {
                     count += await populateCollection(batch, firestore, 'stands', article.tables.stands.rows);
@@ -101,14 +103,14 @@ export async function execute(interaction) {
                 } else if (article.id === 'jewelry-crafting') {
                     count += await populateCollection(batch, firestore, 'jewelry_bonuses', article.tables.jewelryBonuses.rows);
                 } else {
-                    // Artigos genéricos vão para wikiContent
+                    // Artigos genéricos com tabelas vão para wikiContent
                     const wikiRef = doc(firestore, 'wikiContent', articleId);
                     batch.set(wikiRef, article);
                     count++;
                 }
             }
             else {
-                // Artigos sem tabelas estruturadas vão para wikiContent
+                // Artigos sem tabelas estruturadas (guias, etc.) vão para wikiContent
                 const wikiRef = doc(firestore, 'wikiContent', articleId);
                 batch.set(wikiRef, article);
                 count++;

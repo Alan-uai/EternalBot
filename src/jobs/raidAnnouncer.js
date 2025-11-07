@@ -36,7 +36,6 @@ async function handleRaidLifecycle(container) {
         
         const webhookUrl = announcerDoc.data().webhookUrl;
         const webhookClient = new WebhookClient({ url: webhookUrl });
-        const webhook = await webhookClient.fetchWebhook(); // Fetch the webhook to edit its properties
 
         const announcerState = announcerDoc.data() || { state: 'finished' };
         
@@ -53,7 +52,9 @@ async function handleRaidLifecycle(container) {
                 }
                 
                 const openAvatar = await assetService.getAsset(`${assetPrefix}A`);
-                await webhook.edit({ name: `🔥 A Raid Começou: ${raidId}!`, avatar: openAvatar });
+                
+                // Atualiza o nome e avatar do webhook
+                await webhookClient.edit({ name: `🔥 A Raid Começou: ${raidId}!`, avatar: openAvatar });
 
                 const gifUrl = await assetService.getAsset(`${assetPrefix}A`);
                 const embed = new EmbedBuilder()
@@ -72,12 +73,12 @@ async function handleRaidLifecycle(container) {
                 const roleMention = raid.roleId ? `<@&${raid.roleId}>` : '';
                 const message = await webhookClient.send({ content: roleMention, embeds: [embed], wait: true });
                 
-                await setDoc(announcerRef, { state: 'open', raidId, messageId: message.id, startTimeMs, webhookUrl: webhook.url }, { merge: true });
+                await setDoc(announcerRef, { state: 'open', raidId, messageId: message.id, startTimeMs, webhookUrl: webhookClient.url }, { merge: true });
                 logger.info(`[${raidId}] Anúncio de RAID ABERTA enviado.`);
 
             } else if (announcerState.state === 'open' && Date.now() >= tenSecondMark) {
                  const closingAvatar = await assetService.getAsset(`${assetPrefix}F`);
-                 await webhook.edit({ name: `Raid ${raidId} fechando em 10s!`, avatar: closingAvatar });
+                 await webhookClient.edit({ name: `Raid ${raidId} fechando em 10s!`, avatar: closingAvatar });
                 
                 const gifUrl = await assetService.getAsset(`${assetPrefix}F`);
                 const closingEmbed = new EmbedBuilder()
@@ -102,7 +103,7 @@ async function handleRaidLifecycle(container) {
 
             if (isDifferentRaid) {
                 const nextAvatar = await assetService.getAsset(`${assetPrefix}PR`);
-                await webhook.edit({ name: `Próxima Raid: ${raidId}`, avatar: nextAvatar });
+                await webhookClient.edit({ name: `Próxima Raid: ${raidId}`, avatar: nextAvatar });
                  
                 const gifUrl = await assetService.getAsset(`${assetPrefix}PR`);
                 const embed = new EmbedBuilder()
@@ -121,12 +122,12 @@ async function handleRaidLifecycle(container) {
                     message = await webhookClient.send({ embeds: [embed], wait: true });
                 }
 
-                await setDoc(announcerRef, { state: 'next_up', raidId, messageId: message.id, webhookUrl: webhook.url }, { merge: true });
+                await setDoc(announcerRef, { state: 'next_up', raidId, messageId: message.id, webhookUrl: webhookClient.url }, { merge: true });
                 logger.info(`[${raidId}] Anunciado como PRÓXIMA RAID.`);
             
             } else if (announcerState.state === 'next_up' && Date.now() >= fiveMinuteMark) {
                 const fiveMinAvatar = await assetService.getAsset(`${assetPrefix}5m`);
-                await webhook.edit({ name: `Atenção! Raid ${raidId} em 5 Min!`, avatar: fiveMinAvatar });
+                await webhookClient.edit({ name: `Atenção! Raid ${raidId} em 5 Min!`, avatar: fiveMinAvatar });
 
                 const gifUrl = await assetService.getAsset(`${assetPrefix}5m`);
                 const embed = new EmbedBuilder()
