@@ -112,6 +112,44 @@ export const world2Data = {
       name: 'Restaurant Raid', 
       boss: 'Big Mom', 
       description: 'Uma raid com 1000 waves onde se obtém o Chef Power.',
+      rewards: {
+        general: [
+            { item: 'Avatar Soul', amount: 'x1', probability: 0.25 },
+            { item: 'Shadow Soul', amount: 'x1', probability: 0.20 },
+            { item: 'Obelisk Coin', amount: 'x1', probability: 0.0035 },
+            { item: 'Lunch Box', amount: 'x1', probability: 0.003 },
+            { item: 'Restaurant Box', amount: 'x1', probability: 0.50 },
+            { item: 'Chef Power Box', amount: 'x1', probability: 0.50 },
+            { item: 'Exp', amount: 'x500', probability: 1 },
+            { item: 'Coins', amount: 'x100k', probability: 1 },
+        ],
+        lunchBox: [
+            { item: 'Chocolate Bar', amount: 'x1', probability: 0.11 },
+            { item: 'Cheese Pizza Slice', amount: 'x1', probability: 0.11 },
+            { item: 'Milk', amount: 'x1', probability: 0.11 },
+            { item: 'Green Gummy Bear', amount: 'x1', probability: 0.11 },
+            { item: 'Hot Sauce', amount: 'x1', probability: 0.12 },
+            { item: 'Coffee', amount: 'x1', probability: 0.11 },
+            { item: 'Doughnut', amount: 'x1', probability: 0.11 },
+            { item: 'Fried Egg', amount: 'x1', probability: 0.11 },
+            { item: 'Waffle', amount: 'x1', probability: 0.11 },
+        ],
+        restaurantBox: [
+            { item: 'Dragon Race Token', amount: 'x8-13', probability: 0.20 },
+            { item: 'Saiyan Token', amount: 'x8-13', probability: 0.20 },
+            { item: 'Pirate Crew Token', amount: 'x8-13', probability: 0.20 },
+            { item: 'Demon Fruit Token', amount: 'x8-13', probability: 0.20 },
+            { item: 'Sword Token', amount: 'x11-16', probability: 0.20 },
+        ],
+        chefPowerBox: [
+            { item: 'Common Chef', probability: 0.55 },
+            { item: 'Uncommon Chef', probability: 0.33 },
+            { item: 'Rare Chef', probability: 0.09 },
+            { item: 'Epic Chef', probability: 0.05 },
+            { item: 'Legendary Chef', probability: 0.01 },
+            { item: 'Mythical Chef', probability: 0.005 },
+        ]
+      },
       achievements: {
         headers: ['Conquista', 'Requisito', 'Bônus'],
         rows: [
@@ -215,5 +253,3 @@ export const world2Data = {
     }
   ]
 }
-
-    
