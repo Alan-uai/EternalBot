@@ -41,7 +41,7 @@ export function getAvailableRaids() {
         }
     });
     
-    // Adiciona raids do Halloween (Mundo 1)
+    // Adiciona raids do Halloween/Graveyard (Mundo 1)
     world1Data.dungeons.forEach(dungeon => {
         if (!soloRaids.includes(dungeon.name)) {
              allRaids.set(dungeon.name, {

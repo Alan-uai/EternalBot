@@ -48,7 +48,8 @@ export const world1Data = {
       { id: 'imp-tail', name: 'Imp Tail', world: 'Mundo 1', boss: 'Halloween Raid', rarity: 'Evento', coins_bonus: '0.2', energy_bonus: '0.2x', damage_bonus: '0.2x' }
   ],
   dungeons: [
-      { name: 'Halloween Raid', boss: 'Pumpkin King', description: 'Uma raid de evento com temática de Halloween.'}
+      { name: 'Halloween Raid', boss: 'Pumpkin King', description: 'Uma raid de evento com temática de Halloween.'},
+      { name: 'Graveyard Defense', boss: 'Necromancer', description: 'Uma raid de defesa de cemitério com temática de Halloween.'}
   ]
 };
 
