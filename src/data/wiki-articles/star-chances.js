@@ -12,7 +12,7 @@ export const starChancesArticle = {
       rows: [
         { 'World': 1, 'Cost': '25', 'Common': '30.63%', 'Uncommon': '30.63%', 'Rare': '14.29%', 'Epic': '14.29%', 'Legendary': '9.62%', 'Mythic': '0.412%', 'Phantom': '0.137%' },
         { 'World': 2, 'Cost': '250', 'Common': '30.63%', 'Uncommon': '30.63%', 'Rare': '14.29%', 'Epic': '14.29%', 'Legendary': '9.62%', 'Mythic': '0.412%', 'Phantom': '0.137%' },
-        { 'World': 3, 'Cost': '2.5k', 'Common': '40.00%', 'Uncommon': '39.63%', 'Rare': '14.00%', 'Epic': '6.00%', 'Legendary': '0.35%', 'Mythic': '0.015%', 'Phantom': '0.005%' },
+        { 'World': 3, 'Cost': '2.5k', 'Common': '30.63%', 'Uncommon': '30.63%', 'Rare': '14.29%', 'Epic': '9.62%', 'Legendary': '0.412%', 'Mythic': '0.137%', 'Phantom': 'N/A' },
         { 'World': 4, 'Cost': '25k', 'Common': '40.00%', 'Uncommon': '39.63%', 'Rare': '14.00%', 'Epic': '6.00%', 'Legendary': '0.35%', 'Mythic': '0.015%', 'Phantom': '0.005%' },
         { 'World': 5, 'Cost': '312k', 'Common': '40.000%', 'Uncommon': '39.630%', 'Rare': '14.000%', 'Epic': '6.000%', 'Legendary': '0.350%', 'Mythic': '0.01%', 'Phantom': '0.0025%' },
         { 'World': 6, 'Cost': '3.9M', 'Common': '40.000%', 'Uncommon': '39.630%', 'Rare': '14.000%', 'Epic': '6.000%', 'Legendary': '0.350%', 'Mythic': '0.01%', 'Phantom': '0.0025%' },
