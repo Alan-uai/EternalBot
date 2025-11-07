@@ -68,7 +68,67 @@ export const world4Data = {
   ],
   dungeons: [
       { name: 'Cursed Raid', boss: 'Desconhecido', description: 'Uma raid onde se obtém os poderes Curses e Cursed Power.'}
+  ],
+  missions: [
+    {
+        name: 'Missão #1',
+        requirement: 'Derrotar 30 Itodo',
+        rewards: [
+            { name: 'World Key', amount: 1 },
+            { name: 'Cursed Token', amount: 5 },
+            { name: 'Star Luck', amount: '1.17%' },
+            { name: 'Exp', amount: '2k' }
+        ]
+    },
+    {
+        name: 'Missão #2',
+        requirement: 'Derrotar 25 Nebara',
+        rewards: [
+            { name: 'World Key', amount: 1 },
+            { name: 'Cursed Token', amount: 10 },
+            { name: 'Exp', amount: '2.01k' }
+        ]
+    },
+    {
+        name: 'Missão #3',
+        requirement: 'Derrotar 20 Magum',
+        rewards: [
+            { name: 'World Key', amount: 1 },
+            { name: 'Drop Percent', amount: '4%' },
+            { name: 'Exp', amount: '2.58k' }
+        ]
+    },
+    {
+        name: 'Missão #4',
+        requirement: 'Derrotar 15 Meki',
+        rewards: [
+            { name: 'World Key', amount: 1 },
+            { name: 'Drop Percent', amount: '4%' },
+            { name: 'Exp', amount: '3.37k' }
+        ]
+    },
+    {
+        name: 'Missão #5',
+        requirement: 'Derrotar 10 Tage',
+        rewards: [
+            { name: 'Avatar Soul', amount: 5 },
+            { name: 'Pet Chest', amount: 1 },
+            { name: 'Drop Percent', amount: '5%' },
+            { name: 'World Key', amount: 1 },
+            { name: 'Exp', amount: '4.43k' }
+        ]
+    },
+    {
+        name: 'Missão #6',
+        requirement: 'Derrotar 5 Gajo',
+        rewards: [
+            { name: 'Avatar Soul', amount: 10 },
+            { name: 'Pet Chest', amount: 1 },
+            { name: 'Cursed Token', amount: 10 },
+            { name: 'Drop Percent', amount: '5%' },
+            { name: 'World Key', amount: 1 },
+            { name: 'Exp', amount: '4.8k' }
+        ]
+    }
   ]
 };
-
-    
