@@ -5,13 +5,13 @@ export const world2Data = {
   summary: 'Mundo temático de piratas, focado em moedas e dano. Introduz o chefe Shanks.',
   content: 'Mundo temático de piratas. Aqui é possível fabricar la espada Phantom "Venomstrike" no "Sword Exchanger", usando 20 espadas Míticas "Redmourne", 10B de Moedas e 5 Cristais Vermelhos (dano).',
   npcs: [
-    { name: 'Nomi', rank: 'E', exp: 150, hp: '4.5B', drops: { coins: { amount: 'x500', probability: 1 }, pirate_crew_token: { amount: 'x1-5', probability: 0.1 }, sword_token: { amount: 'x1-5', probability: 0.1 }, haki_token: { amount: 'x1-5', probability: 0.1 }, exp: { amount: 'x9', probability: 1 }, avatar_soul: { amount: 1, probability: 0.11 }, avatar: { probability: 0.01 } } },
-    { name: 'Usup', rank: 'D', exp: 250, hp: '70B', drops: { coins: { amount: 'x1k', probability: 1 }, pirate_crew_token: { amount: 'x1-5', probability: 0.1 }, sword_token: { amount: 'x1-5', probability: 0.1 }, haki_token: { amount: 'x1-5', probability: 0.1 }, exp: { amount: 'x10', probability: 1 }, avatar_soul: { amount: 1, probability: 0.11 }, avatar: { probability: 0.01 } } },
-    { name: 'Robins', rank: 'C', exp: 400, hp: '250B', drops: { coins: { amount: 'x1.5k', probability: 1 }, pirate_crew_token: { amount: 'x1-5', probability: 0.1 }, sword_token: { amount: 'x1-5', probability: 0.1 }, haki_token: { amount: 'x1-5', probability: 0.1 }, exp: { amount: 'x11', probability: 1 }, avatar_soul: { amount: 1, probability: 0.125 }, avatar: { probability: 0.01 } } },
-    { name: 'Senji', rank: 'B', exp: 600, hp: '1.2T', drops: { coins: { amount: 'x2k', probability: 1 }, pirate_crew_token: { amount: 'x1-5', probability: 0.1 }, sword_token: { amount: 'x1-5', probability: 0.1 }, haki_token: { amount: 'x1-5', probability: 0.1 }, exp: { amount: 'x12', probability: 1 }, avatar_soul: { amount: 1, probability: 0.15 }, avatar: { probability: 0.01 } } },
-    { name: 'Zaro', rank: 'A', exp: 850, hp: '12T', drops: { coins: { amount: 'x2.5k', probability: 1 }, demon_fruit_token: { amount: 'x1-5', probability: 0.1 }, sword_token: { amount: 'x1-5', probability: 0.1 }, haki_token: { amount: 'x1-5', probability: 0.1 }, exp: { amount: 'x13', probability: 1 }, avatar_soul: { amount: 1, probability: 0.2 }, avatar: { probability: 0.01 } } },
-    { name: 'Loffy', rank: 'S', exp: 1200, hp: '120T', drops: { coins: { amount: 'x3k', probability: 1 }, demon_fruit_token: { amount: 'x1-5', probability: 0.1 }, sword_token: { amount: 'x1-5', probability: 0.1 }, haki_token: { amount: 'x1-5', probability: 0.1 }, exp: { amount: 'x14', probability: 1 }, avatar_soul: { amount: 1, probability: 0.25 }, avatar: { probability: 0.01 } } },
-    { name: 'Shanks', rank: 'SS', exp: 2500, hp: '5sx', drops: { coins: { amount: 'x7k', probability: 1 }, demon_fruit_token: { amount: 'x3-5', probability: 0.1 }, pirate_crew_token: { amount: 'x3-5', probability: 0.1 }, haki_token: { amount: 'x3-5', probability: 0.1 }, exp: { amount: 'x30', probability: 1 }, avatar_soul: { amount: 1, probability: 0.5 }, red_emperor_aura: { probability: 0.01 }, armless_cloak: { probability: 0.25 }, avatar: { probability: 0.01 } }, videoUrl: 'https://cdn.discordapp.com/attachments/1430337273794265250/1430337623989157898/ScreenRecording_10-21-2025_10-30-18_1.mov?ex=68fa11f7&is=68f8c077&hm=545bf96550f91648d3cb19976024f9177520781ec5a21df3210a4c85af955e54&' },
+    { name: 'Nomi', rank: 'E', exp: 150, hp: '4.5B', drops: { coins: { amount: 'x500', probability: 1 }, pirate_crew_token: { amount: 'x1-5', probability: 0.1 }, sword_token: { amount: 'x1-5', probability: 0.1 }, haki_token: { amount: 'x1-5', probability: 0.1 }, exp: { amount: 'x9', probability: 1 }, avatar: { probability: 0.01 } } },
+    { name: 'Usup', rank: 'D', exp: 250, hp: '70B', drops: { coins: { amount: 'x1k', probability: 1 }, pirate_crew_token: { amount: 'x1-5', probability: 0.1 }, sword_token: { amount: 'x1-5', probability: 0.1 }, haki_token: { amount: 'x1-5', probability: 0.1 }, exp: { amount: 'x10', probability: 1 }, avatar: { probability: 0.01 } } },
+    { name: 'Robins', rank: 'C', exp: 400, hp: '250B', drops: { coins: { amount: 'x1.5k', probability: 1 }, pirate_crew_token: { amount: 'x1-5', probability: 0.1 }, sword_token: { amount: 'x1-5', probability: 0.1 }, haki_token: { amount: 'x1-5', probability: 0.1 }, exp: { amount: 'x11', probability: 1 }, avatar: { probability: 0.01 } } },
+    { name: 'Senji', rank: 'B', exp: 600, hp: '1.2T', drops: { coins: { amount: 'x2k', probability: 1 }, pirate_crew_token: { amount: 'x1-5', probability: 0.1 }, sword_token: { amount: 'x1-5', probability: 0.1 }, haki_token: { amount: 'x1-5', probability: 0.1 }, exp: { amount: 'x12', probability: 1 }, avatar: { probability: 0.01 } } },
+    { name: 'Zaro', rank: 'A', exp: 850, hp: '12T', drops: { coins: { amount: 'x2.5k', probability: 1 }, demon_fruit_token: { amount: 'x1-5', probability: 0.1 }, sword_token: { amount: 'x1-5', probability: 0.1 }, haki_token: { amount: 'x1-5', probability: 0.1 }, exp: { amount: 'x13', probability: 1 }, avatar: { probability: 0.01 } } },
+    { name: 'Loffy', rank: 'S', exp: 1200, hp: '120T', drops: { coins: { amount: 'x3k', probability: 1 }, demon_fruit_token: { amount: 'x1-5', probability: 0.1 }, sword_token: { amount: 'x1-5', probability: 0.1 }, haki_token: { amount: 'x1-5', probability: 0.1 }, exp: { amount: 'x14', probability: 1 }, avatar: { probability: 0.01 } } },
+    { name: 'Shanks', rank: 'SS', exp: 2500, hp: '5sx', drops: { coins: { amount: 'x7k', probability: 1 }, demon_fruit_token: { amount: 'x3-5', probability: 0.1 }, pirate_crew_token: { amount: 'x3-5', probability: 0.1 }, haki_token: { amount: 'x3-5', probability: 0.1 }, exp: { amount: 'x30', probability: 1 }, red_emperor_aura: { probability: 0.01 }, armless_cloak: { probability: 0.25 }, avatar: { probability: 0.01 } }, videoUrl: 'https://cdn.discordapp.com/attachments/1430337273794265250/1430337623989157898/ScreenRecording_10-21-2025_10-30-18_1.mov?ex=68fa11f7&is=68f8c077&hm=545bf96550f91648d3cb19976024f9177520781ec5a21df3210a4c85af955e54&' },
   ],
   pets: [
     { name: 'Nomi', rarity: 'Comum', energy_bonus: '8' },
@@ -133,6 +133,67 @@ export const world2Data = {
         { type: 'Damage Multiply', value: '0.25x' },
         { type: 'Exp Percent', value: '3.5%' }
       ]
+    }
+  ],
+  missions: [
+    {
+        name: 'Missão #1',
+        requirement: 'Derrotar 30 Nomi',
+        rewards: [
+            { name: 'Poder de Chef', amount: 1 },
+            { name: 'Chave de Mundo', amount: 1 },
+            { name: 'Experiência', amount: '270' }
+        ]
+    },
+    {
+        name: 'Missão #2',
+        requirement: 'Derrotar 25 Usup',
+        rewards: [
+            { name: 'Poder de Chef', amount: 1 },
+            { name: 'Chave de Mundo', amount: 1 },
+            { name: 'Experiência', amount: '500' }
+        ]
+    },
+    {
+        name: 'Missão #3',
+        requirement: 'Derrotar 20 Robins',
+        rewards: [
+            { name: 'Alma do Avatar', amount: 5 },
+            { name: 'Poder de Chef', amount: 2 },
+            { name: 'Chave de Mundo', amount: 1 },
+            { name: 'Experiência', amount: '650' }
+        ]
+    },
+    {
+        name: 'Missão #4',
+        requirement: 'Derrotar 15 Senji',
+        rewards: [
+            { name: 'Chave de Mundo', amount: 1 },
+            { name: 'Drop Percent', amount: '2%' },
+            { name: 'Experiência', amount: '900' }
+        ]
+    },
+    {
+        name: 'Missão #5',
+        requirement: 'Derrotar 10 Zaro',
+        rewards: [
+            { name: 'Alma do Avatar', amount: 10 },
+            { name: 'Poder de Chef', amount: 2 },
+            { name: 'Token de Pirata', amount: 10 },
+            { name: 'Chave de Mundo', amount: 1 },
+            { name: 'Experiência', amount: '1.1k' }
+        ]
+    },
+    {
+        name: 'Missão #6',
+        requirement: 'Derrotar 5 Loffy',
+        rewards: [
+            { name: 'Baú de Pet', amount: 1 },
+            { name: 'Drop Percent', amount: '3%' },
+            { name: 'Joia', amount: 1 },
+            { name: 'Chave de Mundo', amount: 1 },
+            { name: 'Experiência', amount: '1.3k' }
+        ]
     }
   ]
 }
