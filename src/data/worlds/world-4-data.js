@@ -83,8 +83,8 @@ export const world4Data = {
         name: 'Missão #2',
         requirement: 'Derrotar 25 Nebara',
         rewards: [
-            { name: 'World Key', amount: 1 },
             { name: 'Cursed Token', amount: 10 },
+            { name: 'World Key', amount: 1 },
             { name: 'Exp', amount: '2.01k' }
         ]
     },
@@ -92,6 +92,7 @@ export const world4Data = {
         name: 'Missão #3',
         requirement: 'Derrotar 20 Magum',
         rewards: [
+            { name: 'Pet Chest', amount: 1 },
             { name: 'World Key', amount: 1 },
             { name: 'Drop Percent', amount: '4%' },
             { name: 'Exp', amount: '2.58k' }
@@ -101,6 +102,7 @@ export const world4Data = {
         name: 'Missão #4',
         requirement: 'Derrotar 15 Meki',
         rewards: [
+            { name: 'Pet Chest', amount: 1 },
             { name: 'World Key', amount: 1 },
             { name: 'Drop Percent', amount: '4%' },
             { name: 'Exp', amount: '3.37k' }
@@ -112,8 +114,8 @@ export const world4Data = {
         rewards: [
             { name: 'Avatar Soul', amount: 5 },
             { name: 'Pet Chest', amount: 1 },
-            { name: 'Drop Percent', amount: '5%' },
             { name: 'World Key', amount: 1 },
+            { name: 'Drop Percent', amount: '5%' },
             { name: 'Exp', amount: '4.43k' }
         ]
     },
@@ -123,9 +125,9 @@ export const world4Data = {
         rewards: [
             { name: 'Avatar Soul', amount: 10 },
             { name: 'Pet Chest', amount: 1 },
+            { name: 'World Key', amount: 1 },
             { name: 'Cursed Token', amount: 10 },
             { name: 'Drop Percent', amount: '5%' },
-            { name: 'World Key', amount: 1 },
             { name: 'Exp', amount: '4.8k' }
         ]
     }
