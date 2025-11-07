@@ -23,7 +23,7 @@ export const world4Data = {
       type: 'gacha',
       statType: 'energy',
       unlockCost: 'Varia',
-      description: "Poder de energia obtido na Cursed Raid.",
+      description: "Poder de energia obtido no gacha do mundo 4.",
       stats: [
         { name: 'Blazing Cataclysm', multiplier: '2x', rarity: 'Comum' },
         { name: 'Nullborn Phantom', multiplier: '3x', rarity: 'Incomum' },
@@ -39,7 +39,7 @@ export const world4Data = {
       type: 'gacha',
       statType: 'mixed',
       unlockCost: 'Varia',
-      description: "Poder de dano e crítico de energia obtido na Cursed Raid.",
+      description: "Poder de dano e dano crítico de energia obtido na Cursed Raid.",
       stats: [
         { name: 'Common Curse', statType: 'damage', multiplier: '0.6x', rarity: 'Comum' },
         { name: 'Uncommon Curse', statType: 'damage', multiplier: '0.8x', rarity: 'Incomum' },
