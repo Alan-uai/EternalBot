@@ -3,7 +3,7 @@ export const world2Data = {
   id: 'world-2',
   title: 'Mundo 2 - Ilha do Moinho',
   summary: 'Mundo temático de piratas, focado em moedas e dano. Introduz o chefe Shanks.',
-  content: 'Mundo temático de piratas. Aqui é possível fabricar a espada Phantom "Venomstrike" no "Sword Exchanger", usando 20 espadas Míticas "Redmourne", 10B de Moedas e 5 Cristais Vermelhos (dano).',
+  content: 'Mundo temático de piratas. Aqui é possível fabricar a espada Phantom "Venomstrike" no "Sword Exchanger", usando 20 espadas Míticas "Redmourne", 10B de Moedas e 5 Cristais Vermelhos (dano). Também é neste mundo que se obtêm as espadas de dano via gacha.',
   npcs: [
     { name: 'Marinheiro Pirata', rank: 'E', exp: 150, hp: '100M' },
     { name: 'Espadachim Pirata', rank: 'D', exp: 250, hp: '500M' },
@@ -50,6 +50,36 @@ export const world2Data = {
         { name: 'Phantom Chef', multiplier: '10x', rarity: 'Phantom' },
       ],
     },
+    {
+        name: "Demon Fruit",
+        type: "gacha",
+        statType: "mixed",
+        unlockCost: "1.5k",
+        stats: [
+            { name: "Bomb Fruit", statType: "energy", multiplier: "2x", rarity: "Supremo" },
+            { name: "Rubber Fruit", statType: "energy", multiplier: "3x", rarity: "Comum" },
+            { name: "Sand Fruit", statType: "energy", multiplier: "4x", rarity: "Incomum" },
+            { name: "Flame Fruit", statType: "energy", multiplier: "5x", rarity: "Incomum" },
+            { name: "Smoke Fruit", statType: "energy", multiplier: "6x", rarity: "Raro" },
+            { name: "Magma Fruit", statType: "energy", multiplier: "7x", rarity: "Épico" },
+            { name: "Revive Fruit", statType: "energy", multiplier: "8x", rarity: "Épico" },
+            { name: "String Fruit", statType: "energy", multiplier: "9x", rarity: "Épico" },
+            { name: "Human Fruit", statType: "coin", multiplier: "10x", rarity: "Lendário" },
+            { name: "Dark Fruit", statType: "coin", multiplier: "11x", rarity: "Lendário" },
+            { name: "Quake Fruit", statType: "damage", multiplier: "12x", rarity: "Mítico" },
+            { name: "Money Fruit", statType: "coin", multiplier: "1x", rarity: "Lendário" },
+            { name: "Phoenix Fruit", statType: "energy", multiplier: "15x", rarity: "Raro" },
+            { name: "Dough Fruit", statType: "energy", multiplier: "10x", rarity: "Phantom" }
+        ]
+    },
+    {
+        name: "Haki Upgrade",
+        type: "progression",
+        statType: "damage",
+        maxLevel: 60,
+        maxBoost: "0.6x Damage",
+        unlockCost: "Varia"
+    }
   ],
   accessories: [
     { id: 'bandana-pirata', name: 'Bandana Pirata', world: 'Mundo 2', boss: 'Capitão Pirata', rarity: 'Incomum', coins_bonus: '0.05' }
