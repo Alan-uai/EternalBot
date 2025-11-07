@@ -10,7 +10,7 @@ export const starChancesArticle = {
     world1_8: {
       headers: ['World', 'Cost', 'Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', 'Mythic', 'Phantom'],
       rows: [
-        { 'World': 1, 'Cost': '25', 'Common': '40.00%', 'Uncommon': '39.63%', 'Rare': '14.00%', 'Epic': '6.00%', 'Legendary': '0.35%', 'Mythic': '0.015%', 'Phantom': '0.005%' },
+        { 'World': 1, 'Cost': '25', 'Common': '30.63%', 'Uncommon': '30.63%', 'Rare': '14.29%', 'Epic': '14.29%', 'Legendary': '9.62%', 'Mythic': '0.412%', 'Phantom': '0.137%' },
         { 'World': 2, 'Cost': '250', 'Common': '40.00%', 'Uncommon': '39.63%', 'Rare': '14.00%', 'Epic': '6.00%', 'Legendary': '0.35%', 'Mythic': '0.015%', 'Phantom': '0.005%' },
         { 'World': 3, 'Cost': '2.5k', 'Common': '40.00%', 'Uncommon': '39.63%', 'Rare': '14.00%', 'Epic': '6.00%', 'Legendary': '0.35%', 'Mythic': '0.015%', 'Phantom': '0.005%' },
         { 'World': 4, 'Cost': '25k', 'Common': '40.00%', 'Uncommon': '39.63%', 'Rare': '14.00%', 'Epic': '6.00%', 'Legendary': '0.35%', 'Mythic': '0.015%', 'Phantom': '0.005%' },
@@ -48,5 +48,3 @@ export const starChancesArticle = {
     },
   },
 };
-
-    

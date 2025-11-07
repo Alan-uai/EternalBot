@@ -6,16 +6,28 @@ export const avatarIndexArticle = {
   content: `Esta página serve como um índice para os bônus de energia de todos os Avatares no jogo, organizados por mundo e rank. Use estas tabelas para planejar qual avatar obter para maximizar seus ganhos de energia.`,
   tags: ['avatar', 'energia', 'index', 'guia', 'bônus', 'lvl 150'],
   tables: {
-    world1_3: {
-        headers: ['Rank', 'Stats (W1)', 'Stats (lvl 150, W1)', 'Stats (W2)', 'Stats (lvl 150, W2)', 'Stats (W3)', 'Stats (lvl 150, W3)'],
+    world1: {
+        headers: ['Avatar', 'Raridade', 'Stats (Base)', 'Stats (lvl 150)'],
         rows: [
-          { Rank: 'E', 'Stats (W1)': '3', 'Stats (lvl 150, W1)': '25.5', 'Stats (W2)': '8', 'Stats (lvl 150, W2)': '68', 'Stats (W3)': '19', 'Stats (lvl 150, W3)': '161.5' },
-          { Rank: 'D', 'Stats (W1)': '6', 'Stats (lvl 150, W1)': '51', 'Stats (W2)': '15', 'Stats (lvl 150, W2)': '127.5', 'Stats (W3)': '38', 'Stats (lvl 150, W3)': '323' },
-          { Rank: 'C', 'Stats (W1)': '9', 'Stats (lvl 150, W1)': '76.5', 'Stats (W2)': '23', 'Stats (lvl 150, W2)': '195.5', 'Stats (W3)': '56', 'Stats (lvl 150, W3)': '476' },
-          { Rank: 'B', 'Stats (W1)': '12', 'Stats (lvl 150, W1)': '102', 'Stats (W2)': '30', 'Stats (lvl 150, W2)': '255', 'Stats (W3)': '75', 'Stats (lvl 150, W3)': '637.5' },
-          { Rank: 'A', 'Stats (W1)': '15', 'Stats (lvl 150, W1)': '127.5', 'Stats (W2)': '38', 'Stats (lvl 150, W2)': '323', 'Stats (W3)': '94', 'Stats (lvl 150, W3)': '799' },
-          { Rank: 'S', 'Stats (W1)': '20', 'Stats (lvl 150, W1)': '170', 'Stats (W2)': '50', 'Stats (lvl 150, W2)': '425', 'Stats (W3)': '125', 'Stats (lvl 150, W3)': '1.06k' },
-          { Rank: 'SS', 'Stats (W1)': '60', 'Stats (lvl 150, W1)': '510', 'Stats (W2)': '150', 'Stats (lvl 150, W2)': '1.27k', 'Stats (W3)': '375', 'Stats (lvl 150, W3)': '3.18k' },
+          { 'Avatar': '[Av] Kriluni', 'Raridade': 'Comum', 'Stats (Base)': '3', 'Stats (lvl 150)': '25.5' },
+          { 'Avatar': '[Av] Ymicha', 'Raridade': 'Incomum', 'Stats (Base)': '6', 'Stats (lvl 150)': '51' },
+          { 'Avatar': '[Av] Tian Shan', 'Raridade': 'Raro', 'Stats (Base)': '9', 'Stats (lvl 150)': '76.5' },
+          { 'Avatar': '[Av] Kohan', 'Raridade': 'Épico', 'Stats (Base)': '12', 'Stats (lvl 150)': '102' },
+          { 'Avatar': '[Av] Picco', 'Raridade': 'Lendário', 'Stats (Base)': '15', 'Stats (lvl 150)': '127.5' },
+          { 'Avatar': '[Av] Koku', 'Raridade': 'Mítico', 'Stats (Base)': '20', 'Stats (lvl 150)': '170' },
+          { 'Avatar': '[Av] Kid Kohan', 'Raridade': 'Phantom', 'Stats (Base)': '60', 'Stats (lvl 150)': '510' },
+        ],
+    },
+    world2_3: {
+        headers: ['Rank', 'Stats (W2)', 'Stats (lvl 150, W2)', 'Stats (W3)', 'Stats (lvl 150, W3)'],
+        rows: [
+          { Rank: 'E', 'Stats (W2)': '8', 'Stats (lvl 150, W2)': '68', 'Stats (W3)': '19', 'Stats (lvl 150, W3)': '161.5' },
+          { Rank: 'D', 'Stats (W2)': '15', 'Stats (lvl 150, W2)': '127.5', 'Stats (W3)': '38', 'Stats (lvl 150, W3)': '323' },
+          { Rank: 'C', 'Stats (W2)': '23', 'Stats (lvl 150, W2)': '195.5', 'Stats (W3)': '56', 'Stats (lvl 150, W3)': '476' },
+          { Rank: 'B', 'Stats (W2)': '30', 'Stats (lvl 150, W2)': '255', 'Stats (W3)': '75', 'Stats (lvl 150, W3)': '637.5' },
+          { Rank: 'A', 'Stats (W2)': '38', 'Stats (lvl 150, W2)': '323', 'Stats (W3)': '94', 'Stats (lvl 150, W3)': '799' },
+          { Rank: 'S', 'Stats (W2)': '50', 'Stats (lvl 150, W2)': '425', 'Stats (W3)': '125', 'Stats (lvl 150, W3)': '1.06k' },
+          { Rank: 'SS', 'Stats (W2)': '150', 'Stats (lvl 150, W2)': '1.27k', 'Stats (W3)': '375', 'Stats (lvl 150, W3)': '3.18k' },
         ],
     },
     world4_6: {
