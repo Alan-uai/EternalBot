@@ -3,6 +3,7 @@ export const world1Data = {
   id: 'world-1',
   title: 'Mundo 1 - Ilha dos Monstros',
   summary: 'O mundo inicial e hub central do jogo. Lar do Kid Kohan, do Lobby de Dungeons, do local de Prestígio e das missões iniciais.',
+  content: 'O Mundo 1 é a área principal onde você encontrará a maioria dos sistemas de progressão do jogo. É aqui que se localiza o Lobby de Dungeons, o local de Prestígio, a loja de comidas (egg, chocolate, milk, donuts, hot sausage), os baús de recompensa (diário, comum, comunidade, vip, premium) e os placares de líderes (leaderboards).',
   npcs: [
     { name: 'Kriluni', rank: 'E', exp: 1, hp: '5k', drops: { coins: { amount: 'x50', probability: 1 }, dragon_race_token: { amount: 'x1-5', probability: 0.1 }, exp: { amount: 'x1', probability: 1 }, avatar_soul: { amount: 1, probability: 0.1 } } },
     { name: 'Ymicha', rank: 'D', exp: 2, hp: '230k', drops: { coins: { amount: 'x100', probability: 1 }, dragon_race_token: { amount: 'x1-5', probability: 0.1 }, exp: { amount: 'x2', probability: 1 }, avatar_soul: { amount: 1, probability: 0.11 } } },
@@ -63,7 +64,56 @@ export const world1Data = {
       { id: 'imp-tail', name: 'Imp Tail', world: 'Mundo 1', boss: 'Halloween Raid', rarity: 'Evento', coins_bonus: '0.2', energy_bonus: '0.2x', damage_bonus: '0.2x' }
   ],
   dungeons: [
-      { name: 'Tournament Raid', boss: 'Desconhecido', description: 'Uma dungeon de progressão no Mundo 1 que vai até a sala 550.'},
-      { name: 'Halloween Raid', boss: 'Pumpkin King', description: 'Uma raid de evento com temática de Halloween.'}
+      { 
+        name: 'Tournament Raid', 
+        boss: 'Desconhecido', 
+        description: 'Uma dungeon de progressão no Mundo 1 que vai até a sala 550.',
+        achievements: {
+            headers: ['Conquista', 'Requisito', 'Bônus'],
+            rows: [
+                { 'Conquista': 'Tournament Raid I', 'Requisito': 'Reach Wave 10', 'Bônus': '5% Energy' },
+                { 'Conquista': 'Tournament Raid II', 'Requisito': 'Reach Wave 20', 'Bônus': '5% Energy' },
+                { 'Conquista': 'Tournament Raid III', 'Requisito': 'Reach Wave 30', 'Bônus': '5% Energy' },
+                { 'Conquista': 'Tournament Raid IV', 'Requisito': 'Reach Wave 40', 'Bônus': '5% Star Luck' },
+                { 'Conquista': 'Tournament Raid V', 'Requisito': 'Reach Wave 60', 'Bônus': '10% Energy' },
+                { 'Conquista': 'Tournament Raid VI', 'Requisito': 'Reach Wave 80', 'Bônus': '10% Damage' },
+                { 'Conquista': 'Tournament Raid VII', 'Requisito': 'Reach Wave 100', 'Bônus': '10% Energy' },
+                { 'Conquista': 'Tournament Raid VIII', 'Requisito': 'Reach Wave 120', 'Bônus': '+5% Coin Drop' },
+                { 'Conquista': 'Tournament Raid IX', 'Requisito': 'Reach Wave 140', 'Bônus': '10% Energy' },
+                { 'Conquista': 'Tournament Raid X', 'Requisito': 'Reach Wave 160', 'Bônus': '10% Damage' },
+                { 'Conquista': 'Tournament Raid XI', 'Requisito': 'Reach Wave 180', 'Bônus': '10% Energy' },
+                { 'Conquista': 'Tournament Raid XII', 'Requisito': 'Reach Wave 200', 'Bônus': '5% Star Luck' },
+                { 'Conquista': 'Tournament Raid XIII', 'Requisito': 'Reach Wave 220', 'Bônus': '10% Energy' },
+                { 'Conquista': 'Tournament Raid XIV', 'Requisito': 'Reach Wave 240', 'Bônus': '10% Damage' },
+                { 'Conquista': 'Tournament Raid XV', 'Requisito': 'Reach Wave 260', 'Bônus': '10% Energy' },
+                { 'Conquista': 'Tournament Raid XVI', 'Requisito': 'Reach Wave 280', 'Bônus': '+5% Coin Drop' },
+                { 'Conquista': 'Tournament Raid XVII', 'Requisito': 'Reach Wave 300', 'Bônus': '10% Energy' },
+                { 'Conquista': 'Tournament Raid XVIII', 'Requisito': 'Reach Wave 320', 'Bônus': '10% Damage' },
+                { 'Conquista': 'Tournament Raid XIX', 'Requisito': 'Reach Wave 340', 'Bônus': '10% Energy' },
+                { 'Conquista': 'Tournament Raid XX', 'Requisito': 'Reach Wave 360', 'Bônus': '5% Star Luck' },
+                { 'Conquista': 'Tournament Raid XXI', 'Requisito': 'Reach Wave 380', 'Bônus': '10% Energy' },
+                { 'Conquista': 'Tournament Raid XXII', 'Requisito': 'Reach Wave 400', 'Bônus': '10% Damage' },
+                { 'Conquista': 'Tournament Raid XXIII', 'Requisito': 'Reach Wave 420', 'Bônus': '10% Energy' },
+                { 'Conquista': 'Tournament Raid XXIV', 'Requisito': 'Reach Wave 440', 'Bônus': '+5% Coin Drop' },
+                { 'Conquista': 'Tournament Raid XXV', 'Requisito': 'Reach Wave 460', 'Bônus': '10% Energy' },
+                { 'Conquista': 'Tournament Raid XXVI', 'Requisito': 'Reach Wave 480', 'Bônus': '10% Damage' },
+                { 'Conquista': 'Tournament Raid XXVII', 'Requisito': 'Reach Wave 500', 'Bônus': '10% Energy' },
+                { 'Conquista': 'Tournament Raid XXVIII', 'Requisito': 'Reach Wave 520', 'Bônus': '5% Star Luck' },
+                { 'Conquista': 'Tournament Raid XXIX', 'Requisito': 'Reach Wave 540', 'Bônus': '10% Energy' },
+                { 'Conquista': 'Tournament Raid XXX', 'Requisito': 'Reach Wave 560', 'Bônus': '10% Damage' },
+                { 'Conquista': 'Tournament Raid XXXI', 'Requisito': 'Reach Wave 580', 'Bônus': '5% Energy' },
+                { 'Conquista': 'Tournament Raid XXXII', 'Requisito': 'Reach Wave 600', 'Bônus': '10% Energy' },
+                { 'Conquista': 'Tournament Raid XXXIII', 'Requisito': 'Reach Wave 620', 'Bônus': '10% Damage' },
+                { 'Conquista': 'Tournament Raid XXXIV', 'Requisito': 'Reach Wave 640', 'Bônus': '5% Star Luck' },
+                { 'Conquista': 'Tournament Raid XXXV', 'Requisito': 'Reach Wave 660', 'Bônus': '10% Energy' },
+                { 'Conquista': 'Tournament Raid XXXVI', 'Requisito': 'Reach Wave 680', 'Bônus': '10% Damage' }
+            ]
+        }
+      },
+      { 
+        name: 'Halloween Raid', 
+        boss: 'Pumpkin King', 
+        description: 'Uma raid de evento com temática de Halloween. Contém o Halloween Crafting para criar Spooky Portions (2.5x de bônus) e o sistema de evolução da Halloween Bag.'
+      }
   ]
 };
