@@ -33,7 +33,7 @@ import { auraArticle } from './wiki-articles/aura-system.js';
 import { avatarIndexArticle } from './wiki-articles/avatar-index.js';
 import { birthdaySystemArticle } from './wiki-articles/birthday-system.js';
 import { championsIndexArticle } from './wiki-articles/champions-index.js';
-import { colorRulesGuideArticle } from './wiki-articles/color-rules-guide.js';
+import { colorsAndIconsGuideArticle } from './wiki-articles/colors-and-icons-guide.js';
 import { damageSwordsArticle } from './wiki-articles/damage-swords.js';
 import { energyGainPerRankArticle } from './wiki-articles/energy-gain.js';
 import { gamepassTierListArticle } from './wiki-articles/gamepass-tier-list.js';
@@ -127,6 +127,8 @@ export const allWikiArticles = [
     limitedPacksGuideArticle,
     avatarIndexArticle,
     birthdaySystemArticle,
-    colorRulesGuideArticle,
+    colorsAndIconsGuideArticle,
     howPowersWorkGuideArticle,
 ];
+
+    
