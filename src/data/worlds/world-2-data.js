@@ -54,8 +54,8 @@ export const world2Data = {
         name: "Demon Fruit",
         type: "gacha",
         statType: "mixed",
-        unlockCost: "1.5k",
         description: "Também são conhecidas como Akuma no Mi.",
+        unlockCost: "1.5k",
         stats: [
             { name: "Bomb Fruit", statType: "energy", multiplier: "2x", rarity: "Comum" },
             { name: "Rubber Fruit", statType: "energy", multiplier: "3x", rarity: "Comum" },
@@ -86,7 +86,6 @@ export const world2Data = {
     { id: 'bandana-pirata', name: 'Bandana Pirata', world: 'Mundo 2', boss: 'Capitão Pirata', rarity: 'Incomum', coins_bonus: '0.05' }
   ],
   dungeons: [
-    { name: 'Caverna do Tesouro', boss: 'Rei dos Mares', description: 'Uma caverna cheia de tesouros guardada por um monstro marinho.'},
     { 
       name: 'Restaurant Raid', 
       boss: 'Big Mom', 
