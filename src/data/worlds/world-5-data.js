@@ -28,29 +28,8 @@ export const world5Data = {
         { name: 'Respiração do Trovão', multiplier: '2.2x', rarity: 'Incomum', probability: 25 },
         { name: 'Respiração do Sol', multiplier: '5x', rarity: 'Phantom', probability: 0.2, energy_crit_bonus: '1.50%' },
       ],
-    },
-    {
-      name: 'Hero License Quest',
-      type: 'progression',
-      statType: 'mixed',
-      description: "Missão de Licença de Herói (Rank E), com tarefas neste mundo.",
-      missions: [
-          {
-              name: 'E Class Quest #1',
-              requirement: 'Derrotar 50 Hashira',
-              rewards: [{name: 'Chave de Missão', amount: 1}, {name: 'Chave de Incursão', amount: 1}]
-          },
-          {
-              name: 'E Class Quest #2',
-              requirement: 'Derrotar 25 Rangoki',
-              rewards: [{name: 'Chave de Incursão', amount: 1}, {name: 'Baú de Arma', amount: 1}]
-          },
-          {
-              name: 'E Class Quest #3',
-              requirement: 'Chegar ao piso 50 na Dungeon Easy (Lobby 1)',
-              rewards: [{name: 'Ticket de Missão', amount: 1}, {name: 'Créditos', amount: 15}, {name: 'Baú de Pet', amount: 1}]
-          }
-      ]
     }
   ]
 };
+
+    

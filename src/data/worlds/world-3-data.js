@@ -28,24 +28,6 @@ export const world3Data = {
         { name: 'Bankai', multiplier: '2.5x', rarity: 'Raro', probability: 10 },
         { name: 'Getsuga Tenshou Final', multiplier: '4x', rarity: 'Phantom', probability: 0.3, energy_crit_bonus: '1.00%' },
       ],
-    },
-    {
-      name: 'Hero License Quest',
-      type: 'progression',
-      statType: 'mixed',
-      description: "Missão de Licença de Herói (Rank D), com tarefas neste mundo.",
-      missions: [
-          {
-              name: 'F Class Quest',
-              requirement: 'Derrotar 75 Shinigami Novato',
-              rewards: [{name: 'Chave de Missão', amount: 1}, {name: 'Poção de Energia', amount: 1}]
-          },
-          {
-              name: 'F Class Quest',
-              requirement: 'Coletar 75 Almas de Hollow',
-              rewards: [{name: 'Poção de Moeda', amount: 1}, {name: 'Chave de Mundo', amount: 1}]
-          }
-      ]
     }
   ],
   accessories: [
@@ -55,5 +37,7 @@ export const world3Data = {
       { name: 'Las Noches', boss: 'Ulquiorra', description: 'O palácio dos Arrancars em Hueco Mundo.'}
   ]
 };
+
+    
 
     

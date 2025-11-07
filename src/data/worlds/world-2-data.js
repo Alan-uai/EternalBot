@@ -84,24 +84,6 @@ export const world2Data = {
         maxLevel: 60,
         maxBoost: "0.6x Damage",
         unlockCost: "Varia"
-    },
-    {
-      name: 'Hero License Quest',
-      type: 'progression',
-      statType: 'mixed',
-      description: "Missão de Licença de Herói (Rank D), com tarefas neste mundo.",
-      missions: [
-           {
-              name: 'F Class Quest',
-              requirement: 'Coletar 500 Pedaços de Moinho',
-              rewards: [{name: 'Chave de Missão', amount: 1}, {name: 'Baú de Pet', amount: 1}]
-          },
-          {
-              name: 'F Class Quest',
-              requirement: 'Derrotar 75 Robins',
-              rewards: []
-          }
-      ]
     }
   ],
   accessories: [
@@ -252,3 +234,5 @@ export const world2Data = {
     }
   ]
 }
+
+    

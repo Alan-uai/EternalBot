@@ -57,18 +57,17 @@ export const world1Data = {
       name: 'Hero License Quest',
       type: 'progression',
       statType: 'mixed',
-      description: "Missão de Licença de Herói (Rank F - Comum), com tarefas localizadas neste mundo.",
+      description: "Uma questline da Classe F iniciada no Mundo 1, com missões que se estendem por vários mundos. O jogador só pode aceitar uma missão desta categoria por vez.",
       missions: [
-          {
-              name: 'F Class Quest #1',
-              requirement: 'Derrotar 100 Kriluni',
-              rewards: [{name: 'Chave de Missão', amount: 1}, {name: 'Poção de Sorte', amount: 1}, {name: 'Poção de Dano', amount: 1}, {name: 'Poção de Energia', amount: 1}]
-          },
-           {
-              name: 'F Class Quest #2',
-              requirement: 'Coletar 100 Frutas do Dragão',
-              rewards: []
-          }
+          { name: 'F Class Quest #1', world: 1, requirement: 'Derrotar 100 Kriluni', rewards: [{name: 'Chave de Missão', amount: 1}, {name: 'Poção de Sorte', amount: 1}, {name: 'Poção de Dano', amount: 1}, {name: 'Poção de Energia', amount: 1}] },
+          { name: 'F Class Quest #2', world: 1, requirement: 'Coletar 100 Frutas do Dragão', rewards: [] },
+          { name: 'F Class Quest #3', world: 2, requirement: 'Coletar 500 Pedaços de Moinho', rewards: [{name: 'Chave de Missão', amount: 1}, {name: 'Baú de Pet', amount: 1}] },
+          { name: 'F Class Quest #4', world: 2, requirement: 'Derrotar 75 Robins', rewards: [] },
+          { name: 'F Class Quest #5', world: 3, requirement: 'Derrotar 75 Shinigami Novato', rewards: [{name: 'Chave de Missão', amount: 1}, {name: 'Poção de Energia', amount: 1}] },
+          { name: 'F Class Quest #6', world: 3, requirement: 'Coletar 75 Almas de Hollow', rewards: [{name: 'Poção de Moeda', amount: 1}, {name: 'Chave de Mundo', amount: 1}] },
+          { name: 'F Class Quest #7', world: 5, requirement: 'Derrotar 50 Hashira', rewards: [{name: 'Chave de Missão', amount: 1}, {name: 'Chave de Incursão', amount: 1}] },
+          { name: 'F Class Quest #8', world: 5, requirement: 'Derrotar 25 Rangoki', rewards: [{name: 'Chave de Incursão', amount: 1}, {name: 'Baú de Arma', amount: 1}] },
+          { name: 'F Class Quest #9', world: 'Lobby 1', requirement: 'Chegar ao piso 50 na Dungeon Easy (Lobby 1)', rewards: [{name: 'Ticket de Missão', amount: 1}, {name: 'Créditos', amount: 15}, {name: 'Baú de Pet', amount: 1}] }
       ]
     }
   ],
