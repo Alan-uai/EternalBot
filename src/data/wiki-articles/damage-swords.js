@@ -2,8 +2,14 @@
 export const damageSwordsArticle = {
   id: 'damage-swords',
   title: 'Espadas de Dano (Evolução)',
-  summary: 'Um guia para as espadas de dano e seus multiplicadores em cada nível de evolução (estrela), incluindo informações sobre a espada de evento Golden Venom Strike.',
-  content: `Espadas de dano aumentam seu poder de ataque. A cada evolução (nível de estrela), o multiplicador de dano aumenta significativamente. Para maximizar ainda mais o dano, as espadas podem ser aprimoradas com encantamentos como **Respirações** e **Runas**, que também possuem suas próprias raridades e bônus.
+  summary: 'Um guia para as espadas de dano, seus multiplicadores, custos e locais de evolução (estrela).',
+  content: `Espadas de dano aumentam seu poder de ataque e são obtidas inicialmente no gacha do **Mundo 2**. A cada evolução (nível de estrela), o multiplicador de dano aumenta significativamente.
+
+### Evolução (Estrelas)
+- **Evolução 1★:** Acontece no **Mundo 4**.
+- **Evolução 2★ e 3★:** Acontecem no **Mundo 5**.
+
+Para maximizar ainda mais o dano, as espadas podem ser aprimoradas com encantamentos como **Respirações** e **Runas**, que também possuem suas próprias raridades e bônus.
 
 **Nota Especial sobre a Golden Venom Strike:** A Golden Venom Strike foi uma espada de evento da atualização 17, que saiu na atualização 18 e não está mais disponível para obtenção. Ela era adquirida no Mundo 2 ao trocar uma Venomstrike de 3 estrelas (Phantom) por ela. A Golden Venom Strike possui um multiplicador de dano base de 38x e não possui estrelas ou passivas.`,
   tags: ['espadas', 'dano', 'arma', 'guia', 'geral', 'evolução', 'golden venom', 'respiração', 'runa'],
@@ -22,5 +28,13 @@ export const damageSwordsArticle = {
         { name: 'Golden Venom Strike', rarity: 'Evento', type: 'damage', probability: 'N/A', base_damage: '38x', one_star_damage: '38x', two_star_damage: '38x', three_star_damage: '38x' },
       ],
     },
+    evolutionCosts: {
+        headers: ['Evolução', 'Custo em Moedas', 'Custo em Cristais'],
+        rows: [
+            { 'Evolução': '1★', 'Custo em Moedas': '1B', 'Custo em Cristais': '1' },
+            { 'Evolução': '2★', 'Custo em Moedas': '5B', 'Custo em Cristais': '3' },
+            { 'Evolução': '3★', 'Custo em Moedas': '10B', 'Custo em Cristais': '5' },
+        ]
+    }
   },
 };
