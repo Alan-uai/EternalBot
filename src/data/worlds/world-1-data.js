@@ -247,5 +247,3 @@ export const world1Data = {
     }
   ]
 };
-
-    

@@ -13,6 +13,9 @@ Uma nova raid temporária está disponível no Mundo 1.
 - **Recompensa Final:** Ao completar a 1000ª onda, você recebe a **Halloween Bag**, um item de progressão com múltiplas evoluções.
 - **Drop Exclusivo:** A raid também tem a chance de dropar o acessório de cintura **Imp Tail**.
 
+### Graveyard Defense Raid (Ilha de Halloween)
+Uma segunda raid, a **Graveyard Defense**, está localizada em sua própria ilha de evento. É aqui que você pode obter o **Halloween Ghost Power** e os **Energy Zombies**.
+
 ### Sistema de Progressão da Halloween Bag
 
 A Halloween Bag funciona de forma similar ao poder "Adolla" do Mundo 19. Você começa com uma versão Comum e a evolui usando **Halloween Candies** (doces de Halloween), que são obtidos durante a raid. O nível da bag é aumentado no **Halloween Bag Leveling**, enquanto a raridade é evoluída no **Halloween Envolve**.
@@ -31,10 +34,24 @@ A Halloween Bag funciona de forma similar ao poder "Adolla" do Mundo 19. Você c
 ### Halloween Crafting (Spooky Portions)
 No local do evento, também é possível fabricar **"Spooky Portions"** (Poções Assustadoras). Elas funcionam como consumíveis que fornecem um multiplicador de **2.5x** para seus respectivos bônus (dano, energia, moedas), sendo uma ótima forma de acelerar o farm durante o evento.
 
+### Halloween Ghost Power
+Este poder é obtido na **Graveyard Defense Raid** e evolui usando "Eyes".
+| Raridade  | Stats (Base) | Stats (lvl 100) | Custo de Leveling |
+|-----------|--------------|-----------------|-------------------|
+| Common    | 0.5x         | 1x              | 11k Eyes          |
+| Uncommon  | 1x           | 2x              | 21k Eyes          |
+| Rare      | 1.5x         | 3x              | 31k Eyes          |
+| Epic      | 2.5x         | 5x              | 41k Eyes          |
+| Legendary | 3.5x         | 6.47x           | 50k Eyes          |
+| Mythic    | 5.5x         | 9.62x           | 60k Eyes          |
+| Phantom   | 7.5x         | 11.2x           | 70k Eyes          |
+| Supreme   | 10x          | 15x             | 200k Eyes         |
+
+
 ### Fighters do Evento
 Existem dois tipos de zumbis no jogo. Os de Energia são exclusivos do evento de Halloween. Os de Dano são encontrados no Mundo 25.
 `,
-  tags: ['guia', 'evento', 'halloween', 'raid', 'halloween bag', 'progressão', 'mundo 1', 'energia', 'dano', 'moedas', 'imp tail', 'zombie', 'spooky portions', 'ghost power'],
+  tags: ['guia', 'evento', 'halloween', 'raid', 'halloween bag', 'progressão', 'mundo 1', 'energia', 'dano', 'moedas', 'imp tail', 'zombie', 'spooky portions', 'ghost power', 'graveyard defense'],
   tables: {
     energyZombies: {
       headers: ['Name', 'Stats', 'Stats (1 Star)', 'Stats (2 Star)', 'Stats (3 Star)'],
