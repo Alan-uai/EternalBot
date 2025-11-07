@@ -180,15 +180,9 @@ export async function run(container) {
         let webhookUrl = docSnap.exists() ? docSnap.data().webhookUrl : null;
         let messageId = docSnap.exists() ? docSnap.data().messageId : null;
 
-        const channel = await client.channels.fetch(config.FARMING_PANEL_CHANNEL_ID);
         if (!webhookUrl) {
-            const webhooks = await channel.fetchWebhooks();
-            let webhook = webhooks.find(wh => wh.name.startsWith('Farms de'));
-            if (!webhook) {
-                 webhook = await channel.createWebhook({ name: `Farms de ${WEEKDAYS_PT[currentDay]}`, reason: 'Painel de agendamento de farms.'});
-            }
-            webhookUrl = webhook.url;
-            await setDoc(panelWebhookDocRef, { webhookUrl }, { merge: true });
+            logger.warn(`[farmingPanel] URL do webhook '${PANEL_DOC_ID}' não encontrada. O job 'ready' deve criá-la.`);
+            return;
         }
         
         const webhookClient = new WebhookClient({ url: webhookUrl });

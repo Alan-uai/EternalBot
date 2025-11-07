@@ -27,13 +27,8 @@ export async function run(container) {
         let messageId = docSnap.exists() ? docSnap.data().messageId : null;
 
         if (!webhookUrl) {
-            const webhooks = await panelChannel.fetchWebhooks();
-            let webhook = webhooks.find(wh => wh.name === PERSISTENT_WEBHOOK_NAME && wh.owner.id === client.user.id);
-            if (!webhook) {
-                 webhook = await panelChannel.createWebhook({ name: PERSISTENT_WEBHOOK_NAME, reason: 'Painel de suporte persistente.'});
-            }
-            webhookUrl = webhook.url;
-            await setDoc(panelWebhookDocRef, { webhookUrl }, { merge: true });
+            logger.warn(`[supportPanel] URL do webhook para '${PANEL_DOC_ID}' não encontrada. O job 'ready' deve criá-la.`);
+            return;
         }
         
         const webhookClient = new WebhookClient({ url: webhookUrl });

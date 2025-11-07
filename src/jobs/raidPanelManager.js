@@ -50,29 +50,16 @@ export async function run(container) {
         const docSnap = await getDoc(panelWebhookDocRef);
 
         let webhookData = docSnap.exists() ? docSnap.data() : {};
-        let { webhookUrl, webhookId, webhookToken, messageId } = webhookData;
+        let { webhookUrl, messageId } = webhookData;
 
-        // Se não tivermos as informações completas do webhook, tentamos encontrá-lo ou criá-lo
-        if (!webhookId || !webhookToken || !webhookUrl) {
-            const channel = await client.channels.fetch(container.config.RAID_CHANNEL_ID);
-            const webhooks = await channel.fetchWebhooks();
-            let webhook = webhooks.find(wh => wh.name === PERSISTENT_WEBHOOK_NAME && wh.owner.id === client.user.id);
-            
-            if (!webhook) {
-                 webhook = await channel.createWebhook({ name: PERSISTENT_WEBHOOK_NAME, reason: 'Painel de status das raids.'});
-            }
-            
-            webhookId = webhook.id;
-            webhookToken = webhook.token;
-            webhookUrl = webhook.url;
-            
-            // Salva as informações completas no Firestore
-            await setDoc(panelWebhookDocRef, { webhookId, webhookToken, webhookUrl }, { merge: true });
-            logger.info(`[raidPanelManager] Webhook '${PERSISTENT_WEBHOOK_NAME}' encontrado/criado e informações salvas.`);
-            messageId = null; // Força a criação de uma nova mensagem
+        // Se não tivermos as informações completas do webhook, o job ready deve ter criado.
+        // Se ainda não existir, logamos o erro e esperamos a próxima execução.
+        if (!webhookUrl) {
+            logger.warn(`[raidPanelManager] URL do webhook para '${PANEL_DOC_ID}' ainda não está no Firestore. O job 'ready' deve criá-la.`);
+            return;
         }
         
-        const webhookClient = new WebhookClient({ id: webhookId, token: webhookToken });
+        const webhookClient = new WebhookClient({ url: webhookUrl });
 
         const { statuses, gifUrl } = await getRaidStatusPanelData(container);
         
@@ -110,5 +97,3 @@ export async function run(container) {
         logger.error('Erro ao atualizar o painel de raids:', error);
     }
 }
-
-    

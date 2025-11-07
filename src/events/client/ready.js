@@ -20,7 +20,10 @@ async function initializeWebhooks(client) {
         { name: 'Anunciador de Raids', channelId: config.RAID_CHANNEL_ID, docId: 'raidAnnouncer' },
         { name: 'Painel de Status das Raids', channelId: config.RAID_CHANNEL_ID, docId: 'raidPanel' },
         { name: 'Update Log', channelId: config.UPDLOG_CHANNEL_ID, docId: 'updlog' },
-        { name: 'Códigos Ativos do Jogo', channelId: config.CODES_CHANNEL_ID, docId: 'gameCodes' }
+        { name: 'Códigos Ativos do Jogo', channelId: config.CODES_CHANNEL_ID, docId: 'gameCodes' },
+        { name: 'Anunciador de Farms', channelId: config.FARMING_PANEL_CHANNEL_ID, docId: 'farmAnnouncer' },
+        { name: 'Painel de Farms', channelId: config.FARMING_PANEL_CHANNEL_ID, docId: 'farmingPanel' },
+        { name: 'Suporte | Denúncias | Formulários', channelId: config.SUPPORT_PANEL_CHANNEL_ID, docId: 'supportPanel' }
     ];
 
     for (const webhookConfig of requiredWebhooks) {
