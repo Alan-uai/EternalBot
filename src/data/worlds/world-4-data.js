@@ -1,28 +1,32 @@
 
 export const world4Data = {
   id: 'world-4',
-  title: 'Mundo 4 - Ilha dos Demônios de Fogo',
+  title: 'Mundo 4 - Ilha dos Feiticeiros',
   summary: 'Um mundo infernal focado em dano e drops, com o chefe Sakuni.',
   npcs: [
-    { name: 'Diabinho', rank: 'E', exp: 5000, hp: '100qd' },
-    { name: 'Cão Infernal', rank: 'D', exp: 7000, hp: '1Qn' },
-    { name: 'Demônio de Fogo', rank: 'C', exp: 10000, hp: '25Qn' },
-    { name: 'Demônio Maior', rank: 'B', exp: 15000, hp: '250Qn' },
-    { name: 'Lorde Demônio', rank: 'A', exp: 22000, hp: '500Qn' },
-    { name: 'Akaza', rank: 'S', exp: 30000, hp: '60O' },
+    { name: 'Itodo', rank: 'E', exp: 5000, hp: '100qd' },
+    { name: 'Nebara', rank: 'D', exp: 7000, hp: '1Qn' },
+    { name: 'Magum', rank: 'C', exp: 10000, hp: '25Qn' },
+    { name: 'Meki', rank: 'B', exp: 15000, hp: '250Qn' },
+    { name: 'Tage', rank: 'A', exp: 22000, hp: '500Qn' },
+    { name: 'Gajo', rank: 'S', exp: 30000, hp: '60O' },
     { name: 'Sakuni', rank: 'SS', exp: 60000, hp: '120Sp', drops: { aura: { name: 'Aura do Rei do Fogo', probability: 0.05 } }, videoUrl: 'https://cdn.discordapp.com/attachments/1430337273794265250/1430337777840554126/ScreenRecording_10-21-2025_10-31-17_1.mov?ex=68fa121c&is=68f8c09c&hm=4701c56efe6c8b63f39d235ca2353f417c474b290038f6c2874b44537ce6ead1&' },
   ],
   pets: [
-    { name: 'Salamandra', rank: 'Comum', rarity: 'Comum', energy_bonus: '0.04x' },
-    { name: 'Cerberus Jr.', rank: 'Incomum', rarity: 'Incomum', energy_bonus: '0.08x' },
-    { name: 'Lord Diabinho', rank: 'Raro', rarity: 'Raro', energy_bonus: '0.12x' },
+    { name: 'Itodo', rank: 'Comum', rarity: 'Comum', energy_bonus: '0.04x' },
+    { name: 'Nebara', rank: 'Incomum', rarity: 'Incomum', energy_bonus: '0.08x' },
+    { name: 'Magum', rank: 'Raro', rarity: 'Raro', energy_bonus: '0.12x' },
+    { name: 'Meki', rank: 'Épico', rarity: 'Épico', energy_bonus: '0.12x' },
+    { name: 'Tage', rank: 'Lendário', rarity: 'Lendário', energy_bonus: '0.12x' },
+    { name: 'Gajo', rank: 'Mítico', rarity: 'Mítico', energy_bonus: '0.12x' },
+    { name: 'Sakuni', rank: 'Phantom', rarity: 'Phantom', energy_bonus: '0.12x' },
   ],
   powers: [
     {
-      name: 'Curses',
-      type: 'gacha',
-      statType: 'energy',
-      unlockCost: 'Varia',
+      name: "Curses",
+      type: "gacha",
+      statType: "energy",
+      unlockCost: "Varia",
       description: "Poder de energia obtido no gacha do mundo 4.",
       stats: [
         { name: 'Blazing Cataclysm', multiplier: '2x', rarity: 'Comum' },
@@ -35,11 +39,11 @@ export const world4Data = {
       ]
     },
     {
-      name: 'Cursed Power',
-      type: 'gacha',
-      statType: 'mixed',
-      unlockCost: 'Varia',
-      description: "Poder de dano e dano crítico de energia obtido na Cursed Raid.",
+      name: "Cursed Power",
+      type: "gacha",
+      statType: "mixed",
+      unlockCost: "Varia",
+      description: "Poder de dano e crítico de energia obtido na Cursed Raid.",
       stats: [
         { name: 'Common Curse', statType: 'damage', multiplier: '0.6x', rarity: 'Comum' },
         { name: 'Uncommon Curse', statType: 'damage', multiplier: '0.8x', rarity: 'Incomum' },
@@ -51,12 +55,12 @@ export const world4Data = {
       ]
     },
     {
-      name: 'Cursed Progression',
-      type: 'progression',
-      statType: 'damage',
+      name: "Cursed Progression",
+      type: "progression",
+      statType: "damage",
       maxLevel: 410,
-      maxBoost: '4.10x Damage',
-      unlockCost: 'Varia',
+      maxBoost: "4.10x Damage",
+      unlockCost: "Varia",
     }
   ],
   accessories: [
@@ -66,3 +70,5 @@ export const world4Data = {
       { name: 'Cursed Raid', boss: 'Desconhecido', description: 'Uma raid onde se obtém os poderes Curses e Cursed Power.'}
   ]
 };
+
+    
