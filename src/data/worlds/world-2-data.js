@@ -3,7 +3,7 @@ export const world2Data = {
   id: 'world-2',
   title: 'Mundo 2 - Ilha do Moinho',
   summary: 'Mundo temático de piratas, focado em moedas e dano. Introduz o chefe Shanks.',
-  content: 'Mundo temático de piratas. Aqui é possível fabricar a espada Phantom "Venomstrike" no "Sword Exchanger", usando 20 espadas Míticas "Redmourne", 10B de Moedas e 5 Cristais Vermelhos (dano). Também é neste mundo que se obtêm as espadas de dano via gacha.',
+  content: 'Mundo temático de piratas. Aqui é possível fabricar la espada Phantom "Venomstrike" no "Sword Exchanger", usando 20 espadas Míticas "Redmourne", 10B de Moedas e 5 Cristais Vermelhos (dano).',
   npcs: [
     { name: 'Marinheiro Pirata', rank: 'E', exp: 150, hp: '100M' },
     { name: 'Espadachim Pirata', rank: 'D', exp: 250, hp: '500M' },
