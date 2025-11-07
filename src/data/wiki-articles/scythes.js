@@ -5,12 +5,14 @@ export const scythesArticle = {
   summary: 'Um guia para as foices do Mundo 21, as armas mais recentes do jogo, e seus multiplicadores de dano.',
   content: `As foices são as armas introduzidas no Mundo 21. Elas oferecem multiplicadores de dano significativos que aumentam com a evolução (estrelas), de forma similar aos Titãs. Além disso, as foices podem vir com encantamentos de **Passiva**, que concedem bônus adicionais e também possuem raridades distintas.
 
-### Fabricação (Scythe Exchanger)
-É possível fabricar foices mais poderosas, como a **Stormreaver**. A fabricação requer:
+### Fabricação e Evolução (Scythe Exchanger)
+Tanto a fabricação de foices mais poderosas quanto a sua evolução (nível de estrela) ocorrem no **Scythe Exchanger**, localizado no Mundo 21.
+
+**Fabricação (Exemplo: Stormreaver):**
 - 10x Phantom Requiem
 - 10k Exchange Coin 2
 - 1x Item Desconhecido`,
-  tags: ['foice', 'arma', 'mundo 21', '21', 'guia', 'geral', 'passiva', 'fabricação'],
+  tags: ['foice', 'arma', 'mundo 21', '21', 'guia', 'geral', 'passiva', 'fabricação', 'evolução'],
   imageUrl: 'wiki-14',
   tables: {
     scythes: {
@@ -25,6 +27,14 @@ export const scythesArticle = {
         { name: 'Phantom Requiem', type: 'scythe', rarity: 'Phantom', base_damage: '4.25x', one_star_damage: '8.5x', two_star_damage: '12.75x', three_star_damage: '21.25x' },
         { name: 'Stormreaver', type: 'scythe', rarity: 'Supremo', base_damage: '5x', one_star_damage: '10x', two_star_damage: '15x', three_star_damage: '25x' },
       ]
+    },
+    evolutionCosts: {
+        headers: ['Evolução', 'Quantidade', 'Custo'],
+        rows: [
+            { 'Evolução': 'Scythe 1 Estrela', 'Quantidade': '2', 'Custo': '2k' },
+            { 'Evolução': 'Scythe 2 Estrelas', 'Quantidade': '2', 'Custo': '5k' },
+            { 'Evolução': 'Scythe 3 Estrelas', 'Quantidade': '2', 'Custo': '10k' },
+        ]
     }
   }
 };

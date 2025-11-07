@@ -4,7 +4,7 @@ export const swordsArticle = {
   title: 'Espadas de Energia',
   summary: 'Um guia para as espadas que fornecem um multiplicador de energia, onde encontrá-las e seus status.',
   content: 'Espadas de energia são armas especiais que aumentam sua energia total com base em seu nível. Elas são encontradas em diferentes mundos.',
-  tags: ['espadas', 'energia', 'arma', 'guia', 'geral', '3', '5', '15', '19'],
+  tags: ['espadas', 'energia', 'arma', 'guia', 'geral', '3', '5', '15', '19', 'halloween'],
   imageUrl: 'wiki-8',
   tables: {
     world3: {
@@ -42,6 +42,15 @@ export const swordsArticle = {
             { name: 'Excalibur (2 Estrelas)', type: 'energy', rarity: 'Lendário', stats: '0.6x' },
             { name: 'Excalibur (3 Estrelas)', type: 'energy', rarity: 'Mítico', stats: '1x' },
         ],
+    },
+    halloween: {
+        headers: ['name', 'rarity', 'stats'],
+        rows: [
+            { name: 'Overdrive Saw', type: 'energy', rarity: 'Evento', stats: '0.3x' },
+            { name: 'Overdrive Saw (1 Estrela)', type: 'energy', rarity: 'Evento', stats: '0.6x' },
+            { name: 'Overdrive Saw (2 Estrelas)', type: 'energy', rarity: 'Evento', stats: '0.9x' },
+            { name: 'Overdrive Saw (3 Estrelas)', type: 'energy', rarity: 'Evento', stats: '1.5x' },
+        ]
     }
   },
 };
