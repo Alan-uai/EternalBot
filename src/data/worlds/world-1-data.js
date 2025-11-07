@@ -1,7 +1,7 @@
 
 export const world1Data = {
   id: 'world-1',
-  title: 'Mundo 1 - Ilha dos Monstros',
+  title: 'Mundo 1 - Cidade da Terra',
   summary: 'O mundo inicial e hub central do jogo. Lar do Kid Kohan, do Lobby de Dungeons, do local de Prestígio e das missões iniciais.',
   content: 'O Mundo 1 é a área principal onde você encontrará a maioria dos sistemas de progressão do jogo. É aqui que se localiza o Lobby de Dungeons, o local de Prestígio, a loja de comidas (egg, chocolate, milk, donuts, hot sausage), os baús de recompensa (diário, comum, comunidade, vip, premium) e os placares de líderes (leaderboards).',
   npcs: [

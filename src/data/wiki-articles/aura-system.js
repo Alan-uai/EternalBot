@@ -7,7 +7,7 @@ export const auraArticle = {
 
 *   **Mundo 1 (Kid Kohan):** Aura da Sorte (10% de Sorte de Estrela)
 *   **Mundo 2 (Shanks):** Aura do Imperador Vermelho (0.1x)
-*   **Mundo 3 (Eizen):** Aura do Traidor Roxo (0.25x)
+*   **Mundo 3 (Eizen):** Aura do Traidor Roxo (0.25x) - Energia
 *   **Mundo 4 (Sakuni):** Aura do Rei do Fogo (25% de Drops)
 *   **Mundo 5 (Rangoki):** Aura Flamejante (0.15x)
 *   **Mundo 6 (Statue of God):** Aura da Estátua (0.75x)
