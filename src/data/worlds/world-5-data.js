@@ -36,23 +36,21 @@ export const world5Data = {
       description: "Missão de Licença de Herói (Rank E), com tarefas neste mundo.",
       missions: [
           {
-              name: 'F Class Quest #5',
+              name: 'E Class Quest #1',
               requirement: 'Derrotar 50 Hashira',
               rewards: [{name: 'Chave de Missão', amount: 1}, {name: 'Chave de Incursão', amount: 1}]
           },
           {
-              name: 'F Class Quest #6',
+              name: 'E Class Quest #2',
               requirement: 'Derrotar 25 Rangoki',
               rewards: [{name: 'Chave de Incursão', amount: 1}, {name: 'Baú de Arma', amount: 1}]
           },
           {
-              name: 'F Class Quest #7',
-              requirement: 'Completar a Masmorra "Infinity Castle" 50 vezes',
+              name: 'E Class Quest #3',
+              requirement: 'Chegar ao piso 50 na Dungeon Easy (Lobby 1)',
               rewards: [{name: 'Ticket de Missão', amount: 1}, {name: 'Créditos', amount: 15}, {name: 'Baú de Pet', amount: 1}]
           }
       ]
     }
   ]
 };
-
-    
