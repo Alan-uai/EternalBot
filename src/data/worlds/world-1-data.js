@@ -211,5 +211,67 @@ export const world1Data = {
         { type: 'Exp Percent', value: '3.5%' }
       ]
     }
+  ],
+  missions: [
+    {
+        name: 'Missão #1',
+        requirement: 'Derrotar 30 Kriluni',
+        rewards: [
+            { name: 'Chave de Mundo', amount: 1 },
+            { name: 'Token de Raça Dragão', amount: 1 },
+            { name: 'Experiência', amount: '30' }
+        ]
+    },
+    {
+        name: 'Missão #2',
+        requirement: 'Derrotar 25 Ymicha',
+        rewards: [
+            { name: 'Chave de Mundo', amount: 1 },
+            { name: 'Token de Raça Dragão', amount: 15 },
+            { name: 'Experiência', amount: '100' }
+        ]
+    },
+    {
+        name: 'Missão #3',
+        requirement: 'Derrotar 20 Tian Shan',
+        rewards: [
+            { name: 'Chave de Mundo', amount: 1 },
+            { name: 'Drop Percent', amount: '1%' },
+            { name: 'Experiência', amount: '180' }
+        ]
+    },
+    {
+        name: 'Missão #4',
+        requirement: 'Derrotar 15 Kohan',
+        rewards: [
+            { name: 'Chave de Mundo', amount: 1 },
+            { name: 'Token de Raça Dragão', amount: 1 },
+            { name: 'Experiência', amount: '300' }
+        ]
+    },
+    {
+        name: 'Missão #5',
+        requirement: 'Derrotar 10 Picco',
+        rewards: [
+            { name: 'Alma do Avatar', amount: 5 },
+            { name: 'Token de Raça Dragão', amount: 1 },
+            { name: 'Chave de Mundo', amount: 1 },
+            { name: 'Experiência', amount: '450' }
+        ]
+    },
+    {
+        name: 'Missão #6',
+        requirement: 'Derrotar 5 Koku',
+        rewards: [
+            { name: 'Alma do Avatar', amount: 10 },
+            { name: 'Baú de Pet', amount: 1 },
+            { name: 'Token de Saiyajin', amount: 15 },
+            { name: 'Drop Percent', amount: '2%' },
+            { name: 'Chave de Mundo', amount: 1 },
+            { name: 'Experiência', amount: '600' }
+        ]
+    }
   ]
 };
+
+    
