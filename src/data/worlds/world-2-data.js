@@ -56,9 +56,9 @@ export const world2Data = {
     },
     {
         name: "Demon Fruit",
-        description: "Também são conhecidas como Akuma no Mi.",
+        description: "Também são conhecidas como Akuma no Mi. Cada fruta oferece um bônus para um status específico.",
         type: "gacha",
-        statType: "mixed",
+        statType: "energy",
         unlockCost: "1.5k",
         stats: [
             { name: "Bomb Fruit", statType: "energy", multiplier: "2x", rarity: "Comum" },
