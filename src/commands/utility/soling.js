@@ -3,6 +3,7 @@ import { SlashCommandBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, Stri
 import { lobbyDungeonsArticle } from '../../data/wiki-articles/lobby-dungeons.js';
 import { raidRequirementsArticle } from '../../data/wiki-articles/raid-requirements.js';
 import { world1Data } from '../../data/worlds/world-1-data.js';
+import { world20Data } from '../../data/worlds/world-20-data.js';
 import { world24Data } from '../../data/worlds/world-24-data.js';
 
 
@@ -42,6 +43,17 @@ export function getAvailableRaids() {
     
     // Adiciona raids do Halloween (Mundo 1)
     world1Data.dungeons.forEach(dungeon => {
+        if (!soloRaids.includes(dungeon.name)) {
+             allRaids.set(dungeon.name, {
+                label: dungeon.name,
+                value: dungeon.name.toLowerCase().replace(/ /g, '_'),
+                category: categorizeRaid(dungeon.name)
+            });
+        }
+    });
+
+    // Adiciona raids do Mundo 20
+    world20Data.dungeons.forEach(dungeon => {
         if (!soloRaids.includes(dungeon.name)) {
              allRaids.set(dungeon.name, {
                 label: dungeon.name,
