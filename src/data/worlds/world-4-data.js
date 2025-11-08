@@ -134,6 +134,7 @@ export const world4Data = {
         name: 'Missão #5',
         requirement: 'Derrotar 10 Tage',
         rewards: [
+            { name: 'Avatar Soul', amount: 5 },
             { name: 'Cursed Token', amount: 10 },
             { name: 'World Key', amount: 1 },
             { name: 'Luck Percent', value: '4%' },
