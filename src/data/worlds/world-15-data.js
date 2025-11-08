@@ -10,12 +10,7 @@ export const world15Data = {
     { name: 'Ogro', rank: 'B', exp: 7e11, hp: '1DTG' },
     { name: 'Ceifador', rank: 'A', exp: 1e12, hp: '10DTG' },
     { name: 'Kayaba', rank: 'S', exp: 1.5e12, hp: '483SPG' },
-    { name: 'The Paladin', rank: 'SS', exp: 3e12, hp: '967SPG', drops: { aura: { name: 'Aura Virtual', probability: 0.05 } }, videoUrl: 'https://cdn.discordapp.com/attachments/1430337273794265250/1430338800034513017/ScreenRecording_10-21-2025_10-57-29_1.mov?ex=68fa1310&is=68f8c190&hm=7e4aa96055fd3d86befd44af404ac119d421580bc8fad1771f2b8bf1dba031f3&' },
-  ],
-  pets: [
-    { name: 'Slime', rank: 'Comum', rarity: 'Comum', energy_bonus: '0.15x' },
-    { name: 'Pina', rank: 'Incomum', rarity: 'Incomum', energy_bonus: '0.30x' },
-    { name: 'Yui', rank: 'Raro', rarity: 'Raro', energy_bonus: '0.45x' },
+    { name: 'The Paladin', rank: 'SS', exp: 3e12, hp: '967SPG', drops: { aura: { name: 'Vitual Aura', probability: 0.05 } }, videoUrl: 'https://cdn.discordapp.com/attachments/1430337273794265250/1430338800034513017/ScreenRecording_10-21-2025_10-57-29_1.mov?ex=68fa1310&is=68f8c190&hm=7e4aa96055fd3d86befd44af404ac119d421580bc8fad1771f2b8bf1dba031f3&' },
   ],
   powers: [
     {

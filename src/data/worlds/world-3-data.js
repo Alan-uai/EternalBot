@@ -10,7 +10,7 @@ export const world3Data = {
     { name: 'Uryua', rank: 'C', exp: 23, hp: '55qd', drops: { coins: { amount: 'x15k', probability: 1 }, 'Reiatsu Token': { amount: 'x1-5', probability: 0.1 }, 'Pressure Token': { amount: 'x1-5', probability: 0.1 }, exp: { amount: 'x23', probability: 1 }, avatar_soul: { amount: 1, probability: 0.125 }, avatar: { probability: 0.01 } } },
     { name: 'Yoichi', rank: 'A', exp: 25, hp: '450qd', drops: { coins: { amount: 'x25k', probability: 1 }, 'Reiatsu Token': { amount: 'x1-5', probability: 0.1 }, 'Pressure Token': { amount: 'x1-5', probability: 0.1 }, exp: { amount: 'x25', probability: 1 }, avatar_soul: { amount: 1, probability: 0.2 }, avatar: { probability: 0.01 } } },
     { name: 'Ichigo', rank: 'S', exp: 26, hp: '1Qn', drops: { coins: { amount: 'x30k', probability: 1 }, 'Reiatsu Token': { amount: 'x1-5', probability: 0.1 }, 'Pressure Token': { amount: 'x1-5', probability: 0.1 }, exp: { amount: 'x26', probability: 1 }, avatar_soul: { amount: 1, probability: 0.25 }, avatar: { probability: 0.01 } } },
-    { name: 'Eizen', rank: 'SS', exp: 60, hp: '2.5Sp', drops: { coins: { amount: 'x70k', probability: 1 }, 'Zanpakuto Token': { amount: 'x3-5', probability: 0.1 }, 'Reiatsu Token': { amount: 'x3-5', probability: 0.1 }, 'Pressure Token': { amount: 'x3-5', probability: 0.1 }, exp: { amount: 'x60', probability: 1 }, avatar_soul: { amount: 1, probability: 0.5 }, aura: { name: 'Purple Traitor Aura', type: 'energy', probability: 0.01 }, avatar: { probability: 0.01 } }, videoUrl: 'https://cdn.discordapp.com/attachments/1430337273794265250/1430337718872965202/ScreenRecording_10-21-2025_10-30-50_1.mov?ex=68fa120e&is=68f8c08e&hm=8f03a2541a21bf69091297a2f4aa56de4f9b8615118efcb767705ff29e4fc60f&' },
+    { name: 'Eizen', rank: 'SS', exp: 60, hp: '2.5Sp', drops: { coins: { amount: 'x70k', probability: 1 }, 'Zanpakuto Token': { amount: 'x3-5', probability: 0.1 }, 'Reiatsu Token': { amount: 'x3-5', probability: 0.1 }, 'Pressure Token': { amount: 'x3-5', probability: 0.1 }, exp: { amount: 'x60', probability: 1 }, avatar_soul: { amount: 1, probability: 0.5 }, aura: { name: 'Purple Traitor Aura', probability: 0.01 }, avatar: { probability: 0.01 } }, videoUrl: 'https://cdn.discordapp.com/attachments/1430337273794265250/1430337718872965202/ScreenRecording_10-21-2025_10-30-50_1.mov?ex=68fa120e&is=68f8c08e&hm=8f03a2541a21bf69091297a2f4aa56de4f9b8615118efcb767705ff29e4fc60f&' },
   ],
   powers: [
     {
@@ -150,5 +150,3 @@ export const world3Data = {
     }
   ]
 };
-
-    

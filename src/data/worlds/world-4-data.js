@@ -205,5 +205,3 @@ export const world4Data = {
     }
   ]
 }
-
-    
