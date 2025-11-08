@@ -17,7 +17,7 @@ export const world22Data = {
       slot: 'Neck',
       world: '22', 
       boss: 'Shadow', 
-      rarity: 'SSS', 
+      rarity: 'SSS-Rank', 
       bonuses: [
         { type: 'energy', values: ['2%', '3%', '4%', '5%', '6%', '7%', '10%', '15%'] },
         { type: 'damage', values: ['0.6x', '0.9x', '1.2x', '1.5x', '1.8x', '2.1x', '3x', '4.5x'] }
@@ -29,7 +29,7 @@ export const world22Data = {
       slot: 'Back',
       world: '22', 
       boss: 'Shadow', 
-      rarity: 'B', 
+      rarity: 'B-Rank', 
       bonuses: [
         { type: 'damage', values: ['1.1x'] },
         { type: 'coin', values: ['1.1x'] },

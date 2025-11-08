@@ -33,8 +33,8 @@ export const world11Data = {
       name: 'Red Scarf', 
       slot: 'Neck',
       world: '11', 
-      boss: 'Titã Colossal', 
-      rarity: 'C', 
+      boss: 'Eran', 
+      rarity: 'S-Rank', 
       bonuses: [
           { type: 'coin', values: ['0.3x', '0.45x', '0.6x', '0.75x', '0.9x', '1.05x', '1.5x', '2.25x'] },
           { type: 'damage', values: ['0.5x', '0.75x', '1x', '1.25x', '1.5x', '1.75x', '2.5x', '3.75x'] }
@@ -46,7 +46,7 @@ export const world11Data = {
       slot: 'Head',
       world: '11', 
       boss: 'Eran', 
-      rarity: 'S', 
+      rarity: 'S-Rank', 
       bonuses: [
         { type: 'damage', values: ['1x'] }
       ] 
@@ -57,7 +57,7 @@ export const world11Data = {
       slot: 'Back',
       world: '11', 
       boss: 'Killas Godspeed', 
-      rarity: 'SS', 
+      rarity: 'SS-Rank', 
       bonuses: [
         { type: 'energy', values: ['1.5x'] }
       ] 

@@ -27,10 +27,10 @@ export const world20Data = {
       slot: 'Neck',
       world: '20', 
       boss: 'Forças Especiais Ginyu', 
-      rarity: 'D', 
+      rarity: 'D-Rank', 
       bonuses: [
-          { type: 'energy', values: ['2%', '3%', '4%', '5%', '6%', '7%', '10%', '15%'] },
-          { type: 'damage', values: ['0.6x', '0.9x', '1.2x', '1.5x', '1.8x', '2.1x', '3x', '4.5x'] }
+        { type: 'energy', values: ['2%', '3%', '4%', '5%', '6%', '7%', '10%', '15%'] },
+        { type: 'damage', values: ['0.6x', '0.9x', '1.2x', '1.5x', '1.8x', '2.1x', '3x', '4.5x'] }
       ]
     }
   ],
