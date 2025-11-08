@@ -80,7 +80,7 @@ export const world4Data = {
         requirement: 'Derrotar Sakuni 10 vezes.',
         rewards: [
           { name: 'Obelisk Part', amount: 1 },
-          { name: 'Star Luck', amount: '5%' },
+          { name: 'Energy Percent', amount: '5%' },
           { name: 'Exp', amount: '12k' },
           { name: 'Avatar Soul', amount: 100 },
           { name: 'Energy Potion', amount: 1 }
