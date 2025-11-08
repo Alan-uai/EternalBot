@@ -49,7 +49,7 @@ export const world18Data = {
       rank: 'SSS-Rank', 
       bonuses: [
         { 
-          type: 'damage', 
+          type: 'energy', 
           valuesByRarity: [
             { "rarity": "Common", "value": "0.3x" },
             { "rarity": "Uncommon", "value": "0.45x" },

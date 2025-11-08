@@ -34,11 +34,11 @@ export const world8Data = {
       name: 'Shinobi Flops', 
       slot: 'Leg',
       world: '8', 
-      npc: 'Itechi', 
+      npc: 'Itechi, Madera', 
       rank: 'SS-Rank', 
       bonuses: [
         { 
-          type: 'coin', 
+          type: 'energy', 
           valuesByRarity: [
             { rarity: 'Common', value: '0.1x' },
             { rarity: 'Uncommon', value: '0.15x' },
@@ -46,7 +46,7 @@ export const world8Data = {
             { rarity: 'Epic', value: '0.25x' },
             { rarity: 'Legendary', value: '0.3x' },
             { rarity: 'Mythic', value: '0.35x' },
-            { rarity: 'Phantom', value: '1x' },
+            { rarity: 'Phantom', value: '0.5x' },
             { rarity: 'Supreme', value: '0.75x' }
           ]
         },
