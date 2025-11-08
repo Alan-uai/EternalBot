@@ -34,11 +34,35 @@ export const world8Data = {
       name: 'Shinobi Flops', 
       slot: 'Leg',
       world: '8', 
-      boss: 'Itechi', 
-      rarity: 'SS', 
+      npc: 'Itechi', 
+      rank: 'SS-Rank', 
       bonuses: [
-        { type: 'coin', values: ['0.1', '0.15x', '0.2x', '0.25x', '0.3x', '0.35x', '1x', '0.75x'] },
-        { type: 'movespeed', values: ['10%', '15%', '20%', '25%', '30%', '35%', '50%', '75%'] }
+        { 
+          type: 'coin', 
+          valuesByRarity: [
+            { rarity: 'Common', value: '0.1x' },
+            { rarity: 'Uncommon', value: '0.15x' },
+            { rarity: 'Rare', value: '0.2x' },
+            { rarity: 'Epic', value: '0.25x' },
+            { rarity: 'Legendary', value: '0.3x' },
+            { rarity: 'Mythic', value: '0.35x' },
+            { rarity: 'Phantom', value: '1x' },
+            { rarity: 'Supreme', value: '0.75x' }
+          ]
+        },
+        { 
+          type: 'movespeed', 
+          valuesByRarity: [
+            { rarity: 'Common', value: '10%' },
+            { rarity: 'Uncommon', value: '15%' },
+            { rarity: 'Rare', value: '20%' },
+            { rarity: 'Epic', value: '25%' },
+            { rarity: 'Legendary', value: '30%' },
+            { rarity: 'Mythic', value: '35%' },
+            { rarity: 'Phantom', value: '50%' },
+            { rarity: 'Supreme', value: '75%' }
+          ]
+        }
       ]
     }
   ],
