@@ -5,13 +5,13 @@ export const world4Data = {
   summary: 'Um mundo infernal focado em dano e drops, com o chefe Sakuni.',
   content: 'Mundo temático de Shinigamis. É aqui que os jogadores encontram a primeira espada de energia do jogo, a Zangetsu.',
   npcs: [
-    { name: 'Itodo', rank: 'E', exp: 39, hp: '1.5Qn', drops: { coins: { amount: 'x50k', probability: 1 }, 'Cursed Token': { amount: 'x1-5', probability: 0.1 }, 'Cursed Finger Token': { amount: 'x1-5', probability: 0.1 }, 'Avatar Soul': { amount: 'x1', probability: 0.1 } } },
-    { name: 'Nebara', rank: 'D', exp: 41, hp: '50Qn', drops: { coins: { amount: 'x100k', probability: 1 }, 'Cursed Token': { amount: 'x1-5', probability: 0.1 }, 'Cursed Finger Token': { amount: 'x1-5', probability: 0.1 }, 'Avatar Soul': { amount: 'x1', probability: 0.11 } } },
-    { name: 'Magum', rank: 'C', exp: 43, hp: '110Qn', drops: { coins: { amount: 'x150k', probability: 1 }, 'Cursed Token': { amount: 'x1-5', probability: 0.1 }, 'Cursed Finger Token': { amount: 'x1-5', probability: 0.1 }, 'Avatar Soul': { amount: 'x1', probability: 0.125 } } },
-    { name: 'Meki', rank: 'B', exp: 45, hp: '475Qn', drops: { coins: { amount: 'x200k', probability: 1 }, 'Cursed Token': { amount: 'x1-5', probability: 0.1 }, 'Cursed Finger Token': { amount: 'x1-5', probability: 0.1 }, 'Avatar Soul': { amount: 'x1', probability: 0.15 } } },
-    { name: 'Tage', rank: 'A', exp: 47, hp: '9.69sx', drops: { coins: { amount: 'x250k', probability: 1 }, 'Cursed Token': { amount: 'x1-5', probability: 0.1 }, 'Cursed Finger Token': { amount: 'x1-5', probability: 0.1 }, 'Avatar Soul': { amount: 'x1', probability: 0.2 } } },
-    { name: 'Gajo', rank: 'S', exp: 50, hp: '50sx', drops: { coins: { amount: 'x300k', probability: 1 }, 'Cursed Token': { amount: 'x1-5', probability: 0.1 }, 'Cursed Finger Token': { amount: 'x1-5', probability: 0.1 }, 'Avatar Soul': { amount: 'x1', probability: 0.25 } } },
-    { name: 'Sakuni', rank: 'SS', exp: 120, hp: '120Sp', drops: { coins: { amount: 'x700k', probability: 1 }, 'Cursed Token': { amount: 'x3-5', probability: 0.1 }, 'Cursed Finger Token': { amount: 'x3-5', probability: 0.1 }, 'Avatar Soul': { amount: 'x1', probability: 0.5 }, aura: { name: 'Fire King Aura', probability: 0.01 } }, videoUrl: 'https://cdn.discordapp.com/attachments/1430337273794265250/1430337777840554126/ScreenRecording_10-21-2025_10-31-17_1.mov?ex=68fa121c&is=68f8c09c&hm=4701c56efe6c8b63f39d235ca2353f417c474b290038f6c2874b44537ce6ead1&' },
+    { name: 'Itodo', rank: 'E', exp: 39, hp: '1.5Qn', drops: { coins: { amount: 'x50k', probability: 1 }, 'Cursed Token': { amount: 'x1-5', probability: 0.1 }, 'Cursed Finger Token': { amount: 'x1-5', probability: 0.1 }, avatar_soul: { amount: 1, probability: 0.1 }, avatar: { probability: 0.01 } } },
+    { name: 'Nebara', rank: 'D', exp: 41, hp: '50Qn', drops: { coins: { amount: 'x100k', probability: 1 }, 'Cursed Token': { amount: 'x1-5', probability: 0.1 }, 'Cursed Finger Token': { amount: 'x1-5', probability: 0.1 }, avatar_soul: { amount: 1, probability: 0.11 }, avatar: { probability: 0.01 } } },
+    { name: 'Magum', rank: 'C', exp: 43, hp: '110Qn', drops: { coins: { amount: 'x150k', probability: 1 }, 'Cursed Token': { amount: 'x1-5', probability: 0.1 }, 'Cursed Finger Token': { amount: 'x1-5', probability: 0.1 }, avatar_soul: { amount: 1, probability: 0.125 }, avatar: { probability: 0.01 } } },
+    { name: 'Meki', rank: 'B', exp: 45, hp: '475Qn', drops: { coins: { amount: 'x200k', probability: 1 }, 'Cursed Token': { amount: 'x1-5', probability: 0.1 }, 'Cursed Finger Token': { amount: 'x1-5', probability: 0.1 }, avatar_soul: { amount: 1, probability: 0.15 }, avatar: { probability: 0.01 } } },
+    { name: 'Tage', rank: 'A', exp: 47, hp: '9.69sx', drops: { coins: { amount: 'x250k', probability: 1 }, 'Cursed Token': { amount: 'x1-5', probability: 0.1 }, 'Cursed Finger Token': { amount: 'x1-5', probability: 0.1 }, avatar_soul: { amount: 1, probability: 0.2 }, avatar: { probability: 0.01 } } },
+    { name: 'Gajo', rank: 'S', exp: 50, hp: '50sx', drops: { coins: { amount: 'x300k', probability: 1 }, 'Cursed Token': { amount: 'x1-5', probability: 0.1 }, 'Cursed Finger Token': { amount: 'x1-5', probability: 0.1 }, avatar_soul: { amount: 1, probability: 0.25 }, avatar: { probability: 0.01 } } },
+    { name: 'Sakuni', rank: 'SS', exp: 120, hp: '120Sp', drops: { coins: { amount: 'x700k', probability: 1 }, 'Cursed Token': { amount: 'x3-5', probability: 0.1 }, 'Cursed Finger Token': { amount: 'x3-5', probability: 0.1 }, avatar_soul: { amount: 1, probability: 0.5 }, aura: { name: 'Fire King Aura', probability: 0.01 }, avatar: { probability: 0.01 } }, videoUrl: 'https://cdn.discordapp.com/attachments/1430337273794265250/1430337777840554126/ScreenRecording_10-21-2025_10-31-17_1.mov?ex=68fa121c&is=68f8c09c&hm=4701c56efe6c8b63f39d235ca2353f417c474b290038f6c2874b44537ce6ead1&' },
   ],
   pets: [
     { name: 'Itodo', rarity: 'Comum', energy_bonus: '47' },
@@ -119,16 +119,16 @@ export const world4Data = {
         achievements: {
             headers: ['Conquista', 'Requisito', 'Bônus'],
             rows: [
-                { 'Conquista': 'Cursed Raid I', 'Requisito': 'Reach Wave 10', 'Bônus': '5% Damage' },
-                { 'Conquista': 'Cursed Raid II', 'Requisito': 'Reach Wave 20', 'Bônus': '5% Energy' },
-                { 'Conquista': 'Cursed Raid III', 'Requisito': 'Reach Wave 30', 'Bônus': '5% Damage' },
-                { 'Conquista': 'Cursed Raid IV', 'Requisito': 'Reach Wave 40', 'Bônus': '5% Energy' },
-                { 'Conquista': 'Cursed Raid V', 'Requisito': 'Reach Wave 50', 'Bônus': '5% Damage' },
+                { 'Conquista': 'Cursed Raid I', 'Requisito': 'Reach Wave 10', 'Bônus': '5% Dano' },
+                { 'Conquista': 'Cursed Raid II', 'Requisito': 'Reach Wave 20', 'Bônus': '5% Energia' },
+                { 'Conquista': 'Cursed Raid III', 'Requisito': 'Reach Wave 30', 'Bônus': '5% Dano' },
+                { 'Conquista': 'Cursed Raid IV', 'Requisito': 'Reach Wave 40', 'Bônus': '5% Energia' },
+                { 'Conquista': 'Cursed Raid V', 'Requisito': 'Reach Wave 50', 'Bônus': '5% Dano' },
                 { 'Conquista': 'Cursed Raid VI', 'Requisito': 'Reach Wave 100', 'Bônus': '100 Credits' },
-                { 'Conquista': 'Cursed Raid VII', 'Requisito': 'Reach Wave 200', 'Bônus': '10% Damage' },
-                { 'Conquista': 'Cursed Raid VIII', 'Requisito': 'Reach Wave 300', 'Bônus': '15% Energy' },
-                { 'Conquista': 'Cursed Raid IX', 'Requisito': 'Reach Wave 500', 'Bônus': '15% Damage' },
-                { 'Conquista': 'Cursed Raid X', 'Requisito': 'Reach Wave 750', 'Bônus': '20% Energy' },
+                { 'Conquista': 'Cursed Raid VII', 'Requisito': 'Reach Wave 200', 'Bônus': '10% Dano' },
+                { 'Conquista': 'Cursed Raid VIII', 'Requisito': 'Reach Wave 300', 'Bônus': '15% Energia' },
+                { 'Conquista': 'Cursed Raid IX', 'Requisito': 'Reach Wave 500', 'Bônus': '15% Dano' },
+                { 'Conquista': 'Cursed Raid X', 'Requisito': 'Reach Wave 750', 'Bônus': '20% Energia' },
                 { 'Conquista': 'Cursed Raid XI', 'Requisito': 'Reach Wave 1000', 'Bônus': '150 Credits' },
             ]
         }
@@ -217,3 +217,5 @@ export const world4Data = {
     }
   ]
 }
+
+    
