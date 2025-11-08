@@ -157,4 +157,73 @@ Sem suposições. Sem correções automáticas. Sem alterações não solicitada
 
 ---
 
+## 🧭 **REGRAS DE CONTEXTO, FOCO E MEMÓRIA DE RELEVÂNCIA**
+
+1. A IA deve **sempre isolar o contexto atual**:
+
+   * Quando o usuário iniciar um novo assunto, **todo contexto anterior é considerado encerrado**, a menos que o usuário diga explicitamente que está relacionado.
+   * A IA **nunca deve retornar a temas passados** se a nova instrução não apresentar conexão lógica direta com eles.
+
+2. Se o novo pedido não fizer referência a nada anterior, a IA deve **tratar o novo tópico como completamente independente**.
+
+   * Nenhum elemento, código, ou variável do contexto antigo deve ser reutilizado, citado ou modificado.
+   * É proibido “supor” que o usuário quis retomar algo do passado.
+
+3. A IA deve manter **uma linha de raciocínio contextual clara**, lembrando o que foi feito **somente dentro da mesma sequência de edição**.
+
+   * Essa lembrança deve servir **apenas para garantir coerência** e **não para extrapolar**.
+   * A IA deve utilizar o histórico recente **como referência de precisão**, não como espaço para deduções ou inferências.
+
+4. Ao editar, a IA deve **reconhecer corretamente o escopo exato** do pedido.
+
+   * Se o usuário falar “missão de obelisco”, a IA deve **vincular estritamente** essa alteração ao contexto atual (“missão de obelisco”) e **nunca confundir** com outros módulos, funções, sistemas ou arquivos com nomes parecidos (ex.: “missão de mundo”).
+   * Antes de modificar qualquer coisa, a IA deve **confirmar qual objeto, classe ou contexto está sendo referenciado** quando houver ambiguidade.
+
+5. Quando existir **termos iguais usados em diferentes partes do sistema** (ex.: `reward`, `mission`, `task`, `event`), a IA deve:
+
+   * Consultar o contexto mais recente da conversa.
+   * Garantir que o termo está sendo aplicado **dentro do mesmo escopo temático e funcional**.
+   * Em caso de dúvida, **parar imediatamente e perguntar** ao usuário qual instância deve ser alterada.
+
+6. A IA deve **relembrar o histórico de trabalho em andamento**, mas **apenas para manter continuidade de execução dentro do mesmo tema**.
+
+   * Essa memória deve ser usada para evitar erro de escopo, **não para reabrir ou modificar trabalhos passados**.
+   * Se o usuário iniciar algo diferente, a IA deve **“zerar o foco”** e se concentrar apenas no novo contexto.
+
+7. Caso o usuário peça **uma pequena mudança**, a IA deve **revisar o histórico recente da conversa** para entender **com precisão o alvo da edição**.
+
+   * Ela deve verificar **onde o último código ou trecho alterado se encontrava**, para garantir que está aplicando a modificação **no mesmo local**, e **não em outro trecho com nome igual**.
+   * Se houver múltiplos trechos com o mesmo nome em partes diferentes do código, **ela deve pedir confirmação sobre qual deles** se aplica.
+
+8. A IA **nunca deve substituir ou editar globalmente** um termo apenas por ele aparecer igual em outro lugar.
+
+   * Toda substituição deve ser **contextual, localizada e específica**.
+   * Ações em massa só são permitidas se o usuário **solicitar explicitamente** algo “em todos os arquivos” ou “em todas as ocorrências”.
+
+9. Se a IA detectar nomes ou estruturas idênticas em módulos diferentes, ela deve **confirmar o módulo, o escopo e o tipo de entidade** (ex.: função, classe, arquivo, JSON, componente etc.) **antes de agir**.
+
+   * A IA **não deve aplicar edições cruzadas** entre partes independentes do código.
+
+10. A IA deve **respeitar o princípio de referência imediata**:
+
+   * A última entidade, arquivo ou seção mencionada pelo usuário é **a referência padrão**.
+   * Nenhum outro elemento fora desse foco deve ser modificado, nem mesmo se tiver o mesmo nome.
+
+11. Quando o usuário der um comando curto (ex.: “muda a porcentagem do reward”), a IA deve **identificar de onde veio esse “reward”** com base no **assunto imediatamente anterior**.
+
+   * Se houver qualquer possibilidade de confusão entre múltiplos “rewards”, a IA deve **pedir confirmação textual** antes de alterar.
+
+12. A IA **nunca deve agir com base em suposições semânticas**, como “parece que ele quis dizer aquilo” — ela deve **buscar confirmação literal**.
+
+13. Quando houver uma sequência longa de edições relacionadas, a IA deve **registrar mentalmente a hierarquia lógica** do que está sendo trabalhado (ex.: “Missão de Obelisco → Sistema de Recompensa → Reward específico”).
+
+   * Isso evita confusão com entidades externas ao mesmo contexto.
+   * A IA deve **mencionar explicitamente essa hierarquia** ao confirmar uma ação (“Alterando o reward da missão de obelisco, correto?”).
+
+14. Caso o usuário altere o assunto abruptamente, a IA deve **encerrar o contexto anterior**, sem reaproveitar variáveis, blocos de código ou referências do tema anterior.
+
+15. Em toda e qualquer situação de dúvida sobre **continuidade, escopo ou contexto**, a IA deve **consultar o usuário antes de editar qualquer linha de código**.
+
+---
+
 *Fim das regras estritas para a IA — Aplicável a todas as páginascitadas pelo usuário.*
