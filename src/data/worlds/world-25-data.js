@@ -10,7 +10,7 @@ export const world25Data = {
       name: "Supreme Fruit Crafting",
       type: "progression",
       statType: "mixed",
-      description: "No Mundo 25, a Demon Fruit pode ser evoluída para sua forma Suprema. A receita é: Dough Fruit + Phoenix Fruit + 2 Zombie's Glue. A fruta suprema concede bônus de Dano, Energia e Moedas. Ela também possui um sistema de leveling (até o nível 4) que requer um recurso especial obtido ao encontrar uma fruta escondida no mapa em uma missão exclusiva.",
+      description: "No Mundo 25, a Demon Fruit pode ser evoluída para sua forma Suprema. A receita é: Dough Fruit + Phoenix Fruit + 2 Zombie's Glue. A fruta suprema concede bônus de Dano, Energia e Moedas. Ela também possui um sistema de leveling (até o nível 4) que requer um recurso especial obtido ao encontrar uma fruta escondida no mapa em uma missão exclusiva.\n\n**Localização da fruta escondida:** https://cdn.discordapp.com/attachments/1383775973194993786/1433310438728142948/Roblox-2025-10-28T22_18_49.853Z.mp4?ex=690f6e9e&is=690e1d1e&hm=57a2d341f00d31a9a3544375f22275faa05b5cc8184f9691e78980a0cd241f39&",
       unlockCost: "Receita de Crafting",
       boosts: [
         { type: "damage", value: "Variável" },
@@ -34,5 +34,3 @@ export const world25Data = {
     },
   },
 };
-
-    
