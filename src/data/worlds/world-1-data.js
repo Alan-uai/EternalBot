@@ -173,7 +173,7 @@ export const world1Data = {
         requirement: 'Derrotar Kid Kohan 10 vezes.',
         rewards: [
           { name: 'Obelisk Part', amount: 1 },
-          { name: 'Star Luck', amount: '5%' },
+          { name: 'Energy Percent', value: '5%' },
           { name: 'Exp', amount: '1.5k' },
           { name: 'Avatar Soul', amount: 100 },
           { name: 'Energy Potion', amount: 1 }
@@ -192,7 +192,7 @@ export const world1Data = {
         requirement: 'Derrotar 30 Kriluni',
         rewards: [
             { name: 'World Key', amount: 1 },
-            { name: 'Dragon Race Token', amount: 1 },
+            { name: 'Coin Potion', amount: 1 },
             { name: 'Exp', amount: '30' }
         ]
     },
@@ -201,7 +201,7 @@ export const world1Data = {
         requirement: 'Derrotar 25 Ymicha',
         rewards: [
             { name: 'World Key', amount: 1 },
-            { name: 'Dragon Race Token', amount: 15 },
+            { name: 'Coin Percent', Value: '1%' },
             { name: 'Exp', amount: '100' }
         ]
     },
@@ -210,7 +210,7 @@ export const world1Data = {
         requirement: 'Derrotar 20 Tian Shan',
         rewards: [
             { name: 'World Key', amount: 1 },
-            { name: 'Drop Percent', amount: '1%' },
+            { name: 'Damage Percent', value: '1%' },
             { name: 'Exp', amount: '180' }
         ]
     },
@@ -219,7 +219,7 @@ export const world1Data = {
         requirement: 'Derrotar 15 Kohan',
         rewards: [
             { name: 'World Key', amount: 1 },
-            { name: 'Dragon Race Token', amount: 1 },
+            { name: 'Energy Percent', value: '1%' },
             { name: 'Exp', amount: '300' }
         ]
     },
@@ -228,19 +228,18 @@ export const world1Data = {
         requirement: 'Derrotar 10 Picco',
         rewards: [
             { name: 'Avatar Soul', amount: 5 },
-            { name: 'Dragon Race Token', amount: 1 },
+            { name: 'Luck Percent', value: '1%' },
+            { name: 'Dragon Race Token', amount: 10 },
             { name: 'World Key', amount: 1 },
-            { name: 'Exp', amount: '450' }
+            { name: 'Exp', amount: '500' }
         ]
     },
     {
         name: 'Missão #6',
         requirement: 'Derrotar 5 Koku',
         rewards: [
-            { name: 'Avatar Soul', amount: 10 },
-            { name: 'Pet Chest', amount: 1 },
-            { name: 'Saiyan Evolution Token', amount: 15 },
-            { name: 'Drop Percent', amount: '2%' },
+            { name: 'Saiyan Evolution Token', amount: 10 },
+            { name: 'Energy Percent', value: '2%' },
             { name: 'World Key', amount: 1 },
             { name: 'Exp', amount: '600' }
         ]

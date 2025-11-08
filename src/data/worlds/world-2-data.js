@@ -159,7 +159,7 @@ export const world2Data = {
         requirement: 'Derrotar Shanks 10 vezes.',
         rewards: [
           { name: 'Obelisk Part', amount: 1 },
-          { name: 'Star Luck', amount: '5%' },
+          { name: 'Energy Percent', value: '5%' },
           { name: 'Exp', amount: '3k' },
           { name: 'Avatar Soul', amount: 100 },
           { name: 'Energy Potion', amount: 1 }
@@ -177,7 +177,7 @@ export const world2Data = {
         name: 'Missão #1',
         requirement: 'Derrotar 30 Nomi',
         rewards: [
-            { name: 'Chef Power Token', amount: 1 },
+            { name: 'Damage Potion', amount: 1 },
             { name: 'World Key', amount: 1 },
             { name: 'Exp', amount: '270' }
         ]
@@ -186,7 +186,7 @@ export const world2Data = {
         name: 'Missão #2',
         requirement: 'Derrotar 25 Usup',
         rewards: [
-            { name: 'Chef Power Token', amount: 1 },
+            { name: 'Coin Percent', value: '2%' },
             { name: 'World Key', amount: 1 },
             { name: 'Exp', amount: '500' }
         ]
@@ -195,10 +195,9 @@ export const world2Data = {
         name: 'Missão #3',
         requirement: 'Derrotar 20 Robins',
         rewards: [
-            { name: 'Avatar Soul', amount: 5 },
-            { name: 'Chef Power Token', amount: 2 },
+            { name: 'Damage Percent', value: '2%' },
             { name: 'World Key', amount: 1 },
-            { name: 'Exp', amount: '650' }
+            { name: 'Exp', amount: '660' }
         ]
     },
     {
@@ -206,7 +205,7 @@ export const world2Data = {
         requirement: 'Derrotar 15 Senji',
         rewards: [
             { name: 'World Key', amount: 1 },
-            { name: 'Drop Percent', value: '2%' },
+            { name: 'Energy Percent', value: '2%' },
             { name: 'Exp', amount: '900' }
         ]
     },
@@ -214,22 +213,22 @@ export const world2Data = {
         name: 'Missão #5',
         requirement: 'Derrotar 10 Zaro',
         rewards: [
-            { name: 'Avatar Soul', amount: 10 },
-            { name: 'Chef Power Token', amount: 2 },
+            { name: 'Avatar Soul', amount: 5 },
             { name: 'Pirate Crew Token', amount: 10 },
+            { name: 'Luck Percent', value: '2%' },
             { name: 'World Key', amount: 1 },
-            { name: 'Exp', amount: '1.1k' }
+            { name: 'Exp', amount: '1.3k' }
         ]
     },
     {
         name: 'Missão #6',
         requirement: 'Derrotar 5 Loffy',
         rewards: [
-            { name: 'Pet Chest', amount: 1 },
-            { name: 'Drop Percent', value: '3%' },
-            { name: 'Joia', amount: 1 },
+            { name: 'Redefinição de Status', amount: 1 },
+            { name: 'Energy Percent', value: '3%' },
+            { name: 'Demon Fruit Token', amount: 1 },
             { name: 'World Key', amount: 1 },
-            { name: 'Exp', amount: '1.3k' }
+            { name: 'Exp', amount: '1.4k' }
         ]
     }
   ]

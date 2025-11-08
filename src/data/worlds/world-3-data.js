@@ -86,7 +86,7 @@ export const world3Data = {
         requirement: 'Derrotar Eizen 10 vezes.',
         rewards: [
           { name: 'Obelisk Part', amount: 1 },
-          { name: 'Star Luck', amount: '5%' },
+          { name: 'Energy Percent', value: '5%' },
           { name: 'Exp', amount: '6k' },
           { name: 'Avatar Soul', amount: 100 },
           { name: 'Energy Potion', amount: 1 }

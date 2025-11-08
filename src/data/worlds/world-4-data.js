@@ -173,7 +173,7 @@ export const world4Data = {
         name: 'Missão #4',
         requirement: 'Derrotar 15 Meki',
         rewards: [
-            { name: 'WorldKey', amount: 1 },
+            { name: 'World Key', amount: 1 },
             { name: 'Energy Percent', value: '4%' },
             { name: 'Exp', amount: '3.37k' }
         ]
