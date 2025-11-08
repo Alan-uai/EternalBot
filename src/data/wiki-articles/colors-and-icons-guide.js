@@ -5,9 +5,15 @@ export const colorsAndIconsGuideArticle = {
   summary: 'Um guia de referência para entender o que cada cor de item e cada ícone de bônus significa no jogo.',
   content: `No Anime Eternal, a cor de fundo do nome de um item e os ícones de bônus indicam sua raridade e o tipo de status que eles afetam. Saber o que cada um significa é essencial para avaliar a força de um equipamento, poder ou lutador.
 
-### Legenda de Cores (Raridade)
-Abaixo está a tabela completa de raridades, da mais fraca para a mais forte.`,
-  tags: ['cores', 'ícones', 'raridade', 'guia', 'itens', 'dano', 'energia', 'sorte', 'moedas', 'créditos'],
+### Legenda de Cores (Raridade de Itens/Poderes)
+Abaixo está a tabela completa de raridades, da mais fraca para a mais forte.
+
+### Legenda de Ícones (Bônus de Status)
+Estes ícones indicam o tipo de bônus que um item ou poder fornece.
+
+### Cores de Bônus de Acessórios
+Os acessórios usam um sistema de cores diferente para indicar seus bônus:`,
+  tags: ['cores', 'ícones', 'raridade', 'guia', 'itens', 'dano', 'energia', 'sorte', 'moedas', 'créditos', 'velocidade'],
   tables: {
     rarityColors: {
       headers: ['Cor', 'Raridade'],
@@ -39,6 +45,16 @@ Abaixo está a tabela completa de raridades, da mais fraca para a mais forte.`,
         { Ícone: '🥊 (Luva de Boxe)', Significado: 'Dano', Descrição: 'Bônus permanente de Dano.' },
         { Ícone: '🪙 (Moeda)', Significado: 'Moedas (Coins)', Descrição: 'Bônus permanente de Moedas.' },
         { Ícone: '⭐ / 🍀 (Estrela Amarela / Trevo Verde)', Significado: 'Sorte (Luck)', Descrição: 'Bônus permanente de Sorte.' },
+      ],
+    },
+    accessoryColors: {
+      headers: ['Cor do Bônus', 'Tipo de Status'],
+      rows: [
+        { 'Cor do Bônus': 'Azul', 'Tipo de Status': 'Energia' },
+        { 'Cor do Bônus': 'Vermelho Vivo', 'Tipo de Status': 'Dano' },
+        { 'Cor do Bônus': 'Amarelo Escuro', 'Tipo de Status': 'Moedas (Coins)' },
+        { 'Cor do Bônus': 'Cinza Claro', 'Tipo de Status': 'Experiência (EXP)' },
+        { 'Cor do Bônus': 'Vermelho Escuro/Desbotado', 'Tipo de Status': 'Velocidade de Movimento' },
       ],
     },
   },

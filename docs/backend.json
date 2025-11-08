@@ -466,11 +466,11 @@
             "world": { "type": "string", "description": "The name of the world where the accessory drops." },
             "boss": { "type": "string", "description": "The name of the boss that drops the accessory." },
             "rarity": { "type": "string", "description": "The rarity of the accessory (e.g., C-Rank, S-Rank, SS-Rank)." },
-            "coins_bonus": { "type": "string", "description": "The coin bonus multiplier (e.g., '0.1', '2.25')." },
-            "energy_bonus": { "type": "string", "description": "The energy bonus multiplier (eg., '0.01x', '0.75x')." },
-            "exp_bonus": { "type": "string", "description": "The experience bonus percentage (e.g., '1.0%', '7.5%')." },
-            "damage_bonus": { "type": "string", "description": "The damage bonus multiplier (e.g., '0.05x', '1x')." },
-            "movespeed_bonus": { "type": "string", "description": "The movement speed bonus percentage (e.g., '10%', '75%')." }
+            "coins_bonus": { "type": "string", "description": "The coin bonus." },
+            "energy_bonus": { "type": "string", "description": "The energy bonus." },
+            "exp_bonus": { "type": "string", "description": "The experience bonus." },
+            "damage_bonus": { "type": "string", "description": "The damage bonus." },
+            "movespeed_bonus": { "type": "string", "description": "The movement speed bonus." }
         },
         "required": ["id", "name", "world"]
     },
@@ -835,5 +835,3 @@
     "reasoning": "The Firestore structure is organized with 'worlds' as the top-level collection to logically separate game content. Each world document contains sub-collections for 'powers', 'npcs', 'pets', 'dungeons', 'accessories', 'shadows' and 'stands', creating a hierarchical and scalable data model. This allows for efficient querying of specific game data. For example, to get all shadows for 'World 7', you query the '/worlds/world7/shadows' sub-collection. A new top-level collection 'achievements' is added to store all game achievements, which is separate from world-specific data."
   }
 }
-
-    

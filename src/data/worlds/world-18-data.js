@@ -39,6 +39,9 @@ export const world18Data = {
   dungeons: [
       { name: 'Chainsaw Defense', boss: 'Gun Devil', description: 'Uma raid de defesa contra hordas de demônios.'}
   ],
+  accessories: [
+    { id: 'pokita-slides', name: 'Pokita Slides', world: '18', boss: 'D', rarity: 'D', energy_bonus: 'true', movespeed_bonus: 'true' }
+  ],
   missions: [
      {
       name: 'Hero License Quest',

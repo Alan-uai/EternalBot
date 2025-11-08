@@ -10,5 +10,7 @@ export const world23Data = {
     pets: [],
     powers: [],
     dungeons: [],
-    accessories: [],
+    accessories: [
+        { id: 'red-hero-boots', name: 'Red Hero Boots', world: '23', boss: 'S', rarity: 'S', damage_bonus: 'true', movespeed_bonus: 'true' }
+    ],
 };

@@ -27,4 +27,9 @@ export const world11Data = {
       unlockCost: '25M',
     },
   ],
+  accessories: [
+    { id: 'red-scarf', name: 'Red Scarf', world: '11', boss: 'C', rarity: 'C', coins_bonus: 'true' },
+    { id: 'clean-hat', name: 'Clean Hat', world: '11', boss: 'S', rarity: 'S', damage_bonus: 'true' },
+    { id: 'scout-cloak', name: 'Scout Cloak', world: '11', boss: 'SS', rarity: 'SS', energy_bonus: 'true' }
+  ],
 };

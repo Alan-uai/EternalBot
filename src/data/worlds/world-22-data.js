@@ -10,7 +10,10 @@ export const world22Data = {
   pets: [],
   powers: [],
   dungeons: [],
-  accessories: [],
+  accessories: [
+    { id: 'neck-fur', name: 'Neck Fur', world: '22', boss: 'D', rarity: 'D', energy_bonus: 'true', coins_bonus: 'true', exp_bonus: 'true' },
+    { id: 'crested-wingbands', name: 'Crested Wingbands', world: '22', boss: 'B', rarity: 'B', damage_bonus: 'true', coins_bonus: 'true', exp_bonus: 'true' }
+  ],
   missions: [
     {
       name: 'Hero License Quest',

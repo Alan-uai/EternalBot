@@ -27,4 +27,7 @@ export const world14Data = {
       unlockCost: '250M',
     },
   ],
+  accessories: [
+    { id: 'slime-mask', name: 'Slime Mask', world: '14', boss: 'S', rarity: 'S', energy_bonus: 'true', damage_bonus: 'true', coins_bonus: 'true', exp_bonus: 'true' }
+  ],
 };

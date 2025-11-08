@@ -28,4 +28,7 @@ export const world8Data = {
       unlockCost: '2.5M',
     },
   ],
+  accessories: [
+    { id: 'shinobi-flops', name: 'Shinobi Flops', world: '8', boss: 'SS', rarity: 'SS', energy_bonus: 'true', exp_bonus: 'true', movespeed_bonus: 'true' }
+  ],
 };

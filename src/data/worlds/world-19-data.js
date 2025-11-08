@@ -27,4 +27,10 @@ export const world19Data = {
       unlockCost: '2B',
     },
   ],
+  accessories: [
+    { id: 'fire-force-pants', name: 'Fire Force Pants', world: '19', boss: 'C', rarity: 'C', energy_bonus: 'true' },
+    { id: 'fire-force-cape', name: 'Fire Force Cape', world: '19', boss: 'S', rarity: 'S', energy_bonus: 'true', damage_bonus: 'true', exp_bonus: 'true' },
+    { id: 'fire-witch-hat', name: 'Fire Witch Hat', world: '19', boss: 'S', rarity: 'S', damage_bonus: 'true', coins_bonus: 'true' },
+    { id: 'fire-eye-patch', name: 'Fire Eye Patch', world: '19', boss: 'SS', rarity: 'SS', energy_bonus: 'true', damage_bonus: 'true', coins_bonus: 'true', exp_bonus: 'true' }
+  ],
 };

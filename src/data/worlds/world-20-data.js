@@ -19,5 +19,8 @@ export const world20Data = {
   dungeons: [
     { name: 'Green Planet Raid', boss: 'Broly', description: 'Uma raid em um planeta verde instável.'},
     { name: 'Suffering Raid', boss: 'Jiren', description: 'Uma raid de resistência extrema.'}
-  ]
+  ],
+  accessories: [
+    { id: 'scarffy', name: 'Scarffy', world: '20', boss: 'D', rarity: 'D', damage_bonus: 'true', coins_bonus: 'true', exp_bonus: 'true' }
+  ],
 };

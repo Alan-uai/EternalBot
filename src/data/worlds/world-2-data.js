@@ -87,7 +87,7 @@ export const world2Data = {
     }
   ],
   accessories: [
-    { id: 'armless-cloak', name: 'Armless Cloak', world: 'Mundo 2', boss: 'Shanks', rarity: 'Phantom', damage_bonus: '0.1x' }
+    { id: 'armless-cloak', name: 'Armless Cloak', world: '2', boss: 'SS', rarity: 'SS', energy_bonus: 'true' }
   ],
   dungeons: [
     { 

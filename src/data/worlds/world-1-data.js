@@ -55,7 +55,7 @@ export const world1Data = {
     },
   ],
   accessories: [
-      { id: 'imp-tail', name: 'Imp Tail', world: 'Mundo 1', boss: 'Halloween Raid', rarity: 'Evento', coins_bonus: '0.2', energy_bonus: '0.2x', damage_bonus: '0.2x' }
+      { id: '4-star-hat', name: '4 Star Hat', world: '1', boss: 'SS', rarity: 'SS', coins_bonus: 'true' }
   ],
   dungeons: [
       { 
@@ -244,5 +244,3 @@ export const world1Data = {
     }
   ]
 };
-
-    

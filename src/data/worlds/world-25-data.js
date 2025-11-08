@@ -19,6 +19,9 @@ export const world25Data = {
       ],
     }
   ],
+  accessories: [
+      { id: 'ghostling-crown', name: 'Ghostling Crown', world: '25', boss: 'D', rarity: 'D', energy_bonus: 'true', coins_bonus: 'true' }
+  ],
   tables: {
     damageZombies: {
       headers: ['Name', 'Atk Spd', 'Stats'],
