@@ -3,6 +3,7 @@ export const world5Data = {
   id: 'world-5',
   title: 'Mundo 5 - Ilha dos Caçadores',
   summary: 'Mundo focado em caçadores, com a espada de energia Yellow Nichirin.',
+  content: 'Mundo temático de Shinigamis. É aqui que os jogadores encontram a primeira espada de energia do jogo, a Zangetsu.',
   npcs: [
     { name: 'Nazuki', rank: 'E', exp: 75, hp: '100sx', drops: { coins: { amount: 'x500k', probability: 1 }, 'Breathing Token': { amount: 'x1-5', probability: 0.1 }, exp: { amount: 75, probability: 1 }, avatar_soul: { amount: 1, probability: 0.10 }, avatar: { probability: 0.01 } } },
     { name: 'Tenjaro', rank: 'D', exp: 78, hp: '500sx', drops: { coins: { amount: 'x1M', probability: 1 }, 'Breathing Token': { amount: 'x1-5', probability: 0.1 }, exp: { amount: 78, probability: 1 }, avatar_soul: { amount: 1, probability: 0.11 }, avatar: { probability: 0.01 } } },
@@ -36,6 +37,29 @@ export const world5Data = {
         { name: 'Cryokinesis', multiplier: '10x', rarity: 'Mítico' },
         { name: 'Blood Control', multiplier: '12x', rarity: 'Phantom' },
       ],
+    }
+  ],
+  obelisks: [
+    {
+      id: 'slayer-obelisk',
+      name: 'Slayer Obelisk',
+      description: 'Um obelisco que fornece bônus permanentes após completar uma missão.',
+      mission: {
+        name: 'Missão #1',
+        requirement: 'Derrotar Rangaki 10 vezes.',
+        rewards: [
+          { name: 'Obelisk Part', amount: 1 },
+          { name: 'Energy Percent', value: '5%' },
+          { name: 'Exp', amount: '24k' },
+          { name: 'Avatar Soul', amount: 100 },
+          { name: 'Energy Potion', amount: 1 }
+        ]
+      },
+      boosts: [
+        { type: 'Energy Multiply', value: '0.15x' },
+        { type: 'Damage Multiply', value: '0.25x' },
+        { type: 'Exp Percent', value: '3.5%' }
+      ]
     }
   ],
   missions: [
