@@ -24,6 +24,24 @@ export const world6Data = {
           { type: 'energy', value: '10% Energy' }
       ]
     },
+    {
+      name: 'Solo Hunter Rank',
+      type: 'progression',
+      statType: 'mixed',
+      unlockCost: '1B',
+    },
+    {
+      name: 'ReAwakening Progression',
+      type: 'progression',
+      statType: 'mixed',
+      unlockCost: '1.25B',
+    },
+    {
+      name: 'Monarch Progression',
+      type: 'progression',
+      statType: 'mixed',
+      unlockCost: '2.5B',
+    },
   ],
   missions: [
     {
@@ -34,3 +52,5 @@ export const world6Data = {
     }
   ]
 };
+
+  

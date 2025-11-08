@@ -24,6 +24,30 @@ export const world15Data = {
         { name: 'Vontade Encarnada', multiplier: '10x', rarity: 'Phantom', probability: 0.05, statType: 'energy' },
       ],
     },
+    {
+        name: 'Power Energy Runes',
+        type: 'progression',
+        statType: 'energy',
+        unlockCost: '200Qn',
+    },
+    {
+        name: 'Weapon Runes',
+        type: 'progression',
+        statType: 'mixed',
+        unlockCost: '400Qn',
+    },
+    {
+        name: 'Swordsman Energy',
+        type: 'progression',
+        statType: 'energy',
+        unlockCost: '300Qn',
+    },
+    {
+        name: 'Swordsman Damage',
+        type: 'progression',
+        statType: 'damage',
+        unlockCost: '300Qn',
+    },
   ],
   dungeons: [
       { name: 'Gleam Raid', boss: 'The Gleam Eyes', description: 'Uma raid de desafio individual com 10 ondas.'}
@@ -37,3 +61,5 @@ export const world15Data = {
     }
   ]
 };
+
+  

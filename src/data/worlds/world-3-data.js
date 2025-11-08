@@ -17,7 +17,7 @@ export const world3Data = {
       name: 'Reiatsu Color',
       type: 'gacha',
       statType: 'energy',
-      unlockCost: '10k',
+      unlockCost: '110k',
       stats: [
         { name: 'Gray Reiatsu', multiplier: '2x', rarity: 'Comum' },
         { name: 'Green Reiatsu', multiplier: '3x', rarity: 'Incomum' },
@@ -32,7 +32,7 @@ export const world3Data = {
       name: 'Zanpakuto',
       type: 'gacha',
       statType: 'damage',
-      unlockCost: '10k',
+      unlockCost: '190k',
       stats: [
         { name: 'Common', multiplier: '2x', rarity: 'Comum' },
         { name: 'Uncommon', multiplier: '3x', rarity: 'Incomum' },
@@ -52,7 +52,7 @@ export const world3Data = {
             { type: "damage", value: "1.01x" },
             { type: "energy", value: "1.11x" }
         ],
-        unlockCost: "Varia"
+        unlockCost: "250k"
     },
     {
       name: 'Hero License Quest',
@@ -150,3 +150,5 @@ export const world3Data = {
     }
   ]
 };
+
+  

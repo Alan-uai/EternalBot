@@ -26,6 +26,42 @@ export const world11Data = {
       maxBoost: '30% Damage',
       unlockCost: '25M',
     },
+    {
+        name: 'Families',
+        type: 'progression',
+        statType: 'mixed',
+        unlockCost: '590T',
+    },
+    {
+        name: 'Titans',
+        type: 'progression',
+        statType: 'mixed',
+        unlockCost: '890T',
+    },
+    {
+        name: 'Titan Injection',
+        type: 'progression',
+        statType: 'mixed',
+        unlockCost: '900T',
+    },
+    {
+        name: 'Titan Evolve',
+        type: 'progression',
+        statType: 'mixed',
+        unlockCost: '1qd',
+    },
+    {
+        name: 'Titan Evolve 2',
+        type: 'progression',
+        statType: 'mixed',
+        unlockCost: '2qd',
+    },
+    {
+        name: 'Titan Evolve 3',
+        type: 'progression',
+        statType: 'mixed',
+        unlockCost: '3qd',
+    },
   ],
   accessories: [
     { 
@@ -100,4 +136,4 @@ export const world11Data = {
   ],
 };
 
-    
+  

@@ -24,7 +24,31 @@ export const world7Data = {
         { name: 'Deus do Tempo', multiplier: '6x', rarity: 'Phantom', probability: 0.15 },
       ],
     },
+    {
+        name: 'Grimoire',
+        type: 'progression',
+        statType: 'mixed',
+        unlockCost: '250B',
+    },
+    {
+        name: 'Water Spirit Progression',
+        type: 'progression',
+        statType: 'mixed',
+        unlockCost: '50B',
+    },
+    {
+        name: 'Fire Spirit Progression',
+        type: 'progression',
+        statType: 'mixed',
+        unlockCost: '75B',
+    },
+    {
+        name: 'Wind Spirit Progression',
+        type: 'progression',
+        statType: 'mixed',
+        unlockCost: '150B',
+    },
   ],
 };
 
-    
+  

@@ -18,7 +18,7 @@ export const world4Data = {
       name: "Curses",
       type: "gacha",
       statType: "energy",
-      unlockCost: "Varia",
+      unlockCost: "500k",
       description: "Poder de energia obtido no gacha do mundo 4.",
       stats: [
         { name: 'Blazing Cataclysm', multiplier: '2x', rarity: 'Comum' },
@@ -52,7 +52,7 @@ export const world4Data = {
       statType: "damage",
       maxLevel: 410,
       maxBoost: "4.10x Damage",
-      unlockCost: "Varia",
+      unlockCost: "965k",
     }
   ],
   dungeons: [
@@ -205,3 +205,5 @@ export const world4Data = {
     }
   ]
 }
+
+  

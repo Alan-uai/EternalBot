@@ -24,5 +24,25 @@ export const world13Data = {
         { name: 'The One', multiplier: '6x', rarity: 'Phantom', probability: 0.08 },
       ],
     },
+    {
+      name: 'Kaiju energy',
+      type: 'progression',
+      statType: 'energy',
+      unlockCost: '100qd',
+    },
+    {
+      name: 'Fortitude Level',
+      type: 'progression',
+      statType: 'mixed',
+      unlockCost: '200qd',
+    },
+    {
+      name: 'Kaiju Powers',
+      type: 'progression',
+      statType: 'mixed',
+      unlockCost: '650qd',
+    },
   ],
 };
+
+  

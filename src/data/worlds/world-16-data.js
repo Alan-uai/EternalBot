@@ -27,6 +27,50 @@ export const world16Data = {
     { name: 'Platinum', 'atk_spd': '0.35s', 'base_damage': '15.7%', 'one_star_damage': '24%', 'two_star_damage': '31.4%', 'three_star_damage': '47.1%' },
     { name: 'World', 'atk_spd': '0.2s', 'base_damage': '15.8%', 'one_star_damage': '24%', 'two_star_damage': '31.6%', 'three_star_damage': '47.4%' },
   ],
+  powers: [
+      {
+          name: 'Stands',
+          type: 'gacha',
+          statType: 'damage',
+          unlockCost: '900Qn',
+      },
+      {
+          name: 'Ripple Energy',
+          type: 'progression',
+          statType: 'energy',
+          unlockCost: '5sx',
+      },
+      {
+          name: 'Onomatopoeia',
+          type: 'progression',
+          statType: 'mixed',
+          unlockCost: '1sx',
+      },
+      {
+          name: 'Stand Evolve',
+          type: 'progression',
+          statType: 'mixed',
+          unlockCost: '2sx',
+      },
+      {
+          name: 'Stand Evolve 2',
+          type: 'progression',
+          statType: 'mixed',
+          unlockCost: '3sx',
+      },
+      {
+          name: 'Stand Evolve 3',
+          type: 'progression',
+          statType: 'mixed',
+          unlockCost: '4sx',
+      },
+      {
+          name: 'Requiem Injection',
+          type: 'progression',
+          statType: 'mixed',
+          unlockCost: '1sx',
+      },
+  ],
   accessories: [
     { 
       id: 'greenello-scarf', 
@@ -66,3 +110,5 @@ export const world16Data = {
     }
   ],
 };
+
+  

@@ -26,6 +26,42 @@ export const world14Data = {
       maxBoost: '40% Star Luck',
       unlockCost: '250M',
     },
+    {
+        name: 'Ultimate Skills',
+        type: 'progression',
+        statType: 'mixed',
+        unlockCost: '90Qn',
+    },
+    {
+        name: 'Species',
+        type: 'progression',
+        statType: 'mixed',
+        unlockCost: '1.1Qn',
+    },
+    {
+        name: 'Demon Lord Energy',
+        type: 'progression',
+        statType: 'energy',
+        unlockCost: '10Qn',
+    },
+    {
+        name: 'Demon Lord Damage',
+        type: 'progression',
+        statType: 'damage',
+        unlockCost: '7.5Qn',
+    },
+    {
+        name: 'Demon Lord Luck',
+        type: 'progression',
+        statType: 'luck',
+        unlockCost: '20Qn',
+    },
+    {
+        name: 'Demon Lord Coins',
+        type: 'progression',
+        statType: 'coin',
+        unlockCost: '30Qn',
+    },
   ],
   accessories: [
     { 
@@ -92,3 +128,5 @@ export const world14Data = {
     }
   ],
 };
+
+  

@@ -30,5 +30,25 @@ export const world9Data = {
         { name: 'Super Saiyajin Blue', multiplier: '8x', rarity: 'Phantom', probability: 0.1 },
       ],
     },
+    {
+      name: 'Psychic Mayhem',
+      type: 'progression',
+      statType: 'mixed',
+      unlockCost: '5T',
+    },
+    {
+      name: 'Spiritual Upgrade',
+      type: 'progression',
+      statType: 'mixed',
+      unlockCost: '2.5T',
+    },
+    {
+      name: 'Lucky Spirit',
+      type: 'progression',
+      statType: 'mixed',
+      unlockCost: '9T',
+    },
   ],
 };
+
+  

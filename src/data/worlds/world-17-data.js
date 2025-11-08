@@ -16,10 +16,10 @@ export const world17Data = {
   ],
   powers: [
     {
-      name: "Investigator Power",
+      name: "Investigators",
       type: "gacha",
       statType: "energy",
-      unlockCost: "Varia (usa Quinque)",
+      unlockCost: "9sx",
       stats: [
           { name: 'Bureau', multiplier: '2x', rarity: 'Comum' },
           { name: 'Assistants', multiplier: '3x', rarity: 'Incomum' },
@@ -32,10 +32,10 @@ export const world17Data = {
       ]
     },
     {
-        name: "Kagune Power",
+        name: "Kagune",
         type: "gacha",
         statType: "damage",
-        unlockCost: "Varia (usa Yen)",
+        unlockCost: "10sx",
         stats: [
             { name: 'Retto', multiplier: '1x', rarity: 'Comum' },
             { name: 'Hakuro', multiplier: '1.5x', rarity: 'Incomum' },
@@ -53,15 +53,14 @@ export const world17Data = {
         statType: "damage",
         maxLevel: 110,
         maxBoost: "1.10x Damage",
-        unlockCost: "Varia",
-        description: "Poder de progressão que aumenta o dano."
+        unlockCost: "50sx",
     },
     {
         name: "Kagune Leveling",
         type: "progression",
         statType: "damage",
         maxLevel: 50,
-        unlockCost: "Flesh Token",
+        unlockCost: "5k Kagune Token",
         description: "Sistema de leveling para o Kagune Power (dano), usando Flesh Tokens. O nível máximo é 50 e o bônus final de dano varia com a raridade da Kagune. No nível máximo (50) com uma Kagune de raridade Suprema, o bônus de dano é 18x."
     }
   ],
@@ -98,3 +97,5 @@ export const world17Data = {
     }
   ]
 };
+
+  

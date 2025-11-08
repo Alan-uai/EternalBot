@@ -31,19 +31,21 @@ export const world12Data = {
       ],
     },
     {
-      name: 'Sin Upgrades',
+      name: 'Sins',
       type: 'progression',
       statType: 'mixed',
-      maxLevel: 100, // Exemplo
-      unlockCost: 'Raid Sins Tokens',
-      boosts: [
-          { type: 'damage', value: 'Até +50% Damage' },
-          { type: 'energy', value: 'Até +50% Energy' },
-      ],
-      description: "Upgrades de Dano e Energia obtidos com tokens da Raid Sins."
+      unlockCost: '10qd',
+    },
+    {
+      name: 'Commandments',
+      type: 'progression',
+      statType: 'mixed',
+      unlockCost: '50qd',
     },
   ],
   dungeons: [
       { name: 'Raid Sins', boss: 'Demon King', description: 'Uma raid de desafio individual onde se obtém tokens para os Sin Upgrades.'}
   ]
 };
+
+  

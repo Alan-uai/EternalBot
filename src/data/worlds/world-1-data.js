@@ -18,7 +18,7 @@ export const world1Data = {
       name: 'Dragon Race',
       type: 'gacha',
       statType: 'energy',
-      unlockCost: '100',
+      unlockCost: '1k',
       stats: [
         { name: 'Human', multiplier: '2x', rarity: 'Comum' },
         { name: 'Android', multiplier: '3x', rarity: 'Incomum' },
@@ -33,7 +33,7 @@ export const world1Data = {
       name: 'Saiyan Evolution',
       type: 'gacha',
       statType: 'energy',
-      unlockCost: '1000',
+      unlockCost: '10k',
       stats: [
         { name: 'Great Ape', multiplier: '2x', rarity: 'Comum' },
         { name: 'Super Saiyan Grad 1', multiplier: '3x', rarity: 'Incomum' },
@@ -258,4 +258,4 @@ export const world1Data = {
   ]
 };
 
-    
+  

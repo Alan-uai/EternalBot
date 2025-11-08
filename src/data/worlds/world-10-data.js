@@ -21,6 +21,30 @@ export const world10Data = {
       maxBoost: '50% Energy',
       unlockCost: '10M',
     },
+    {
+      name: 'Energy Card',
+      type: 'progression',
+      statType: 'energy',
+      unlockCost: '30T',
+    },
+    {
+      name: 'Damage Card',
+      type: 'progression',
+      statType: 'damage',
+      unlockCost: '69T',
+    },
+    {
+      name: 'Ten Progression',
+      type: 'progression',
+      statType: 'mixed',
+      unlockCost: '99T',
+    },
+    {
+      name: 'Contract of Greed',
+      type: 'progression',
+      statType: 'mixed',
+      unlockCost: '89T',
+    },
   ],
   missions: [
     {
@@ -31,3 +55,5 @@ export const world10Data = {
     }
   ]
 };
+
+  

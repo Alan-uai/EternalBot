@@ -18,7 +18,7 @@ export const world2Data = {
       name: 'Pirate Crew',
       type: 'gacha',
       statType: 'energy',
-      unlockCost: '1k',
+      unlockCost: '25k',
       stats: [
         { name: 'Whitebeard Pirates', multiplier: '2x', rarity: 'Comum' },
         { name: 'Cross Guild', multiplier: '3x', rarity: 'Incomum' },
@@ -50,7 +50,7 @@ export const world2Data = {
         description: "Também são conhecidas como Akuma no Mi. Cada fruta oferece um bônus para um status específico.",
         type: "gacha",
         statType: "energy",
-        unlockCost: "1.5k",
+        unlockCost: "55k",
         stats: [
             { name: "Bomb Fruit", statType: "energy", multiplier: "2x", rarity: "Comum" },
             { name: "Rubber Fruit", statType: "energy", multiplier: "3x", rarity: "Comum" },
@@ -74,7 +74,7 @@ export const world2Data = {
         statType: "damage",
         maxLevel: 60,
         maxBoost: "0.6x Damage",
-        unlockCost: "Varia"
+        unlockCost: "100k"
     }
   ],
   accessories: [
@@ -260,4 +260,4 @@ export const world2Data = {
   ]
 }
 
-    
+  

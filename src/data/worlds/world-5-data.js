@@ -18,7 +18,7 @@ export const world5Data = {
       name: 'Demon Arts',
       type: 'gacha',
       statType: 'energy',
-      unlockCost: '250k',
+      unlockCost: '50M',
       stats: [
         { name: 'Dream Manipulation', multiplier: '2x', rarity: 'Comum' },
         { name: 'Blood Scythes', multiplier: '3x', rarity: 'Incomum' },
@@ -120,3 +120,5 @@ export const world5Data = {
     }
   ]
 };
+
+  

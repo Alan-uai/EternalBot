@@ -35,6 +35,30 @@ export const world18Data = {
         { name: 'Supreme Ghost', rarity: 'Supreme', stats: '10x', stats_lvl_100: '15x', cost: '200k Eyes' },
       ],
     },
+    {
+        name: 'Debiru Hunter',
+        type: 'progression',
+        statType: 'mixed',
+        unlockCost: '100sx',
+    },
+    {
+        name: 'Akuma Power',
+        type: 'progression',
+        statType: 'mixed',
+        unlockCost: '800sx',
+    },
+    {
+        name: 'Akuma Damage',
+        type: 'progression',
+        statType: 'damage',
+        unlockCost: '2Sp',
+    },
+    {
+        name: 'Akuma Energy',
+        type: 'progression',
+        statType: 'energy',
+        unlockCost: '9Sp',
+    },
   ],
   dungeons: [
       { name: 'Chainsaw Defense', boss: 'Gun Devil', description: 'Uma raid de defesa contra hordas de demônios.'}
@@ -69,7 +93,7 @@ export const world18Data = {
             { "rarity": "Rare", "value": "26.6%" },
             { "rarity": "Epic", "value": "33.3%" },
             { "rarity": "Legendary", "value": "40%" },
-            { "rarity": "Mythic", "value": "46.6%" },
+            { "rarity": "Mythic", "value": "46.55%" },
             { "rarity": "Phantom", "value": "66.5%" },
             { "rarity": "Supreme", "value": "100%" }
           ]
@@ -86,3 +110,5 @@ export const world18Data = {
     }
   ]
 };
+
+  

@@ -20,7 +20,19 @@ export const world8Data = {
       statType: 'luck',
       maxLevel: 25,
       maxBoost: '30% Star Luck',
-      unlockCost: '2.5M',
+      unlockCost: '300B',
+    },
+    {
+      name: 'Chakra Progression',
+      type: 'progression',
+      statType: 'mixed',
+      unlockCost: '300B',
+    },
+    {
+      name: 'Power Eyes',
+      type: 'progression',
+      statType: 'mixed',
+      unlockCost: '350B',
     },
   ],
   accessories: [
@@ -63,4 +75,4 @@ export const world8Data = {
   ],
 };
 
-    
+  

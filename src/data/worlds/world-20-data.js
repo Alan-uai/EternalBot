@@ -20,6 +20,44 @@ export const world20Data = {
     { name: 'Green Planet Raid', boss: 'Broly', description: 'Uma raid em um planeta verde instável.'},
     { name: 'Suffering Raid', boss: 'Jiren', description: 'Uma raid de resistência extrema.'}
   ],
+  powers: [
+    {
+        name: 'Grand Elder Power',
+        type: 'progression',
+        statType: 'mixed',
+        unlockCost: '1.50',
+    },
+    {
+        name: 'Frost Demon Evolution',
+        type: 'progression',
+        statType: 'mixed',
+        unlockCost: '20',
+    },
+    {
+        name: 'Dragon Race Leveling',
+        type: 'progression',
+        statType: 'mixed',
+        unlockCost: '2.50',
+    },
+    {
+        name: 'Saiyan Evolution Leveling',
+        type: 'progression',
+        statType: 'mixed',
+        unlockCost: '30',
+    },
+    {
+        name: 'Dragon Energy',
+        type: 'progression',
+        statType: 'energy',
+        unlockCost: '40',
+    },
+    {
+        name: 'Dragon Damage',
+        type: 'progression',
+        statType: 'damage',
+        unlockCost: '40',
+    },
+  ],
   accessories: [
     { 
       id: 'scarffy', 
@@ -72,3 +110,5 @@ export const world20Data = {
     }
   ],
 };
+
+  
