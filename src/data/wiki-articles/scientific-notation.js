@@ -76,7 +76,7 @@ export const scientificNotationArticle = {
             { Abreviação: 'tQDR', Nome: 'Tresquadragintillion', 'Notação Científica': '1.00E+132' },
             { Abreviação: 'qdQDR', Nome: 'Quattuorquadragintillion', 'Notação Científica': '1.00E+135' },
             { Abreviação: 'QnQDR', Nome: 'Quinquadragintillion', 'Notação Científica': '1.00E+138' },
-            { Abreviação: 'sxQDR', Nome: 'Sesquadragintillion', 'Notação Científica': '1.00E+141' },
+            { Abreviação: 'sxQDR', Nome: 'Sexquadragintillion', 'Notação Científica': '1.00E+141' },
             { Abreviação: 'SpQDR', Nome: 'Septenquadragintillion', 'Notação Científica': '1.00E+144' },
             { Abreviação: 'OQQDR', Nome: 'Octoquadragintillion', 'Notação Científica': '1.00E+147' },
             { Abreviação: 'NQQDR', Nome: 'Novemquadragintillion', 'Notação Científica': '1.00E+150' },
@@ -100,4 +100,5 @@ export const scientificNotationArticle = {
   }
 };
 
+    
     
