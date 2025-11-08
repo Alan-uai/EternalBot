@@ -57,9 +57,9 @@ export const avatarIndexArticle = {
         { 'Avatar': '[Av] Tenjaro', 'Rank': 'D', 'Raridade': 'Incomum', 'Stats (Base)': '234', 'Stats (lvl 150)': '1.98k' },
         { 'Avatar': '[Av] Zentsu', 'Rank': 'C', 'Raridade': 'Raro', 'Stats (Base)': '352', 'Stats (lvl 150)': '2.99k' },
         { 'Avatar': '[Av] Insake', 'Rank': 'B', 'Raridade': 'Épico', 'Stats (Base)': '469', 'Stats (lvl 150)': '3.98k' },
-        { 'Avatar': '[Av] Shinabe', 'Rank': 'A', 'Raridade': 'Lendário', 'Stats (Base)': '586', 'Stats (lvl 150)': '4.98k' },
-        { 'Avatar': '[Av] Rangaki', 'Rank': 'S', 'Raridade': 'Mítico', 'Stats (Base)': '781', 'Stats (lvl 150)': '6.63k' },
-        { 'Avatar': '[Av] Koku', 'Rank': 'SS', 'Raridade': 'Phantom', 'Stats (Base)': '2.43k', 'Stats (lvl 150)': '19.9k' },
+        { 'Avatar': '[Av] Tamoka', 'Rank': 'A', 'Raridade': 'Lendário', 'Stats (Base)': '586', 'Stats (lvl 150)': '4.98k' },
+        { 'Avatar': '[Av] Shinabe', 'Rank': 'S', 'Raridade': 'Mítico', 'Stats (Base)': '781', 'Stats (lvl 150)': '6.63k' },
+        { 'Avatar': '[Av] Rangaki', 'Rank': 'SS', 'Raridade': 'Phantom', 'Stats (Base)': '2.43k', 'Stats (lvl 150)': '19.9k' },
       ],
     },
     world6: {
