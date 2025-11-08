@@ -47,13 +47,14 @@ export const starChancesArticle = {
       ]
     },
     world25_32: {
+        headers: ['World', 'Cost', 'Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', 'Mythic', 'Phantom', 'Supreme'],
         rows: [
-            { World: 25, Common: 'Pet Comum (10.5B)', Uncommon: 'Pet Incomum (21B)', Rare: 'Pet Raro (31.6B)', Epic: 'Pet Épico (42.9B)', Legendary: 'Pet Lendário (54.6B)', Mythic: 'Pet Mítico (70.3B)', Phantom: 'Pet Phantom (160B)', Supreme: 'Pet Supremo (238B)' },
-            { World: 26, Common: 'Pet Comum (26.3B)', Uncommon: 'Pet Incomum (53.7B)', Rare: 'Pet Raro (80B)', Epic: 'Pet Épico (107B)', Legendary: 'Pet Lendário (136B)', Mythic: 'Pet Mítico (175B)', Phantom: 'Pet Phantom (400B)', Supreme: 'Pet Supremo (595B)' },
+            { World: 25, 'Cost': '19.7O', 'Common': '40.00%', 'Uncommon': '39.64%', 'Rare': '14.00%', 'Epic': '6.00%', 'Legendary': '0.35%', 'Mythic': '0.01%', 'Phantom': '0.0007%', 'Supreme': '0.00002%' },
         ]
     }
   },
 };
 
     
+
 
