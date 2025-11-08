@@ -36,14 +36,14 @@ export const starChancesArticle = {
     world17_24: {
       headers: ['World', 'Cost', 'Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', 'Mythic', 'Phantom', 'Supreme'],
       rows: [
-        { World: 17, Common: 'Pet Comum (6.98M)', Uncommon: 'Pet Incomum (13.9M)', Rare: 'Pet Raro (20.9M)', Epic: 'Pet Épico (27.9M)', Legendary: 'Pet Lendário (34.9M)', Mythic: 'Pet Mítico (46.5M)', Phantom: 'Pet Phantom (104M)', Supreme: 'N/A' },
-        { World: 18, Common: 'Pet Comum (17.4M)', Uncommon: 'Pet Incomum (34.9M)', Rare: 'Pet Raro (52.3M)', Epic: 'Pet Épico (69.8M)', Legendary: 'Pet Lendário (87.3M)', Mythic: 'Pet Mítico (116M)', Phantom: 'Pet Phantom (261M)', Supreme: 'Pet Supremo (392M)' },
-        { World: 19, Common: 'Pet Comum (46.3M)', Uncommon: 'Pet Incomum (87.3M)', Rare: 'Pet Raro (130M)', Epic: 'Pet Épico (174M)', Legendary: 'Pet Lendário (218M)', Mythic: 'Pet Mítico (291M)', Phantom: 'Pet Phantom (654M)', Supreme: 'Pet Supremo (982M)' },
-        { World: 20, Common: 'Pet Comum (109M)', Uncommon: 'Pet Incomum (218M)', Rare: 'Pet Raro (327M)', Epic: 'Pet Épico (436M)', Legendary: 'Pet Lendário (545M)', Mythic: 'Pet Mítico (727M)', Phantom: 'Pet Phantom (1.63M)', Supreme: 'Pet Supremo (2.45M)' },
-        { World: 21, Common: 'Pet Comum (270M)', Uncommon: 'Pet Incomum (550M)', Rare: 'Pet Raro (820M)', Epic: 'Pet Épico (1.1B)', Legendary: 'Pet Lendário (1.4B)', Mythic: 'Pet Mítico (1.8B)', Phantom: 'Pet Phantom (4.1B)', Supreme: 'Pet Supremo (6.1B)' },
-        { World: 22, Common: 'Pet Comum (675M)', Uncommon: 'Pet Incomum (1.37B)', Rare: 'Pet Raro (2.05B)', Epic: 'Pet Épico (2.75B)', Legendary: 'Pet Lendário (3.50B)', Mythic: 'Pet Mítico (4.50B)', Phantom: 'Pet Phantom (10.2B)', Supreme: 'Pet Supremo (15.2B)' },
-        { World: 23, Common: 'Pet Comum (1.68B)', Uncommon: 'Pet Incomum (3.43B)', Rare: 'Pet Raro (5.12B)', Epic: 'Pet Épico (6.87B)', Legendary: 'Pet Lendário (8.75B)', Mythic: 'Pet Mítico (11.2B)', Phantom: 'Pet Phantom (25.6B)', Supreme: 'Pet Supremo (38.1B)' },
-        { World: 24, Common: 'Pet Comum (4.21B)', Uncommon: 'Pet Incomum (8.59B)', Rare: 'Pet Raro (12.8B)', Epic: 'Pet Épico (17.1B)', Legendary: 'Pet Lendário (21.8B)', Mythic: 'Pet Mítico (28.1B)', Phantom: 'Pet Phantom (64B)', Supreme: 'Pet Supremo (95.3B)' },
+        { World: 17, 'Cost': '7.71Qn', Common: '40.00%', Uncommon: '39.64%', Rare: '14.00%', Epic: '6.00%', Legendary: '0.35%', Mythic: '0.01%', Phantom: '0.0009%', Supreme: 'N/A' },
+        { World: 18, 'Cost': '115Qn', Common: '40.00%', Uncommon: '39.64%', Rare: '14.00%', Epic: '6.00%', Legendary: '0.35%', Mythic: '0.01%', Phantom: '0.0008%', Supreme: '0.00008%' },
+        { World: 19, 'Cost': '1.73sx', Common: '40.00%', Uncommon: '39.64%', Rare: '14.00%', Epic: '6.00%', Legendary: '0.35%', Mythic: '0.01%', Phantom: '0.0008%', Supreme: '0.00008%' },
+        { World: 20, 'Cost': '26sx', Common: '40.00%', Uncommon: '39.64%', Rare: '14.00%', Epic: '6.00%', Legendary: '0.35%', Mythic: '0.01%', Phantom: '0.0008%', Supreme: '0.00003%' },
+        { World: 21, 'Cost': '390sx', Common: '40.00%', Uncommon: '39.64%', Rare: '14.00%', Epic: '6.00%', Legendary: '0.35%', Mythic: '0.01%', Phantom: '0.0008%', Supreme: '0.00003%' },
+        { World: 22, 'Cost': '5.86sp', Common: '40.00%', Uncommon: '39.64%', Rare: '14.00%', Epic: '6.00%', Legendary: '0.35%', Mythic: '0.01%', Phantom: '0.0008%', Supreme: '0.00003%' },
+        { World: 23, 'Cost': '87.9sp', Common: '40.00%', Uncommon: '39.64%', Rare: '14.00%', Epic: '6.00%', Legendary: '0.35%', Mythic: '0.01%', Phantom: '0.0007%', Supreme: '0.00002%' },
+        { World: 24, 'Cost': '1.31O', Common: '40.00%', Uncommon: '39.64%', Rare: '14.00%', Epic: '6.00%', Legendary: '0.35%', Mythic: '0.01%', Phantom: '0.0007%', Supreme: '0.00002%' },
       ]
     },
     world25_32: {
@@ -56,3 +56,4 @@ export const starChancesArticle = {
 };
 
     
+
