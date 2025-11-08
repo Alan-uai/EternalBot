@@ -46,8 +46,8 @@ export const world8Data = {
             { rarity: 'Epic', value: '0.25x' },
             { rarity: 'Legendary', value: '0.3x' },
             { rarity: 'Mythic', value: '0.35x' },
-            { rarity: 'Phantom', value: '0.5x' },
-            { rarity: 'Supreme', value: '0.75x' }
+            { rarity: 'Phantom', value: '0.75x' },
+            { rarity: 'Supreme', value: '1x' }
           ]
         },
         { 
