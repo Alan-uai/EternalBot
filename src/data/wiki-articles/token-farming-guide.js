@@ -7,22 +7,21 @@ export const tokenFarmingGuideArticle = {
 
 ### Parte 1: A Fórmula do Farm Otimizado (Empilhando Bônus)
 
-Para calcular o ganho máximo de tokens por drop, você deve multiplicar o drop base do NPC por todos os seus bônus de multiplicador. A "Ficha 2x" (gamepass) é considerada um padrão para jogadores sérios, e os outros bônus são consumíveis.
+Para calcular o ganho máximo de tokens por drop, você deve multiplicar o drop base do NPC por todos os seus bônus de multiplicador.
 
 **Fórmula de Bônus:**
-**Ganho Final = (Drop Base) * (Bônus de Ficha) * (Bônus de Aura) * (Bônus de Poção) * (Bônus de Macarrão)**
+**Ganho Final = (Drop Base) * (Bônus de Aura) * (Bônus de Poção) * (Bônus de Macarrão)**
 
 **Detalhes de Cada Bônus:**
 - **Drop Base:** A quantidade de tokens que um NPC ou fonte dropa sem nenhum bônus.
-- **Bônus de Ficha (Gamepass "2x Tokens"):** Multiplicador de **x2**.
-- **Bônus de Aura (Ex: Aura do Rei do Fogo):** Aumenta o ganho em 25%, resultando em um multiplicador de **x1.25**.
-- **Bônus de Poção (2x Drop):** Multiplicador de **x2**.
-- **Bônus de Macarrão (Comida de Drop):** Aumenta o ganho em 50%, resultando em um multiplicador de **x1.5**.
+- **Bônus de Aura (Ex: Aura do Rei do Fogo):** Aumenta a chance de drop em 25%, resultando em um multiplicador de **x1.25**.
+- **Bônus de Poção (Poção de Drop):** Multiplicador de **x2**.
+- **Bônus de Macarrão (Comida de Drop):** Aumenta a chance de drop em 50%, resultando em um multiplicador de **x1.5**.
 
 **O Multiplicador Máximo:**
-Ao combinar todos esses bônus, você alcança um multiplicador massivo:
-\`2 (Ficha) * 1.25 (Aura) * 2 (Poção) * 1.5 (Macarrão) = 7.5x\`
-Isso significa que você pode ganhar **7.5 vezes mais tokens** do que o normal por cada drop bem-sucedido.
+Ao combinar todos esses bônus, você alcança um multiplicador massivo na chance de drop:
+\`1.25 (Aura) * 2 (Poção) * 1.5 (Macarrão) = 3.75x\`
+Isso significa que você pode ter **3.75 vezes mais chance** de conseguir um drop.
 
 ### Parte 2: Análise de Eficiência de Raids (Onde Farmar)
 
