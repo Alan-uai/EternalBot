@@ -23,7 +23,7 @@ export const swordsArticle = {
     world5: {
       headers: ['name', 'rarity', 'stats', 'obtencao'],
       rows: [
-        { name: 'Yellow Nichirin', type: 'energy', rarity: 'Lendário', stats: '0.075x', obtencao: 'Gacha (Mundo 5)' },
+        { name: 'Yellow Nichirin', type: 'energy', rarity: 'Lendário', stats: '0.075x', obtencao: 'Drop do Zenstu (Mundo 5)' },
         { name: 'Yellow Nichirin (1 Estrela)', type: 'energy', rarity: 'Lendário', stats: '0.15x', obtencao: 'Evolução' },
         { name: 'Yellow Nichirin (2 Estrelas)', type: 'energy', rarity: 'Lendário', stats: '0.225x', obtencao: 'Evolução' },
         { name: 'Yellow Nichirin (3 Estrelas)', type: 'energy', rarity: 'Lendário', stats: '0.375x', obtencao: 'Evolução' },
@@ -32,7 +32,7 @@ export const swordsArticle = {
     world15: {
         headers: ['name', 'rarity', 'stats', 'obtencao'],
         rows: [
-            { name: 'Lucidator', type: 'energy', rarity: 'Mítico', stats: '0.125x', obtencao: 'Gacha (Mundo 15)' },
+            { name: 'Lucidator', type: 'energy', rarity: 'Mítico', stats: '0.125x', obtencao: 'Drop do Beater (Mundo 15)' },
             { name: 'Lucidator (1 Estrela)', type: 'energy', rarity: 'Mítico', stats: '0.250x', obtencao: 'Evolução' },
             { name: 'Lucidator (2 Estrelas)', type: 'energy', rarity: 'Mítico', stats: '0.375x', obtencao: 'Evolução' },
             { name: 'Lucidator (3 Estrelas)', type: 'energy', rarity: 'Mítico', stats: '0.625x', obtencao: 'Evolução' },
@@ -41,7 +41,7 @@ export const swordsArticle = {
     world19: {
         headers: ['name', 'rarity', 'stats', 'obtencao'],
         rows: [
-            { name: 'Excalibur', type: 'energy', rarity: 'Phantom', stats: '0.2x', obtencao: 'Gacha (Mundo 19)' },
+            { name: 'Excalibur', type: 'energy', rarity: 'Phantom', stats: '0.2x', obtencao: 'Drop do Arter (Mundo 19)' },
             { name: 'Excalibur (1 Estrela)', type: 'energy', rarity: 'Phantom', stats: '0.4x', obtencao: 'Evolução' },
             { name: 'Excalibur (2 Estrelas)', type: 'energy', rarity: 'Phantom', stats: '0.6x', obtencao: 'Evolução' },
             { name: 'Excalibur (3 Estrelas)', type: 'energy', rarity: 'Phantom', stats: '1x', obtencao: 'Evolução' },
@@ -50,7 +50,7 @@ export const swordsArticle = {
     halloween: {
         headers: ['name', 'rarity', 'stats', 'obtencao'],
         rows: [
-            { name: 'Overdrive Saw', type: 'energy', rarity: 'Supremo', stats: '0.3x', obtencao: 'Evento de Halloween' },
+            { name: 'Overdrive Saw', type: 'energy', rarity: 'Supremo', stats: '0.3x', obtencao: 'Drop do Spook-Suke (Halloween)' },
             { name: 'Overdrive Saw (1 Estrela)', type: 'energy', rarity: 'Supremo', stats: '0.6x', obtencao: 'Evolução' },
             { name: 'Overdrive Saw (2 Estrelas)', type: 'energy', rarity: 'Supremo', stats: '0.9x', obtencao: 'Evolução' },
             { name: 'Overdrive Saw (3 Estrelas)', type: 'energy', rarity: 'Supremo', stats: '1.5x', obtencao: 'Evolução' },

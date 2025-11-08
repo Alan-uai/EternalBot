@@ -17,7 +17,7 @@ Uma nova raid temporária está disponível no Mundo 1.
 Uma segunda raid, a **Graveyard Defense**, está localizada em sua própria ilha de evento. É aqui que você pode obter o **Halloween Ghost Power** e os **Energy Zombies**.
 
 ### Avatares de Halloween (Bônus de Star Luck Único)
-Os avatares obtidos durante este evento são os únicos em todo o jogo que fornecem um bônus direto de **Star Luck**, tornando-os extremamente valiosos para farm de pets.
+Os avatares obtidos durante este evento são os únicos em todo o jogo que fornecem um bônus direto de **Star Luck**, tornando-os extremamente valiosos para farm de pets. O avatar **Spook-suke** também tem a chance de dropar a arma de energia **Overdrive Saw**.
 
 ### Sistema de Progressão da Halloween Bag
 
