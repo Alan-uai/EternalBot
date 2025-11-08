@@ -114,7 +114,7 @@ export const world3Data = {
         requirement: 'Derrotar 25 Ichige',
         rewards: [
             { name: 'World Key', amount: 1 },
-            { name: 'Coin Percent', amount: '3%' },
+            { name: 'Coin Percent', value: '3%' },
             { name: 'Exp', amount: '1.1k' }
         ]
     },
@@ -123,7 +123,7 @@ export const world3Data = {
         requirement: 'Derrotar 20 Uryua',
         rewards: [
             { name: 'World Key', amount: 1 },
-            { name: 'Damage Percent', amount: '3%' },
+            { name: 'Damage Percent', value: '3%' },
             { name: 'Exp', amount: '1.38k' }
         ]
     },
@@ -132,7 +132,7 @@ export const world3Data = {
         requirement: 'Derrotar 15 Rakiu',
         rewards: [
             { name: 'World Key', amount: 1 },
-            { name: 'Energy Percent', amount: '3%' },
+            { name: 'Energy Percent', value: '3%' },
             { name: 'Exp', amount: '1.8k' }
         ]
     },
@@ -152,7 +152,7 @@ export const world3Data = {
         rewards: [
             { name: 'Zanpakuto Token', amount: 10 },
             { name: 'Sword Token', amount: 10 },
-            { name: 'Energy Percent', amount: '4%'},
+            { name: 'Energy Percent', value: '4%'},
             { name: 'World Key', amount: 1 },
             { name: 'Exp', amount: '2.6k' }
         ]

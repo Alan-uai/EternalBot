@@ -206,7 +206,7 @@ export const world2Data = {
         requirement: 'Derrotar 15 Senji',
         rewards: [
             { name: 'World Key', amount: 1 },
-            { name: 'Drop Percent', amount: '2%' },
+            { name: 'Drop Percent', value: '2%' },
             { name: 'Exp', amount: '900' }
         ]
     },
@@ -226,7 +226,7 @@ export const world2Data = {
         requirement: 'Derrotar 5 Loffy',
         rewards: [
             { name: 'Pet Chest', amount: 1 },
-            { name: 'Drop Percent', amount: '3%' },
+            { name: 'Drop Percent', value: '3%' },
             { name: 'Joia', amount: 1 },
             { name: 'World Key', amount: 1 },
             { name: 'Exp', amount: '1.3k' }
@@ -234,5 +234,3 @@ export const world2Data = {
     }
   ]
 }
-
-    
