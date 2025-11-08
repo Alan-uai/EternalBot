@@ -2,7 +2,7 @@
 export const halloweenEventGuideArticle = {
   id: 'halloween-event-guide',
   title: 'Guia do Evento de Halloween',
-  summary: 'Um guia completo para a Raid de Halloween, a Halloween Bag, os novos Energy Zombies e os drops exclusivos como o Imp Tail.',
+  summary: 'Um guia completo para a Raid de Halloween, a Halloween Bag, os Energy Zombies e os Avatares exclusivos que são os únicos no jogo a concederem bônus de Star Luck.',
   content: `O Evento de Halloween traz uma nova raid desafiadora e itens exclusivos. Este guia detalha como participar e como maximizar as recompensas do evento.
 
 ### Nova Raid de Halloween (Mundo 1)
@@ -15,6 +15,9 @@ Uma nova raid temporária está disponível no Mundo 1.
 
 ### Graveyard Defense Raid (Ilha de Halloween)
 Uma segunda raid, a **Graveyard Defense**, está localizada em sua própria ilha de evento. É aqui que você pode obter o **Halloween Ghost Power** e os **Energy Zombies**.
+
+### Avatares de Halloween (Bônus de Star Luck Único)
+Os avatares obtidos durante este evento são os únicos em todo o jogo que fornecem um bônus direto de **Star Luck**, tornando-os extremamente valiosos para farm de pets.
 
 ### Sistema de Progressão da Halloween Bag
 
@@ -51,17 +54,17 @@ Este poder é obtido na **Graveyard Defense Raid** e evolui usando "Eyes".
 ### Fighters do Evento
 Existem dois tipos de zumbis no jogo. Os de Energia são exclusivos do evento de Halloween. Os de Dano são encontrados no Mundo 25.
 `,
-  tags: ['guia', 'evento', 'halloween', 'raid', 'halloween bag', 'progressão', 'mundo 1', 'energia', 'dano', 'moedas', 'imp tail', 'zombie', 'spooky portions', 'ghost power', 'graveyard defense'],
+  tags: ['guia', 'evento', 'halloween', 'raid', 'halloween bag', 'progressão', 'mundo 1', 'energia', 'dano', 'moedas', 'imp tail', 'zombie', 'spooky portions', 'ghost power', 'graveyard defense', 'star luck'],
   tables: {
     halloweenAvatars: {
-        headers: ['Name', 'Stats', 'Stats (lvl 150)'],
-        rows: [
-            { Name: 'Carrotto', Stats: '2.34k', 'Stats (lvl 150)': '19.9k' },
-            { Name: 'Evil Bald Man', Stats: '228k', 'Stats (lvl 150)': '1.93M' },
-            { Name: 'Pumpkinado', Stats: '22.4M', 'Stats (lvl 150)': '190M' },
-            { Name: 'Bald Warlock', Stats: '2.19B', 'Stats (lvl 150)': '18.6B' },
-            { Name: 'Spook-suke', Stats: '214B', 'Stats (lvl 150)': '1.82T' }
-        ]
+      headers: ['Name', 'Stats (Energy)', 'Stats (lvl 150 Energy)', 'Stats (Star Luck)', 'Stats (lvl 150 Star Luck)'],
+      rows: [
+        { Name: 'Carrotto', 'Stats (Energy)': '2.34k', 'Stats (lvl 150 Energy)': '19.9k', 'Stats (Star Luck)': '5%', 'Stats (lvl 150 Star Luck)': '5%' },
+        { Name: 'Evil Bald Man', 'Stats (Energy)': '228k', 'Stats (lvl 150 Energy)': '1.93M', 'Stats (Star Luck)': '10%', 'Stats (lvl 150 Star Luck)': '10%' },
+        { Name: 'Pumpkinado', 'Stats (Energy)': '22.4M', 'Stats (lvl 150 Energy)': '190M', 'Stats (Star Luck)': '15%', 'Stats (lvl 150 Star Luck)': '15%' },
+        { Name: 'Bald Warlock', 'Stats (Energy)': '2.19B', 'Stats (lvl 150 Energy)': '18.6B', 'Stats (Star Luck)': '20%', 'Stats (lvl 150 Star Luck)': '20%' },
+        { Name: 'Spook-suke', 'Stats (Energy)': '214B', 'Stats (lvl 150 Energy)': '1.82T', 'Stats (Star Luck)': '25%', 'Stats (lvl 150 Star Luck)': '25%' }
+      ]
     },
     energyZombies: {
       headers: ['Name', 'Stats', 'Stats (1 Star)', 'Stats (2 Star)', 'Stats (3 Star)'],
