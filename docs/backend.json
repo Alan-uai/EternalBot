@@ -463,14 +463,21 @@
         "properties": {
             "id": { "type": "string", "description": "Unique identifier for the accessory." },
             "name": { "type": "string", "description": "The name of the accessory." },
+            "slot": { "type": "string", "enum": ["Head", "Face", "Neck", "Back", "Waist", "Leg", "Pant"], "description": "The equipment slot for the accessory." },
             "world": { "type": "string", "description": "The name of the world where the accessory drops." },
             "boss": { "type": "string", "description": "The name of the boss that drops the accessory." },
             "rarity": { "type": "string", "description": "The rarity of the accessory (e.g., C-Rank, S-Rank, SS-Rank)." },
-            "coins_bonus": { "type": "string", "description": "The coin bonus." },
-            "energy_bonus": { "type": "string", "description": "The energy bonus." },
-            "exp_bonus": { "type": "string", "description": "The experience bonus." },
-            "damage_bonus": { "type": "string", "description": "The damage bonus." },
-            "movespeed_bonus": { "type": "string", "description": "The movement speed bonus." }
+            "bonuses": {
+              "type": "array",
+              "description": "An array of bonus objects.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": { "type": "string", "enum": ["energy", "damage", "coin", "exp", "movespeed"] },
+                  "values": { "type": "array", "items": { "type": "string" } }
+                }
+              }
+            }
         },
         "required": ["id", "name", "world"]
     },

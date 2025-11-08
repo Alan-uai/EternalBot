@@ -21,6 +21,17 @@ export const world20Data = {
     { name: 'Suffering Raid', boss: 'Jiren', description: 'Uma raid de resistência extrema.'}
   ],
   accessories: [
-    { id: 'scarffy', name: 'Scarffy', world: '20', boss: 'D', rarity: 'D', damage_bonus: 'true', coins_bonus: 'true', exp_bonus: 'true' }
+    { 
+      id: 'scarffy', 
+      name: 'Scarffy', 
+      slot: 'Neck',
+      world: '20', 
+      boss: 'Forças Especiais Ginyu', 
+      rarity: 'D', 
+      bonuses: [
+          { type: 'energy', values: ['2%', '3%', '4%', '5%', '6%', '7%', '10%', '15%'] },
+          { type: 'damage', values: ['0.6x', '0.9x', '1.2x', '1.5x', '1.8x', '2.1x', '3x', '4.5x'] }
+      ]
+    }
   ],
 };

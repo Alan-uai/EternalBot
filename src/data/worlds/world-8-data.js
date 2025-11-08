@@ -29,6 +29,17 @@ export const world8Data = {
     },
   ],
   accessories: [
-    { id: 'shinobi-flops', name: 'Shinobi Flops', world: '8', boss: 'SS', rarity: 'SS', energy_bonus: 'true', exp_bonus: 'true', movespeed_bonus: 'true' }
+    { 
+      id: 'shinobi-flops', 
+      name: 'Shinobi Flops', 
+      slot: 'Leg',
+      world: '8', 
+      boss: 'Itechi', 
+      rarity: 'SS', 
+      bonuses: [
+        { type: 'coin', values: ['0.1', '0.15x', '0.2x', '0.25x', '0.3x', '0.35x', '1x', '0.75x'] },
+        { type: 'movespeed', values: ['10%', '15%', '20%', '25%', '30%', '35%', '50%', '75%'] }
+      ]
+    }
   ],
 };

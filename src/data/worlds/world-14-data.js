@@ -28,6 +28,31 @@ export const world14Data = {
     },
   ],
   accessories: [
-    { id: 'slime-mask', name: 'Slime Mask', world: '14', boss: 'S', rarity: 'S', energy_bonus: 'true', damage_bonus: 'true', coins_bonus: 'true', exp_bonus: 'true' }
+    { 
+      id: 'greenello-scarf', 
+      name: 'Greenello Scarf', 
+      slot: 'Neck',
+      world: '14', 
+      boss: 'Rei Mago', 
+      rarity: 'S', 
+      bonuses: [
+          { type: 'energy', values: ['1%', '1.5%', '2%', '2.5%', '3%', '3.5%', '5%', '7.5%'] },
+          { type: 'coin', values: ['0.133x', '0.2x', '0.266x', '0.333x', '0.4x', '0.466x', '0.665x', '1x'] }
+      ]
+    },
+    { 
+      id: 'slime-mask', 
+      name: 'Slime Mask', 
+      slot: 'Head',
+      world: '14', 
+      boss: 'Rei Mago', 
+      rarity: 'S', 
+      bonuses: [
+          { type: 'energy', values: ['1x'] },
+          { type: 'damage', values: ['1x'] },
+          { type: 'coin', values: ['1x'] },
+          { type: 'exp', values: ['1x'] }
+      ]
+    }
   ],
 };

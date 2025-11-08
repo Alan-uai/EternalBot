@@ -40,7 +40,18 @@ export const world18Data = {
       { name: 'Chainsaw Defense', boss: 'Gun Devil', description: 'Uma raid de defesa contra hordas de demônios.'}
   ],
   accessories: [
-    { id: 'pokita-slides', name: 'Pokita Slides', world: '18', boss: 'D', rarity: 'D', energy_bonus: 'true', movespeed_bonus: 'true' }
+    { 
+      id: 'pokita-slides', 
+      name: 'Pokita Slides', 
+      slot: 'Leg',
+      world: '18', 
+      boss: 'Hero of Hell', 
+      rarity: 'D', 
+      bonuses: [
+        { type: 'damage', values: ['0.3', '0.45x', '0.6x', '0.75x', '0.9x', '1.05x', '2x', '2.25x'] },
+        { type: 'movespeed', values: ['13.3%', '20%', '26.6%', '33.3%', '40%', '46.6%', '66.5%', '100%'] }
+      ]
+    }
   ],
   missions: [
      {

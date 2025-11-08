@@ -11,8 +11,31 @@ export const world22Data = {
   powers: [],
   dungeons: [],
   accessories: [
-    { id: 'neck-fur', name: 'Neck Fur', world: '22', boss: 'D', rarity: 'D', energy_bonus: 'true', coins_bonus: 'true', exp_bonus: 'true' },
-    { id: 'crested-wingbands', name: 'Crested Wingbands', world: '22', boss: 'B', rarity: 'B', damage_bonus: 'true', coins_bonus: 'true', exp_bonus: 'true' }
+    { 
+      id: 'neck-fur', 
+      name: 'Neck Fur', 
+      slot: 'Neck',
+      world: '22', 
+      boss: 'Shadow', 
+      rarity: 'SSS', 
+      bonuses: [
+        { type: 'energy', values: ['2%', '3%', '4%', '5%', '6%', '7%', '10%', '15%'] },
+        { type: 'damage', values: ['0.6x', '0.9x', '1.2x', '1.5x', '1.8x', '2.1x', '3x', '4.5x'] }
+      ]
+    },
+    { 
+      id: 'crested-wingbands', 
+      name: 'Crested Wingbands', 
+      slot: 'Back',
+      world: '22', 
+      boss: 'Shadow', 
+      rarity: 'B', 
+      bonuses: [
+        { type: 'damage', values: ['1.1x'] },
+        { type: 'coin', values: ['1.1x'] },
+        { type: 'exp', values: ['1.1x'] }
+      ] 
+    }
   ],
   missions: [
     {

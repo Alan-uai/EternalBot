@@ -28,8 +28,39 @@ export const world11Data = {
     },
   ],
   accessories: [
-    { id: 'red-scarf', name: 'Red Scarf', world: '11', boss: 'C', rarity: 'C', coins_bonus: 'true' },
-    { id: 'clean-hat', name: 'Clean Hat', world: '11', boss: 'S', rarity: 'S', damage_bonus: 'true' },
-    { id: 'scout-cloak', name: 'Scout Cloak', world: '11', boss: 'SS', rarity: 'SS', energy_bonus: 'true' }
+    { 
+      id: 'red-scarf', 
+      name: 'Red Scarf', 
+      slot: 'Neck',
+      world: '11', 
+      boss: 'Titã Colossal', 
+      rarity: 'C', 
+      bonuses: [
+          { type: 'coin', values: ['0.3x', '0.45x', '0.6x', '0.75x', '0.9x', '1.05x', '1.5x', '2.25x'] },
+          { type: 'damage', values: ['0.5x', '0.75x', '1x', '1.25x', '1.5x', '1.75x', '2.5x', '3.75x'] }
+      ]
+    },
+    { 
+      id: 'clean-hat', 
+      name: 'Clean Hat', 
+      slot: 'Head',
+      world: '11', 
+      boss: 'Eran', 
+      rarity: 'S', 
+      bonuses: [
+        { type: 'damage', values: ['1x'] }
+      ] 
+    },
+    { 
+      id: 'scout-cloak', 
+      name: 'Scout Cloak', 
+      slot: 'Back',
+      world: '11', 
+      boss: 'Killas Godspeed', 
+      rarity: 'SS', 
+      bonuses: [
+        { type: 'energy', values: ['1.5x'] }
+      ] 
+    }
   ],
 };
