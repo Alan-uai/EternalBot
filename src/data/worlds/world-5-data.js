@@ -19,14 +19,18 @@ export const world5Data = {
   ],
   powers: [
     {
-      name: 'Breathing',
+      name: 'Demon Arts',
       type: 'gacha',
       statType: 'energy',
       unlockCost: '250k',
       stats: [
-        { name: 'Water Breathing', multiplier: '1.8x', rarity: 'Comum', probability: 35 },
-        { name: 'Thunder Breathing', multiplier: '2.2x', rarity: 'Incomum', probability: 25 },
-        { name: 'Sun Breathing', multiplier: '5x', rarity: 'Phantom', probability: 0.2, energy_crit_bonus: '1.50%' },
+        { name: 'Dream Manipulation', multiplier: '2x', rarity: 'Comum' },
+        { name: 'Blood Scythes', multiplier: '3x', rarity: 'Incomum' },
+        { name: 'Vase Teleportation', multiplier: '4x', rarity: 'Raro' },
+        { name: 'Emotion Splitting', multiplier: '5x', rarity: 'Épico' },
+        { name: 'Destructive Death', multiplier: '8x', rarity: 'Lendário' },
+        { name: 'Cryokinesis', multiplier: '10x', rarity: 'Mítico' },
+        { name: 'Blood Control', multiplier: '12x', rarity: 'Phantom' },
       ],
     }
   ]

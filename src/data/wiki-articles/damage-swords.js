@@ -9,10 +9,14 @@ export const damageSwordsArticle = {
 - **Evolução 1★:** Acontece no **Mundo 4**.
 - **Evolução 2★ e 3★:** Acontecem no **Mundo 5**.
 
-Para maximizar ainda mais o dano, as espadas podem ser aprimoradas com encantamentos como **Respirações** e **Runas**, que também possuem suas próprias raridades e bônus.
+### Encantamentos (Breathings)
+Para maximizar ainda mais o dano, as espadas podem ser aprimoradas com encantamentos como **Respirações (Breathings)**, que também possuem suas próprias raridades e bônus. Para roletar um encantamento:
+1. Desequipe a arma que você deseja encantar e selecione-a na interface de encantamento.
+2. Clique em "Roll" para tentar uma vez ou use o "Auto Roll" para tentar obter uma respiração específica.
+3. Se não conseguir roletar, verifique se selecionou uma raridade que você pode obter.
 
 **Nota Especial sobre a Golden Venom Strike:** A Golden Venom Strike foi uma espada de evento da atualização 17, que saiu na atualização 18 e não está mais disponível para obtenção. Ela era adquirida no Mundo 2 ao trocar uma Venomstrike de 3 estrelas (Phantom) por ela. A Golden Venom Strike possui um multiplicador de dano base de 38x e não possui estrelas ou passivas.`,
-  tags: ['espadas', 'dano', 'arma', 'guia', 'geral', 'evolução', 'golden venom', 'respiração', 'runa'],
+  tags: ['espadas', 'dano', 'arma', 'guia', 'geral', 'evolução', 'golden venom', 'respiração', 'runa', 'breathing'],
   imageUrl: 'wiki-9',
   tables: {
     damageSwords: {
