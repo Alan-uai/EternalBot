@@ -22,27 +22,27 @@ export const world23Data = {
             { 
               type: 'damage', 
               valuesByRarity: [
-                { "rarity": "Common", "value": "0.3x" },
-                { "rarity": "Uncommon", "value": "0.45x" },
-                { "rarity": "Rare", "value": "0.6x" },
-                { "rarity": "Epic", "value": "0.75x" },
-                { "rarity": "Legendary", "value": "0.9x" },
-                { "rarity": "Mythic", "value": "1.05x" },
-                { "rarity": "Phantom", "value": "1.5x" },
-                { "rarity": "Supreme", "value": "2.25x" }
+                { rarity: "Common", value: "0.3x" },
+                { rarity: "Uncommon", value: "0.45x" },
+                { rarity: "Rare", value: "0.6x" },
+                { rarity: "Epic", value: "0.75x" },
+                { rarity: "Legendary", value: "0.9x" },
+                { rarity: "Mythic", value: "1.05x" },
+                { rarity: "Phantom", value: "1.5x" },
+                { rarity: "Supreme", value: "2.25x" }
               ]
             },
             { 
               type: 'movespeed', 
               valuesByRarity: [
-                { "rarity": "Common", "value": "13.3%" },
-                { "rarity": "Uncommon", "value": "20%" },
-                { "rarity": "Rare", "value": "26.6%" },
-                { "rarity": "Epic", "value": "33.3%" },
-                { "rarity": "Legendary", "value": "40%" },
-                { "rarity": "Mythic", "value": "46.55%" },
-                { "rarity": "Phantom", "value": "66.5%" },
-                { "rarity": "Supreme", "value": "100%" }
+                { rarity: "Common", value: "13.3%" },
+                { rarity: "Uncommon", value: "20%" },
+                { rarity: "Rare", value: "26.6%" },
+                { rarity: "Epic", value: "33.3%" },
+                { rarity: "Legendary", value: "40%" },
+                { rarity: "Mythic", value: "46.55%" },
+                { rarity: "Phantom", value: "66.5%" },
+                { rarity: "Supreme", value: "100%" }
               ]
             }
           ]

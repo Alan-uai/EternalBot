@@ -144,7 +144,7 @@ export const world2Data = {
         ],
         restaurantBox: [
             { item: 'Dragon Race Token', amount: 'x8-13', probability: 0.20 },
-            { item: 'Saiyan Evolution Token', amount: 'x8-13', probability: 0.20 },
+            { item: 'Saiyan Token', amount: 'x8-13', probability: 0.20 },
             { item: 'Pirate Crew Token', amount: 'x8-13', probability: 0.20 },
             { item: 'Demon Fruit Token', amount: 'x8-13', probability: 0.20 },
             { item: 'Sword Token', amount: 'x11-16', probability: 0.20 },

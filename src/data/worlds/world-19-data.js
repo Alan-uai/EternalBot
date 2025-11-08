@@ -144,7 +144,7 @@ export const world19Data = {
           valuesByRarity: [
             { rarity: "Common", value: "1%" },
             { rarity: "Uncommon", value: "1.5%" },
-            { rarity: "Rare", "value": "2%" },
+            { rarity: "Rare", value: "2%" },
             { rarity: "Epic", value: "2.5%" },
             { rarity: "Legendary", value: "3%" },
             { rarity: "Mythic", value: "3.5%" },

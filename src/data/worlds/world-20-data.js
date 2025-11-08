@@ -70,40 +70,40 @@ export const world20Data = {
         { 
           type: 'damage', 
           valuesByRarity: [
-            { "rarity": "Common", "value": "0.133x" },
-            { "rarity": "Uncommon", "value": "0.2x" },
-            { "rarity": "Rare", "value": "0.266x" },
-            { "rarity": "Epic", "value": "0.333x" },
-            { "rarity": "Legendary", "value": "0.4x" },
-            { "rarity": "Mythic", "value": "0.466x" },
-            { "rarity": "Phantom", "value": "0.665x" },
-            { "rarity": "Supreme", "value": "1x" }
+            { rarity: "Common", value: "0.133x" },
+            { rarity: "Uncommon", value: "0.2x" },
+            { rarity: "Rare", value: "0.266x" },
+            { rarity: "Epic", value: "0.333x" },
+            { rarity: "Legendary", value: "0.4x" },
+            { rarity: "Mythic", value: "0.466x" },
+            { rarity: "Phantom", value: "0.665x" },
+            { rarity: "Supreme", value: "1x" }
           ]
         },
         { 
           type: 'coin', 
           valuesByRarity: [
-            { "rarity": "Common", "value": "0.6x" },
-            { "rarity": "Uncommon", "value": "0.9x" },
-            { "rarity": "Rare", "value": "1.2x" },
-            { "rarity": "Epic", "value": "1.5x" },
-            { "rarity": "Legendary", "value": "1.8x" },
-            { "rarity": "Mythic", "value": "2.1x" },
-            { "rarity": "Phantom", "value": "3x" },
-            { "rarity": "Supreme", "value": "4.5x" }
+            { rarity: "Common", value: "0.6x" },
+            { rarity: "Uncommon", value: "0.9x" },
+            { rarity: "Rare", value: "1.2x" },
+            { rarity: "Epic", value: "1.5x" },
+            { rarity: "Legendary", value: "1.8x" },
+            { rarity: "Mythic", value: "2.1x" },
+            { rarity: "Phantom", value: "3x" },
+            { rarity: "Supreme", value: "4.5x" }
           ]
         },
         { 
           type: 'exp', 
           valuesByRarity: [
-            { "rarity": "Common", "value": "2%" },
-            { "rarity": "Uncommon", "value": "3%" },
-            { "rarity": "Rare", "value": "4%" },
-            { "rarity": "Epic", "value": "5%" },
-            { "rarity": "Legendary", "value": "6%" },
-            { "rarity": "Mythic", "value": "7%" },
-            { "rarity": "Phantom", "value": "10%" },
-            { "rarity": "Supreme", "value": "15%" }
+            { rarity: "Common", value: "2%" },
+            { rarity: "Uncommon", value: "3%" },
+            { rarity: "Rare", value: "4%" },
+            { rarity: "Epic", value: "5%" },
+            { rarity: "Legendary", value: "6%" },
+            { rarity: "Mythic", value: "7%" },
+            { rarity: "Phantom", value: "10%" },
+            { rarity: "Supreme", value: "15%" }
           ]
         }
       ]

@@ -83,27 +83,27 @@ export const world16Data = {
         { 
           type: 'coin', 
           valuesByRarity: [
-            { "rarity": "Common", "value": "0.5x" },
-            { "rarity": "Uncommon", "value": "0.75x" },
-            { "rarity": "Rare", "value": "1.x" },
-            { "rarity": "Epic", "value": "1.25x" },
-            { "rarity": "Legendary", "value": "1.5x" },
-            { "rarity": "Mythic", "value": "1.75x" },
-            { "rarity": "Phantom", "value": "2.5x" },
-            { "rarity": "Supreme", "value": "3.75x" }
+            { rarity: "Common", value: "0.5x" },
+            { rarity: "Uncommon", value: "0.75x" },
+            { rarity: "Rare", value: "1.x" },
+            { rarity: "Epic", value: "1.25x" },
+            { rarity: "Legendary", value: "1.5x" },
+            { rarity: "Mythic", value: "1.75x" },
+            { rarity: "Phantom", value: "2.5x" },
+            { rarity: "Supreme", value: "3.75x" }
           ] 
         },
         { 
           type: 'exp', 
           valuesByRarity: [
-            { "rarity": "Common", "value": "1%" },
-            { "rarity": "Uncommon", "value": "1.5%" },
-            { "rarity": "Rare", "value": "2%" },
-            { "rarity": "Epic", "value": "2.5%" },
-            { "rarity": "Legendary", "value": "3%" },
-            { "rarity": "Mythic", "value": "3.5%" },
-            { "rarity": "Phantom", "value": "5%" },
-            { "rarity": "Supreme", "value": "7.5%" }
+            { rarity: "Common", value: "1%" },
+            { rarity: "Uncommon", value: "1.5%" },
+            { rarity: "Rare", value: "2%" },
+            { rarity: "Epic", value: "2.5%" },
+            { rarity: "Legendary", value: "3%" },
+            { rarity: "Mythic", value: "3.5%" },
+            { rarity: "Phantom", value: "5%" },
+            { rarity: "Supreme", value: "7.5%" }
           ]
         }
       ]
