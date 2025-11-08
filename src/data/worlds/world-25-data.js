@@ -20,7 +20,42 @@ export const world25Data = {
     }
   ],
   accessories: [
-      { id: 'ghostling-crown', name: 'Ghostling Crown', world: '25', boss: 'D', rarity: 'D', energy_bonus: 'true', coins_bonus: 'true' }
+    { 
+      id: 'ghostling-crown', 
+      name: 'Ghostling Crown', 
+      slot: 'Head',
+      world: '25', 
+      npc: 'Desconhecido', 
+      rank: 'D-Rank',
+      bonuses: [
+        {
+          type: 'energy',
+          valuesByRarity: [
+            { rarity: 'Common', value: '0.133x' },
+            { rarity: 'Uncommon', value: '0.2x' },
+            { rarity: 'Rare', value: '0.266x' },
+            { rarity: 'Epic', value: '0.333x' },
+            { rarity: 'Legendary', value: '0.4x' },
+            { rarity: 'Mythic', value: '0.466x' },
+            { rarity: 'Phantom', value: '0.665x' },
+            { rarity: 'Supreme', value: '1x' }
+          ]
+        },
+        {
+          type: 'coin',
+          valuesByRarity: [
+            { rarity: 'Common', value: '0.133x' },
+            { rarity: 'Uncommon', value: '0.2x' },
+            { rarity: 'Rare', value: '0.266x' },
+            { rarity: 'Epic', value: '0.333x' },
+            { rarity: 'Legendary', value: '0.4x' },
+            { rarity: 'Mythic', value: '0.466x' },
+            { rarity: 'Phantom', value: '0.665x' },
+            { rarity: 'Supreme', value: '1x' }
+          ]
+        }
+      ]
+    }
   ],
   tables: {
     damageZombies: {
@@ -37,3 +72,5 @@ export const world25Data = {
     },
   },
 };
+
+    

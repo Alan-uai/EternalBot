@@ -55,7 +55,29 @@ export const world1Data = {
     },
   ],
   accessories: [
-      { id: '4-star-hat', name: '4 Star Hat', world: '1', boss: 'SS', rarity: 'SS', coins_bonus: 'true' }
+    {
+      id: '4-star-hat',
+      name: '4 Star Hat',
+      slot: 'Head',
+      world: '1',
+      npc: 'Kid Kohan',
+      rank: 'SS-Rank',
+      bonuses: [
+        {
+          type: 'coin',
+          valuesByRarity: [
+            { rarity: 'Common', value: '0.1x' },
+            { rarity: 'Uncommon', value: '0.15x' },
+            { rarity: 'Rare', value: '0.2x' },
+            { rarity: 'Epic', value: '0.25x' },
+            { rarity: 'Legendary', value: '0.3x' },
+            { rarity: 'Mythic', value: '0.35x' },
+            { rarity: 'Phantom', value: '0.5x' },
+            { rarity: 'Supreme', value: '0.75x' }
+          ]
+        }
+      ]
+    }
   ],
   dungeons: [
       { 
@@ -244,3 +266,5 @@ export const world1Data = {
     }
   ]
 };
+
+    
