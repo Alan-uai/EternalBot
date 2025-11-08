@@ -27,7 +27,5 @@ export const world16Data = {
     { name: 'Platinum', 'atk_spd': '0.35s', 'base_damage': '15.7%', 'one_star_damage': '24%', 'two_star_damage': '31.4%', 'three_star_damage': '47.1%' },
     { name: 'World', 'atk_spd': '0.2s', 'base_damage': '15.8%', 'one_star_damage': '24%', 'two_star_damage': '31.6%', 'three_star_damage': '47.4%' },
   ],
-  accessories: [
-    { id: 'greenello-scarf', name: 'Greenello Scarf', world: '16', boss: 'C', rarity: 'C', coins_bonus: 'true', exp_bonus: 'true' }
-  ],
+  accessories: [],
 };

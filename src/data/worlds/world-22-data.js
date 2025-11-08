@@ -20,7 +20,8 @@ export const world22Data = {
       rarity: 'SSS-Rank', 
       bonuses: [
         { type: 'energy', values: ['0.133x', '0.2x', '0.266x', '0.333x', '0.4x', '0.466x', '0.665x', '1x'] },
-        { type: 'coin', values: ['0.6x', '0.9x', '1.2x', '1.5x', '1.8x', '2.1x', '3x', '4.5x'] }
+        { type: 'coin', values: ['0.6x', '0.9x', '1.2x', '1.5x', '1.8x', '2.1x', '3x', '4.5x'] },
+        { type: 'exp', values: ['2%', '3%', '4%', '5%', '6%', '7%', '10%', '15%'] }
       ]
     },
     { 

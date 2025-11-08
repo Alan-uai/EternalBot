@@ -36,8 +36,7 @@ export const world11Data = {
       boss: 'Eran', 
       rarity: 'S-Rank', 
       bonuses: [
-          { type: 'coin', values: ['0.3x', '0.45x', '0.6x', '0.75x', '0.9x', '1.05x', '1.5x', '2.25x'] },
-          { type: 'damage', values: ['0.5x', '0.75x', '1x', '1.25x', '1.5x', '1.75x', '2.5x', '3.75x'] }
+          { type: 'coin', values: ['0.3x', '0.45x', '0.6x', '0.75x', '0.9x', '1.05x', '1.5x', '2.25x'] }
       ]
     },
     { 

@@ -36,7 +36,8 @@ export const world14Data = {
       boss: 'Rei Mago', 
       rarity: 'S-Rank', 
       bonuses: [
-        { type: 'energy', values: ['1%', '1.5%', '2%', '2.5%', '3%', '3.5%', '5%', '7.5%'] }
+        { type: 'coin', values: ['0.5x', '0.75x', '1.x', '1.25x', '1.5x', '1.75x', '2.5x', '3.75x'] },
+        { type: 'exp', values: ['1%', '1.5%', '2%', '2.5%', '3%', '3.5%', '5%', '7.5%'] }
       ]
     },
     { 
