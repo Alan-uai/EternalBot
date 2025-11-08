@@ -25,16 +25,41 @@ function formatArticle(article) {
     }
   }
   
-  // Novo: Lógica otimizada para dados de mundo
+  // CORREÇÃO: Lógica aprimorada para detalhar NPCs e seus DROPS
+  if (article.npcs && Array.isArray(article.npcs)) {
+      content += `NPCS DESTE MUNDO:\n`;
+      article.npcs.forEach(npc => {
+          let npcDetails = `- **${npc.name}** (Rank: ${npc.rank}, HP: ${npc.hp}, Exp: ${npc.exp})`;
+          if (npc.drops) {
+              const dropStrings = Object.entries(npc.drops).map(([dropName, dropDetails]) => {
+                  if (typeof dropDetails === 'object' && dropDetails !== null) {
+                      const details = Object.entries(dropDetails)
+                          .map(([key, value]) => `${key}: ${value}`)
+                          .join(', ');
+                      return `${dropName} (${details})`;
+                  }
+                  return dropName; // Fallback
+              });
+              if (dropStrings.length > 0) {
+                  npcDetails += ` | Drops: ${dropStrings.join('; ')}`;
+              }
+          }
+          content += npcDetails + '\n';
+      });
+      content += '\n';
+  }
+
+  // Lógica para outras entidades como pets, poderes, etc.
   const worldData = {
-      NPCs: article.npcs,
       Pets: article.pets,
       Acessórios: article.accessories,
       Dungeons: article.dungeons,
       Shadows: article.shadows,
       Stands: article.stands,
       Ghouls: article.ghouls,
-      Poderes: article.powers
+      Poderes: article.powers,
+      Missões: article.missions,
+      Obeliscos: article.obelisks,
   };
 
   for (const [key, items] of Object.entries(worldData)) {
@@ -42,9 +67,10 @@ function formatArticle(article) {
           content += `${key.toUpperCase()}:\n`;
           items.forEach(item => {
               const details = Object.entries(item)
+                  .filter(([prop]) => typeof item[prop] !== 'object') // Não mostra objetos aninhados de forma genérica
                   .map(([prop, value]) => `${prop}: ${value}`)
                   .join(', ');
-              content += `- ${details}\n`;
+              content += `- ${item.name || item.id}: ${details}\n`;
           });
           content += '\n';
       }
