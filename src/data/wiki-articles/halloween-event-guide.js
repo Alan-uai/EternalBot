@@ -53,6 +53,16 @@ Existem dois tipos de zumbis no jogo. Os de Energia são exclusivos do evento de
 `,
   tags: ['guia', 'evento', 'halloween', 'raid', 'halloween bag', 'progressão', 'mundo 1', 'energia', 'dano', 'moedas', 'imp tail', 'zombie', 'spooky portions', 'ghost power', 'graveyard defense'],
   tables: {
+    halloweenAvatars: {
+        headers: ['Name', 'Stats', 'Stats (lvl 150)'],
+        rows: [
+            { Name: 'Carrotto', Stats: '2.34k', 'Stats (lvl 150)': '19.9k' },
+            { Name: 'Evil Bald Man', Stats: '228k', 'Stats (lvl 150)': '1.93M' },
+            { Name: 'Pumpkinado', Stats: '22.4M', 'Stats (lvl 150)': '190M' },
+            { Name: 'Bald Warlock', Stats: '2.19B', 'Stats (lvl 150)': '18.6B' },
+            { Name: 'Spook-suke', Stats: '214B', 'Stats (lvl 150)': '1.82T' }
+        ]
+    },
     energyZombies: {
       headers: ['Name', 'Stats', 'Stats (1 Star)', 'Stats (2 Star)', 'Stats (3 Star)'],
       rows: [
