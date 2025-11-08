@@ -33,7 +33,7 @@ export const world14Data = {
       name: 'Greenello Scarf', 
       slot: 'Neck',
       world: '14', 
-      boss: 'Rei Mago', 
+      npc: 'Rei Mago', 
       rank: 'S-Rank', 
       bonuses: [
         { 
@@ -69,7 +69,7 @@ export const world14Data = {
       name: 'Slime Mask', 
       slot: 'Head',
       world: '14', 
-      boss: 'Rei Mago', 
+      npc: 'Rei Mago', 
       rank: 'S-Rank', 
       bonuses: [
           { 
@@ -128,5 +128,3 @@ export const world14Data = {
     }
   ],
 };
-
-    

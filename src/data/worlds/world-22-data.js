@@ -16,7 +16,7 @@ export const world22Data = {
       name: 'Neck Fur', 
       slot: 'Neck',
       world: '22', 
-      boss: 'Shadow', 
+      npc: 'Shadow', 
       rank: 'SSS-Rank', 
       bonuses: [
         { 
@@ -65,8 +65,8 @@ export const world22Data = {
       name: 'Crested Wingbands', 
       slot: 'Back',
       world: '22', 
-      boss: 'Shadow', 
-      rank: 'B-Rank', 
+      npc: 'Shadow', 
+      rank: 'SSS-Rank', 
       bonuses: [
         { 
           type: 'damage', 
@@ -119,5 +119,3 @@ export const world22Data = {
     }
   ],
 };
-
-    

@@ -45,13 +45,13 @@ export const world18Data = {
       name: 'Pokita Slides', 
       slot: 'Leg',
       world: '18', 
-      boss: 'Hero of Hell', 
-      rank: 'D', 
+      npc: 'Hero of Hell', 
+      rank: 'SSS-Rank', 
       bonuses: [
         { 
           type: 'damage', 
           valuesByRarity: [
-            { "rarity": "Common", "value": "0.3" },
+            { "rarity": "Common", "value": "0.3x" },
             { "rarity": "Uncommon", "value": "0.45x" },
             { "rarity": "Rare", "value": "0.6x" },
             { "rarity": "Epic", "value": "0.75x" },
@@ -86,5 +86,3 @@ export const world18Data = {
     }
   ]
 };
-
-    

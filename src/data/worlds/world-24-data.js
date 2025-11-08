@@ -18,8 +18,8 @@ export const world24Data = {
         name: 'Jalbathar Mask', 
         slot: 'Head',
         world: 'Mundo 24', 
-        boss: 'Jalbathar', 
-        rarity: 'Lendário', 
+        npc: 'Jalbathar', 
+        rank: 'Lendário-Rank', 
         description: 'Um acessório de rosto dropado na Tomb Arena Raid.' 
       },
       { 
@@ -27,8 +27,8 @@ export const world24Data = {
         name: 'Jalbathar Wings', 
         slot: 'Back',
         world: 'Mundo 24', 
-        boss: 'Jalbathar', 
-        rarity: 'Lendário', 
+        npc: 'Jalbathar', 
+        rank: 'Lendário-Rank', 
         description: 'Um acessório para as costas dropado na Tomb Arena Raid.' 
       },
       { 
@@ -36,8 +36,8 @@ export const world24Data = {
         name: 'Jalbathar Tail', 
         slot: 'Waist',
         world: 'Mundo 24', 
-        boss: 'Jalbathar', 
-        rarity: 'Lendário', 
+        npc: 'Jalbathar', 
+        rank: 'Lendário-Rank', 
         description: 'Um acessório de cintura dropado na Tomb Arena Raid.' 
       }
   ],

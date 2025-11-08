@@ -33,13 +33,13 @@ export const world19Data = {
       name: 'Fire Force Pants', 
       slot: 'Pant',
       world: '19', 
-      boss: 'Diabo das Sombras', 
-      rank: 'C', 
+      npc: 'Diabo das Sombras', 
+      rank: 'C-Rank', 
       bonuses: [
         { 
           type: 'coin', 
           valuesByRarity: [
-            { "rarity": "Common", "value": "0.133" },
+            { "rarity": "Common", "value": "0.133x" },
             { "rarity": "Uncommon", "value": "0.2x" },
             { "rarity": "Rare", "value": "0.266x" },
             { "rarity": "Epic", "value": "0.333x" },
@@ -56,8 +56,8 @@ export const world19Data = {
       name: 'Fire Force Cape', 
       slot: 'Back',
       world: '19', 
-      boss: 'Satan', 
-      rank: 'S', 
+      npc: 'Satan', 
+      rank: 'S-Rank', 
       bonuses: [
         { 
           type: 'energy', 
@@ -105,8 +105,8 @@ export const world19Data = {
       name: 'Fire Witch Hat', 
       slot: 'Head',
       world: '19', 
-      boss: 'Satan', 
-      rank: 'S', 
+      npc: 'Satan', 
+      rank: 'S-Rank', 
       bonuses: [
         { 
           type: 'damage', 
@@ -141,8 +141,8 @@ export const world19Data = {
       name: 'Fire Eye Patch', 
       slot: 'Face',
       world: '19', 
-      boss: 'Leonardo', 
-      rank: 'SS', 
+      npc: 'Leonardo', 
+      rank: 'SS-Rank', 
       bonuses: [
         { 
           type: 'energy', 
@@ -200,5 +200,3 @@ export const world19Data = {
     }
   ],
 };
-
-    

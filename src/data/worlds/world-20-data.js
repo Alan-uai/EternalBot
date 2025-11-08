@@ -26,7 +26,7 @@ export const world20Data = {
       name: 'Scarffy', 
       slot: 'Neck',
       world: '20', 
-      boss: 'Forças Especiais Ginyu', 
+      npc: 'Forças Especiais Ginyu', 
       rank: 'D-Rank', 
       bonuses: [
         { 
@@ -72,5 +72,3 @@ export const world20Data = {
     }
   ],
 };
-
-    

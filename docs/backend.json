@@ -465,7 +465,7 @@
         "name": { "type": "string" },
         "slot": { "type": "string", "enum": ["Head", "Face", "Neck", "Back", "Waist", "Leg", "Pant"] },
         "world": { "type": "string" },
-        "boss": { "type": "string" },
+        "npc": { "type": "string" },
         "rank": { "type": "string", "description": "The rank of the boss that drops the accessory (e.g., 'S-Rank', 'SS-Rank')." },
         "bonuses": {
           "type": "array",
@@ -853,5 +853,3 @@
     "reasoning": "The Firestore structure is organized with 'worlds' as the top-level collection to logically separate game content. Each world document contains sub-collections for 'powers', 'npcs', 'pets', 'dungeons', 'accessories', 'shadows' and 'stands', creating a hierarchical and scalable data model. This allows for efficient querying of specific game data. For example, to get all shadows for 'World 7', you query the '/worlds/world7/shadows' sub-collection. A new top-level collection 'achievements' is added to store all game achievements, which is separate from world-specific data."
   }
 }
-
-    

@@ -33,7 +33,7 @@ export const world11Data = {
       name: 'Red Scarf', 
       slot: 'Neck',
       world: '11', 
-      boss: 'Eran', 
+      npc: 'Eran', 
       rank: 'S-Rank', 
       bonuses: [
         { 
@@ -56,7 +56,7 @@ export const world11Data = {
       name: 'Clean Hat', 
       slot: 'Head',
       world: '11', 
-      boss: 'Eran', 
+      npc: 'Eran', 
       rank: 'S-Rank', 
       bonuses: [
         { 
@@ -79,7 +79,7 @@ export const world11Data = {
       name: 'Scout Cloak', 
       slot: 'Back',
       world: '11', 
-      boss: 'Killas Godspeed', 
+      npc: 'Killas Godspeed', 
       rank: 'SS-Rank', 
       bonuses: [
         { 
@@ -99,5 +99,3 @@ export const world11Data = {
     }
   ],
 };
-
-    

@@ -16,13 +16,13 @@ export const world23Data = {
           name: 'Red Hero Boots', 
           slot: 'Leg',
           world: '23', 
-          boss: 'Lord Boro', 
-          rank: 'S', 
+          npc: 'Lord Boro', 
+          rank: 'SS-Rank', 
           bonuses: [
             { 
               type: 'damage', 
               valuesByRarity: [
-                { "rarity": "Common", "value": "0.3" },
+                { "rarity": "Common", "value": "0.3x" },
                 { "rarity": "Uncommon", "value": "0.45x" },
                 { "rarity": "Rare", "value": "0.6x" },
                 { "rarity": "Epic", "value": "0.75x" },
@@ -49,5 +49,3 @@ export const world23Data = {
         }
     ],
 };
-
-    
