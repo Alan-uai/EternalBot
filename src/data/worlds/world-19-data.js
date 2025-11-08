@@ -147,58 +147,56 @@ export const world19Data = {
         { 
           type: 'energy', 
           valuesByRarity: [
-            { "rarity": "Common", "value": "1.2x" },
-            { "rarity": "Uncommon", "value": "1.8x" },
-            { "rarity": "Rare", "value": "2.4x" },
-            { "rarity": "Epic", "value": "3x" },
-            { "rarity": "Legendary", "value": "3.6x" },
-            { "rarity": "Mythic", "value": "4.2x" },
-            { "rarity": "Phantom", "value": "6x" },
-            { "rarity": "Supreme", "value": "9x" }
+            { "rarity": "Common", "value": "0.0667x" },
+            { "rarity": "Uncommon", "value": "0.1x" },
+            { "rarity": "Rare", "value": "0.133x" },
+            { "rarity": "Epic", "value": "0.167x" },
+            { "rarity": "Legendary", "value": "0.2x" },
+            { "rarity": "Mythic", "value": "0.233x" },
+            { "rarity": "Phantom", "value": "0.334x" },
+            { "rarity": "Supreme", "value": "0.5x" }
           ]
         },
         { 
           type: 'damage', 
           valuesByRarity: [
-            { "rarity": "Common", "value": "1.2x" },
-            { "rarity": "Uncommon", "value": "1.8x" },
-            { "rarity": "Rare", "value": "2.4x" },
-            { "rarity": "Epic", "value": "3x" },
-            { "rarity": "Legendary", "value": "3.6x" },
-            { "rarity": "Mythic", "value": "4.2x" },
-            { "rarity": "Phantom", "value": "6x" },
-            { "rarity": "Supreme", "value": "9x" }
+            { "rarity": "Common", "value": "0.133x" },
+            { "rarity": "Uncommon", "value": "0.2x" },
+            { "rarity": "Rare", "value": "0.266x" },
+            { "rarity": "Epic", "value": "0.333x" },
+            { "rarity": "Legendary", "value": "0.4x" },
+            { "rarity": "Mythic", "value": "0.466x" },
+            { "rarity": "Phantom", "value": "0.665x" },
+            { "rarity": "Supreme", "value": "1x" }
           ]
         },
         { 
           type: 'coin', 
           valuesByRarity: [
-            { "rarity": "Common", "value": "1.2x" },
-            { "rarity": "Uncommon", "value": "1.8x" },
-            { "rarity": "Rare", "value": "2.4x" },
-            { "rarity": "Epic", "value": "3x" },
-            { "rarity": "Legendary", "value": "3.6x" },
-            { "rarity": "Mythic", "value": "4.2x" },
-            { "rarity": "Phantom", "value": "6x" },
-            { "rarity": "Supreme", "value": "9x" }
+            { "rarity": "Common", "value": "0.0667x" },
+            { "rarity": "Uncommon", "value": "0.1x" },
+            { "rarity": "Rare", "value": "0.133x" },
+            { "rarity": "Epic", "value": "0.167x" },
+            { "rarity": "Legendary", "value": "0.2x" },
+            { "rarity": "Mythic", "value": "0.233x" },
+            { "rarity": "Phantom", "value": "0.334x" },
+            { "rarity": "Supreme", "value": "0.5x" }
           ]
         },
         { 
           type: 'exp', 
           valuesByRarity: [
-            { "rarity": "Common", "value": "1.2x" },
-            { "rarity": "Uncommon", "value": "1.8x" },
-            { "rarity": "Rare", "value": "2.4x" },
-            { "rarity": "Epic", "value": "3x" },
-            { "rarity": "Legendary", "value": "3.6x" },
-            { "rarity": "Mythic", "value": "4.2x" },
-            { "rarity": "Phantom", "value": "6x" },
-            { "rarity": "Supreme", "value": "9x" }
+            { "rarity": "Common", "value": "1%" },
+            { "rarity": "Uncommon", "value": "1.5%" },
+            { "rarity": "Rare", "value": "2%" },
+            { "rarity": "Epic", "value": "2.5%" },
+            { "rarity": "Legendary", "value": "3%" },
+            { "rarity": "Mythic", "value": "3.5%" },
+            { "rarity": "Phantom", "value": "5%" },
+            { "rarity": "Supreme", "value": "7.5%" }
           ]
         }
       ]
     }
   ],
 };
-
-    

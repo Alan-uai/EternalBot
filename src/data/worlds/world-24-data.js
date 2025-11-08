@@ -16,11 +16,64 @@ export const world24Data = {
       { 
         id: 'jalbathar-mask', 
         name: 'Jalbathar Mask', 
-        slot: 'Head',
+        slot: 'Face',
         world: 'Mundo 24', 
         npc: 'Jalbathar', 
         rank: 'Lendário-Rank', 
-        description: 'Um acessório de rosto dropado na Tomb Arena Raid.' 
+        bonuses: [
+            {
+                type: 'energy',
+                valuesByRarity: [
+                    { "rarity": "Common", "value": "0.133x" },
+                    { "rarity": "Uncommon", "value": "0.2x" },
+                    { "rarity": "Rare", "value": "0.266x" },
+                    { "rarity": "Epic", "value": "0.333x" },
+                    { "rarity": "Legendary", "value": "0.4x" },
+                    { "rarity": "Mythic", "value": "0.466x" },
+                    { "rarity": "Phantom", "value": "0.665x" },
+                    { "rarity": "Supreme", "value": "1x" }
+                ]
+            },
+            {
+                type: 'damage',
+                valuesByRarity: [
+                    { "rarity": "Common", "value": "0.266x" },
+                    { "rarity": "Uncommon", "value": "0.399x" },
+                    { "rarity": "Rare", "value": "0.532x" },
+                    { "rarity": "Epic", "value": "0.665x" },
+                    { "rarity": "Legendary", "value": "0.8x" },
+                    { "rarity": "Mythic", "value": "0.931x" },
+                    { "rarity": "Phantom", "value": "1.33x" },
+                    { "rarity": "Supreme", "value": "2x" }
+                ]
+            },
+            {
+                type: 'coin',
+                valuesByRarity: [
+                    { "rarity": "Common", "value": "0.133x" },
+                    { "rarity": "Uncommon", "value": "0.2x" },
+                    { "rarity": "Rare", "value": "0.266x" },
+                    { "rarity": "Epic", "value": "0.333x" },
+                    { "rarity": "Legendary", "value": "0.4x" },
+                    { "rarity": "Mythic", "value": "0.466x" },
+                    { "rarity": "Phantom", "value": "0.665x" },
+                    { "rarity": "Supreme", "value": "1x" }
+                ]
+            },
+            {
+                type: 'exp',
+                valuesByRarity: [
+                    { "rarity": "Common", "value": "1.67%" },
+                    { "rarity": "Uncommon", "value": "2.51%" },
+                    { "rarity": "Rare", "value": "3%" },
+                    { "rarity": "Epic", "value": "4.18%" },
+                    { "rarity": "Legendary", "value": "5.01%" },
+                    { "rarity": "Mythic", "value": "5.85%" },
+                    { "rarity": "Phantom", "value": "8%" },
+                    { "rarity": "Supreme", "value": "12.5%" }
+                ]
+            }
+        ]
       },
       { 
         id: 'jalbathar-wings', 
@@ -82,5 +135,3 @@ export const world24Data = {
       }
   ],
 };
-
-    
