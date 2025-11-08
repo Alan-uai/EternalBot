@@ -27,6 +27,7 @@ import { world22Data } from './worlds/world-22-data.js';
 import { world23Data } from './worlds/world-23-data.js';
 import { world24Data } from './worlds/world-24-data.js';
 import { world25Data } from './worlds/world-25-data.js';
+import { world26Data } from './worlds/world-26-data.js';
 
 import { achievementsGuideArticle } from './wiki-articles/achievements-guide.js';
 import { auraArticle } from './wiki-articles/aura-system.js';
@@ -94,6 +95,7 @@ export const allWikiArticles = [
     world23Data,
     world24Data,
     world25Data,
+    world26Data,
 
     // Wiki Articles
     gettingStartedArticle,
