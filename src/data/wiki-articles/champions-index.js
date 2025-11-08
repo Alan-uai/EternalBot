@@ -20,5 +20,17 @@ export const championsIndexArticle = {
         { World: 8, Common: 'Sapo (1.83k)', Uncommon: 'Lesma (3.66k)', Rare: 'Cobra (5.49k)', Epic: 'N/A (7.32k)', Legendary: 'N/A (9.15k)', Mythic: 'N/A (12.2k)', Phantom: 'Itechi/Madera (27.4k)' },
       ],
     },
+    world9_16: {
+      rows: [
+        { World: 9, Common: '4.57k', Uncommon: '9.15k', Rare: '13.7k', Epic: '18.3k', Legendary: '22.8k', Mythic: '30.5k', Phantom: '68.6k' },
+        { World: 10, Common: '11.4k', Uncommon: '22.8k', Rare: '34.3k', Epic: '45.7k', Legendary: '57.2k', Mythic: '76.2k', Phantom: '171k' },
+        { World: 11, Common: '28.6k', Uncommon: '57.2k', Rare: '85.8k', Epic: '114k', Legendary: '143k', Mythic: '190k', Phantom: '429k' },
+        { World: 12, Common: '71.5k', Uncommon: '143k', Rare: '214k', Epic: '286k', Legendary: '357k', Mythic: '476k', Phantom: '1.07M' },
+        { World: 13, Common: '178k', Uncommon: '357k', Rare: '536k', Epic: '715k', Legendary: '894k', Mythic: '1.19M', Phantom: '2.68M' },
+        { World: 14, Common: '447k', Uncommon: '894k', Rare: '1.34M', Epic: '1.78M', Legendary: '2.23M', Mythic: '2.98M', Phantom: '6.7M' },
+        { World: 15, Common: '1.11M', Uncommon: '2.23M', Rare: '3.35M', Epic: '4.47M', Legendary: '5.58M', Mythic: '7.45M', Phantom: '16.7M' },
+        { World: 16, Common: '2.79M', Uncommon: '5.58M', Rare: '8.38M', Epic: '11.1M', Legendary: '13.9M', Mythic: '18.6M', Phantom: '41.9M' },
+      ],
+    },
   },
 };
