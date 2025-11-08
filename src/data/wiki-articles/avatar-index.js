@@ -92,7 +92,8 @@ export const avatarIndexArticle = {
         { 'Avatar': '[Av] Anbu', 'Rank': 'B', 'Raridade': 'Épico', 'Stats (Base)': '7.32k', 'Stats (lvl 150)': '62.2k' },
         { 'Avatar': '[Av] Kage', 'Rank': 'A', 'Raridade': 'Lendário', 'Stats (Base)': '9.15k', 'Stats (lvl 150)': '77.8k' },
         { 'Avatar': '[Av] Naruto', 'Rank': 'S', 'Raridade': 'Mítico', 'Stats (Base)': '12.2k', 'Stats (lvl 150)': '103k' },
-        { 'Avatar': '[Av] Itechi/Madera', 'Rank': 'SS', 'Raridade': 'Phantom', 'Stats (Base)': '36.6k', 'Stats (lvl 150)': '311k' },
+        { 'Avatar': '[Av] Itechi', 'Rank': 'SS', 'Raridade': 'Phantom', 'Stats (Base)': '36.6k', 'Stats (lvl 150)': '311k' },
+        { 'Avatar': '[Av] Madera', 'Rank': 'SS', 'Raridade': 'Phantom', 'Stats (Base)': '40.2k', 'Stats (lvl 150)': '342k' },
       ],
     },
     world9: {
@@ -104,9 +105,8 @@ export const avatarIndexArticle = {
         { 'Avatar': '[Av] Freeza', 'Rank': 'A', 'Raridade': 'Lendário', 'Stats (Base)': '22.8k', 'Stats (lvl 150)': '194k' },
         { 'Avatar': '[Av] Koku', 'Rank': 'S', 'Raridade': 'Mítico', 'Stats (Base)': '30.5k', 'Stats (lvl 150)': '259k' },
         { 'Avatar': '[Av] Veggita', 'Rank': 'SS', 'Raridade': 'Phantom', 'Stats (Base)': '91.5k', 'Stats (lvl 150)': '778k' },
+        { 'Avatar': '[Av] Ken Turbo', 'Rank': 'SS', 'Raridade': 'Phantom', 'Stats (Base)': '102k', 'Stats (lvl 150)': '867k' },
       ],
     },
   },
 };
-
-    
