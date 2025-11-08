@@ -43,7 +43,7 @@ A **Mundo Raid**, localizada no Lobby 2, é desbloqueada junto com o Mundo 21. S
         rows: [
             { 'Origem': 'Gleam Raid', 'Stats': '5x', 'Obtenção': 'Alcançar a Wave 25' },
             { 'Origem': 'Mundo Raid', 'Stats': '10x', 'Obtenção': 'Alcançar a Wave 20' },
-            { 'Origem': 'Chefe Mundo 26', 'Stats': '6x', 'Obtenção': 'Drop do boss Arcanjo (SSS-Rank)' }
+            { 'Origem': 'Chefe Mundo 26', 'Stats': '15x', 'Obtenção': 'Drop do boss Arcanjo (SSS-Rank)' }
         ]
     },
     gleamRaidWorld15: {

@@ -17,7 +17,7 @@ export const world26Data = {
       rank: 'SSS',
       rarity: 'Supremo',
       type: 'damage',
-      stats: '6x',
+      stats: '15x',
       obtainment: 'Drop do boss Arcanjo (SSS-Rank)',
     }
   ]
