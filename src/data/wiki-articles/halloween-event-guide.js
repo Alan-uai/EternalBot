@@ -60,4 +60,42 @@ Existem dois tipos de zumbis no jogo. Os de Energia são exclusivos do evento de
       ],
     },
   },
+  accessories: [
+    {
+      id: 'imp-tail',
+      name: 'Imp Tail',
+      slot: 'Waist',
+      world: 'Evento de Halloween',
+      npc: 'Halloween Raid',
+      rank: 'Evento',
+      bonuses: [
+        {
+          type: 'damage',
+          valuesByRarity: [
+            { "rarity": "Common", "value": "0.067x" },
+            { "rarity": "Uncommon", "value": "0.1x" },
+            { "rarity": "Rare", "value": "0.133x" },
+            { "rarity": "Epic", "value": "0.167x" },
+            { "rarity": "Legendary", "value": "0.2x" },
+            { "rarity": "Mythic", "value": "0.233x" },
+            { "rarity": "Phantom", "value": "0.334x" },
+            { "rarity": "Supreme", "value": "0.5x" }
+          ]
+        },
+        {
+          type: 'energy',
+          valuesByRarity: [
+            { "rarity": "Common", "value": "0.067x" },
+            { "rarity": "Uncommon", "value": "0.1x" },
+            { "rarity": "Rare", "value": "0.133x" },
+            { "rarity": "Epic", "value": "0.167x" },
+            { "rarity": "Legendary", "value": "0.2x" },
+            { "rarity": "Mythic", "value": "0.233x" },
+            { "rarity": "Phantom", "value": "0.334x" },
+            { "rarity": "Supreme", "value": "0.5x" }
+          ]
+        }
+      ]
+    }
+  ]
 };

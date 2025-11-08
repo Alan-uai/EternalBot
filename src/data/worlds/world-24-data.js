@@ -130,8 +130,35 @@ export const world24Data = {
         slot: 'Waist',
         world: 'Mundo 24', 
         npc: 'Jalbathar', 
-        rank: 'Lendário-Rank', 
-        description: 'Um acessório de cintura dropado na Tomb Arena Raid.' 
+        rank: 'Lendário-Rank',
+        bonuses: [
+          {
+            type: 'damage',
+            valuesByRarity: [
+              { "rarity": "Common", "value": "0.133x" },
+              { "rarity": "Uncommon", "value": "0.2x" },
+              { "rarity": "Rare", "value": "0.266x" },
+              { "rarity": "Epic", "value": "0.333x" },
+              { "rarity": "Legendary", "value": "0.4x" },
+              { "rarity": "Mythic", "value": "0.466x" },
+              { "rarity": "Phantom", "value": "0.665x" },
+              { "rarity": "Supreme", "value": "1x" }
+            ]
+          },
+          {
+            type: 'energy',
+            valuesByRarity: [
+              { "rarity": "Common", "value": "0.133x" },
+              { "rarity": "Uncommon", "value": "0.2x" },
+              { "rarity": "Rare", "value": "0.266x" },
+              { "rarity": "Epic", "value": "0.333x" },
+              { "rarity": "Legendary", "value": "0.4x" },
+              { "rarity": "Mythic", "value": "0.466x" },
+              { "rarity": "Phantom", "value": "0.665x" },
+              { "rarity": "Supreme", "value": "1x" }
+            ]
+          }
+        ]
       }
   ],
 };
