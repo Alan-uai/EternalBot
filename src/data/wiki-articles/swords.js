@@ -3,7 +3,11 @@ export const swordsArticle = {
   id: 'energy-swords',
   title: 'Espadas de Energia',
   summary: 'Um guia para as espadas que fornecem um multiplicador de energia, onde encontrá-las e seus status.',
-  content: 'Espadas de energia são armas especiais que aumentam sua energia total. A raridade é fixa na arma base, e as evoluções (estrelas) apenas aumentam seu poder, sem alterar a raridade.',
+  content: `Espadas de energia são armas especiais que aumentam sua energia total. A raridade é fixa na arma base, e as evoluções (estrelas) apenas aumentam seu poder, sem alterar a raridade.
+
+### Locais de Evolução
+- **Evolução 1★:** Acontece no **Mundo 4**.
+- **Evoluções 2★ e 3★:** Acontecem no **Mundo 5**.`,
   tags: ['espadas', 'energia', 'arma', 'guia', 'geral', '3', '5', '15', '19', 'halloween'],
   imageUrl: 'wiki-8',
   tables: {
