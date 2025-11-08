@@ -3,7 +3,7 @@ export const heroLicenseQuestGuideArticle = {
   id: 'hero-license-quest-guide',
   title: 'Guia de Localização da Hero License Quest',
   summary: 'Um guia com os vídeos mostrando a localização de cada NPC da Hero License Quest em suas respectivas classes e mundos.',
-  content: `A "Hero License Quest" é uma questline secundária que se estende por múltiplos mundos, começando na Classe F (Mundo 1) e progredindo até a Classe A (Mundo 22). Cada classe tem um NPC específico em um mundo diferente que dá continuidade à missão.
+  content: `A "Hero License Quest" é uma questline secundária que se estende por múltiplos mundos, começando na Classe F (Mundo 1) e progredindo até a Classe A (Mundo 22). A missão é iniciada em um painel de missões, e cada classe tem um NPC específico em um mundo diferente que dá continuidade à missão.
 
 Abaixo estão os vídeos que mostram a localização exata de cada NPC da quest.`,
   tags: ['hero license', 'quest', 'guia', 'localização', 'classe f', 'classe e', 'classe d', 'classe c', 'classe b', 'classe a'],
