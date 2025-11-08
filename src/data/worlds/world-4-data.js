@@ -146,8 +146,8 @@ export const world4Data = {
         name: 'Missão #1',
         requirement: 'Derrotar 30 Itodo',
         rewards: [
-            { name: 'Luck Potion', amount: 1 },
             { name: 'World Key', amount: 1 },
+            { name: 'Luck Potion', amount: 1 },
             { name: 'Exp', amount: '1.17k' }
         ]
     },
@@ -165,7 +165,7 @@ export const world4Data = {
         requirement: 'Derrotar 20 Magum',
         rewards: [
             { name: 'World Key', amount: 1 },
-            { name: 'Damage Percent', value: '3%' },
+            { name: 'Damage Percent', value: '4%' },
             { name: 'Exp', amount: '2.58k' }
         ]
     },
@@ -173,7 +173,7 @@ export const world4Data = {
         name: 'Missão #4',
         requirement: 'Derrotar 15 Meki',
         rewards: [
-            { name: 'World Key', amount: 1 },
+            { name: 'WorldKey', amount: 1 },
             { name: 'Energy Percent', value: '4%' },
             { name: 'Exp', amount: '3.37k' }
         ]
