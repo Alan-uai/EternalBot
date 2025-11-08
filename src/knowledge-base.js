@@ -1,88 +1,61 @@
 // src/knowledge-base.js
 import { allWikiArticles } from './data/wiki-data.js';
 
+function formatValue(value, indentLevel = 0) {
+  const indent = '  '.repeat(indentLevel);
+  if (Array.isArray(value)) {
+    return value.map(item => `${indent}- ${formatValue(item, indentLevel + 1)}`).join('\n');
+  }
+  if (typeof value === 'object' && value !== null) {
+    return Object.entries(value)
+      .map(([key, val]) => `${indent}${key}: ${formatValue(val, indentLevel + 1)}`)
+      .join('\n');
+  }
+  return String(value);
+}
+
 function formatArticle(article) {
   let content = `INÍCIO DO ARTIGO: ${article.title}\n`;
   content += `RESUMO: ${article.summary}\n`;
   
   if (article.content) {
-    content += `CONTEÚDO:\n${article.content}\n`;
+    content += `CONTEÚDO:\n${article.content}\n\n`;
   }
 
-  // Novo: Lógica otimizada para tabelas
-  if (article.tables) {
-    content += 'DADOS TABULADOS:\n';
-    for (const key in article.tables) {
-      const table = article.tables[key];
-      content += `Tabela "${key}":\n`;
-      content += table.headers.join(' | ') + '\n';
-      content += table.headers.map(() => '---').join(' | ') + '\n';
-      table.rows.forEach((row) => {
-        const rowContent = table.headers.map((header) => row[header] !== undefined ? String(row[header]) : 'N/A').join(' | ');
-        content += rowContent + '\n';
-      });
-      content += '\n';
+  const excludedKeys = ['id', 'title', 'summary', 'content'];
+
+  for (const key in article) {
+    if (excludedKeys.includes(key)) continue;
+
+    const value = article[key];
+    content += `SEÇÃO: ${key.toUpperCase()}\n`;
+
+    if (Array.isArray(value)) {
+        value.forEach(item => {
+            if (typeof item === 'object' && item !== null) {
+                const name = item.name || item.id || 'Item';
+                content += `- **${name}**:\n`;
+                for (const prop in item) {
+                    if (prop === 'name' || prop === 'id') continue;
+                    const propValue = item[prop];
+                    if (propValue !== undefined) {
+                        content += `  - ${prop}: ${formatValue(propValue, 2)}\n`;
+                    }
+                }
+            } else {
+                 content += `- ${formatValue(item, 1)}\n`;
+            }
+        });
+    } else if (typeof value === 'object' && value !== null) {
+        for (const subKey in value) {
+            const subValue = value[subKey];
+            content += `- **${subKey}**:\n`;
+            content += `${formatValue(subValue, 2)}\n`;
+        }
+    } else {
+         content += `${formatValue(value, 1)}\n`;
     }
-  }
-  
-  // CORREÇÃO: Lógica aprimorada para detalhar NPCs e seus DROPS
-  if (article.npcs && Array.isArray(article.npcs)) {
-      content += `NPCS DESTE MUNDO:\n`;
-      article.npcs.forEach(npc => {
-          let npcDetails = `- **${npc.name}** (Rank: ${npc.rank}, HP: ${npc.hp}, Exp: ${npc.exp})`;
-          if (npc.drops) {
-              const dropStrings = Object.entries(npc.drops).map(([dropName, dropDetails]) => {
-                  if (typeof dropDetails === 'object' && dropDetails !== null) {
-                      const details = Object.entries(dropDetails)
-                          .map(([key, value]) => `${key}: ${value}`)
-                          .join(', ');
-                      return `${dropName} (${details})`;
-                  }
-                  return dropName; // Fallback
-              });
-              if (dropStrings.length > 0) {
-                  npcDetails += ` | Drops: ${dropStrings.join('; ')}`;
-              }
-          }
-          content += npcDetails + '\n';
-      });
-      content += '\n';
-  }
-
-  // Lógica para outras entidades como pets, poderes, etc.
-  const worldData = {
-      Pets: article.pets,
-      Acessórios: article.accessories,
-      Dungeons: article.dungeons,
-      Shadows: article.shadows,
-      Stands: article.stands,
-      Ghouls: article.ghouls,
-      Poderes: article.powers,
-      Missões: article.missions,
-      Obeliscos: article.obelisks,
-  };
-
-  for (const [key, items] of Object.entries(worldData)) {
-      if (items && Array.isArray(items) && items.length > 0) {
-          content += `${key.toUpperCase()}:\n`;
-          items.forEach(item => {
-              let itemDetails = Object.entries(item)
-                  .filter(([prop, value]) => typeof value !== 'object' && value !== null && value !== undefined)
-                  .map(([prop, value]) => `${prop}: ${value}`)
-                  .join(', ');
-              content += `- ${item.name || item.id}: ${itemDetails}\n`;
-
-              // CORREÇÃO ESPECÍFICA PARA CONQUISTAS DE DUNGEON
-              if (key === 'Dungeons' && item.achievements && item.achievements.rows) {
-                  content += `  Conquistas da Dungeon:\n`;
-                  item.achievements.rows.forEach(ach => {
-                      const achDetails = Object.entries(ach).map(([k, v]) => `${k}: ${v}`).join('; ');
-                      content += `    - ${ach.Conquista || ach.Requisito}: ${achDetails}\n`;
-                  });
-              }
-          });
-          content += '\n';
-      }
+     content += `\n`;
   }
 
   content += 'FIM DO ARTIGO\n';
