@@ -39,6 +39,18 @@ Para maximizar ainda mais o dano, as espadas podem ser aprimoradas com encantame
             { 'Evolução': '2★', 'Custo em Moedas': '5B', 'Custo em Cristais': '3' },
             { 'Evolução': '3★', 'Custo em Moedas': '10B', 'Custo em Cristais': '5' },
         ]
+    },
+    breathingEnchantments: {
+      headers: ['Encantamento', 'Bônus de Dano', 'Chance'],
+      rows: [
+        { 'Encantamento': 'Flower Breathing', 'Bônus de Dano': '+5%', 'Chance': '40.55%' },
+        { 'Encantamento': 'Stone Breathing', 'Bônus de Dano': '+15%', 'Chance': '33%' },
+        { 'Encantamento': 'Wind Breathing', 'Bônus de Dano': '+25%', 'Chance': '19.9%' },
+        { 'Encantamento': 'Love Breathing', 'Bônus de Dano': '+35%', 'Chance': '5%' },
+        { 'Encantamento': 'Insect Breathing', 'Bônus de Dano': '+50%', 'Chance': '1%' },
+        { 'Encantamento': 'Water Breathing', 'Bônus de Dano': '+65%', 'Chance': '0.5%' },
+        { 'Encantamento': 'Thunder Breathing', 'Bônus de Dano': '+80%', 'Chance': '0.05%' },
+      ]
     }
   },
 };
