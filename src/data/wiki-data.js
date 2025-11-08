@@ -64,6 +64,7 @@ import { world20RaidsArticle } from './wiki-articles/world-20-raids.js';
 import { worldBossesArticle } from './wiki-articles/world-bosses.js';
 import { howPowersWorkGuideArticle } from './wiki-articles/how-powers-work-guide.js';
 import { punchMachineQuestGuideArticle } from './wiki-articles/punch-machine-quest-guide.js';
+import { heroLicenseQuestGuideArticle } from './wiki-articles/hero-license-quest-guide.js';
 
 
 export const allWikiArticles = [
@@ -131,8 +132,5 @@ export const allWikiArticles = [
     colorsAndIconsGuideArticle,
     howPowersWorkGuideArticle,
     punchMachineQuestGuideArticle,
+    heroLicenseQuestGuideArticle,
 ];
-
-    
-
-    
