@@ -3,7 +3,7 @@ export const world5Data = {
   id: 'world-5',
   title: 'Mundo 5 - Ilha dos Caçadores',
   summary: 'Mundo focado em caçadores, com a espada de energia Yellow Nichirin.',
-  content: 'Mundo temático de Shinigamis. É aqui que os jogadores encontram a primeira espada de energia do jogo, a Zangetsu.',
+  content: 'Mundo temático de caçadores de demônios. É neste mundo que os jogadores podem evoluir suas armas para 2 e 3 estrelas.',
   npcs: [
     { name: 'Nazuki', rank: 'E', exp: 75, hp: '100sx', drops: { coins: { amount: 'x500k', probability: 1 }, 'Breathing Token': { amount: 'x1-5', probability: 0.1 }, exp: { amount: 75, probability: 1 }, avatar_soul: { amount: 1, probability: 0.10 }, avatar: { probability: 0.01 } } },
     { name: 'Tenjaro', rank: 'D', exp: 78, hp: '500sx', drops: { coins: { amount: 'x1M', probability: 1 }, 'Breathing Token': { amount: 'x1-5', probability: 0.1 }, exp: { amount: 78, probability: 1 }, avatar_soul: { amount: 1, probability: 0.11 }, avatar: { probability: 0.01 } } },
