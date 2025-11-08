@@ -5,7 +5,7 @@ export const world19Data = {
   summary: 'Um mundo infernal com múltiplos chefes e a espada de energia Excalibur.',
   npcs: [
     { name: 'Diabo de Fogo', rank: 'E', exp: 1.5e14, hp: '1NoTG' },
-    { name: 'Diabo de Gelo', rank: 'D', exp: 2.2e14, hp: '10NoTG' },
+    { name: 'Diabo de Gelo', rank: 'D', exp: 2.2e14, hp: '10NoTG', drops: { weapon: { name: 'Excalibur', type: 'energy', probability: 0.1 } } },
     { name: 'Diabo das Sombras', rank: 'C', exp: 3.2e14, hp: '100NoTG' },
     { name: 'Diabo da Morte', rank: 'B', exp: 4.8e14, hp: '1QDR' },
     { name: 'Lúcifer', rank: 'A', exp: 7e14, hp: '10QDR' },
