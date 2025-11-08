@@ -6,7 +6,7 @@ export const championsIndexArticle = {
   content: `Esta página serve como um índice para os bônus de energia de todos os Champions (pets) no jogo, organizados por mundo e raridade. Use estas tabelas para planejar quais pets farmar em cada estágio do jogo.`,
   tags: ['champions', 'pets', 'energia', 'index', 'guia', 'bônus'],
   imageUrl: 'wiki-5', // Reusing a relevant image
-  sharedHeaders: ['World', 'Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', 'Mythic', 'Phantom'],
+  sharedHeaders: ['World', 'Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', 'Mythic', 'Phantom', 'Supreme'],
   tables: {
     world1_8: {
       rows: [
@@ -32,5 +32,17 @@ export const championsIndexArticle = {
         { World: 16, Common: 'Pet Comum (2.79M)', Uncommon: 'Pet Incomum (5.58M)', Rare: 'Pet Raro (8.38M)', Epic: 'Pet Épico (11.1M)', Legendary: 'Pet Lendário (13.9M)', Mythic: 'Pet Mítico (18.6M)', Phantom: 'Pet Phantom (41.9M)' },
       ],
     },
+    world17_24: {
+      rows: [
+        { World: 17, Common: 'Pet Comum (6.98M)', Uncommon: 'Pet Incomum (13.9M)', Rare: 'Pet Raro (20.9M)', Epic: 'Pet Épico (27.9M)', Legendary: 'Pet Lendário (34.9M)', Mythic: 'Pet Mítico (46.5M)', Phantom: 'Pet Phantom (104M)', Supreme: 'N/A' },
+        { World: 18, Common: 'Pet Comum (17.4M)', Uncommon: 'Pet Incomum (34.9M)', Rare: 'Pet Raro (52.3M)', Epic: 'Pet Épico (69.8M)', Legendary: 'Pet Lendário (87.3M)', Mythic: 'Pet Mítico (116M)', Phantom: 'Pet Phantom (261M)', Supreme: 'Pet Supremo (392M)' },
+        { World: 19, Common: 'Pet Comum (46.3M)', Uncommon: 'Pet Incomum (87.3M)', Rare: 'Pet Raro (130M)', Epic: 'Pet Épico (174M)', Legendary: 'Pet Lendário (218M)', Mythic: 'Pet Mítico (291M)', Phantom: 'Pet Phantom (654M)', Supreme: 'Pet Supremo (982M)' },
+        { World: 20, Common: 'Pet Comum (109M)', Uncommon: 'Pet Incomum (218M)', Rare: 'Pet Raro (327M)', Epic: 'Pet Épico (436M)', Legendary: 'Pet Lendário (545M)', Mythic: 'Pet Mítico (727M)', Phantom: 'Pet Phantom (1.63M)', Supreme: 'Pet Supremo (2.45M)' },
+        { World: 21, Common: 'Pet Comum (270M)', Uncommon: 'Pet Incomum (550M)', Rare: 'Pet Raro (820M)', Epic: 'Pet Épico (1.1B)', Legendary: 'Pet Lendário (1.4B)', Mythic: 'Pet Mítico (1.8B)', Phantom: 'Pet Phantom (4.1B)', Supreme: 'Pet Supremo (6.1B)' },
+        { World: 22, Common: 'Pet Comum (675M)', Uncommon: 'Pet Incomum (1.37B)', Rare: 'Pet Raro (2.05B)', Epic: 'Pet Épico (2.75B)', Legendary: 'Pet Lendário (3.50B)', Mythic: 'Pet Mítico (4.50B)', Phantom: 'Pet Phantom (10.2B)', Supreme: 'Pet Supremo (15.2B)' },
+        { World: 23, Common: 'Pet Comum (1.68B)', Uncommon: 'Pet Incomum (3.43B)', Rare: 'Pet Raro (5.12B)', Epic: 'Pet Épico (6.87B)', Legendary: 'Pet Lendário (8.75B)', Mythic: 'Pet Mítico (11.2B)', Phantom: 'Pet Phantom (25.6B)', Supreme: 'Pet Supremo (38.1B)' },
+        { World: 24, Common: 'Pet Comum (4.21B)', Uncommon: 'Pet Incomum (8.59B)', Rare: 'Pet Raro (12.8B)', Epic: 'Pet Épico (17.1B)', Legendary: 'Pet Lendário (21.8B)', Mythic: 'Pet Mítico (28.1B)', Phantom: 'Pet Phantom (64B)', Supreme: 'Pet Supremo (95.3B)' },
+      ]
+    }
   },
 };
