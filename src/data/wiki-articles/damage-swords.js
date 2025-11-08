@@ -41,15 +41,15 @@ Para maximizar ainda mais o dano, as espadas podem ser aprimoradas com encantame
         ]
     },
     breathingEnchantments: {
-      headers: ['Encantamento', 'Bônus de Dano', 'Chance'],
+      headers: ['Encantamento', 'Raridade', 'Bônus de Dano', 'Chance'],
       rows: [
-        { 'Encantamento': 'Flower Breathing', 'Bônus de Dano': '+5%', 'Chance': '40.55%' },
-        { 'Encantamento': 'Stone Breathing', 'Bônus de Dano': '+15%', 'Chance': '33%' },
-        { 'Encantamento': 'Wind Breathing', 'Bônus de Dano': '+25%', 'Chance': '19.9%' },
-        { 'Encantamento': 'Love Breathing', 'Bônus de Dano': '+35%', 'Chance': '5%' },
-        { 'Encantamento': 'Insect Breathing', 'Bônus de Dano': '+50%', 'Chance': '1%' },
-        { 'Encantamento': 'Water Breathing', 'Bônus de Dano': '+65%', 'Chance': '0.5%' },
-        { 'Encantamento': 'Thunder Breathing', 'Bônus de Dano': '+80%', 'Chance': '0.05%' },
+        { 'Encantamento': 'Flower Breathing', 'Raridade': 'Comum', 'Bônus de Dano': '+5%', 'Chance': '40.55%' },
+        { 'Encantamento': 'Stone Breathing', 'Raridade': 'Incomum', 'Bônus de Dano': '+15%', 'Chance': '33%' },
+        { 'Encantamento': 'Wind Breathing', 'Raridade': 'Raro', 'Bônus de Dano': '+25%', 'Chance': '19.9%' },
+        { 'Encantamento': 'Love Breathing', 'Raridade': 'Épico', 'Bônus de Dano': '+35%', 'Chance': '5%' },
+        { 'Encantamento': 'Insect Breathing', 'Raridade': 'Lendário', 'Bônus de Dano': '+50%', 'Chance': '1%' },
+        { 'Encantamento': 'Water Breathing', 'Raridade': 'Mítico', 'Bônus de Dano': '+65%', 'Chance': '0.5%' },
+        { 'Encantamento': 'Thunder Breathing', 'Raridade': 'Phantom', 'Bônus de Dano': '+80%', 'Chance': '0.05%' },
       ]
     }
   },
