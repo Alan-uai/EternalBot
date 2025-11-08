@@ -66,11 +66,20 @@ function formatArticle(article) {
       if (items && Array.isArray(items) && items.length > 0) {
           content += `${key.toUpperCase()}:\n`;
           items.forEach(item => {
-              const details = Object.entries(item)
-                  .filter(([prop]) => typeof item[prop] !== 'object') // Não mostra objetos aninhados de forma genérica
+              let itemDetails = Object.entries(item)
+                  .filter(([prop, value]) => typeof value !== 'object' && value !== null && value !== undefined)
                   .map(([prop, value]) => `${prop}: ${value}`)
                   .join(', ');
-              content += `- ${item.name || item.id}: ${details}\n`;
+              content += `- ${item.name || item.id}: ${itemDetails}\n`;
+
+              // CORREÇÃO ESPECÍFICA PARA CONQUISTAS DE DUNGEON
+              if (key === 'Dungeons' && item.achievements && item.achievements.rows) {
+                  content += `  Conquistas da Dungeon:\n`;
+                  item.achievements.rows.forEach(ach => {
+                      const achDetails = Object.entries(ach).map(([k, v]) => `${k}: ${v}`).join('; ');
+                      content += `    - ${ach.Conquista || ach.Requisito}: ${achDetails}\n`;
+                  });
+              }
           });
           content += '\n';
       }
