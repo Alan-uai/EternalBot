@@ -5,13 +5,13 @@ export const world4Data = {
   summary: 'Um mundo infernal focado em dano e drops, com o chefe Sakuni.',
   content: 'Mundo temático de Shinigamis. É aqui que os jogadores encontram a primeira espada de energia do jogo, a Zangetsu.',
   npcs: [
-    { name: 'Itodo', rank: 'E', exp: 5000, hp: '100qd' },
-    { name: 'Nebara', rank: 'D', exp: 7000, hp: '1Qn' },
-    { name: 'Magum', rank: 'C', exp: 10000, hp: '25Qn' },
-    { name: 'Meki', rank: 'B', exp: 15000, hp: '250Qn' },
-    { name: 'Tage', rank: 'A', exp: 22000, hp: '500Qn' },
-    { name: 'Gajo', rank: 'S', exp: 30000, hp: '60O' },
-    { name: 'Sakuni', rank: 'SS', exp: 60000, hp: '120Sp', drops: { aura: { name: 'Aura do Rei do Fogo', probability: 0.05 } }, videoUrl: 'https://cdn.discordapp.com/attachments/1430337273794265250/1430337777840554126/ScreenRecording_10-21-2025_10-31-17_1.mov?ex=68fa121c&is=68f8c09c&hm=4701c56efe6c8b63f39d235ca2353f417c474b290038f6c2874b44537ce6ead1&' },
+    { name: 'Itodo', rank: 'E', exp: 39, hp: '1.5Qn', drops: { coins: { amount: 'x50k', probability: 1 }, 'Cursed Token': { amount: 'x1-5', probability: 0.1 }, 'Cursed Finger': { amount: 'x1-5', probability: 0.1 }, 'Avatar Soul': { amount: 'x1', probability: 0.1 } } },
+    { name: 'Nebara', rank: 'D', exp: 41, hp: '50Qn', drops: { coins: { amount: 'x100k', probability: 1 }, 'Cursed Token': { amount: 'x1-5', probability: 0.1 }, 'Cursed Finger': { amount: 'x1-5', probability: 0.1 }, 'Avatar Soul': { amount: 'x1', probability: 0.11 } } },
+    { name: 'Magum', rank: 'C', exp: 43, hp: '110Qn', drops: { coins: { amount: 'x150k', probability: 1 }, 'Cursed Token': { amount: 'x1-5', probability: 0.1 }, 'Cursed Finger': { amount: 'x1-5', probability: 0.1 }, 'Avatar Soul': { amount: 'x1', probability: 0.125 } } },
+    { name: 'Meki', rank: 'B', exp: 45, hp: '475Qn', drops: { coins: { amount: 'x200k', probability: 1 }, 'Cursed Token': { amount: 'x1-5', probability: 0.1 }, 'Cursed Finger': { amount: 'x1-5', probability: 0.1 }, 'Avatar Soul': { amount: 'x1', probability: 0.15 } } },
+    { name: 'Tage', rank: 'A', exp: 47, hp: '9.69sx', drops: { coins: { amount: 'x250k', probability: 1 }, 'Cursed Token': { amount: 'x1-5', probability: 0.1 }, 'Cursed Finger': { amount: 'x1-5', probability: 0.1 }, 'Avatar Soul': { amount: 'x1', probability: 0.2 } } },
+    { name: 'Gajo', rank: 'S', exp: 50, hp: '50sx', drops: { coins: { amount: 'x300k', probability: 1 }, 'Cursed Token': { amount: 'x1-5', probability: 0.1 }, 'Cursed Finger': { amount: 'x1-5', probability: 0.1 }, 'Avatar Soul': { amount: 'x1', probability: 0.25 } } },
+    { name: 'Sakuni', rank: 'SS', exp: 120, hp: '120Sp', drops: { coins: { amount: 'x700k', probability: 1 }, 'Cursed Token': { amount: 'x3-5', probability: 0.1 }, 'Cursed Finger': { amount: 'x3-5', probability: 0.1 }, 'Avatar Soul': { amount: 'x1', probability: 0.5 }, aura: { name: 'Fire King Aura', probability: 0.01 } }, videoUrl: 'https://cdn.discordapp.com/attachments/1430337273794265250/1430337777840554126/ScreenRecording_10-21-2025_10-31-17_1.mov?ex=68fa121c&is=68f8c09c&hm=4701c56efe6c8b63f39d235ca2353f417c474b290038f6c2874b44537ce6ead1&' },
   ],
   pets: [
     { name: 'Itodo', rarity: 'Comum', energy_bonus: '47' },
@@ -80,7 +80,7 @@ export const world4Data = {
         requirement: 'Derrotar Sakuni 10 vezes.',
         rewards: [
           { name: 'Obelisk Part', amount: 1 },
-          { name: 'Energy Percent', amount: '5%' },
+          { name: 'Energy Percent', value: '5%' },
           { name: 'Exp', amount: '12k' },
           { name: 'Avatar Soul', amount: 100 },
           { name: 'Energy Potion', amount: 1 }
@@ -134,7 +134,6 @@ export const world4Data = {
         name: 'Missão #5',
         requirement: 'Derrotar 10 Tage',
         rewards: [
-            { name: 'Avatar Soul', amount: 5 },
             { name: 'Cursed Token', amount: 10 },
             { name: 'World Key', amount: 1 },
             { name: 'Luck Percent', value: '4%' },
@@ -152,4 +151,4 @@ export const world4Data = {
         ]
     }
   ]
-};
+}
