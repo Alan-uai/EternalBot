@@ -108,5 +108,107 @@ export const avatarIndexArticle = {
         { 'Avatar': '[Av] Ken Turbo', 'Rank': 'SS', 'Raridade': 'Phantom', 'Stats (Base)': '102k', 'Stats (lvl 150)': '867k' },
       ],
     },
+    world10: {
+      rows: [
+        { 'Avatar': '[Av] Ciborgue Nv.1', 'Rank': 'E', 'Raridade': 'Comum', 'Stats (Base)': '11.4k', 'Stats (lvl 150)': '97.2k' },
+        { 'Avatar': '[Av] Ciborgue Nv.2', 'Rank': 'D', 'Raridade': 'Incomum', 'Stats (Base)': '22.8k', 'Stats (lvl 150)': '194k' },
+        { 'Avatar': '[Av] Ciborgue Nv.3', 'Rank': 'C', 'Raridade': 'Raro', 'Stats (Base)': '34.3k', 'Stats (lvl 150)': '291k' },
+        { 'Avatar': '[Av] Ciborgue Nv.4', 'Rank': 'B', 'Raridade': 'Épico', 'Stats (Base)': '45.7k', 'Stats (lvl 150)': '389k' },
+        { 'Avatar': '[Av] Ciborgue Nv.5', 'Rank': 'A', 'Raridade': 'Lendário', 'Stats (Base)': '57.2k', 'Stats (lvl 150)': '386k' },
+        { 'Avatar': '[Av] Android 18', 'Rank': 'S', 'Raridade': 'Mítico', 'Stats (Base)': '76.2k', 'Stats (lvl 150)': '648k' },
+        { 'Avatar': '[Av] Ken Turbo', 'Rank': 'SS', 'Raridade': 'Phantom', 'Stats (Base)': '228k', 'Stats (lvl 150)': '1.94M' },
+      ],
+    },
+    world11: {
+      rows: [
+        { 'Avatar': '[Av] Titã Anormal', 'Rank': 'E', 'Raridade': 'Comum', 'Stats (Base)': '28.6k', 'Stats (lvl 150)': '243k' },
+        { 'Avatar': '[Av] Titã Blindado', 'Rank': 'D', 'Raridade': 'Incomum', 'Stats (Base)': '57.2k', 'Stats (lvl 150)': '486k' },
+        { 'Avatar': '[Av] Titã Colossal', 'Rank': 'C', 'Raridade': 'Raro', 'Stats (Base)': '85.8k', 'Stats (lvl 150)': '729k' },
+        { 'Avatar': '[Av] Titã Bestial', 'Rank': 'B', 'Raridade': 'Épico', 'Stats (Base)': '114k', 'Stats (lvl 150)': '972k' },
+        { 'Avatar': '[Av] Titã de Ataque', 'Rank': 'A', 'Raridade': 'Lendário', 'Stats (Base)': '143k', 'Stats (lvl 150)': '1.21M' },
+        { 'Avatar': '[Av] Eran', 'Rank': 'S', 'Raridade': 'Mítico', 'Stats (Base)': '190k', 'Stats (lvl 150)': '1.62M' },
+        { 'Avatar': '[Av] Killas Godspeed', 'Rank': 'SS', 'Raridade': 'Phantom', 'Stats (Base)': '575k', 'Stats (lvl 150)': '4.86M' },
+      ],
+    },
+    world12: {
+      rows: [
+        { 'Avatar': '[Av] Vilão de Rua', 'Rank': 'E', 'Raridade': 'Comum', 'Stats (Base)': '71.5k', 'Stats (lvl 150)': '607k' },
+        { 'Avatar': '[Av] Vilão Classe Tigre', 'Rank': 'D', 'Raridade': 'Incomum', 'Stats (Base)': '143k', 'Stats (lvl 150)': '1.21M' },
+        { 'Avatar': '[Av] Vilão Classe Demônio', 'Rank': 'C', 'Raridade': 'Raro', 'Stats (Base)': '214k', 'Stats (lvl 150)': '1.82M' },
+        { 'Avatar': '[Av] Vilão Classe Dragão', 'Rank': 'B', 'Raridade': 'Épico', 'Stats (Base)': '286k', 'Stats (lvl 150)': '2.41M' },
+        { 'Avatar': '[Av] Ameaça Nível Deus', 'Rank': 'A', 'Raridade': 'Lendário', 'Stats (Base)': '357k', 'Stats (lvl 150)': '3.03M' },
+        { 'Avatar': '[Av] Herói Careca', 'Rank': 'S', 'Raridade': 'Mítico', 'Stats (Base)': '476k', 'Stats (lvl 150)': '4.05M' },
+        { 'Avatar': '[Av] Garou Cósmico', 'Rank': 'SS', 'Raridade': 'Phantom', 'Stats (Base)': '1.43M', 'Stats (lvl 150)': '12.1M' },
+      ],
+    },
+    world13: {
+      rows: [
+        { 'Avatar': '[Av] Cavaleiro Sagrado', 'Rank': 'E', 'Raridade': 'Comum', 'Stats (Base)': '178k', 'Stats (lvl 150)': '1.51M' },
+        { 'Avatar': '[Av] Demônio Vermelho', 'Rank': 'D', 'Raridade': 'Incomum', 'Stats (Base)': '357k', 'Stats (lvl 150)': '3.03M' },
+        { 'Avatar': '[Av] Demônio Cinza', 'Rank': 'C', 'Raridade': 'Raro', 'Stats (Base)': '536k', 'Stats (lvl 150)': '4.55M' },
+        { 'Avatar': '[Av] Albion', 'Rank': 'B', 'Raridade': 'Épico', 'Stats (Base)': '715k', 'Stats (lvl 150)': '6.07M' },
+        { 'Avatar': '[Av] Mandamento', 'Rank': 'A', 'Raridade': 'Lendário', 'Stats (Base)': '894k', 'Stats (lvl 150)': '7.59M' },
+        { 'Avatar': '[Av] Meliodas', 'Rank': 'S', 'Raridade': 'Mítico', 'Stats (Base)': '1.19M', 'Stats (lvl 150)': '10.1M' },
+        { 'Avatar': '[Av] Esanor', 'Rank': 'SS', 'Raridade': 'Phantom', 'Stats (Base)': '3.59M', 'Stats (lvl 150)': '30.5M' },
+      ],
+    },
+    world14: {
+      rows: [
+        { 'Avatar': '[Av] Plebeu Mágico', 'Rank': 'E', 'Raridade': 'Comum', 'Stats (Base)': '447k', 'Stats (lvl 150)': '3.79M' },
+        { 'Avatar': '[Av] Nobre Mágico', 'Rank': 'D', 'Raridade': 'Incomum', 'Stats (Base)': '894k', 'Stats (lvl 150)': '7.59M' },
+        { 'Avatar': '[Av] Cavaleiro Mágico', 'Rank': 'C', 'Raridade': 'Raro', 'Stats (Base)': '1.34M', 'Stats (lvl 150)': '11.3M' },
+        { 'Avatar': '[Av] Vice-Capitão', 'Rank': 'B', 'Raridade': 'Épico', 'Stats (Base)': '1.78M', 'Stats (lvl 150)': '15.1M' },
+        { 'Avatar': '[Av] Capitão', 'Rank': 'A', 'Raridade': 'Lendário', 'Stats (Base)': '2.23M', 'Stats (lvl 150)': '18.9M' },
+        { 'Avatar': '[Av] Rei Mago', 'Rank': 'S', 'Raridade': 'Mítico', 'Stats (Base)': '2.98M', 'Stats (lvl 150)': '25.3M' },
+        { 'Avatar': '[Av] Valzora', 'Rank': 'SS', 'Raridade': 'Phantom', 'Stats (Base)': '8.98M', 'Stats (lvl 150)': '76.3M' },
+      ],
+    },
+    world15: {
+      rows: [
+        { 'Avatar': '[Av] Lobo', 'Rank': 'E', 'Raridade': 'Comum', 'Stats (Base)': '1.11M', 'Stats (lvl 150)': '9.49M' },
+        { 'Avatar': '[Av] Javali', 'Rank': 'D', 'Raridade': 'Incomum', 'Stats (Base)': '2.23M', 'Stats (lvl 150)': '18.9M' },
+        { 'Avatar': '[Av] Goblin', 'Rank': 'C', 'Raridade': 'Raro', 'Stats (Base)': '3.35M', 'Stats (lvl 150)': '28.4M' },
+        { 'Avatar': '[Av] Ogro', 'Rank': 'B', 'Raridade': 'Épico', 'Stats (Base)': '4.47M', 'Stats (lvl 150)': '37.9M' },
+        { 'Avatar': '[Av] Ceifador', 'Rank': 'A', 'Raridade': 'Lendário', 'Stats (Base)': '5.58M', 'Stats (lvl 150)': '47.4M' },
+        { 'Avatar': '[Av] Kayaba', 'Rank': 'S', 'Raridade': 'Mítico', 'Stats (Base)': '7.45M', 'Stats (lvl 150)': '63.3M' },
+        { 'Avatar': '[Av] The Paladin', 'Rank': 'SS', 'Raridade': 'Phantom', 'Stats (Base)': '22.4M', 'Stats (lvl 150)': '190M' },
+      ],
+    },
+    world16: {
+      rows: [
+        { 'Avatar': '[Av] Usuário de Stand', 'Rank': 'E', 'Raridade': 'Comum', 'Stats (Base)': '2.79M', 'Stats (lvl 150)': '23.7M' },
+        { 'Avatar': '[Av] Vampiro', 'Rank': 'D', 'Raridade': 'Incomum', 'Stats (Base)': '5.58M', 'Stats (lvl 150)': '47.4M' },
+        { 'Avatar': '[Av] Homem do Pilar', 'Rank': 'C', 'Raridade': 'Raro', 'Stats (Base)': '8.38M', 'Stats (lvl 150)': '71.2M' },
+        { 'Avatar': '[Av] Assassino', 'Rank': 'B', 'Raridade': 'Épico', 'Stats (Base)': '11.1M', 'Stats (lvl 150)': '94.9M' },
+        { 'Avatar': '[Av] Mafioso', 'Rank': 'A', 'Raridade': 'Lendário', 'Stats (Base)': '13.9M', 'Stats (lvl 150)': '118M' },
+        { 'Avatar': '[Av] Jotaro', 'Rank': 'S', 'Raridade': 'Mítico', 'Stats (Base)': '18.6M', 'Stats (lvl 150)': '158M' },
+        { 'Avatar': '[Av] Dio', 'Rank': 'SS', 'Raridade': 'Phantom', 'Stats (Base)': '56.1M', 'Stats (lvl 150)': '477M' },
+      ],
+    },
+    world17: {
+      rows: [
+        { 'Avatar': '[Av] Ghoul Rank C', 'Rank': 'E', 'Raridade': 'Comum', 'Stats (Base)': '6.98M', 'Stats (lvl 150)': '59.3M' },
+        { 'Avatar': '[Av] Ghoul Rank B', 'Rank': 'D', 'Raridade': 'Incomum', 'Stats (Base)': '13.9M', 'Stats (lvl 150)': '118M' },
+        { 'Avatar': '[Av] Ghoul Rank A', 'Rank': 'C', 'Raridade': 'Raro', 'Stats (Base)': '20.9M', 'Stats (lvl 150)': '178M' },
+        { 'Avatar': '[Av] Ghoul Rank S', 'Rank': 'B', 'Raridade': 'Épico', 'Stats (Base)': '27.9M', 'Stats (lvl 150)': '237M' },
+        { 'Avatar': '[Av] Ghoul Rank SS', 'Rank': 'A', 'Raridade': 'Lendário', 'Stats (Base)': '34.9M', 'Stats (lvl 150)': '296M' },
+        { 'Avatar': '[Av] Kaneki', 'Rank': 'S', 'Raridade': 'Mítico', 'Stats (Base)': '46.5M', 'Stats (lvl 150)': '395M' },
+        { 'Avatar': '[Av] Arama', 'Rank': 'SS', 'Raridade': 'Phantom', 'Stats (Base)': '140M', 'Stats (lvl 150)': '1.19B' },
+      ],
+    },
+    world18: {
+      rows: [
+        { 'Avatar': '[Av] Zombie Devil', 'Rank': 'E', 'Raridade': 'Comum', 'Stats (Base)': '17.4M', 'Stats (lvl 150)': '148M' },
+        { 'Avatar': '[Av] Bat Devil', 'Rank': 'D', 'Raridade': 'Incomum', 'Stats (Base)': '34.9M', 'Stats (lvl 150)': '296M' },
+        { 'Avatar': '[Av] Leech Devil', 'Rank': 'C', 'Raridade': 'Raro', 'Stats (Base)': '52.3M', 'Stats (lvl 150)': '445M' },
+        { 'Avatar': '[Av] Eternity Devil', 'Rank': 'B', 'Raridade': 'Épico', 'Stats (Base)': '69.8M', 'Stats (lvl 150)': '593M' },
+        { 'Avatar': '[Av] Katana Man', 'Rank': 'A', 'Raridade': 'Lendário', 'Stats (Base)': '87.3M', 'Stats (lvl 150)': '742M' },
+        { 'Avatar': '[Av] Bomb Devil', 'Rank': 'S', 'Raridade': 'Mítico', 'Stats (Base)': '116M', 'Stats (lvl 150)': '989M' },
+        { 'Avatar': '[Av] Mr Chainsaw', 'Rank': 'SS', 'Raridade': 'Phantom', 'Stats (Base)': '350M', 'Stats (lvl 150)': '2.98B' },
+        { 'Avatar': '[Av] Hero of Hell', 'Rank': 'SSS', 'Raridade': 'Supremo', 'Stats (Base)': '631M', 'Stats (lvl 150)': '5.36B' },
+      ],
+    },
   },
 };
+
+    
