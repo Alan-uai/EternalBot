@@ -233,5 +233,3 @@ export const world2Data = {
     }
   ]
 }
-
-    
