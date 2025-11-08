@@ -208,7 +208,87 @@ export const avatarIndexArticle = {
         { 'Avatar': '[Av] Hero of Hell', 'Rank': 'SSS', 'Raridade': 'Supremo', 'Stats (Base)': '631M', 'Stats (lvl 150)': '5.36B' },
       ],
     },
+    world19: {
+        rows: [
+            { 'Avatar': '[Av] Diabo de Fogo', 'Rank': 'E', 'Raridade': 'Comum', 'Stats (Base)': '43.6M', 'Stats (lvl 150)': '370M' },
+            { 'Avatar': '[Av] Diabo de Gelo', 'Rank': 'D', 'Raridade': 'Incomum', 'Stats (Base)': '87.3M', 'Stats (lvl 150)': '742M' },
+            { 'Avatar': '[Av] Diabo das Sombras', 'Rank': 'C', 'Raridade': 'Raro', 'Stats (Base)': '130M', 'Stats (lvl 150)': '1.11B' },
+            { 'Avatar': '[Av] Diabo da Morte', 'Rank': 'B', 'Raridade': 'Épico', 'Stats (Base)': '174M', 'Stats (lvl 150)': '1.48B' },
+            { 'Avatar': '[Av] Lúcifer', 'Rank': 'A', 'Raridade': 'Lendário', 'Stats (Base)': '218M', 'Stats (lvl 150)': '1.85B' },
+            { 'Avatar': '[Av] Satan', 'Rank': 'S', 'Raridade': 'Mítico', 'Stats (Base)': '291M', 'Stats (lvl 150)': '2.47B' },
+            { 'Avatar': '[Av] Leonardo', 'Rank': 'SS', 'Raridade': 'Phantom', 'Stats (Base)': '875M', 'Stats (lvl 150)': '7.43B' },
+            { 'Avatar': '[Av] Bansho', 'Rank': 'SSS', 'Raridade': 'Supremo', 'Stats (Base)': '1.57B', 'Stats (lvl 150)': '13.3B' },
+        ],
+    },
+    world20: {
+        rows: [
+            { 'Avatar': '[Av] Soldado de Freeza', 'Rank': 'E', 'Raridade': 'Comum', 'Stats (Base)': '109M', 'Stats (lvl 150)': '926M' },
+            { 'Avatar': '[Av] Forças Especiais Ginyu', 'Rank': 'D', 'Raridade': 'Incomum', 'Stats (Base)': '218M', 'Stats (lvl 150)': '1.85B' },
+            { 'Avatar': '[Av] Freeza (Forma 1)', 'Rank': 'C', 'Raridade': 'Raro', 'Stats (Base)': '327M', 'Stats (lvl 150)': '2.77B' },
+            { 'Avatar': '[Av] Freeza (Forma Final)', 'Rank': 'B', 'Raridade': 'Épico', 'Stats (Base)': '436M', 'Stats (lvl 150)': '3.70B' },
+            { 'Avatar': '[Av] Koku (Super Saiyajin)', 'Rank': 'A', 'Raridade': 'Lendário', 'Stats (Base)': '545M', 'Stats (lvl 150)': '4.63B' },
+            { 'Avatar': '[Av] Koku SSJ', 'Rank': 'S', 'Raridade': 'Mítico', 'Stats (Base)': '727M', 'Stats (lvl 150)': '6.17B' },
+            { 'Avatar': '[Av] Frezi Final Form', 'Rank': 'SSS', 'Raridade': 'Supremo', 'Stats (Base)': '2.61B', 'Stats (lvl 150)': '22.2B' },
+        ],
+    },
+    world21: {
+        rows: [
+            { 'Avatar': '[Av] Arrancar Fracción', 'Rank': 'E', 'Raridade': 'Comum', 'Stats (Base)': '272M', 'Stats (lvl 150)': '2.31B' },
+            { 'Avatar': '[Av] Privaron Espada', 'Rank': 'D', 'Raridade': 'Incomum', 'Stats (Base)': '545M', 'Stats (lvl 150)': '4.63B' },
+            { 'Avatar': '[Av] Espada', 'Rank': 'C', 'Raridade': 'Raro', 'Stats (Base)': '818M', 'Stats (lvl 150)': '6.95B' },
+            { 'Avatar': '[Av] Coyote Starrk', 'Rank': 'B', 'Raridade': 'Épico', 'Stats (Base)': '1.09B', 'Stats (lvl 150)': '9.26B' },
+            { 'Avatar': '[Av] Barragan', 'Rank': 'A', 'Raridade': 'Lendário', 'Stats (Base)': '1.36B', 'Stats (lvl 150)': '11.5B' },
+            { 'Avatar': '[Av] Cifer', 'Rank': 'SS', 'Raridade': 'Phantom', 'Stats (Base)': '5.45B', 'Stats (lvl 150)': '46.3B' },
+            { 'Avatar': '[Av] Vasto Ichige', 'Rank': 'SSS', 'Raridade': 'Supremo', 'Stats (Base)': '6.54B', 'Stats (lvl 150)': '55.6B' },
+        ],
+    },
+    world22: {
+        rows: [
+            { 'Avatar': '[Av] Blood Queen', 'Rank': 'SS', 'Raridade': 'Phantom', 'Stats (Base)': '13.6B', 'Stats (lvl 150)': '115B' },
+            { 'Avatar': '[Av] Shadow', 'Rank': 'SSS', 'Raridade': 'Supremo', 'Stats (Base)': '16.3B', 'Stats (lvl 150)': '138B' },
+        ],
+    },
+    world23: {
+        rows: [
+            { 'Avatar': '[Av] Lord Boro', 'Rank': 'SS', 'Raridade': 'Phantom', 'Stats (Base)': '34B', 'Stats (lvl 150)': '289B' },
+            { 'Avatar': '[Av] Galaxy Hunter', 'Rank': 'SSS', 'Raridade': 'Supremo', 'Stats (Base)': '40.8B', 'Stats (lvl 150)': '347B' },
+        ],
+    },
+    world24: {
+        rows: [
+            { 'Avatar': '[Av] Albedis', 'Rank': 'SS', 'Raridade': 'Phantom', 'Stats (Base)': '85.2B', 'Stats (lvl 150)': '724B' },
+            { 'Avatar': '[Av] Anz Ool Gawn', 'Rank': 'SSS', 'Raridade': 'Supremo', 'Stats (Base)': '102B', 'Stats (lvl 150)': '867B' },
+        ],
+    },
+    world25: {
+        rows: [
+            { 'Avatar': '[Av] Morto-Vivo', 'Rank': 'E', 'Raridade': 'Comum', 'Stats (Base)': '213B', 'Stats (lvl 150)': '1.81T' },
+            { 'Avatar': '[Av] Corrompido', 'Rank': 'D', 'Raridade': 'Incomum', 'Stats (Base)': '426B', 'Stats (lvl 150)': '3.62T' },
+            { 'Avatar': '[Av] Rastejante', 'Rank': 'C', 'Raridade': 'Raro', 'Stats (Base)': '639B', 'Stats (lvl 150)': '5.43T' },
+            { 'Avatar': '[Av] Devorador', 'Rank': 'B', 'Raridade': 'Épico', 'Stats (Base)': '852B', 'Stats (lvl 150)': '7.24T' },
+            { 'Avatar': '[Av] Abominação', 'Rank': 'A', 'Raridade': 'Lendário', 'Stats (Base)': '1.06T', 'Stats (lvl 150)': '9.01T' },
+            { 'Avatar': '[Av] Tirano', 'Rank': 'S', 'Raridade': 'Mítico', 'Stats (Base)': '1.42T', 'Stats (lvl 150)': '12.0T' },
+            { 'Avatar': '[Av] Ceifador de Almas', 'Rank': 'SS', 'Raridade': 'Phantom', 'Stats (Base)': '4.26T', 'Stats (lvl 150)': '36.2T' },
+            { 'Avatar': '[Av] Rei Zumbi', 'Rank': 'SSS', 'Raridade': 'Supremo', 'Stats (Base)': '5.11T', 'Stats (lvl 150)': '43.4T' },
+        ],
+    },
+    world26: {
+        rows: [
+            { 'Avatar': '[Av] Anjo Caído', 'Rank': 'SS', 'Raridade': 'Phantom', 'Stats (Base)': '10.6T', 'Stats (lvl 150)': '90.1T' },
+            { 'Avatar': '[Av] Arcanjo', 'Rank': 'SSS', 'Raridade': 'Supremo', 'Stats (Base)': '12.7T', 'Stats (lvl 150)': '108T' },
+        ],
+    },
+    world27: {
+        rows: [
+            { 'Avatar': '[Av] Demônio Inferior', 'Rank': 'E', 'Raridade': 'Comum', 'Stats (Base)': '6.69T', 'Stats (lvl 150)': '56.8T' },
+            { 'Avatar': '[Av] Demônio Comum', 'Rank': 'D', 'Raridade': 'Incomum', 'Stats (Base)': '13.3T', 'Stats (lvl 150)': '113T' },
+            { 'Avatar': '[Av] Demônio Superior', 'Rank': 'C', 'Raridade': 'Raro', 'Stats (Base)': '20T', 'Stats (lvl 150)': '170T' },
+            { 'Avatar': '[Av] Arquidemônio', 'Rank': 'B', 'Raridade': 'Épico', 'Stats (Base)': '26.7T', 'Stats (lvl 150)': '227T' },
+            { 'Avatar': '[Av] Lorde Demônio', 'Rank': 'A', 'Raridade': 'Lendário', 'Stats (Base)': '33.4T', 'Stats (lvl 150)': '284T' },
+            { 'Avatar': '[Av] Rei Demônio', 'Rank': 'S', 'Raridade': 'Mítico', 'Stats (Base)': '44.6T', 'Stats (lvl 150)': '379T' },
+            { 'Avatar': '[Av] Satanás', 'Rank': 'SS', 'Raridade': 'Phantom', 'Stats (Base)': '133T', 'Stats (lvl 150)': '1.13qd' },
+            { 'Avatar': '[Av] Lúcifer', 'Rank': 'SSS', 'Raridade': 'Supremo', 'Stats (Base)': '160T', 'Stats (lvl 150)': '1.36qd' },
+        ],
+    },
   },
 };
-
-    
