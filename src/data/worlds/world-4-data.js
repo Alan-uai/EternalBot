@@ -64,9 +64,6 @@ export const world4Data = {
       unlockCost: "Varia",
     }
   ],
-  accessories: [
-      { id: 'chifres-demonio', name: 'Chifres de Demônio', world: 'Mundo 4', boss: 'Lorde Demônio', rarity: 'Épico', damage_bonus: '0.05x' }
-  ],
   dungeons: [
       { 
         name: 'Cursed Raid', 
@@ -217,5 +214,3 @@ export const world4Data = {
     }
   ]
 }
-
-    
