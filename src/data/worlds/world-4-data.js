@@ -115,6 +115,22 @@ export const world4Data = {
                 { item: 'Mythical Curse', probability: 0.005 },
                 { item: 'Phantom Curse', probability: 0.0005 },
             ]
+        },
+        achievements: {
+            headers: ['Conquista', 'Requisito', 'Bônus'],
+            rows: [
+                { 'Conquista': 'Cursed Raid I', 'Requisito': 'Reach Wave 10', 'Bônus': '5% Damage' },
+                { 'Conquista': 'Cursed Raid II', 'Requisito': 'Reach Wave 20', 'Bônus': '5% Star Luck' },
+                { 'Conquista': 'Cursed Raid III', 'Requisito': 'Reach Wave 30', 'Bônus': '5% Damage' },
+                { 'Conquista': 'Cursed Raid IV', 'Requisito': 'Reach Wave 40', 'Bônus': '5% Star Luck' },
+                { 'Conquista': 'Cursed Raid V', 'Requisito': 'Reach Wave 50', 'Bônus': '5% Damage' },
+                { 'Conquista': 'Cursed Raid VI', 'Requisito': 'Reach Wave 100', 'Bônus': '100 Credits' },
+                { 'Conquista': 'Cursed Raid VII', 'Requisito': 'Reach Wave 200', 'Bônus': '10% Damage' },
+                { 'Conquista': 'Cursed Raid VIII', 'Requisito': 'Reach Wave 300', 'Bônus': '15% Star Luck' },
+                { 'Conquista': 'Cursed Raid IX', 'Requisito': 'Reach Wave 500', 'Bônus': '15% Damage' },
+                { 'Conquista': 'Cursed Raid X', 'Requisito': 'Reach Wave 750', 'Bônus': '20% Star Luck' },
+                { 'Conquista': 'Cursed Raid XI', 'Requisito': 'Reach Wave 1000', 'Bônus': '150 Credits' },
+            ]
         }
       }
   ],
