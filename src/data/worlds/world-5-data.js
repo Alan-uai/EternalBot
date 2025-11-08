@@ -64,6 +64,64 @@ export const world5Data = {
   ],
   missions: [
     {
+        name: 'Missão #1',
+        requirement: 'Derrotar 30 Nazuki',
+        rewards: [
+            { name: 'Soltar Poção', amount: 1 },
+            { name: 'World Key', amount: 1 },
+            { name: 'Exp', amount: '2.25k' }
+        ]
+    },
+    {
+        name: 'Missão #2',
+        requirement: 'Derrotar 25 Tenjaro',
+        rewards: [
+            { name: 'World Key', amount: 1 },
+            { name: 'Coin Percent', value: '5%' },
+            { name: 'Exp', amount: '3.9k' }
+        ]
+    },
+    {
+        name: 'Missão #3',
+        requirement: 'Derrotar 20 Zentsu',
+        rewards: [
+            { name: 'World Key', amount: 1 },
+            { name: 'Damage Percent', value: '5%' },
+            { name: 'Exp', amount: '4.92k' }
+        ]
+    },
+    {
+        name: 'Missão #4',
+        requirement: 'Derrotar 15 Insake',
+        rewards: [
+            { name: 'World Key', amount: 1 },
+            { name: 'Energy Percent', value: '5%' },
+            { name: 'Exp', amount: '6.45k' }
+        ]
+    },
+    {
+        name: 'Missão #5',
+        requirement: 'Derrotar 10 Tamoka',
+        rewards: [
+            { name: 'Avatar Soul', amount: 5 },
+            { name: 'Luck Percent', value: '5%' },
+            { name: 'Breathing Token', amount: 10 },
+            { name: 'World Key', amount: 1 },
+            { name: 'Exp', amount: '9.1k' }
+        ]
+    },
+    {
+        name: 'Missão #6',
+        requirement: 'Derrotar 5 Shinabe',
+        rewards: [
+            { name: 'Redefinição de Status', amount: 1 },
+            { name: 'Energy Percent', value: '5%' },
+            { name: 'Demon Arts Token', amount: 10 },
+            { name: 'World Key', amount: 1 },
+            { name: 'Exp', amount: '9.5k' }
+        ]
+    },
+    {
       name: 'Hero License Quest',
       type: 'progression',
       statType: 'mixed',
