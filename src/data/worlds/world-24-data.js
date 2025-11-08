@@ -18,7 +18,7 @@ export const world24Data = {
         name: 'Jalbathar Mask', 
         slot: 'Face',
         world: 'Mundo 24', 
-        npc: 'Jalbathar', 
+        npc: 'Tomb Arena Raid', 
         rank: 'Lendário-Rank', 
         bonuses: [
             {
@@ -80,7 +80,7 @@ export const world24Data = {
         name: 'Jalbathar Wings', 
         slot: 'Back',
         world: 'Mundo 24', 
-        npc: 'Jalbathar', 
+        npc: 'Tomb Arena Raid', 
         rank: 'Lendário-Rank', 
         bonuses: [
         { 
@@ -129,7 +129,7 @@ export const world24Data = {
         name: 'Jalbathar Tail', 
         slot: 'Waist',
         world: 'Mundo 24', 
-        npc: 'Jalbathar', 
+        npc: 'Tomb Arena Raid', 
         rank: 'Lendário-Rank',
         bonuses: [
           {
