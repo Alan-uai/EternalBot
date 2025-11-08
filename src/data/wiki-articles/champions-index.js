@@ -6,9 +6,9 @@ export const championsIndexArticle = {
   content: `Esta página serve como um índice para os bônus de energia de todos os Champions (pets) no jogo, organizados por mundo e raridade. Use estas tabelas para planejar quais pets farmar em cada estágio do jogo.`,
   tags: ['champions', 'pets', 'energia', 'index', 'guia', 'bônus'],
   imageUrl: 'wiki-5', // Reusing a relevant image
+  sharedHeaders: ['World', 'Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', 'Mythic', 'Phantom'],
   tables: {
     world1_8: {
-      headers: ['World', 'Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', 'Mythic', 'Phantom'],
       rows: [
         { World: 1, Common: '3', Uncommon: '6', Rare: '9', Epic: '12', Legendary: '15', Mythic: '20', Phantom: '45' },
         { World: 2, Common: '8', Uncommon: '15', Rare: '23', Epic: '30', Legendary: '38', Mythic: '50', Phantom: '113' },
