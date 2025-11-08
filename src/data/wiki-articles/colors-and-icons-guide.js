@@ -12,7 +12,9 @@ Abaixo está a tabela completa de raridades, da mais fraca para a mais forte.
 Estes ícones indicam o tipo de bônus que um item ou poder fornece.
 
 ### Cores de Bônus de Acessórios
-Os acessórios usam um sistema de cores diferente para indicar seus bônus:`,
+Os acessórios usam um sistema de cores diferente para indicar seus bônus.
+
+**Observação Importante:** A cor de fundo do **nome do acessório** é neutra e não indica seu tipo. Apenas a cor de fundo do **valor do bônus** na tabela deve ser considerada para identificar o status (energia, dano, etc.).`,
   tags: ['cores', 'ícones', 'raridade', 'guia', 'itens', 'dano', 'energia', 'sorte', 'moedas', 'créditos', 'velocidade'],
   tables: {
     rarityColors: {
