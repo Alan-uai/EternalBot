@@ -13,15 +13,6 @@ export const world4Data = {
     { name: 'Gajo', rank: 'S', exp: 50, hp: '50sx', drops: { coins: { amount: 'x300k', probability: 1 }, 'Cursed Token': { amount: 'x1-5', probability: 0.1 }, 'Cursed Finger Token': { amount: 'x1-5', probability: 0.1 }, avatar_soul: { amount: 1, probability: 0.25 }, avatar: { probability: 0.01 } } },
     { name: 'Sakuni', rank: 'SS', exp: 120, hp: '120Sp', drops: { coins: { amount: 'x700k', probability: 1 }, 'Cursed Token': { amount: 'x3-5', probability: 0.1 }, 'Cursed Finger Token': { amount: 'x3-5', probability: 0.1 }, avatar_soul: { amount: 1, probability: 0.5 }, aura: { name: 'Fire King Aura', probability: 0.01 }, avatar: { probability: 0.01 } }, videoUrl: 'https://cdn.discordapp.com/attachments/1430337273794265250/1430337777840554126/ScreenRecording_10-21-2025_10-31-17_1.mov?ex=68fa121c&is=68f8c09c&hm=4701c56efe6c8b63f39d235ca2353f417c474b290038f6c2874b44537ce6ead1&' },
   ],
-  pets: [
-    { name: 'Itodo', rarity: 'Comum', energy_bonus: '47' },
-    { name: 'Nebara', rarity: 'Incomum', energy_bonus: '94' },
-    { name: 'Magum', rarity: 'Raro', energy_bonus: '141' },
-    { name: 'Meki', rarity: 'Épico', energy_bonus: '188' },
-    { name: 'Tage', rarity: 'Lendário', energy_bonus: '234' },
-    { name: 'Gajo', rarity: 'Mítico', energy_bonus: '313' },
-    { name: 'Sakuni', rarity: 'Phantom', energy_bonus: '703' },
-  ],
   powers: [
     {
       name: "Curses",
@@ -214,3 +205,5 @@ export const world4Data = {
     }
   ]
 }
+
+    

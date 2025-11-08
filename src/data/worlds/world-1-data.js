@@ -13,15 +13,6 @@ export const world1Data = {
     { name: 'Koku', rank: 'S', exp: 6, hp: '240M', drops: { coins: { amount: 'x300', probability: 1 }, 'Saiyan Evolution Token': { amount: 'x3-5', probability: 0.1 }, exp: { amount: 'x6', probability: 1 }, avatar_soul: { amount: 1, probability: 0.25 }, avatar: { probability: 0.01 } } },
     { name: 'Kid Kohan', rank: 'SS', exp: 15, hp: '2.5Qd', drops: { coins: { amount: 'x700', probability: 1 }, 'Saiyan Evolution Token': { amount: 'x3-5', probability: 0.1 }, 'Dragon Race Token': { amount: 'x3-5', probability: 0.1 }, exp: { amount: 'x15', probability: 1 }, 'four_star_hat': { probability: 0.25 }, luck_aura: { probability: 0.01 }, avatar_soul: { amount: 1, probability: 0.5 }, avatar: { probability: 0.01 } }, videoUrl: 'https://cdn.discordapp.com/attachments/1430337273794265250/1430337506850902126/ScreenRecording_10-21-2025_10-29-41_1.mov?ex=68fa11dc&is=68f8c05c&hm=427738471ba4c03c65ded4771f410444eb190deb54be08eecc33c0ff00286c7f&' },
   ],
-  pets: [
-    { name: 'Kriluni', rarity: 'Comum', energy_bonus: '3' },
-    { name: 'Ymicha', rarity: 'Incomum', energy_bonus: '6' },
-    { name: 'Tian Shan', rarity: 'Raro', energy_bonus: '9' },
-    { name: 'Kohan', rarity: 'Épico', energy_bonus: '12' },
-    { name: 'Picco', rarity: 'Lendário', energy_bonus: '15' },
-    { name: 'Koku', rarity: 'Mítico', energy_bonus: '20' },
-    { name: 'Kid Kohan', rarity: 'Phantom', energy_bonus: '45' },
-  ],
   powers: [
     {
       name: 'Dragon Race',

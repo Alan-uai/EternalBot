@@ -12,11 +12,6 @@ export const world7Data = {
     { name: 'Chronomancer', rank: 'S', exp: 3500000, hp: '50.5tD' },
     { name: 'Novi Chroni', rank: 'SS', exp: 7000000, hp: '101tdD', videoUrl: 'https://cdn.discordapp.com/attachments/1430337273794265250/1430338227725664287/ScreenRecording_10-21-2025_10-35-22_1.mov?ex=68fa1287&is=68f8c107&hm=6ce1e4abfb80c01df86b05dc364cc1e0f45515182d53142c7d75fe9ffad47f3b&', drops: {} },
   ],
-  pets: [
-    { name: 'Ampulheta', rank: 'Comum', rarity: 'Comum', energy_bonus: '0.07x' },
-    { name: 'Relógio de Bolso', rank: 'Incomum', rarity: 'Incomum', energy_bonus: '0.14x' },
-    { name: 'Paradoxo Encapsulado', rank: 'Raro', rarity: 'Raro', energy_bonus: '0.21x' },
-  ],
   powers: [
     {
       name: 'Poder Temporal',
@@ -31,3 +26,5 @@ export const world7Data = {
     },
   ],
 };
+
+    

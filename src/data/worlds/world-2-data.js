@@ -13,15 +13,6 @@ export const world2Data = {
     { name: 'Loffy', rank: 'S', exp: 1200, hp: '120T', drops: { coins: { amount: 'x3k', probability: 1 }, 'Demon Fruit Token': { amount: 'x1-5', probability: 0.1 }, 'Sword Token': { amount: 'x1-5', probability: 0.1 }, 'Haki Token': { amount: 'x1-5', probability: 0.1 }, exp: { amount: 'x14', probability: 1 }, avatar_soul: { amount: 1, probability: 0.25 }, avatar: { probability: 0.01 } } },
     { name: 'Shanks', rank: 'SS', exp: 2500, hp: '5sx', drops: { coins: { amount: 'x7k', probability: 1 }, 'Demon Fruit Token': { amount: 'x3-5', probability: 0.1 }, 'Pirate Crew Token': { amount: 'x3-5', probability: 0.1 }, 'Haki Token': { amount: 'x3-5', probability: 0.1 }, exp: { amount: 'x30', probability: 1 }, 'red_emperor_aura': { probability: 0.01 }, 'armless_cloak': { probability: 0.25 }, avatar_soul: { amount: 1, probability: 0.5 }, avatar: { probability: 0.01 } }, videoUrl: 'https://cdn.discordapp.com/attachments/1430337273794265250/1430337623989157898/ScreenRecording_10-21-2025_10-30-18_1.mov?ex=68fa11f7&is=68f8c077&hm=545bf96550f91648d3cb19976024f9177520781ec5a21df3210a4c85af955e54&' },
   ],
-  pets: [
-    { name: 'Nomi', rarity: 'Comum', energy_bonus: '8' },
-    { name: 'Usup', rarity: 'Incomum', energy_bonus: '15' },
-    { name: 'Robins', rarity: 'Raro', energy_bonus: '23' },
-    { name: 'Senji', rarity: 'Épico', energy_bonus: '30' },
-    { name: 'Zaro', rarity: 'Lendário', energy_bonus: '38' },
-    { name: 'Loffy', rarity: 'Mítico', energy_bonus: '50' },
-    { name: 'Shanks', rarity: 'Phantom', energy_bonus: '113' },
-  ],
   powers: [
     {
       name: 'Pirate Crew',
