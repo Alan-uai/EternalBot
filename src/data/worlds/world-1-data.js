@@ -59,15 +59,13 @@ export const world1Data = {
       statType: 'mixed',
       description: "Uma questline da Classe F iniciada no Mundo 1. Suas missões se estendem por vários mundos (1-5 e Lobby) e o jogador só pode aceitar uma missão desta categoria por vez.",
       missions: [
-          { name: 'F Class Quest #1', world: 1, requirement: 'Derrotar 100 Kriluni', rewards: [{name: 'Mission Key', amount: 1}, {name: 'Luck Potion', amount: 1}, {name: 'Damage Potion', amount: 1}, {name: 'Energy Potion', amount: 1}] },
-          { name: 'F Class Quest #2', world: 1, requirement: 'Coletar 100 Dragon Race Token', rewards: [] },
-          { name: 'F Class Quest #3', world: 2, requirement: 'Coletar 500 Windmill Piece', rewards: [{name: 'Mission Key', amount: 1}, {name: 'Pet Chest', amount: 1}] },
-          { name: 'F Class Quest #4', world: 2, requirement: 'Derrotar 75 Robins', rewards: [] },
-          { name: 'F Class Quest #5', world: 3, requirement: 'Derrotar 75 Shinigami Novato', rewards: [{name: 'Mission Key', amount: 1}, {name: 'Energy Potion', amount: 1}] },
-          { name: 'F Class Quest #6', world: 3, requirement: 'Coletar 75 Hollow Soul', rewards: [{name: 'Coin Potion', amount: 1}, {name: 'World Key', amount: 1}] },
-          { name: 'F Class Quest #7', world: 5, requirement: 'Derrotar 50 Hashira', rewards: [{name: 'Mission Key', amount: 1}, {name: 'Raid Key', amount: 1}] },
-          { name: 'F Class Quest #8', world: 5, requirement: 'Derrotar 25 Rangoki', rewards: [{name: 'Raid Key', amount: 1}, {name: 'Weapon Chest', amount: 1}] },
-          { name: 'F Class Quest #9', world: 'Lobby 1', requirement: 'Chegar ao piso 50 na Dungeon Easy (Lobby 1)', rewards: [{name: 'Mission Ticket', amount: 1}, {name: 'Credits', amount: 15}, {name: 'Pet Chest', amount: 1}] }
+          { name: 'F Class Quest #1', world: 1, requirement: 'Derrotar 100 Kriluni', rewards: [{name: 'Soul Potion', amount: 1}, {name: 'Energy Potion', amount: 1}] },
+          { name: 'F Class Quest #2', world: 1, requirement: 'Coletar 500 Dragon Race Token', rewards: [{name: 'Porção de alcance de ataque', amount: 1}, {name: 'Coin Potion', amount: 1}] },
+          { name: 'F Class Quest #3', world: 2, requirement: 'Derrotar 75 Usors', rewards: [{name: 'Exp Potion', amount: 1}, {name: 'Damage Potion', amount: 1}] },
+          { name: 'F Class Quest #4', world: 2, requirement: 'Coletar 1000 Haki Token', rewards: [{name: 'Exp Potion', amount: 1}, {name: 'Soul Potion', amount: 1}] },
+          { name: 'F Class Quest #5', world: 3, requirement: 'Derrotar 50 Uryuas', rewards: [{name: 'Damage Potion', amount: 1}, {name: 'Energy Potion', amount: 1}] },
+          { name: 'F Class Quest #6', world: 5, requirement: 'Derrotar 25 Rangaki', rewards: [{name: 'Damage Potion', amount: 1}, {name: 'Energy Potion', amount: 1}, {name: 'Drop Potion', amount: 1}] },
+          { name: 'F Class Quest #7', world: 'Dungeon Lobby 1', requirement: 'Chegar ao piso 50 na Dungeon Easy (Lobby 1) + 2000 Breathing Token', rewards: [{name: 'License F Class', amount: 1}, {name: 'Credits', amount: 5}, {name: 'Drop Potion', amount: 1}] }
       ]
     }
   ],
