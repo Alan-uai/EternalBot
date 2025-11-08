@@ -459,7 +459,7 @@
     "Accessory": {
       "title": "Accessory",
       "type": "object",
-      "description": "Represents a wearable accessory dropped by a boss in a specific world.",
+      "description": "Represents a wearable accessory. They can be dropped by a specific NPC boss or obtained as a reward from a Raid.",
       "properties": {
         "id": { "type": "string" },
         "name": { "type": "string" },

@@ -27,5 +27,42 @@ export const world16Data = {
     { name: 'Platinum', 'atk_spd': '0.35s', 'base_damage': '15.7%', 'one_star_damage': '24%', 'two_star_damage': '31.4%', 'three_star_damage': '47.1%' },
     { name: 'World', 'atk_spd': '0.2s', 'base_damage': '15.8%', 'one_star_damage': '24%', 'two_star_damage': '31.6%', 'three_star_damage': '47.4%' },
   ],
-  accessories: [],
+  accessories: [
+    { 
+      id: 'greenello-scarf', 
+      name: 'Greenello Scarf', 
+      slot: 'Neck',
+      world: '16', 
+      npc: 'Rei Mago', 
+      rank: 'S-Rank', 
+      bonuses: [
+        { 
+          type: 'coin', 
+          valuesByRarity: [
+            { "rarity": "Common", "value": "0.5x" },
+            { "rarity": "Uncommon", "value": "0.75x" },
+            { "rarity": "Rare", "value": "1.x" },
+            { "rarity": "Epic", "value": "1.25x" },
+            { "rarity": "Legendary", "value": "1.5x" },
+            { "rarity": "Mythic", "value": "1.75x" },
+            { "rarity": "Phantom", "value": "2.5x" },
+            { "rarity": "Supreme", "value": "3.75x" }
+          ] 
+        },
+        { 
+          type: 'exp', 
+          valuesByRarity: [
+            { "rarity": "Common", "value": "1%" },
+            { "rarity": "Uncommon", "value": "1.5%" },
+            { "rarity": "Rare", "value": "2%" },
+            { "rarity": "Epic", "value": "2.5%" },
+            { "rarity": "Legendary", "value": "3%" },
+            { "rarity": "Mythic", "value": "3.5%" },
+            { "rarity": "Phantom", "value": "5%" },
+            { "rarity": "Supreme", "value": "7.5%" }
+          ]
+        }
+      ]
+    }
+  ],
 };

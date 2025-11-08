@@ -29,28 +29,54 @@ export const world14Data = {
   ],
   accessories: [
     { 
-      id: 'greenello-scarf', 
-      name: 'Greenello Scarf', 
-      slot: 'Neck',
+      id: 'slime-mask', 
+      name: 'Slime Mask', 
+      slot: 'Face',
       world: '14', 
       npc: 'Rei Mago', 
       rank: 'S-Rank', 
       bonuses: [
-        { 
-          type: 'coin', 
+        {
+          type: 'energy',
           valuesByRarity: [
-            { "rarity": "Common", "value": "0.5x" },
-            { "rarity": "Uncommon", "value": "0.75x" },
-            { "rarity": "Rare", "value": "1.x" },
-            { "rarity": "Epic", "value": "1.25x" },
-            { "rarity": "Legendary", "value": "1.5x" },
-            { "rarity": "Mythic", "value": "1.75x" },
-            { "rarity": "Phantom", "value": "2.5x" },
-            { "rarity": "Supreme", "value": "3.75x" }
-          ] 
+            { "rarity": "Common", "value": "0.05x" },
+            { "rarity": "Uncommon", "value": "0.075x" },
+            { "rarity": "Rare", "value": "0.1x" },
+            { "rarity": "Epic", "value": "0.125x" },
+            { "rarity": "Legendary", "value": "0.15x" },
+            { "rarity": "Mythic", "value": "0.175x" },
+            { "rarity": "Phantom", "value": "0.25x" },
+            { "rarity": "Supreme", "value": "0.375x" }
+          ]
         },
-        { 
-          type: 'exp', 
+        {
+          type: 'damage',
+          valuesByRarity: [
+            { "rarity": "Common", "value": "0.05x" },
+            { "rarity": "Uncommon", "value": "0.075x" },
+            { "rarity": "Rare", "value": "0.1x" },
+            { "rarity": "Epic", "value": "0.125x" },
+            { "rarity": "Legendary", "value": "0.15x" },
+            { "rarity": "Mythic", "value": "0.175x" },
+            { "rarity": "Phantom", "value": "0.25x" },
+            { "rarity": "Supreme", "value": "0.375x" }
+          ]
+        },
+        {
+          type: 'coin',
+          valuesByRarity: [
+            { "rarity": "Common", "value": "0.05x" },
+            { "rarity": "Uncommon", "value": "0.075x" },
+            { "rarity": "Rare", "value": "0.1x" },
+            { "rarity": "Epic", "value": "0.125x" },
+            { "rarity": "Legendary", "value": "0.15x" },
+            { "rarity": "Mythic", "value": "0.175x" },
+            { "rarity": "Phantom", "value": "0.25x" },
+            { "rarity": "Supreme", "value": "0.375x" }
+          ]
+        },
+        {
+          type: 'exp',
           valuesByRarity: [
             { "rarity": "Common", "value": "1%" },
             { "rarity": "Uncommon", "value": "1.5%" },
@@ -62,68 +88,6 @@ export const world14Data = {
             { "rarity": "Supreme", "value": "7.5%" }
           ]
         }
-      ]
-    },
-    { 
-      id: 'slime-mask', 
-      name: 'Slime Mask', 
-      slot: 'Head',
-      world: '14', 
-      npc: 'Rei Mago', 
-      rank: 'S-Rank', 
-      bonuses: [
-          { 
-            type: 'energy', 
-            valuesByRarity: [
-                { "rarity": "Common", "value": "0.05x" },
-                { "rarity": "Uncommon", "value": "0.075x" },
-                { "rarity": "Rare", "value": "0.1x" },
-                { "rarity": "Epic", "value": "0.125x" },
-                { "rarity": "Legendary", "value": "0.15x" },
-                { "rarity": "Mythic", "value": "0.175x" },
-                { "rarity": "Phantom", "value": "0.25x" },
-                { "rarity": "Supreme", "value": "0.375x" }
-            ]
-          },
-          { 
-            type: 'damage', 
-            valuesByRarity: [
-                { "rarity": "Common", "value": "0.05x" },
-                { "rarity": "Uncommon", "value": "0.075x" },
-                { "rarity": "Rare", "value": "0.1x" },
-                { "rarity": "Epic", "value": "0.125x" },
-                { "rarity": "Legendary", "value": "0.15x" },
-                { "rarity": "Mythic", "value": "0.175x" },
-                { "rarity": "Phantom", "value": "0.25x" },
-                { "rarity": "Supreme", "value": "0.375x" }
-            ]
-          },
-          { 
-            type: 'coin', 
-            valuesByRarity: [
-                { "rarity": "Common", "value": "0.05x" },
-                { "rarity": "Uncommon", "value": "0.075x" },
-                { "rarity": "Rare", "value": "0.1x" },
-                { "rarity": "Epic", "value": "0.125x" },
-                { "rarity": "Legendary", "value": "0.15x" },
-                { "rarity": "Mythic", "value": "0.175x" },
-                { "rarity": "Phantom", "value": "0.25x" },
-                { "rarity": "Supreme", "value": "0.375x" }
-            ]
-          },
-          { 
-            type: 'exp', 
-            valuesByRarity: [
-                { "rarity": "Common", "value": "1%" },
-                { "rarity": "Uncommon", "value": "1.5%" },
-                { "rarity": "Rare", "value": "2%" },
-                { "rarity": "Epic", "value": "2.5%" },
-                { "rarity": "Legendary", "value": "3%" },
-                { "rarity": "Mythic", "value": "3.5%" },
-                { "rarity": "Phantom", "value": "5%" },
-                { "rarity": "Supreme", "value": "7.5%" }
-            ]
-          }
       ]
     }
   ],
