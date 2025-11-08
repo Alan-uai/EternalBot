@@ -39,14 +39,14 @@ export const world11Data = {
         { 
           type: 'coin', 
           valuesByRarity: [
-            { rarity: 'Common', value: '0.3x' },
-            { rarity: 'Uncommon', value: '0.45x' },
-            { rarity: 'Rare', value: '0.6x' },
-            { rarity: 'Epic', value: '0.75x' },
-            { rarity: 'Legendary', value: '0.9x' },
-            { rarity: 'Mythic', value: '1.05x' },
-            { rarity: 'Phantom', value: '1.5x' },
-            { rarity: 'Supreme', value: '2.25x' }
+            { "rarity": "Common", "value": "0.3x" },
+            { "rarity": "Uncommon", "value": "0.45x" },
+            { "rarity": "Rare", "value": "0.6x" },
+            { "rarity": "Epic", "value": "0.75x" },
+            { "rarity": "Legendary", "value": "0.9x" },
+            { "rarity": "Mythic", "value": "1.05x" },
+            { "rarity": "Phantom", "value": "1.5x" },
+            { "rarity": "Supreme", "value": "2.25x" }
           ]
         }
       ]
@@ -85,17 +85,19 @@ export const world11Data = {
         { 
           type: 'energy', 
           valuesByRarity: [
-            { "rarity": "Common", "value": "1.5x" },
-            { "rarity": "Uncommon", "value": "2.25x" },
-            { "rarity": "Rare", "value": "3x" },
-            { "rarity": "Epic", "value": "3.75x" },
-            { "rarity": "Legendary", "value": "4.5x" },
-            { "rarity": "Mythic", "value": "5.25x" },
-            { "rarity": "Phantom", "value": "7.5x" },
-            { "rarity": "Supreme", "value": "11.25x" }
+            { "rarity": "Common", "value": "0.1x" },
+            { "rarity": "Uncommon", "value": "0.15x" },
+            { "rarity": "Rare", "value": "0.2x" },
+            { "rarity": "Epic", "value": "0.25x" },
+            { "rarity": "Legendary", "value": "0.3x" },
+            { "rarity": "Mythic", "value": "0.35x" },
+            { "rarity": "Phantom", "value": "0.5x" },
+            { "rarity": "Supreme", "value": "0.75x" }
           ] 
         }
       ] 
     }
   ],
 };
+
+    

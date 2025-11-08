@@ -87,7 +87,42 @@ export const world2Data = {
     }
   ],
   accessories: [
-    { id: 'armless-cloak', name: 'Armless Cloak', world: '2', boss: 'SS', rarity: 'SS', energy_bonus: 'true' }
+      { 
+      id: 'armless-cloak', 
+      name: 'Armless Cloak', 
+      slot: 'Back',
+      world: '2', 
+      npc: 'Shanks', 
+      rank: 'SS-Rank', 
+      bonuses: [
+        { 
+          type: 'energy', 
+          valuesByRarity: [
+            { rarity: 'Common', value: '0.01x' },
+            { rarity: 'Uncommon', value: '0.015x' },
+            { rarity: 'Rare', value: '0.02x' },
+            { rarity: 'Epic', value: '0.025x' },
+            { rarity: 'Legendary', value: '0.03x' },
+            { rarity: 'Mythic', value: '0.035x' },
+            { rarity: 'Phantom', value: '0.05x' },
+            { rarity: 'Supreme', value: '0.075x' }
+          ]
+        },
+        { 
+          type: 'exp', 
+          valuesByRarity: [
+            { rarity: 'Common', value: '1%' },
+            { rarity: 'Uncommon', value: '1.5%' },
+            { rarity: 'Rare', value: '2%' },
+            { rarity: 'Epic', value: '2.5%' },
+            { rarity: 'Legendary', value: '3%' },
+            { rarity: 'Mythic', value: '3.5%' },
+            { rarity: 'Phantom', value: '5%' },
+            { rarity: 'Supreme', value: '7.5%' }
+          ]
+        }
+      ]
+    }
   ],
   dungeons: [
     { 
@@ -233,3 +268,5 @@ export const world2Data = {
     }
   ]
 }
+
+    
