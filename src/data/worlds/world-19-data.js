@@ -37,7 +37,7 @@ export const world19Data = {
       rank: 'C-Rank', 
       bonuses: [
         { 
-          type: 'coin', 
+          type: 'energy', 
           valuesByRarity: [
             { "rarity": "Common", "value": "0.133x" },
             { "rarity": "Uncommon", "value": "0.2x" },
