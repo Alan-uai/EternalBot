@@ -115,17 +115,17 @@ export const world4Data = {
             { name: 'Cursed Token', amount: 10 },
             { name: 'World Key', amount: 1 },
             { name: 'Luck Percent', value: '4%' },
-            { name: 'Exp', amount: '4.43k' }
+            { name: 'Exp', amount: '4.7k' }
         ]
     },
     {
         name: 'Missão #6',
         requirement: 'Derrotar 5 Gajo',
         rewards: [
-            { name: 'Cursed Token', amount: 15 },
+            { name: 'Cursed Finger Token', amount: 10 },
             { name: 'World Key', amount: 1 },
-            { name: 'Energy Percent', value: '4%' },
-            { name: 'Exp', amount: '4.8k' }
+            { name: 'Energy Percent', value: '5%' },
+            { name: 'Exp', amount: '5k' }
         ]
     }
   ]

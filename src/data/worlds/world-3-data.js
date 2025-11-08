@@ -105,7 +105,7 @@ export const world3Data = {
         requirement: 'Derrotar 30 Hime',
         rewards: [
             { name: 'World Key', amount: 1 },
-            { name: 'Reiatsu Token', amount: 10 },
+            { name: 'Porção de energia', amount: 1 },
             { name: 'Exp', amount: '630' }
         ]
     },
@@ -114,8 +114,8 @@ export const world3Data = {
         requirement: 'Derrotar 25 Ichige',
         rewards: [
             { name: 'World Key', amount: 1 },
-            { name: 'Reiatsu Token', amount: 15 },
-            { name: 'Exp', amount: '800' }
+            { name: 'Coin Percent', amount: '3%' },
+            { name: 'Exp', amount: '1.1k' }
         ]
     },
     {
@@ -123,9 +123,8 @@ export const world3Data = {
         requirement: 'Derrotar 20 Uryua',
         rewards: [
             { name: 'World Key', amount: 1 },
-            { name: 'Pet Chest', amount: 1 },
-            { name: 'Drop Percent', amount: '3%' },
-            { name: 'Exp', amount: '1.3k' }
+            { name: 'Damage Percent', amount: '3%' },
+            { name: 'Exp', amount: '1.38k' }
         ]
     },
     {
@@ -133,7 +132,7 @@ export const world3Data = {
         requirement: 'Derrotar 15 Rakiu',
         rewards: [
             { name: 'World Key', amount: 1 },
-            { name: 'Drop Percent', amount: '3%' },
+            { name: 'Energy Percent', amount: '3%' },
             { name: 'Exp', amount: '1.8k' }
         ]
     },
@@ -151,9 +150,9 @@ export const world3Data = {
         name: 'Missão #6',
         requirement: 'Derrotar 5 Ichigo',
         rewards: [
-            { name: 'Avatar Soul', amount: 10 },
-            { name: 'Pet Chest', amount: 1 },
-            { name: 'Reiatsu Token', amount: 10 },
+            { name: 'Zanpakuto Token', amount: 10 },
+            { name: 'Sword Token', amount: 10 },
+            { name: 'Energy Percent', amount: '4%'},
             { name: 'World Key', amount: 1 },
             { name: 'Exp', amount: '2.6k' }
         ]
