@@ -35,14 +35,16 @@ export const world18Data = {
         { name: 'Supreme Ghost', rarity: 'Supreme', stats: '10x', stats_lvl_100: '15x', cost: '200k Eyes' },
       ],
     },
-    {
+  ],
+  dungeons: [
+      { name: 'Chainsaw Defense', boss: 'Gun Devil', description: 'Uma raid de defesa contra hordas de demônios.'}
+  ],
+  missions: [
+     {
       name: 'Hero License Quest',
       type: 'progression',
       statType: 'mixed',
       description: "Missão de Licença de Herói (Rank B), com tarefas neste mundo."
     }
-  ],
-  dungeons: [
-      { name: 'Chainsaw Defense', boss: 'Gun Devil', description: 'Uma raid de defesa contra hordas de demônios.'}
   ]
 };

@@ -26,11 +26,13 @@ export const world10Data = {
       maxBoost: '50% Energy',
       unlockCost: '10M',
     },
+  ],
+  missions: [
     {
       name: 'Hero License Quest',
       type: 'progression',
       statType: 'mixed',
       description: "Missão de Licença de Herói (Rank D), com tarefas que se iniciam neste mundo."
     }
-  ],
+  ]
 };

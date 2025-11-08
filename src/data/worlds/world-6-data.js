@@ -29,11 +29,13 @@ export const world6Data = {
           { type: 'energy', value: '10% Energy' }
       ]
     },
+  ],
+  missions: [
     {
       name: 'Hero License Quest',
       type: 'progression',
       statType: 'mixed',
       description: "Missão de Licença de Herói (Rank E), com tarefas que se estendem pelos mundos 6 a 9."
     }
-  ],
+  ]
 };
