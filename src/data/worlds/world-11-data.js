@@ -34,9 +34,21 @@ export const world11Data = {
       slot: 'Neck',
       world: '11', 
       boss: 'Eran', 
-      rarity: 'S-Rank', 
+      rank: 'S-Rank', 
       bonuses: [
-          { type: 'coin', values: ['0.3x', '0.45x', '0.6x', '0.75x', '0.9x', '1.05x', '1.5x', '2.25x'] }
+        { 
+          type: 'coin', 
+          valuesByRarity: [
+            { rarity: 'Common', value: '0.3x' },
+            { rarity: 'Uncommon', value: '0.45x' },
+            { rarity: 'Rare', value: '0.6x' },
+            { rarity: 'Epic', value: '0.75x' },
+            { rarity: 'Legendary', value: '0.9x' },
+            { rarity: 'Mythic', value: '1.05x' },
+            { rarity: 'Phantom', value: '1.5x' },
+            { rarity: 'Supreme', value: '2.25x' }
+          ]
+        }
       ]
     },
     { 
@@ -45,9 +57,21 @@ export const world11Data = {
       slot: 'Head',
       world: '11', 
       boss: 'Eran', 
-      rarity: 'S-Rank', 
+      rank: 'S-Rank', 
       bonuses: [
-        { type: 'damage', values: ['1x'] }
+        { 
+          type: 'damage', 
+          valuesByRarity: [
+            { "rarity": "Common", "value": "1x" },
+            { "rarity": "Uncommon", "value": "1.5x" },
+            { "rarity": "Rare", "value": "2x" },
+            { "rarity": "Epic", "value": "2.5x" },
+            { "rarity": "Legendary", "value": "3x" },
+            { "rarity": "Mythic", "value": "3.5x" },
+            { "rarity": "Phantom", "value": "5x" },
+            { "rarity": "Supreme", "value": "7.5x" }
+          ] 
+        }
       ] 
     },
     { 
@@ -56,10 +80,24 @@ export const world11Data = {
       slot: 'Back',
       world: '11', 
       boss: 'Killas Godspeed', 
-      rarity: 'SS-Rank', 
+      rank: 'SS-Rank', 
       bonuses: [
-        { type: 'energy', values: ['1.5x'] }
+        { 
+          type: 'energy', 
+          valuesByRarity: [
+            { "rarity": "Common", "value": "1.5x" },
+            { "rarity": "Uncommon", "value": "2.25x" },
+            { "rarity": "Rare", "value": "3x" },
+            { "rarity": "Epic", "value": "3.75x" },
+            { "rarity": "Legendary", "value": "4.5x" },
+            { "rarity": "Mythic", "value": "5.25x" },
+            { "rarity": "Phantom", "value": "7.5x" },
+            { "rarity": "Supreme", "value": "11.25x" }
+          ] 
+        }
       ] 
     }
   ],
 };
+
+    

@@ -34,9 +34,21 @@ export const world19Data = {
       slot: 'Pant',
       world: '19', 
       boss: 'Diabo das Sombras', 
-      rarity: 'C', 
+      rank: 'C', 
       bonuses: [
-        { type: 'coin', values: ['0.133', '0.2x', '0.266x', '0.333x', '0.4x', '0.466x', '0.665x', '1x'] }
+        { 
+          type: 'coin', 
+          valuesByRarity: [
+            { "rarity": "Common", "value": "0.133" },
+            { "rarity": "Uncommon", "value": "0.2x" },
+            { "rarity": "Rare", "value": "0.266x" },
+            { "rarity": "Epic", "value": "0.333x" },
+            { "rarity": "Legendary", "value": "0.4x" },
+            { "rarity": "Mythic", "value": "0.466x" },
+            { "rarity": "Phantom", "value": "0.665x" },
+            { "rarity": "Supreme", "value": "1x" }
+          ]
+        }
       ]
     },
     { 
@@ -45,11 +57,47 @@ export const world19Data = {
       slot: 'Back',
       world: '19', 
       boss: 'Satan', 
-      rarity: 'S', 
+      rank: 'S', 
       bonuses: [
-        { type: 'energy', values: ['1.2x'] },
-        { type: 'damage', values: ['1.2x'] },
-        { type: 'exp', values: ['1.2x'] }
+        { 
+          type: 'energy', 
+          valuesByRarity: [
+            { "rarity": "Common", "value": "1.2x" },
+            { "rarity": "Uncommon", "value": "1.8x" },
+            { "rarity": "Rare", "value": "2.4x" },
+            { "rarity": "Epic", "value": "3x" },
+            { "rarity": "Legendary", "value": "3.6x" },
+            { "rarity": "Mythic", "value": "4.2x" },
+            { "rarity": "Phantom", "value": "6x" },
+            { "rarity": "Supreme", "value": "9x" }
+          ]
+        },
+        { 
+          type: 'damage', 
+          valuesByRarity: [
+            { "rarity": "Common", "value": "1.2x" },
+            { "rarity": "Uncommon", "value": "1.8x" },
+            { "rarity": "Rare", "value": "2.4x" },
+            { "rarity": "Epic", "value": "3x" },
+            { "rarity": "Legendary", "value": "3.6x" },
+            { "rarity": "Mythic", "value": "4.2x" },
+            { "rarity": "Phantom", "value": "6x" },
+            { "rarity": "Supreme", "value": "9x" }
+          ] 
+        },
+        { 
+          type: 'exp', 
+          valuesByRarity: [
+            { "rarity": "Common", "value": "1.2x" },
+            { "rarity": "Uncommon", "value": "1.8x" },
+            { "rarity": "Rare", "value": "2.4x" },
+            { "rarity": "Epic", "value": "3x" },
+            { "rarity": "Legendary", "value": "3.6x" },
+            { "rarity": "Mythic", "value": "4.2x" },
+            { "rarity": "Phantom", "value": "6x" },
+            { "rarity": "Supreme", "value": "9x" }
+          ]
+        }
       ] 
     },
     { 
@@ -58,10 +106,34 @@ export const world19Data = {
       slot: 'Head',
       world: '19', 
       boss: 'Satan', 
-      rarity: 'S', 
+      rank: 'S', 
       bonuses: [
-        { type: 'damage', values: ['1.5x'] },
-        { type: 'coin', values: ['1.5x'] }
+        { 
+          type: 'damage', 
+          valuesByRarity: [
+            { "rarity": "Common", "value": "1.5x" },
+            { "rarity": "Uncommon", "value": "2.25x" },
+            { "rarity": "Rare", "value": "3x" },
+            { "rarity": "Epic", "value": "3.75x" },
+            { "rarity": "Legendary", "value": "4.5x" },
+            { "rarity": "Mythic", "value": "5.25x" },
+            { "rarity": "Phantom", "value": "7.5x" },
+            { "rarity": "Supreme", "value": "11.25x" }
+          ]
+        },
+        { 
+          type: 'coin', 
+          valuesByRarity: [
+            { "rarity": "Common", "value": "1.5x" },
+            { "rarity": "Uncommon", "value": "2.25x" },
+            { "rarity": "Rare", "value": "3x" },
+            { "rarity": "Epic", "value": "3.75x" },
+            { "rarity": "Legendary", "value": "4.5x" },
+            { "rarity": "Mythic", "value": "5.25x" },
+            { "rarity": "Phantom", "value": "7.5x" },
+            { "rarity": "Supreme", "value": "11.25x" }
+          ]
+        }
       ]
     },
     { 
@@ -70,13 +142,63 @@ export const world19Data = {
       slot: 'Face',
       world: '19', 
       boss: 'Leonardo', 
-      rarity: 'SS', 
+      rank: 'SS', 
       bonuses: [
-        { type: 'energy', values: ['1.2x'] },
-        { type: 'damage', values: ['1.2x'] },
-        { type: 'coin', values: ['1.2x'] },
-        { type: 'exp', values: ['1.2x'] }
+        { 
+          type: 'energy', 
+          valuesByRarity: [
+            { "rarity": "Common", "value": "1.2x" },
+            { "rarity": "Uncommon", "value": "1.8x" },
+            { "rarity": "Rare", "value": "2.4x" },
+            { "rarity": "Epic", "value": "3x" },
+            { "rarity": "Legendary", "value": "3.6x" },
+            { "rarity": "Mythic", "value": "4.2x" },
+            { "rarity": "Phantom", "value": "6x" },
+            { "rarity": "Supreme", "value": "9x" }
+          ]
+        },
+        { 
+          type: 'damage', 
+          valuesByRarity: [
+            { "rarity": "Common", "value": "1.2x" },
+            { "rarity": "Uncommon", "value": "1.8x" },
+            { "rarity": "Rare", "value": "2.4x" },
+            { "rarity": "Epic", "value": "3x" },
+            { "rarity": "Legendary", "value": "3.6x" },
+            { "rarity": "Mythic", "value": "4.2x" },
+            { "rarity": "Phantom", "value": "6x" },
+            { "rarity": "Supreme", "value": "9x" }
+          ]
+        },
+        { 
+          type: 'coin', 
+          valuesByRarity: [
+            { "rarity": "Common", "value": "1.2x" },
+            { "rarity": "Uncommon", "value": "1.8x" },
+            { "rarity": "Rare", "value": "2.4x" },
+            { "rarity": "Epic", "value": "3x" },
+            { "rarity": "Legendary", "value": "3.6x" },
+            { "rarity": "Mythic", "value": "4.2x" },
+            { "rarity": "Phantom", "value": "6x" },
+            { "rarity": "Supreme", "value": "9x" }
+          ]
+        },
+        { 
+          type: 'exp', 
+          valuesByRarity: [
+            { "rarity": "Common", "value": "1.2x" },
+            { "rarity": "Uncommon", "value": "1.8x" },
+            { "rarity": "Rare", "value": "2.4x" },
+            { "rarity": "Epic", "value": "3x" },
+            { "rarity": "Legendary", "value": "3.6x" },
+            { "rarity": "Mythic", "value": "4.2x" },
+            { "rarity": "Phantom", "value": "6x" },
+            { "rarity": "Supreme", "value": "9x" }
+          ]
+        }
       ]
     }
   ],
 };
+
+    

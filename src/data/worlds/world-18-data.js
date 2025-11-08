@@ -46,10 +46,34 @@ export const world18Data = {
       slot: 'Leg',
       world: '18', 
       boss: 'Hero of Hell', 
-      rarity: 'D', 
+      rank: 'D', 
       bonuses: [
-        { type: 'damage', values: ['0.3', '0.45x', '0.6x', '0.75x', '0.9x', '1.05x', '2x', '2.25x'] },
-        { type: 'movespeed', values: ['13.3%', '20%', '26.6%', '33.3%', '40%', '46.6%', '66.5%', '100%'] }
+        { 
+          type: 'damage', 
+          valuesByRarity: [
+            { "rarity": "Common", "value": "0.3" },
+            { "rarity": "Uncommon", "value": "0.45x" },
+            { "rarity": "Rare", "value": "0.6x" },
+            { "rarity": "Epic", "value": "0.75x" },
+            { "rarity": "Legendary", "value": "0.9x" },
+            { "rarity": "Mythic", "value": "1.05x" },
+            { "rarity": "Phantom", "value": "2x" },
+            { "rarity": "Supreme", "value": "2.25x" }
+          ]
+        },
+        { 
+          type: 'movespeed', 
+          valuesByRarity: [
+            { "rarity": "Common", "value": "13.3%" },
+            { "rarity": "Uncommon", "value": "20%" },
+            { "rarity": "Rare", "value": "26.6%" },
+            { "rarity": "Epic", "value": "33.3%" },
+            { "rarity": "Legendary", "value": "40%" },
+            { "rarity": "Mythic", "value": "46.6%" },
+            { "rarity": "Phantom", "value": "66.5%" },
+            { "rarity": "Supreme", "value": "100%" }
+          ]
+        }
       ]
     }
   ],
@@ -62,3 +86,5 @@ export const world18Data = {
     }
   ]
 };
+
+    

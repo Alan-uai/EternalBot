@@ -34,10 +34,34 @@ export const world14Data = {
       slot: 'Neck',
       world: '14', 
       boss: 'Rei Mago', 
-      rarity: 'S-Rank', 
+      rank: 'S-Rank', 
       bonuses: [
-        { type: 'coin', values: ['0.5x', '0.75x', '1.x', '1.25x', '1.5x', '1.75x', '2.5x', '3.75x'] },
-        { type: 'exp', values: ['1%', '1.5%', '2%', '2.5%', '3%', '3.5%', '5%', '7.5%'] }
+        { 
+          type: 'coin', 
+          valuesByRarity: [
+            { "rarity": "Common", "value": "0.5x" },
+            { "rarity": "Uncommon", "value": "0.75x" },
+            { "rarity": "Rare", "value": "1.x" },
+            { "rarity": "Epic", "value": "1.25x" },
+            { "rarity": "Legendary", "value": "1.5x" },
+            { "rarity": "Mythic", "value": "1.75x" },
+            { "rarity": "Phantom", "value": "2.5x" },
+            { "rarity": "Supreme", "value": "3.75x" }
+          ] 
+        },
+        { 
+          type: 'exp', 
+          valuesByRarity: [
+            { "rarity": "Common", "value": "1%" },
+            { "rarity": "Uncommon", "value": "1.5%" },
+            { "rarity": "Rare", "value": "2%" },
+            { "rarity": "Epic", "value": "2.5%" },
+            { "rarity": "Legendary", "value": "3%" },
+            { "rarity": "Mythic", "value": "3.5%" },
+            { "rarity": "Phantom", "value": "5%" },
+            { "rarity": "Supreme", "value": "7.5%" }
+          ]
+        }
       ]
     },
     { 
@@ -46,13 +70,63 @@ export const world14Data = {
       slot: 'Head',
       world: '14', 
       boss: 'Rei Mago', 
-      rarity: 'S-Rank', 
+      rank: 'S-Rank', 
       bonuses: [
-          { type: 'energy', values: ['1x'] },
-          { type: 'damage', values: ['1x'] },
-          { type: 'coin', values: ['1x'] },
-          { type: 'exp', values: ['1x'] }
+          { 
+            type: 'energy', 
+            valuesByRarity: [
+                { "rarity": "Common", "value": "1x" },
+                { "rarity": "Uncommon", "value": "1.5x" },
+                { "rarity": "Rare", "value": "2x" },
+                { "rarity": "Epic", "value": "2.5x" },
+                { "rarity": "Legendary", "value": "3x" },
+                { "rarity": "Mythic", "value": "3.5x" },
+                { "rarity": "Phantom", "value": "5x" },
+                { "rarity": "Supreme", "value": "7.5x" }
+            ]
+          },
+          { 
+            type: 'damage', 
+            valuesByRarity: [
+                { "rarity": "Common", "value": "1x" },
+                { "rarity": "Uncommon", "value": "1.5x" },
+                { "rarity": "Rare", "value": "2x" },
+                { "rarity": "Epic", "value": "2.5x" },
+                { "rarity": "Legendary", "value": "3x" },
+                { "rarity": "Mythic", "value": "3.5x" },
+                { "rarity": "Phantom", "value": "5x" },
+                { "rarity": "Supreme", "value": "7.5x" }
+            ]
+          },
+          { 
+            type: 'coin', 
+            valuesByRarity: [
+                { "rarity": "Common", "value": "1x" },
+                { "rarity": "Uncommon", "value": "1.5x" },
+                { "rarity": "Rare", "value": "2x" },
+                { "rarity": "Epic", "value": "2.5x" },
+                { "rarity": "Legendary", "value": "3x" },
+                { "rarity": "Mythic", "value": "3.5x" },
+                { "rarity": "Phantom", "value": "5x" },
+                { "rarity": "Supreme", "value": "7.5x" }
+            ]
+          },
+          { 
+            type: 'exp', 
+            valuesByRarity: [
+                { "rarity": "Common", "value": "1x" },
+                { "rarity": "Uncommon", "value": "1.5x" },
+                { "rarity": "Rare", "value": "2x" },
+                { "rarity": "Epic", "value": "2.5x" },
+                { "rarity": "Legendary", "value": "3x" },
+                { "rarity": "Mythic", "value": "3.5x" },
+                { "rarity": "Phantom", "value": "5x" },
+                { "rarity": "Supreme", "value": "7.5x" }
+            ]
+          }
       ]
     }
   ],
 };
+
+    

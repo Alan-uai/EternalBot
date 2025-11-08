@@ -457,29 +457,40 @@
         "required": ["name"]
     },
     "Accessory": {
-        "title": "Accessory",
-        "type": "object",
-        "description": "Represents a wearable accessory dropped by a boss in a specific world.",
-        "properties": {
-            "id": { "type": "string", "description": "Unique identifier for the accessory." },
-            "name": { "type": "string", "description": "The name of the accessory." },
-            "slot": { "type": "string", "enum": ["Head", "Face", "Neck", "Back", "Waist", "Leg", "Pant"], "description": "The equipment slot for the accessory." },
-            "world": { "type": "string", "description": "The name of the world where the accessory drops." },
-            "boss": { "type": "string", "description": "The name of the boss that drops the accessory." },
-            "rarity": { "type": "string", "description": "The rarity of the accessory (e.g., C-Rank, S-Rank, SS-Rank)." },
-            "bonuses": {
-              "type": "array",
-              "description": "An array of bonus objects.",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "type": { "type": "string", "enum": ["energy", "damage", "coin", "exp", "movespeed"] },
-                  "values": { "type": "array", "items": { "type": "string" } }
+      "title": "Accessory",
+      "type": "object",
+      "description": "Represents a wearable accessory dropped by a boss in a specific world.",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "slot": { "type": "string", "enum": ["Head", "Face", "Neck", "Back", "Waist", "Leg", "Pant"] },
+        "world": { "type": "string" },
+        "boss": { "type": "string" },
+        "rank": { "type": "string", "description": "The rank of the boss that drops the accessory (e.g., 'S-Rank', 'SS-Rank')." },
+        "bonuses": {
+          "type": "array",
+          "description": "An array of different bonus types the accessory can provide.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["energy", "damage", "coin", "exp", "movespeed"] },
+              "valuesByRarity": {
+                "type": "array",
+                "description": "A list of bonus values, explicitly linked to their rarity.",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "rarity": { "type": "string", "enum": ["Common", "Uncommon", "Rare", "Epic", "Legendary", "Mythic", "Phantom", "Supreme"] },
+                    "value": { "type": "string" }
+                  },
+                  "required": ["rarity", "value"]
                 }
               }
             }
-        },
-        "required": ["id", "name", "world"]
+          }
+        }
+      },
+      "required": ["id", "name", "world"]
     },
     "Shadow": {
       "title": "Shadow",
@@ -842,3 +853,5 @@
     "reasoning": "The Firestore structure is organized with 'worlds' as the top-level collection to logically separate game content. Each world document contains sub-collections for 'powers', 'npcs', 'pets', 'dungeons', 'accessories', 'shadows' and 'stands', creating a hierarchical and scalable data model. This allows for efficient querying of specific game data. For example, to get all shadows for 'World 7', you query the '/worlds/world7/shadows' sub-collection. A new top-level collection 'achievements' is added to store all game achievements, which is separate from world-specific data."
   }
 }
+
+    

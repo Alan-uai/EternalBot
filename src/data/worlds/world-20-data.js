@@ -27,12 +27,50 @@ export const world20Data = {
       slot: 'Neck',
       world: '20', 
       boss: 'Forças Especiais Ginyu', 
-      rarity: 'D-Rank', 
+      rank: 'D-Rank', 
       bonuses: [
-        { type: 'damage', values: ['0.133x', '0.2x', '0.266x', '0.333x', '0.4x', '0.466x', '0.665x', '1x'] },
-        { type: 'coin', values: ['0.6x', '0.9x', '1.2x', '1.5x', '1.8x', '2.1x', '3x', '4.5x'] },
-        { type: 'exp', values: ['2%', '3%', '4%', '5%', '6%', '7%', '10%', '15%'] }
+        { 
+          type: 'damage', 
+          valuesByRarity: [
+            { "rarity": "Common", "value": "0.133x" },
+            { "rarity": "Uncommon", "value": "0.2x" },
+            { "rarity": "Rare", "value": "0.266x" },
+            { "rarity": "Epic", "value": "0.333x" },
+            { "rarity": "Legendary", "value": "0.4x" },
+            { "rarity": "Mythic", "value": "0.466x" },
+            { "rarity": "Phantom", "value": "0.665x" },
+            { "rarity": "Supreme", "value": "1x" }
+          ]
+        },
+        { 
+          type: 'coin', 
+          valuesByRarity: [
+            { "rarity": "Common", "value": "0.6x" },
+            { "rarity": "Uncommon", "value": "0.9x" },
+            { "rarity": "Rare", "value": "1.2x" },
+            { "rarity": "Epic", "value": "1.5x" },
+            { "rarity": "Legendary", "value": "1.8x" },
+            { "rarity": "Mythic", "value": "2.1x" },
+            { "rarity": "Phantom", "value": "3x" },
+            { "rarity": "Supreme", "value": "4.5x" }
+          ]
+        },
+        { 
+          type: 'exp', 
+          valuesByRarity: [
+            { "rarity": "Common", "value": "2%" },
+            { "rarity": "Uncommon", "value": "3%" },
+            { "rarity": "Rare", "value": "4%" },
+            { "rarity": "Epic", "value": "5%" },
+            { "rarity": "Legendary", "value": "6%" },
+            { "rarity": "Mythic", "value": "7%" },
+            { "rarity": "Phantom", "value": "10%" },
+            { "rarity": "Supreme", "value": "15%" }
+          ]
+        }
       ]
     }
   ],
 };
+
+    
