@@ -43,6 +43,14 @@ export const championsIndexArticle = {
         { World: 23, Common: 'Pet Comum (1.68B)', Uncommon: 'Pet Incomum (3.43B)', Rare: 'Pet Raro (5.12B)', Epic: 'Pet Épico (6.87B)', Legendary: 'Pet Lendário (8.75B)', Mythic: 'Pet Mítico (11.2B)', Phantom: 'Pet Phantom (25.6B)', Supreme: 'Pet Supremo (38.1B)' },
         { World: 24, Common: 'Pet Comum (4.21B)', Uncommon: 'Pet Incomum (8.59B)', Rare: 'Pet Raro (12.8B)', Epic: 'Pet Épico (17.1B)', Legendary: 'Pet Lendário (21.8B)', Mythic: 'Pet Mítico (28.1B)', Phantom: 'Pet Phantom (64B)', Supreme: 'Pet Supremo (95.3B)' },
       ]
+    },
+    world25_32: {
+        rows: [
+            { World: 25, Common: 'Pet Comum (10.5B)', Uncommon: 'Pet Incomum (21B)', Rare: 'Pet Raro (31.6B)', Epic: 'Pet Épico (42.9B)', Legendary: 'Pet Lendário (54.6B)', Mythic: 'Pet Mítico (70.3B)', Phantom: 'Pet Phantom (160B)', Supreme: 'Pet Supremo (238B)' },
+            { World: 26, Common: 'Pet Comum (26.3B)', Uncommon: 'Pet Incomum (53.7B)', Rare: 'Pet Raro (80B)', Epic: 'Pet Épico (107B)', Legendary: 'Pet Lendário (136B)', Mythic: 'Pet Mítico (175B)', Phantom: 'Pet Phantom (400B)', Supreme: 'Pet Supremo (595B)' },
+        ]
     }
   },
 };
+
+    
