@@ -10,14 +10,14 @@ export const championsIndexArticle = {
   tables: {
     world1_8: {
       rows: [
-        { World: 1, Common: '3', Uncommon: '6', Rare: '9', Epic: '12', Legendary: '15', Mythic: '20', Phantom: '45' },
-        { World: 2, Common: '8', Uncommon: '15', Rare: '23', Epic: '30', Legendary: '38', Mythic: '50', Phantom: '113' },
-        { World: 3, Common: '19', Uncommon: '38', Rare: '56', Epic: '75', Legendary: '94', Mythic: '125', Phantom: '281' },
-        { World: 4, Common: '47', Uncommon: '94', Rare: '141', Epic: '188', Legendary: '234', Mythic: '313', Phantom: '703' },
-        { World: 5, Common: '117', Uncommon: '234', Rare: '352', Epic: '469', Legendary: '596', Mythic: '781', Phantom: '1.75k' },
-        { World: 6, Common: '293', Uncommon: '586', Rare: '879', Epic: '1.17k', Legendary: '1.46k', Mythic: '1.95k', Phantom: '4.39k' },
-        { World: 7, Common: '732', Uncommon: '1.46k', Rare: '2.19k', Epic: '2.93k', Legendary: '3.66k', Mythic: '4.88k', Phantom: '10.9k' },
-        { World: 8, Common: '1.83k', Uncommon: '3.66k', Rare: '5.49k', Epic: '7.32k', Legendary: '9.15k', Mythic: '12.2k', Phantom: '27.4k' },
+        { World: 1, Common: 'Kriluni', Uncommon: 'Ymicha', Rare: 'Tian Shan', Epic: 'Kohan', Legendary: 'Picco', Mythic: 'Koku', Phantom: 'Kid Kohan' },
+        { World: 2, Common: 'Nomi', Uncommon: 'Usup', Rare: 'Robins', Epic: 'Senji', Legendary: 'Zaro', Mythic: 'Loffy', Phantom: 'Shanks' },
+        { World: 3, Common: 'Hime', Uncommon: 'Ichige', Rare: 'Uryua', Epic: 'Rakiu', Legendary: 'Yoichi', Mythic: 'Kahara', Phantom: 'Eizen' },
+        { World: 4, Common: 'Itodo', Uncommon: 'Nebara', Rare: 'Magum', Epic: 'Meki', Legendary: 'Tage', Mythic: 'Gajo', Phantom: 'Sakuni' },
+        { World: 5, Common: 'Nazuki', Uncommon: 'Tenjaro', Rare: 'Zentsu', Epic: 'Insake', Legendary: 'Tamoka', Mythic: 'Shinabe', Phantom: 'Rangaki' },
+        { World: 6, Common: 'Pedrinha', Uncommon: 'Golem Pequeno', Rare: 'Estátua Viva', Epic: 'N/A', Legendary: 'N/A', Mythic: 'N/A', Phantom: 'N/A' },
+        { World: 7, Common: 'Ampulheta', Uncommon: 'Relógio de Bolso', Rare: 'Paradoxo Encapsulado', Epic: 'N/A', Legendary: 'N/A', Mythic: 'N/A', Phantom: 'N/A' },
+        { World: 8, Common: 'Sapo', Uncommon: 'Lesma', Rare: 'Cobra', Epic: 'N/A', Legendary: 'N/A', Mythic: 'N/A', Phantom: 'Itechi/Madera' },
       ],
     },
   },
