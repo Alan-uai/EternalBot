@@ -70,6 +70,29 @@ export const world4Data = {
   dungeons: [
       { name: 'Cursed Raid', boss: 'Desconhecido', description: 'Uma raid onde se obtém os poderes Curses e Cursed Power.'}
   ],
+  obelisks: [
+    {
+      id: 'sorcerer-obelisk',
+      name: 'Sorcerer Obelisk',
+      description: 'Um obelisco que fornece bônus permanentes após completar uma missão.',
+      mission: {
+        name: 'Missão #1',
+        requirement: 'Derrotar Sakuni 10 vezes.',
+        rewards: [
+          { name: 'Obelisk Part', amount: 1 },
+          { name: 'Star Luck', amount: '5%' },
+          { name: 'Exp', amount: '12k' },
+          { name: 'Avatar Soul', amount: 100 },
+          { name: 'Energy Potion', amount: 1 }
+        ]
+      },
+      boosts: [
+        { type: 'Energy Multiply', value: '0.15x' },
+        { type: 'Damage Multiply', value: '0.25x' },
+        { type: 'Exp Percent', value: '3.5%' }
+      ]
+    }
+  ],
   missions: [
     {
         name: 'Missão #1',
@@ -111,7 +134,6 @@ export const world4Data = {
         name: 'Missão #5',
         requirement: 'Derrotar 10 Tage',
         rewards: [
-            { name: 'Avatar Soul', amount: 5 },
             { name: 'Cursed Token', amount: 10 },
             { name: 'World Key', amount: 1 },
             { name: 'Luck Percent', value: '4%' },
