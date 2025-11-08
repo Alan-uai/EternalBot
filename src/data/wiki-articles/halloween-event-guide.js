@@ -66,8 +66,7 @@ Existem dois tipos de zumbis no jogo. Os de Energia são exclusivos do evento de
       name: 'Imp Tail',
       slot: 'Waist',
       world: '1',
-      npc: 'Halloween Raid',
-      rank: 'Evento',
+      raid: 'Halloween Raid',
       bonuses: [
         {
           type: 'damage',
