@@ -8,7 +8,44 @@ export const world24Data = {
     { name: 'Anz Ool Gawn', rank: 'SSS', exp: 0, hp: '4.14dQGNT', videoUrl: 'https://cdn.discordapp.com/attachments/1430337273794265250/1430340009541763184/ScreenRecording_10-18-2025_08-56-23_1.mov?ex=68fa1430&is=68f8c2b0&hm=ec3ebdf9aed49253605c11f52d55c69ede9c67bfc3b376cc190570e0de358b0c&', drops: {} },
   ],
   pets: [],
-  powers: [],
+  powers: [
+    {
+        name: 'Adventurer Rank',
+        type: 'progression',
+        statType: 'mixed',
+        unlockCost: '5k Exchange Coins 2'
+    },
+    {
+        name: 'Magic Tier',
+        type: 'gacha',
+        statType: 'mixed',
+        unlockCost: '5k Exchange Coins 2'
+    },
+    {
+        name: 'Mana Growth',
+        type: 'progression',
+        statType: 'energy',
+        unlockCost: '5k Exchange Coins 2'
+    },
+    {
+        name: 'Ultimate Cast',
+        type: 'progression',
+        statType: 'damage',
+        unlockCost: '5k Exchange Coins 2'
+    },
+    {
+        name: 'Adventurer Rank Leveling',
+        type: 'progression',
+        statType: 'mixed',
+        unlockCost: '5k Exchange Coins 2'
+    },
+    {
+        name: 'Magic Tier Leveling',
+        type: 'progression',
+        statType: 'mixed',
+        unlockCost: '5k Exchange Coins 2'
+    }
+  ],
   dungeons: [
     { name: 'Tomb Arena Raid', boss: 'Jalbathar', description: 'Uma raid desafiadora em uma arena antiga.'}
   ],

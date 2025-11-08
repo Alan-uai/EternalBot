@@ -8,7 +8,32 @@ export const world23Data = {
         { name: 'Galaxy Hunter', rank: 'SSS', exp: 0, hp: '871NQQDR', videoUrl: 'https://cdn.discordapp.com/attachments/1430337273794265250/1430339564265934898/ScreenRecording_10-21-2025_11-12-56_1.mov?ex=68fa13c6&is=68f8c246&hm=2c9b75ae8de13592e0ad17bdaa5da6ef69c3554732d304ab1909771a90c79ad4&', drops: {} },
     ],
     pets: [],
-    powers: [],
+    powers: [
+        {
+            name: 'Energy Threat Level',
+            type: 'progression',
+            statType: 'energy',
+            unlockCost: '5k Exchange Coins 2'
+        },
+        {
+            name: 'Punch Power',
+            type: 'gacha',
+            statType: 'damage',
+            unlockCost: '5k Exchange Coins 2'
+        },
+        {
+            name: 'Energy Threat Leveling',
+            type: 'progression',
+            statType: 'energy',
+            unlockCost: '5k Exchange Coins 2'
+        },
+        {
+            name: 'Punch Power Leveling',
+            type: 'progression',
+            statType: 'damage',
+            unlockCost: '5k Exchange Coins 2'
+        }
+    ],
     dungeons: [],
     accessories: [
         { 

@@ -28,5 +28,41 @@ export const world21Data = {
         { name: 'Resurrección: Segunda Etapa', multiplier: '20x', rarity: 'Phantom', probability: 0.02 },
       ],
     },
+    {
+        name: 'Scythes',
+        type: 'progression',
+        statType: 'damage',
+        unlockCost: '2.5k Exchange Coins 2',
+    },
+    {
+        name: 'Scythes Evolve',
+        type: 'progression',
+        statType: 'damage',
+        unlockCost: '3k Exchange Coins 2',
+    },
+    {
+        name: 'Scythes Evolve 2',
+        type: 'progression',
+        statType: 'damage',
+        unlockCost: '4k Exchange Coins 2',
+    },
+    {
+        name: 'Scythes Evolve 3',
+        type: 'progression',
+        statType: 'damage',
+        unlockCost: '5k Exchange Coins 2',
+    },
+    {
+        name: 'Bankai',
+        type: 'progression',
+        statType: 'damage',
+        unlockCost: '6k Exchange Coins 2',
+    },
+    {
+        name: 'Espada',
+        type: 'progression',
+        statType: 'energy',
+        unlockCost: '2k Exchange Coins 2',
+    },
   ],
 };

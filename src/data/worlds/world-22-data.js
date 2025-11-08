@@ -8,7 +8,44 @@ export const world22Data = {
     { name: 'Shadow', rank: 'SSS', exp: 0, hp: '305QnQDR', videoUrl: 'https://cdn.discordapp.com/attachments/1430337273794265250/1430339471680733245/ScreenRecording_10-21-2025_11-11-00_1.mov?ex=68fa13b0&is=68f8c230&hm=d7c9a2f290d181b637bead0f162ef94bc0cdbfbcd16d724752e24784e90ef541&', drops: {} },
   ],
   pets: [],
-  powers: [],
+  powers: [
+    {
+      name: 'Shadow Garden',
+      type: 'progression',
+      statType: 'energy',
+      unlockCost: '5k Exchange Coins 2'
+    },
+    {
+      name: 'Shadow Arts',
+      type: 'progression',
+      statType: 'damage',
+      unlockCost: '5k Exchange Coins 2'
+    },
+    {
+      name: 'Eminence Energy',
+      type: 'progression',
+      statType: 'energy',
+      unlockCost: '5k Exchange Coins 2'
+    },
+    {
+      name: 'Eminence Damage',
+      type: 'progression',
+      statType: 'damage',
+      unlockCost: '5k Exchange Coins 2'
+    },
+    {
+      name: 'Eminence Luck',
+      type: 'progression',
+      statType: 'luck',
+      unlockCost: '5k Exchange Coins 2'
+    },
+    {
+      name: 'Eminence Coins',
+      type: 'progression',
+      statType: 'coin',
+      unlockCost: '5k Exchange Coins 2'
+    }
+  ],
   dungeons: [],
   accessories: [
     { 
