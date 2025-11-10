@@ -5,31 +5,15 @@ import { getRaidTimings } from '../utils/raidTimings.js'; // Importa a lógica d
 
 const PANEL_DOC_ID = 'raidPanel';
 const PERSISTENT_WEBHOOK_NAME = 'Painel de Status das Raids';
-const RAID_AVATAR_PREFIXES = {
-    'Easy': 'Easy',
-    'Medium': 'Med',
-    'Hard': 'Hd',
-    'Insane': 'Isne',
-    'Crazy': 'Czy',
-    'Nightmare': 'Mare',
-    'Leaf Raid': 'Lf'
-};
 
 async function getRaidStatusPanelData(container) {
     const { services } = container;
     const { assetService } = services;
     
     // Usa a lógica de tempo unificada para obter os status
-    const { statuses, nextRaid } = getRaidTimings();
+    const { statuses } = getRaidTimings();
     
-    let gifUrl = null;
-    if (nextRaid && assetService) {
-        // Busca o GIF da próxima raid
-        const assetPrefix = RAID_AVATAR_PREFIXES[nextRaid.raidId] || 'Easy';
-        gifUrl = await assetService.getAsset(`${assetPrefix}PR`); 
-    }
-
-    return { statuses, gifUrl };
+    return { statuses };
 }
 
 export const name = 'raidPanelManager';
@@ -61,12 +45,11 @@ export async function run(container) {
         
         const webhookClient = new WebhookClient({ url: webhookUrl });
 
-        const { statuses, gifUrl } = await getRaidStatusPanelData(container);
+        const { statuses } = await getRaidStatusPanelData(container);
         
         const avatarUrl = assetService ? await assetService.getAsset('DungeonLobby') : client.user.displayAvatarURL();
 
         const embed = new EmbedBuilder()
-            .setImage(gifUrl || null) // Usa a URL do GIF aqui
             .setColor(0x2F3136)
             .setAuthor({ name: '🗺️ Painel de Status das Raids do Lobby' })
             .setDescription(`*Atualizado <t:${Math.floor(Date.now() / 1000)}:R>*`)

@@ -41,6 +41,7 @@ async function handleRaidLifecycle(container) {
 
         let announcerState = announcerDoc.data() || { state: 'finished' };
         const assetPrefix = RAID_AVATAR_PREFIXES[nextRaid?.raidId || currentRaid?.raidId] || 'Easy';
+        const activeRaidDetails = currentRaid?.raid || nextRaid?.raid;
 
         // --- Lógica de Transição ---
         if (announcerState.state?.startsWith('transition_')) {
@@ -49,6 +50,14 @@ async function handleRaidLifecycle(container) {
             // 1. Edita a mensagem com o GIF de transição
             const transitionGif = await assetService.getAsset(`Tran${assetPrefix}${targetState === 'open' ? 'A' : (targetState === 'starting_soon' ? '5m' : (targetState === 'closing_soon' ? 'F' : 'PR'))}`);
             const transitionEmbed = new EmbedBuilder().setColor(0x2F3136).setImage(transitionGif);
+             if (activeRaidDetails) {
+                 transitionEmbed.addFields(
+                    { name: 'Dificuldade', value: activeRaidDetails['Dificuldade'], inline: true },
+                    { name: 'Vida do Chefe', value: `\`${activeRaidDetails['Vida Último Boss']}\``, inline: true },
+                    { name: 'Dano Recomendado', value: `\`${activeRaidDetails['Dano Recomendado']}\``, inline: true },
+                    { name: 'Entrar no Jogo', value: `**[Clique aqui para ir para o jogo](${config.GAME_LINK})**` }
+                );
+             }
             
             try {
                 if (announcerState.messageId) {
@@ -93,6 +102,12 @@ async function handleRaidLifecycle(container) {
                 
                 const gifUrl = await assetService.getAsset(`${assetPrefix}F`);
                 const closingEmbed = new EmbedBuilder().setImage(gifUrl).setColor(0x000000).setDescription('O portal está fechando!').setFooter({ text: 'Contagem regressiva final!' });
+                 closingEmbed.addFields(
+                    { name: 'Dificuldade', value: raidId, inline: true },
+                    { name: 'Vida do Chefe', value: `\`${raid['Vida Último Boss']}\``, inline: true },
+                    { name: 'Dano Recomendado', value: `\`${raid['Dano Recomendado']}\``, inline: true },
+                    { name: 'Entrar no Jogo', value: `**[Clique aqui para ir para o jogo](${config.GAME_LINK})**` }
+                );
 
                 try {
                     await webhookClient.editMessage(announcerState.messageId, { embeds: [closingEmbed] });
@@ -115,7 +130,7 @@ async function handleRaidLifecycle(container) {
             }
 
         } else if (nextRaid) {
-            const { raidId, fiveMinuteMark } = nextRaid;
+            const { raid, raidId, fiveMinuteMark } = nextRaid;
             const isDifferentRaid = announcerState.raidId !== raidId || announcerState.state === 'finished';
 
             if (announcerState.state === 'next_up' && Date.now() >= fiveMinuteMark) {
@@ -129,6 +144,13 @@ async function handleRaidLifecycle(container) {
                 await webhookClient.edit({ name: `Fique Ligado!`, avatar: fiveMinAvatar });
                 const gifUrl = await assetService.getAsset(`${assetPrefix}5m`);
                 const embed = new EmbedBuilder().setImage(gifUrl).setColor(0xFFA500).setDescription('A próxima raid começa em 5 minutos! Prepare-se!');
+                 embed.addFields(
+                    { name: 'Dificuldade', value: raidId, inline: true },
+                    { name: 'Vida do Chefe', value: `\`${raid['Vida Último Boss']}\``, inline: true },
+                    { name: 'Dano Recomendado', value: `\`${raid['Dano Recomendado']}\``, inline: true },
+                    { name: 'Entrar no Jogo', value: `**[Clique aqui para ir para o jogo](${config.GAME_LINK})**` }
+                );
+
                 await webhookClient.editMessage(announcerState.messageId, { embeds: [embed] }).catch(e => logger.error(`[${raidId}] Falha ao editar mensagem para 5min: ${e.message}`));
                 logger.info(`[${raidId}] Anúncio de 5 MINUTOS enviado.`);
 
@@ -137,6 +159,12 @@ async function handleRaidLifecycle(container) {
                 await webhookClient.edit({ name: `Jajá Vem Aí!`, avatar: nextAvatar });
                 const gifUrl = await assetService.getAsset(`${assetPrefix}PR`);
                 const embed = new EmbedBuilder().setImage(gifUrl).setColor(0x2F3136).setDescription('Preparando para o próximo ciclo de raids...');
+                 embed.addFields(
+                    { name: 'Dificuldade', value: raidId, inline: true },
+                    { name: 'Vida do Chefe', value: `\`${raid['Vida Último Boss']}\``, inline: true },
+                    { name: 'Dano Recomendado', value: `\`${raid['Dano Recomendado']}\``, inline: true },
+                    { name: 'Entrar no Jogo', value: `**[Clique aqui para ir para o jogo](${config.GAME_LINK})**` }
+                );
 
                 let message;
                 if (announcerState.messageId && announcerState.state !== 'finished') {
