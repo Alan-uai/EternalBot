@@ -99,11 +99,13 @@ async function handleRaidLifecycle(container) {
         const transitionMap = {
             'starting_soon': '5m',
             'open': 'A',
-            'closing_soon': 'F',
+            // 'closing_soon' removido daqui para não ter transição
             'next_up': 'PR'
         };
         const transitionSuffix = transitionMap[desiredState];
         
+        let messageForEditingId = null;
+
         if (transitionSuffix) {
             const transitionGif = await assetService.getAsset(`Tran${assetPrefix}${transitionSuffix}`);
             const transitionEmbed = new EmbedBuilder().setColor(0x2F3136).setImage(transitionGif);
@@ -121,7 +123,7 @@ async function handleRaidLifecycle(container) {
                 username: "Carregando Status...",
                 wait: true 
             });
-            await updateDoc(announcerRef, { messageId: transitionMsg.id });
+            messageForEditingId = transitionMsg.id;
             await sleep(10000); // Aguarda 10 segundos
         }
 
@@ -165,13 +167,11 @@ async function handleRaidLifecycle(container) {
             wait: true
         };
 
-        // Pega o ID da mensagem de transição (se houver) para editá-la
-        const currentMessageId = (await getDoc(announcerRef)).data().messageId;
         let finalMessage;
-        if(currentMessageId) {
-            finalMessage = await webhookClient.editMessage(currentMessageId, messagePayload);
+        if(messageForEditingId) {
+            finalMessage = await webhookClient.editMessage(messageForEditingId, messagePayload);
         } else {
-            // Caso raro onde a mensagem de transição não existe
+            // Caso não tenha havido transição (ex: closing_soon), envia uma nova mensagem
             finalMessage = await webhookClient.send(messagePayload);
         }
         
