@@ -4,7 +4,7 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { getRaidTimings } from '../utils/raidTimings.js'; // Importa a lógica de tempo unificada
 
 const PANEL_DOC_ID = 'raidPanel';
-const PERSISTENT_WEBHOOK_NAME = 'Painel de Status das Raids';
+const PERSISTENT_WEBHOOK_NAME = 'Status das Dungeons';
 
 async function getRaidStatusPanelData(container) {
     const { services } = container;

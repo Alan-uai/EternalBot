@@ -105,14 +105,16 @@ async function handleRaidLifecycle(container) {
              }
 
             let msg;
+            const payload = { embeds: [transitionEmbed], content: '', username: PERSISTENT_WEBHOOK_NAME };
+
             if (announcerState.messageId) {
                 try {
-                    msg = await webhookClient.editMessage(announcerState.messageId, { embeds: [transitionEmbed], content: '' });
+                    msg = await webhookClient.editMessage(announcerState.messageId, payload);
                 } catch(e) {
-                     msg = await webhookClient.send({ embeds: [transitionEmbed], wait: true });
+                     msg = await webhookClient.send({ ...payload, wait: true });
                 }
             } else {
-                msg = await webhookClient.send({ embeds: [transitionEmbed], wait: true });
+                msg = await webhookClient.send({ ...payload, wait: true });
             }
             await updateDoc(announcerRef, { messageId: msg.id, raidId: raidId }); // Salva o ID da mensagem de transição
             
@@ -158,19 +160,22 @@ async function handleRaidLifecycle(container) {
             );
         }
 
-        const messagePayload = { embeds: finalEmbed ? [finalEmbed] : [], content: finalContent };
+        const messagePayload = {
+            username: finalWebhookName,
+            embeds: finalEmbed ? [finalEmbed] : [],
+            content: finalContent,
+        };
         let finalMessage;
         const currentMessageId = (await getDoc(announcerRef)).data().messageId;
 
         if (currentMessageId) {
             try {
-                await webhookClient.edit({ name: finalWebhookName });
                 finalMessage = await webhookClient.editMessage(currentMessageId, messagePayload);
             } catch (e) {
-                finalMessage = await webhookClient.send({ ...messagePayload, username: finalWebhookName, wait: true });
+                finalMessage = await webhookClient.send({ ...messagePayload, wait: true });
             }
         } else {
-            finalMessage = await webhookClient.send({ ...messagePayload, username: finalWebhookName, wait: true });
+            finalMessage = await webhookClient.send({ ...messagePayload, wait: true });
         }
         
         await updateDoc(announcerRef, { state: desiredState, raidId: raidId, messageId: finalMessage.id, startTimeMs: currentRaid?.startTimeMs || null });
