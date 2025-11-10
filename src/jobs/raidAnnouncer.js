@@ -40,8 +40,8 @@ async function handleRaidLifecycle(container) {
         const webhookClient = new WebhookClient({ url: webhookUrl });
 
         let announcerState = announcerDoc.data() || { state: 'finished' };
-        const assetPrefix = RAID_AVATAR_PREFIXES[nextRaid?.raidId || currentRaid?.raidId] || 'Easy';
         const activeRaidDetails = currentRaid?.raid || nextRaid?.raid;
+        const assetPrefix = RAID_AVATAR_PREFIXES[activeRaidDetails?.Dificuldade] || 'Easy';
 
         // --- Lógica de Transição ---
         if (announcerState.state?.startsWith('transition_')) {
@@ -73,7 +73,7 @@ async function handleRaidLifecycle(container) {
 
             // 3. Atualiza o estado para o estado final e permite que o próximo ciclo processe o estado real
             await updateDoc(announcerRef, { state: targetState });
-            logger.info(`[${announcerState.raidId}] Transição para '${targetState}' concluída.`);
+            logger.info(`[${activeRaidDetails?.Dificuldade}] Transição para '${targetState}' concluída.`);
             return; // Termina este ciclo para o próximo tratar o novo estado
         }
 
@@ -96,10 +96,7 @@ async function handleRaidLifecycle(container) {
                     return; // Sai para o próximo ciclo fazer a transição
                 }
             } else if (announcerState.state === 'closing_soon') {
-                // Apenas exibe o estado final de fechamento
-                const closingAvatar = await assetService.getAsset(`${assetPrefix}F`);
-                await webhookClient.edit({ name: `Corra! Falta Pouco`, avatar: closingAvatar });
-                
+                await webhookClient.edit({ name: 'Corra! Falta Pouco' });
                 const gifUrl = await assetService.getAsset(`${assetPrefix}F`);
                 const closingEmbed = new EmbedBuilder().setImage(gifUrl).setColor(0x000000).setDescription('O portal está fechando!').setFooter({ text: 'Contagem regressiva final!' });
                  closingEmbed.addFields(
@@ -108,17 +105,11 @@ async function handleRaidLifecycle(container) {
                     { name: 'Dano Recomendado', value: `\`${raid['Dano Recomendado']}\``, inline: true },
                     { name: 'Entrar no Jogo', value: `**[Clique aqui para ir para o jogo](${config.GAME_LINK})**` }
                 );
-
-                try {
-                    await webhookClient.editMessage(announcerState.messageId, { embeds: [closingEmbed] });
-                } catch(e) {
-                     logger.error(`[${raidId}] Falha ao editar mensagem para 10s: ${e.message}`);
-                }
+                try { await webhookClient.editMessage(announcerState.messageId, { embeds: [closingEmbed] }); } 
+                catch(e) { logger.error(`[${raidId}] Falha ao editar mensagem para 10s: ${e.message}`); }
                 logger.info(`[${raidId}] Anúncio de FECHANDO EM 10S enviado.`);
-                // O estado de 'finished' será tratado no próximo ciclo quando currentRaid for null
             } else if (isNewCycle) {
-                 const openAvatar = await assetService.getAsset(`${assetPrefix}A`);
-                 await webhookClient.edit({ name: `Ela Chegou 🥳🎉`, avatar: openAvatar });
+                 await webhookClient.edit({ name: 'Ela Chegou 🥳🎉' });
                  const gifUrl = await assetService.getAsset(`${assetPrefix}A`);
                  const embed = new EmbedBuilder().setImage(gifUrl).setColor(0xFF4B4B).setDescription('A raid está aberta! Entre agora!').addFields({ name: 'Dificuldade', value: raidId, inline: true }, { name: 'Vida do Chefe', value: `\`${raid['Vida Último Boss']}\``, inline: true }, { name: 'Dano Recomendado', value: `\`${raid['Dano Recomendado']}\``, inline: true }, { name: 'Entrar no Jogo', value: `**[Clique aqui para ir para o jogo](${config.GAME_LINK})**` }).setTimestamp(startTimeMs).setFooter({ text: 'O portal fechará em 2 minutos.' });
                 
@@ -128,65 +119,47 @@ async function handleRaidLifecycle(container) {
                  await setDoc(announcerRef, { state: 'open', raidId, messageId: message.id, startTimeMs, webhookUrl: webhookClient.url }, { merge: true });
                  logger.info(`[${raidId}] Anúncio de RAID ABERTA enviado.`);
             }
-
-        } else if (nextRaid) {
-            const { raid, raidId, fiveMinuteMark } = nextRaid;
-            const isDifferentRaid = announcerState.raidId !== raidId || announcerState.state === 'finished';
-
-            if (announcerState.state === 'next_up' && Date.now() >= fiveMinuteMark) {
-                 await updateDoc(announcerRef, { state: 'transition_to_starting_soon' });
-                 logger.info(`[${raidId}] Iniciando transição para 5 MINUTOS.`);
-                 return; // Sai para o próximo ciclo fazer a transição
+        // Se NENHUMA raid está ativa agora
+        } else {
+             // 1. Se o estado atual NÃO é 'finished', significa que um ciclo acabou. Limpe tudo.
+            if (announcerState.state !== 'finished') {
+                const timeSinceStart = Date.now() - (announcerState.startTimeMs || 0);
+                if (timeSinceStart > (PORTAL_OPEN_DURATION_SECONDS * 1000) + 11000) { // 2m + 11s de margem
+                    logger.info(`[${announcerState.raidId}] Ciclo da raid finalizado. Limpando e preparando para o próximo.`);
+                    if (announcerState.messageId) {
+                        await webhookClient.deleteMessage(announcerState.messageId).catch(e => logger.warn(`[${announcerState.raidId}] Não foi possível deletar a mensagem final: ${e.message}`));
+                    }
+                    await updateDoc(announcerRef, { state: 'finished', messageId: null, raidId: null });
+                    return; // Finaliza o ciclo para a próxima execução já pegar o estado 'finished'.
+                }
+                 return; // Se ainda não passou o tempo de segurança, não faz nada e espera o próximo ciclo.
             }
             
-            if (announcerState.state === 'starting_soon') {
-                const fiveMinAvatar = await assetService.getAsset(`${assetPrefix}5m`);
-                await webhookClient.edit({ name: `Fique Ligado!`, avatar: fiveMinAvatar });
-                const gifUrl = await assetService.getAsset(`${assetPrefix}5m`);
-                const embed = new EmbedBuilder().setImage(gifUrl).setColor(0xFFA500).setDescription('A próxima raid começa em 5 minutos! Prepare-se!');
-                 embed.addFields(
-                    { name: 'Dificuldade', value: raidId, inline: true },
-                    { name: 'Vida do Chefe', value: `\`${raid['Vida Último Boss']}\``, inline: true },
-                    { name: 'Dano Recomendado', value: `\`${raid['Dano Recomendado']}\``, inline: true },
-                    { name: 'Entrar no Jogo', value: `**[Clique aqui para ir para o jogo](${config.GAME_LINK})**` }
-                );
+            // 2. Se o estado é 'finished' E existe uma próxima raid agendada
+            if (nextRaid) {
+                const { raid, raidId, fiveMinuteMark } = nextRaid;
 
-                await webhookClient.editMessage(announcerState.messageId, { embeds: [embed] }).catch(e => logger.error(`[${raidId}] Falha ao editar mensagem para 5min: ${e.message}`));
-                logger.info(`[${raidId}] Anúncio de 5 MINUTOS enviado.`);
-
-            } else if (isDifferentRaid) {
-                const nextAvatar = await assetService.getAsset(`${assetPrefix}PR`);
-                await webhookClient.edit({ name: `Jajá Vem Aí!`, avatar: nextAvatar });
-                const gifUrl = await assetService.getAsset(`${assetPrefix}PR`);
-                const embed = new EmbedBuilder().setImage(gifUrl).setColor(0x2F3136).setDescription('Preparando para o próximo ciclo de raids...');
-                 embed.addFields(
-                    { name: 'Dificuldade', value: raidId, inline: true },
-                    { name: 'Vida do Chefe', value: `\`${raid['Vida Último Boss']}\``, inline: true },
-                    { name: 'Dano Recomendado', value: `\`${raid['Dano Recomendado']}\``, inline: true },
-                    { name: 'Entrar no Jogo', value: `**[Clique aqui para ir para o jogo](${config.GAME_LINK})**` }
-                );
-
-                let message;
-                if (announcerState.messageId && announcerState.state !== 'finished') {
-                    try { message = await webhookClient.editMessage(announcerState.messageId, { embeds: [embed] }); } 
-                    catch { message = await webhookClient.send({ embeds: [embed], wait: true }); }
-                } else {
-                    message = await webhookClient.send({ embeds: [embed], wait: true });
+                // Se já estamos na janela de 5 minutos, pule para 'starting_soon'
+                if (Date.now() >= fiveMinuteMark) {
+                    await updateDoc(announcerRef, { state: 'transition_to_starting_soon', raidId });
+                    logger.info(`[${raidId}] Estado 'finished', pulando para transição de 5 MINUTOS.`);
+                } 
+                // Senão, anuncie como 'próxima raid'
+                else {
+                    await webhookClient.edit({ name: 'Jajá Vem Aí!' });
+                    const gifUrl = await assetService.getAsset(`${assetPrefix}PR`);
+                    const embed = new EmbedBuilder().setImage(gifUrl).setColor(0x2F3136).setDescription('Preparando para o próximo ciclo de raids...');
+                     embed.addFields(
+                        { name: 'Dificuldade', value: raidId, inline: true },
+                        { name: 'Vida do Chefe', value: `\`${raid['Vida Último Boss']}\``, inline: true },
+                        { name: 'Dano Recomendado', value: `\`${raid['Dano Recomendado']}\``, inline: true },
+                        { name: 'Entrar no Jogo', value: `**[Clique aqui para ir para o jogo](${config.GAME_LINK})**` }
+                    );
+                    const message = await webhookClient.send({ embeds: [embed], wait: true });
+                    await setDoc(announcerRef, { state: 'next_up', raidId, messageId: message.id, webhookUrl: webhookClient.url }, { merge: true });
+                    logger.info(`[${raidId}] Anunciado como PRÓXIMA RAID.`);
                 }
-
-                await setDoc(announcerRef, { state: 'next_up', raidId, messageId: message.id, webhookUrl: webhookClient.url }, { merge: true });
-                logger.info(`[${raidId}] Anunciado como PRÓXIMA RAID.`);
             }
-
-        } else if (announcerState.state && announcerState.state !== 'finished') {
-             const timeSinceStart = Date.now() - (announcerState.startTimeMs || 0);
-             if (timeSinceStart > (PORTAL_OPEN_DURATION_SECONDS * 1000) + 11000) { // 2m + 11s de margem
-                logger.info(`[${announcerState.raidId}] Ciclo da raid finalizado. Preparando para o próximo.`);
-                if (announcerState.messageId) {
-                    await webhookClient.deleteMessage(announcerState.messageId).catch(e => logger.warn(`[${announcerState.raidId}] Não foi possível deletar a mensagem final: ${e.message}`));
-                }
-                await updateDoc(announcerRef, { state: 'finished', messageId: null, raidId: null });
-             }
         }
     } catch (error) {
         logger.error('[raidAnnouncer] Erro crítico no ciclo de vida da raid:', error);
