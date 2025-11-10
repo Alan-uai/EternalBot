@@ -138,6 +138,7 @@ async function handleRaidLifecycle(container) {
             // 2. Se o estado é 'finished' E existe uma próxima raid agendada
             if (nextRaid) {
                 const { raid, raidId, fiveMinuteMark } = nextRaid;
+                const nextAssetPrefix = RAID_AVATAR_PREFIXES[raidId] || 'Easy';
 
                 // Se já estamos na janela de 5 minutos, pule para 'starting_soon'
                 if (Date.now() >= fiveMinuteMark) {
@@ -147,7 +148,7 @@ async function handleRaidLifecycle(container) {
                 // Senão, anuncie como 'próxima raid'
                 else {
                     await webhookClient.edit({ name: 'Jajá Vem Aí!' });
-                    const gifUrl = await assetService.getAsset(`${assetPrefix}PR`);
+                    const gifUrl = await assetService.getAsset(`${nextAssetPrefix}PR`);
                     const embed = new EmbedBuilder().setImage(gifUrl).setColor(0x2F3136).setDescription('Preparando para o próximo ciclo de raids...');
                      embed.addFields(
                         { name: 'Dificuldade', value: raidId, inline: true },
