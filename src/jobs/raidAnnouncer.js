@@ -64,8 +64,9 @@ async function handleRaidLifecycle(container) {
     const currentRaidId = announcerState.raidId;
     const newRaidId = activeRaidDetails?.Dificuldade || null;
 
+    // Se o estado e a raid não mudaram, não faz nada
     if (desiredState === currentState && newRaidId === currentRaidId) {
-        return; // No change, do nothing.
+        return;
     }
 
     try {
@@ -76,51 +77,32 @@ async function handleRaidLifecycle(container) {
         }
         const webhookClient = new WebhookClient({ url: webhookUrl });
 
-        // Always delete the previous message if it exists
+        // Deleta a mensagem anterior se existir
         if (announcerState.messageId) {
             await webhookClient.deleteMessage(announcerState.messageId).catch(() => {
                 logger.warn(`[raidAnnouncer] Could not delete old message ${announcerState.messageId}. It might have been deleted already.`);
             });
-             await updateDoc(announcerRef, { messageId: null }); // Clear messageId immediately
+            // Limpa o messageId no estado local para garantir que não será usado novamente
+            announcerState.messageId = null; 
+            await updateDoc(announcerRef, { messageId: null });
         }
         
+        // Se o ciclo acabou, apenas limpa o estado e para
         if (desiredState === 'finished') {
-            await updateDoc(announcerRef, { state: 'finished', raidId: null });
+            await updateDoc(announcerRef, { state: 'finished', raidId: null, messageId: null });
             logger.info(`[${currentRaidId || 'N/A'}] Raid cycle finished, panel cleared.`);
             return;
         }
 
         const assetPrefix = RAID_AVATAR_PREFIXES[newRaidId] || 'Easy';
         
-        // Define transition GIFs for specific state changes
         const transitionMap = {
             'starting_soon': '5m',
             'open': 'A',
             'next_up': 'PR',
-            'closing_soon': 'F' // closing_soon now has its own direct transition
+            'closing_soon': 'F'
         };
         const transitionSuffix = transitionMap[desiredState];
-        
-        let transitionMsg = null;
-        if (transitionSuffix) {
-            const transitionGif = await assetService.getAsset(`Tran${assetPrefix}${transitionSuffix}`);
-            const transitionEmbed = new EmbedBuilder().setColor(0x2F3136).setImage(transitionGif);
-             if (activeRaidDetails) {
-                 transitionEmbed.addFields(
-                    { name: 'Dificuldade', value: activeRaidDetails['Dificuldade'], inline: true },
-                    { name: 'Vida do Chefe', value: `\`${activeRaidDetails['Vida Último Boss']}\``, inline: true },
-                    { name: 'Dano Recomendado', value: `\`${activeRaidDetails['Dano Recomendado']}\``, inline: true },
-                    { name: 'Entrar no Jogo', value: `**[Clique aqui para ir para o jogo](${config.GAME_LINK})**` }
-                );
-             }
-
-            transitionMsg = await webhookClient.send({ 
-                embeds: [transitionEmbed],
-                username: "Carregando Status...",
-                wait: true 
-            });
-            await sleep(10000);
-        }
 
         let finalEmbed, finalContent = '', finalWebhookName;
         
@@ -153,22 +135,39 @@ async function handleRaidLifecycle(container) {
             );
         }
 
-        const messagePayload = {
-            username: finalWebhookName,
-            embeds: finalEmbed ? [finalEmbed] : [],
-            content: finalContent,
-        };
+        let sentMessage;
 
-        let finalMessage;
-        if (transitionMsg) {
-            // Edit the transition message to show the final state
-            finalMessage = await webhookClient.editMessage(transitionMsg.id, messagePayload);
+        // Se há uma transição, envia o GIF de transição primeiro
+        if (transitionSuffix) {
+            const transitionGif = await assetService.getAsset(`Tran${assetPrefix}${transitionSuffix}`);
+            const transitionEmbed = new EmbedBuilder().setColor(0x2F3136).setImage(transitionGif);
+             
+            sentMessage = await webhookClient.send({ 
+                username: finalWebhookName, // JÁ USA O NOME FINAL
+                embeds: [transitionEmbed],
+                wait: true 
+            });
+
+            await sleep(10000); // Espera a transição acabar
+
+            // EDITA a mensagem de transição para o estado final
+            await webhookClient.editMessage(sentMessage.id, {
+                embeds: finalEmbed ? [finalEmbed] : [],
+                content: finalContent
+            });
+
         } else {
-            // This case should be rare now, but acts as a fallback
-            finalMessage = await webhookClient.send({ ...messagePayload, wait: true });
+            // Se não há transição, apenas envia o estado final diretamente
+             sentMessage = await webhookClient.send({
+                username: finalWebhookName,
+                embeds: finalEmbed ? [finalEmbed] : [],
+                content: finalContent,
+                wait: true
+            });
         }
         
-        await updateDoc(announcerRef, { state: desiredState, raidId: newRaidId, messageId: finalMessage.id });
+        // Salva o novo estado e o ID da nova mensagem
+        await updateDoc(announcerRef, { state: desiredState, raidId: newRaidId, messageId: sentMessage.id });
         logger.info(`[${newRaidId}] Raid Announcer updated to state: '${desiredState}'.`);
 
     } catch (error) {
