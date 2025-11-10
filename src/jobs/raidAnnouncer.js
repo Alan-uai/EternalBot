@@ -89,7 +89,7 @@ async function handleRaidLifecycle(container) {
             } else if (announcerState.state === 'closing_soon') {
                 // Apenas exibe o estado final de fechamento
                 const closingAvatar = await assetService.getAsset(`${assetPrefix}F`);
-                await webhookClient.edit({ name: `Raid ${raidId} fechando!`, avatar: closingAvatar });
+                await webhookClient.edit({ name: `Corra! Falta Pouco`, avatar: closingAvatar });
                 
                 const gifUrl = await assetService.getAsset(`${assetPrefix}F`);
                 const closingEmbed = new EmbedBuilder().setImage(gifUrl).setColor(0x000000).setDescription('O portal está fechando!').setFooter({ text: 'Contagem regressiva final!' });
@@ -103,7 +103,7 @@ async function handleRaidLifecycle(container) {
                 // O estado de 'finished' será tratado no próximo ciclo quando currentRaid for null
             } else if (isNewCycle) {
                  const openAvatar = await assetService.getAsset(`${assetPrefix}A`);
-                 await webhookClient.edit({ name: `🔥 A Raid Começou: ${raidId}!`, avatar: openAvatar });
+                 await webhookClient.edit({ name: `Ela Chegou 🥳🎉`, avatar: openAvatar });
                  const gifUrl = await assetService.getAsset(`${assetPrefix}A`);
                  const embed = new EmbedBuilder().setImage(gifUrl).setColor(0xFF4B4B).setDescription('A raid está aberta! Entre agora!').addFields({ name: 'Dificuldade', value: raidId, inline: true }, { name: 'Vida do Chefe', value: `\`${raid['Vida Último Boss']}\``, inline: true }, { name: 'Dano Recomendado', value: `\`${raid['Dano Recomendado']}\``, inline: true }, { name: 'Entrar no Jogo', value: `**[Clique aqui para ir para o jogo](${config.GAME_LINK})**` }).setTimestamp(startTimeMs).setFooter({ text: 'O portal fechará em 2 minutos.' });
                 
@@ -126,7 +126,7 @@ async function handleRaidLifecycle(container) {
             
             if (announcerState.state === 'starting_soon') {
                 const fiveMinAvatar = await assetService.getAsset(`${assetPrefix}5m`);
-                await webhookClient.edit({ name: `Atenção! Raid ${raidId} em 5 Min!`, avatar: fiveMinAvatar });
+                await webhookClient.edit({ name: `Fique Ligado!`, avatar: fiveMinAvatar });
                 const gifUrl = await assetService.getAsset(`${assetPrefix}5m`);
                 const embed = new EmbedBuilder().setImage(gifUrl).setColor(0xFFA500).setDescription('A próxima raid começa em 5 minutos! Prepare-se!');
                 await webhookClient.editMessage(announcerState.messageId, { embeds: [embed] }).catch(e => logger.error(`[${raidId}] Falha ao editar mensagem para 5min: ${e.message}`));
@@ -134,7 +134,7 @@ async function handleRaidLifecycle(container) {
 
             } else if (isDifferentRaid) {
                 const nextAvatar = await assetService.getAsset(`${assetPrefix}PR`);
-                await webhookClient.edit({ name: `Próxima Raid: ${raidId}`, avatar: nextAvatar });
+                await webhookClient.edit({ name: `Jajá Vem Aí!`, avatar: nextAvatar });
                 const gifUrl = await assetService.getAsset(`${assetPrefix}PR`);
                 const embed = new EmbedBuilder().setImage(gifUrl).setColor(0x2F3136).setDescription('Preparando para o próximo ciclo de raids...');
 
