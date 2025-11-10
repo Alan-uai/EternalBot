@@ -6,26 +6,15 @@ import { getRaidTimings } from '../utils/raidTimings.js';
 const ANNOUNCER_DOC_ID = 'raidAnnouncer';
 
 const RAID_AVATAR_PREFIXES = {
-    'Easy': 'Easy',
-    'Medium': 'Med',
-    'Hard': 'Hd',
-    'Insane': 'Isne',
-    'Crazy': 'Czy',
-    'Nightmare': 'Mare',
-    'Leaf Raid': 'Lf'
+    'Easy': 'Easy', 'Medium': 'Med', 'Hard': 'Hd', 'Insane': 'Isne',
+    'Crazy': 'Czy', 'Nightmare': 'Mare', 'Leaf Raid': 'Lf'
 };
 
 const RAID_NAMES = {
-    'Easy': 'Jajá Vem Aí!',
-    'Medium': 'Jajá Vem Aí!',
-    'Hard': 'Jajá Vem Aí!',
-    'Insane': 'Jajá Vem Aí!',
-    'Crazy': 'Jajá Vem Aí!',
-    'Nightmare': 'Jajá Vem Aí!',
-    'Leaf Raid': 'Jajá Vem Aí!',
-    'starting_soon': 'Fique Ligado!',
-    'open': 'Ela Chegou 🥳🎉',
-    'closing_soon': 'Corra! Falta Pouco'
+    'Easy': 'Jajá Vem Aí!', 'Medium': 'Jajá Vem Aí!', 'Hard': 'Jajá Vem Aí!',
+    'Insane': 'Jajá Vem Aí!', 'Crazy': 'Jajá Vem Aí!', 'Nightmare': 'Jajá Vem Aí!',
+    'Leaf Raid': 'Jajá Vem Aí!', 'starting_soon': 'Fique Ligado!',
+    'open': 'Ela Chegou 🥳🎉', 'closing_soon': 'Corra! Falta Pouco'
 };
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -64,7 +53,6 @@ async function handleRaidLifecycle(container) {
     const currentRaidId = announcerState.raidId;
     const newRaidId = activeRaidDetails?.Dificuldade || null;
 
-    // If the state and raid are the same, do nothing.
     if (desiredState === currentState && newRaidId === currentRaidId) {
         return;
     }
@@ -77,41 +65,34 @@ async function handleRaidLifecycle(container) {
         }
         const webhookClient = new WebhookClient({ url: webhookUrl });
 
-        // Always delete the previous message if it exists.
         if (announcerState.messageId) {
             await webhookClient.deleteMessage(announcerState.messageId).catch(() => {
-                logger.warn(`[raidAnnouncer] Could not delete old message ${announcerState.messageId}. It might have been deleted already.`);
+                logger.warn(`[raidAnnouncer] Could not delete old message ${announcerState.messageId}.`);
             });
             await updateDoc(announcerRef, { messageId: null });
         }
         
-        // If the cycle is over, just clear the state and stop.
         if (desiredState === 'finished') {
             await updateDoc(announcerRef, { state: 'finished', raidId: null, messageId: null });
-            logger.info(`[${currentRaidId || 'N/A'}] Raid cycle finished, panel cleared.`);
+            logger.info(`[raidAnnouncer] Raid cycle finished, panel cleared.`);
             return;
         }
 
         const assetPrefix = RAID_AVATAR_PREFIXES[newRaidId] || 'Easy';
         
-        // Map states to their final asset suffixes
-        const assetSuffixMap = {
-            'starting_soon': '5m',
-            'open': 'A',
-            'next_up': 'PR',
-            'closing_soon': 'F' // No more TranF, just F
-        };
-
+        const assetSuffixMap = { 'starting_soon': '5m', 'open': 'A', 'next_up': 'PR', 'closing_soon': 'F' };
         const finalAssetSuffix = assetSuffixMap[desiredState];
-        const transitionAssetSuffix = `Tran${assetPrefix}${finalAssetSuffix}`;
-
+        
         let finalWebhookName = RAID_NAMES[newRaidId] || 'Jajá Vem Aí!';
-        if (desiredState === 'open' || desiredState === 'closing_soon' || desiredState === 'starting_soon') {
+        if (['starting_soon', 'open', 'closing_soon'].includes(desiredState)) {
             finalWebhookName = RAID_NAMES[desiredState];
         }
 
-        const finalEmbed = new EmbedBuilder()
-            .setColor(0x2F3136) // Default neutral color
+        const defaultAvatarUrl = await assetService.getAsset('DungeonLobby');
+        const finalAvatarUrl = await assetService.getAsset(`${assetPrefix}${finalAssetSuffix}`) || defaultAvatarUrl;
+
+        const embedTemplate = new EmbedBuilder()
+            .setColor(0x2F3136)
             .addFields(
                 { name: 'Dificuldade', value: activeRaidDetails['Dificuldade'], inline: true },
                 { name: 'Vida do Chefe', value: `\`${activeRaidDetails['Vida Último Boss']}\``, inline: true },
@@ -121,8 +102,7 @@ async function handleRaidLifecycle(container) {
 
         let finalContent = activeRaidDetails.roleId && desiredState === 'open' ? `<@&${activeRaidDetails.roleId}>` : '';
 
-        // Determine assets and colors
-        const transitionGif = await assetService.getAsset(transitionAssetSuffix);
+        const transitionGif = await assetService.getAsset(`Tran${assetPrefix}${finalAssetSuffix}`);
         const finalGif = await assetService.getAsset(`${assetPrefix}${finalAssetSuffix}`);
         let stateColor;
         switch (desiredState) {
@@ -131,37 +111,34 @@ async function handleRaidLifecycle(container) {
             case 'closing_soon': stateColor = 0x000000; break;
             default: stateColor = 0x2F3136; break;
         }
-
-        finalEmbed.setColor(stateColor);
+        embedTemplate.setColor(stateColor);
         
-        // 1. Post a NEW message with the TRANSITION GIF
-        const transitionEmbed = new EmbedBuilder(finalEmbed.toJSON()).setImage(transitionGif);
+        const hasTransition = !!transitionGif;
+
         const sentMessage = await webhookClient.send({
             username: finalWebhookName,
-            embeds: [transitionEmbed],
-            content: finalContent, // Role mention can be sent with the transition
+            avatarURL: finalAvatarUrl,
+            embeds: [new EmbedBuilder(embedTemplate.toJSON()).setImage(hasTransition ? transitionGif : finalGif)],
+            content: finalContent,
             wait: true
         });
 
-        // 2. Save the new message ID and state
         await updateDoc(announcerRef, { state: desiredState, raidId: newRaidId, messageId: sentMessage.id });
-        logger.info(`[${newRaidId}] Posted transition for state: '${desiredState}'.`);
+        logger.info(`[${newRaidId}] Posted message for state: '${desiredState}'.`);
 
-        // 3. Wait for the transition to finish
-        await sleep(10000);
-
-        // 4. EDIT the message to show the FINAL GIF
-        const finalStateEmbed = new EmbedBuilder(finalEmbed.toJSON()).setImage(finalGif);
-
-        // Make sure we are still in the same state before editing
-        const latestAnnouncerDoc = await getDoc(announcerRef);
-        if (latestAnnouncerDoc.data().messageId === sentMessage.id) {
-            await webhookClient.editMessage(sentMessage.id, {
-                embeds: [finalStateEmbed]
-            });
-            logger.info(`[${newRaidId}] Edited message to final state: '${desiredState}'.`);
-        } else {
-            logger.warn(`[${newRaidId}] State changed during sleep. Aborting edit for message ${sentMessage.id}.`);
+        if (hasTransition) {
+            await sleep(10000);
+            
+            const latestAnnouncerDoc = await getDoc(announcerRef);
+            if (latestAnnouncerDoc.data().messageId === sentMessage.id) {
+                const finalStateEmbed = new EmbedBuilder(embedTemplate.toJSON()).setImage(finalGif);
+                await webhookClient.editMessage(sentMessage.id, {
+                    embeds: [finalStateEmbed]
+                });
+                logger.info(`[${newRaidId}] Edited message to final GIF for state: '${desiredState}'.`);
+            } else {
+                logger.warn(`[${newRaidId}] State changed during sleep. Aborting edit for message ${sentMessage.id}.`);
+            }
         }
 
     } catch (error) {
