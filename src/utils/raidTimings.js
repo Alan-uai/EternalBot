@@ -9,7 +9,11 @@ const RAID_EMOJIS = {
 };
 
 export function getRaidTimings() {
-    const now = new Date();
+    // Arredonda a data atual para o intervalo de 10 segundos mais próximo
+    const nowMs = Date.now();
+    const roundedMs = Math.floor(nowMs / 10000) * 10000;
+    const now = new Date(roundedMs);
+    
     const raids = [...lobbyDungeonsArticle.tables.lobbySchedule.rows].sort((a, b) => {
         return parseInt(a['Horário'].substring(3, 5), 10) - parseInt(b['Horário'].substring(3, 5), 10);
     });
