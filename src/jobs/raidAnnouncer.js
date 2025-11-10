@@ -10,11 +10,22 @@ const RAID_AVATAR_PREFIXES = {
     'Crazy': 'Czy', 'Nightmare': 'Mare', 'Leaf Raid': 'Lf'
 };
 
+// Mapeamento de Nomes de Webhook para cada estado
 const RAID_NAMES = {
     'Easy': 'Jajá Vem Aí!', 'Medium': 'Jajá Vem Aí!', 'Hard': 'Jajá Vem Aí!',
     'Insane': 'Jajá Vem Aí!', 'Crazy': 'Jajá Vem Aí!', 'Nightmare': 'Jajá Vem Aí!',
-    'Leaf Raid': 'Jajá Vem Aí!', 'starting_soon': 'Fique Ligado!',
-    'open': 'Ela Chegou 🥳🎉', 'closing_soon': 'Corra! Falta Pouco'
+    'Leaf Raid': 'Jajá Vem Aí!',
+    'starting_soon': 'Fique Ligado!',
+    'open': 'Ela Chegou 🥳🎉',
+    'closing_soon': 'Corra! Falta Pouco'
+};
+
+// Mapeamento de Avatares para cada estado
+const RAID_AVATAR_SUFFIXES = {
+    'next_up': 'PR',
+    'starting_soon': '5m',
+    'open': 'A',
+    'closing_soon': 'F'
 };
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -67,7 +78,7 @@ async function handleRaidLifecycle(container) {
 
         if (announcerState.messageId) {
             await webhookClient.deleteMessage(announcerState.messageId).catch(() => {
-                logger.warn(`[raidAnnouncer] Could not delete old message ${announcerState.messageId}.`);
+                logger.warn(`[raidAnnouncer] Could not delete old message ${announcerState.messageId}. It might have been deleted manually.`);
             });
             await updateDoc(announcerRef, { messageId: null });
         }
@@ -79,19 +90,14 @@ async function handleRaidLifecycle(container) {
         }
 
         const assetPrefix = RAID_AVATAR_PREFIXES[newRaidId] || 'Easy';
+        const assetSuffix = RAID_AVATAR_SUFFIXES[desiredState];
+        const finalWebhookName = RAID_NAMES[desiredState] || RAID_NAMES[newRaidId];
         
-        const assetSuffixMap = { 'starting_soon': '5m', 'open': 'A', 'next_up': 'PR', 'closing_soon': 'F' };
-        const finalAssetSuffix = assetSuffixMap[desiredState];
-        
-        let finalWebhookName = RAID_NAMES[newRaidId] || 'Jajá Vem Aí!';
-        if (['starting_soon', 'open', 'closing_soon'].includes(desiredState)) {
-            finalWebhookName = RAID_NAMES[desiredState];
-        }
+        const transitionGifUrl = await assetService.getAsset(`Tran${assetPrefix}${assetSuffix}`);
+        const finalGifUrl = await assetService.getAsset(`${assetPrefix}${assetSuffix}`);
+        const finalAvatarUrl = await assetService.getAsset(assetPrefix + assetSuffix) || await assetService.getAsset('DungeonLobby');
 
-        const defaultAvatarUrl = await assetService.getAsset('DungeonLobby');
-        const finalAvatarUrl = await assetService.getAsset(`${assetPrefix}${finalAssetSuffix}`) || defaultAvatarUrl;
-
-        const embedTemplate = new EmbedBuilder()
+        const embed = new EmbedBuilder()
             .setColor(0x2F3136)
             .addFields(
                 { name: 'Dificuldade', value: activeRaidDetails['Dificuldade'], inline: true },
@@ -100,10 +106,13 @@ async function handleRaidLifecycle(container) {
                 { name: 'Entrar no Jogo', value: `**[Clique aqui para ir para o jogo](${config.GAME_LINK})**` }
             );
 
-        let finalContent = activeRaidDetails.roleId && desiredState === 'open' ? `<@&${activeRaidDetails.roleId}>` : '';
-
-        const transitionGif = await assetService.getAsset(`Tran${assetPrefix}${finalAssetSuffix}`);
-        const finalGif = await assetService.getAsset(`${assetPrefix}${finalAssetSuffix}`);
+        let finalContent = '';
+        if (activeRaidDetails.roleId && desiredState === 'open') {
+            const mention = `<@&${activeRaidDetails.roleId}>`;
+            const bar = '█'.repeat(20); // Ajuste a quantidade conforme necessário
+            finalContent = `${bar} ${mention} ${bar}`;
+        }
+        
         let stateColor;
         switch (desiredState) {
             case 'starting_soon': stateColor = 0xFFA500; break;
@@ -111,14 +120,14 @@ async function handleRaidLifecycle(container) {
             case 'closing_soon': stateColor = 0x000000; break;
             default: stateColor = 0x2F3136; break;
         }
-        embedTemplate.setColor(stateColor);
+        embed.setColor(stateColor);
         
-        const hasTransition = !!transitionGif;
+        const hasTransition = !!transitionGifUrl;
 
         const sentMessage = await webhookClient.send({
             username: finalWebhookName,
             avatarURL: finalAvatarUrl,
-            embeds: [new EmbedBuilder(embedTemplate.toJSON()).setImage(hasTransition ? transitionGif : finalGif)],
+            embeds: [embed.setImage(hasTransition ? transitionGifUrl : finalGifUrl)],
             content: finalContent,
             wait: true
         });
@@ -126,21 +135,20 @@ async function handleRaidLifecycle(container) {
         await updateDoc(announcerRef, { state: desiredState, raidId: newRaidId, messageId: sentMessage.id });
         logger.info(`[${newRaidId}] Posted message for state: '${desiredState}'.`);
 
-        if (hasTransition) {
-            await sleep(10000);
+        if (hasTransition && finalGifUrl) {
+            await sleep(10000); // Duração da transição
             
             const latestAnnouncerDoc = await getDoc(announcerRef);
             if (latestAnnouncerDoc.data().messageId === sentMessage.id) {
-                const finalStateEmbed = new EmbedBuilder(embedTemplate.toJSON()).setImage(finalGif);
+                embed.setImage(finalGifUrl);
                 await webhookClient.editMessage(sentMessage.id, {
-                    embeds: [finalStateEmbed]
+                    embeds: [embed]
                 });
                 logger.info(`[${newRaidId}] Edited message to final GIF for state: '${desiredState}'.`);
             } else {
                 logger.warn(`[${newRaidId}] State changed during sleep. Aborting edit for message ${sentMessage.id}.`);
             }
         }
-
     } catch (error) {
         logger.error('[raidAnnouncer] Critical error in lifecycle:', error);
     }
