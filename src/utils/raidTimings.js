@@ -1,7 +1,7 @@
 // src/utils/raidTimings.js
 import { lobbyDungeonsArticle } from '../data/wiki-articles/lobby-dungeons.js';
 
-const PORTAL_OPEN_DURATION_SECONDS = 2 * 60; // 2 minutos
+const DEFAULT_PORTAL_OPEN_DURATION_SECONDS = 2 * 60; // 2 minutos
 
 const RAID_EMOJIS = {
     'Easy': '🟢', 'Medium': '🟡', 'Hard': '🔴', 'Insane': '⚔️', 
@@ -31,15 +31,18 @@ export function getRaidTimings() {
         raidStartTime.setUTCMinutes(raidStartMinute, 0, 0);
 
         const timeDiffMs = raidStartTime.getTime() - now.getTime();
+        
+        // Lógica para duração do portal específica por raid
+        const portalOpenDuration = raidId === 'Leaf Raid' ? 60 : DEFAULT_PORTAL_OPEN_DURATION_SECONDS;
 
         // Verifica se a raid está aberta AGORA
-        if (timeDiffMs <= 0 && timeDiffMs > -(PORTAL_OPEN_DURATION_SECONDS * 1000)) {
+        if (timeDiffMs <= 0 && timeDiffMs > -(portalOpenDuration * 1000)) {
              currentRaid = {
                 raid,
                 raidId,
                 startTimeMs: raidStartTime.getTime(),
-                tenSecondMark: raidStartTime.getTime() + (PORTAL_OPEN_DURATION_SECONDS - 10) * 1000,
-                portalCloseTime: raidStartTime.getTime() + PORTAL_OPEN_DURATION_SECONDS * 1000,
+                tenSecondMark: raidStartTime.getTime() + (portalOpenDuration - 10) * 1000,
+                portalCloseTime: raidStartTime.getTime() + portalOpenDuration * 1000,
             };
         }
         
