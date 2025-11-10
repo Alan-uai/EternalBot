@@ -91,8 +91,7 @@ async function handleSelect(interaction, { client }) {
 
 async function handleApproveAndLearn(interaction, { client }) {
     const curationMessageId = interaction.customId.split('_')[2];
-    const { logger, services } = client.container;
-
+    
     const modal = new ModalBuilder()
         .setCustomId(`curate_modal_${curationMessageId}`)
         .setTitle('Ensinar a IA');
@@ -104,7 +103,12 @@ async function handleApproveAndLearn(interaction, { client }) {
         .setPlaceholder("Ex: 'Crie um novo artigo em src/data/wiki-articles/guia-x.js'. 'Adicione esta informação na tabela de pets do mundo 20'.")
         .setRequired(false);
 
-    await interaction.showModal(modal.addComponents(new ActionRowBuilder().addComponents(instructionsInput)));
+    // O TextInput deve estar dentro de um ActionRowBuilder
+    const actionRow = new ActionRowBuilder().addComponents(instructionsInput);
+
+    modal.addComponents(actionRow);
+
+    await interaction.showModal(modal);
 }
 
 
