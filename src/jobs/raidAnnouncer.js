@@ -28,7 +28,6 @@ const RAID_NAMES = {
     'closing_soon': 'Corra! Falta Pouco'
 };
 
-// Função de sleep para os delays de transição
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 async function handleRaidLifecycle(container) {
@@ -65,47 +64,44 @@ async function handleRaidLifecycle(container) {
     const currentRaidId = announcerState.raidId;
     const newRaidId = activeRaidDetails?.Dificuldade || null;
 
-    // Se o estado desejado for o mesmo e a raid for a mesma, não faz nada
     if (desiredState === currentState && newRaidId === currentRaidId) {
-        return;
+        return; // No change, do nothing.
     }
 
-    // Se o estado mudou, executa a lógica de transição e atualização
     try {
         const webhookUrl = announcerState.webhookUrl;
         if (!webhookUrl) {
-            logger.warn(`[raidAnnouncer] URL do webhook '${ANNOUNCER_DOC_ID}' não encontrada.`);
+            logger.warn(`[raidAnnouncer] Webhook URL for '${ANNOUNCER_DOC_ID}' not found.`);
             return;
         }
         const webhookClient = new WebhookClient({ url: webhookUrl });
 
-        // Deleta a mensagem anterior, se existir
+        // Always delete the previous message if it exists
         if (announcerState.messageId) {
             await webhookClient.deleteMessage(announcerState.messageId).catch(() => {
-                logger.warn(`[raidAnnouncer] Não foi possível deletar a mensagem antiga ${announcerState.messageId}. Pode já ter sido removida.`);
+                logger.warn(`[raidAnnouncer] Could not delete old message ${announcerState.messageId}. It might have been deleted already.`);
             });
+             await updateDoc(announcerRef, { messageId: null }); // Clear messageId immediately
         }
         
-        // Se o ciclo terminou, apenas limpa o estado e retorna
         if (desiredState === 'finished') {
-            await updateDoc(announcerRef, { state: 'finished', messageId: null, raidId: null });
-            logger.info(`[${currentRaidId || 'N/A'}] Ciclo de anúncio finalizado e mensagem limpa.`);
+            await updateDoc(announcerRef, { state: 'finished', raidId: null });
+            logger.info(`[${currentRaidId || 'N/A'}] Raid cycle finished, panel cleared.`);
             return;
         }
 
         const assetPrefix = RAID_AVATAR_PREFIXES[newRaidId] || 'Easy';
         
-        // Lógica de Transição (se aplicável)
+        // Define transition GIFs for specific state changes
         const transitionMap = {
             'starting_soon': '5m',
             'open': 'A',
-            // 'closing_soon' removido daqui para não ter transição
-            'next_up': 'PR'
+            'next_up': 'PR',
+            'closing_soon': 'F' // closing_soon now has its own direct transition
         };
         const transitionSuffix = transitionMap[desiredState];
         
-        let messageForEditingId = null;
-
+        let transitionMsg = null;
         if (transitionSuffix) {
             const transitionGif = await assetService.getAsset(`Tran${assetPrefix}${transitionSuffix}`);
             const transitionEmbed = new EmbedBuilder().setColor(0x2F3136).setImage(transitionGif);
@@ -118,18 +114,15 @@ async function handleRaidLifecycle(container) {
                 );
              }
 
-            const transitionMsg = await webhookClient.send({ 
+            transitionMsg = await webhookClient.send({ 
                 embeds: [transitionEmbed],
                 username: "Carregando Status...",
                 wait: true 
             });
-            messageForEditingId = transitionMsg.id;
-            await sleep(10000); // Aguarda 10 segundos
+            await sleep(10000);
         }
 
-
-        // Agora, posta o estado final
-        let finalEmbed, finalContent = '', finalWebhookName = 'Painel de Raids';
+        let finalEmbed, finalContent = '', finalWebhookName;
         
         switch (desiredState) {
             case 'starting_soon':
@@ -142,9 +135,9 @@ async function handleRaidLifecycle(container) {
                 finalContent = activeRaidDetails.roleId ? `<@&${activeRaidDetails.roleId}>` : '';
                 break;
             case 'closing_soon':
-                finalWebhookName = RAID_NAMES.closing_soon;
-                finalEmbed = new EmbedBuilder().setImage(await assetService.getAsset(`${assetPrefix}F`)).setColor(0x000000).setDescription('O portal está fechando!').setFooter({ text: 'Contagem regressiva final!' });
-                break;
+                 finalWebhookName = RAID_NAMES.closing_soon;
+                 finalEmbed = new EmbedBuilder().setImage(await assetService.getAsset(`${assetPrefix}F`)).setColor(0x000000).setDescription('O portal está fechando!').setFooter({ text: 'Contagem regressiva final!' });
+                 break;
             case 'next_up':
                  finalWebhookName = RAID_NAMES[newRaidId] || 'Jajá Vem Aí!';
                  finalEmbed = new EmbedBuilder().setImage(await assetService.getAsset(`${assetPrefix}PR`)).setColor(0x2F3136).setDescription('Preparando para o próximo ciclo de raids...');
@@ -164,22 +157,22 @@ async function handleRaidLifecycle(container) {
             username: finalWebhookName,
             embeds: finalEmbed ? [finalEmbed] : [],
             content: finalContent,
-            wait: true
         };
 
         let finalMessage;
-        if(messageForEditingId) {
-            finalMessage = await webhookClient.editMessage(messageForEditingId, messagePayload);
+        if (transitionMsg) {
+            // Edit the transition message to show the final state
+            finalMessage = await webhookClient.editMessage(transitionMsg.id, messagePayload);
         } else {
-            // Caso não tenha havido transição (ex: closing_soon), envia uma nova mensagem
-            finalMessage = await webhookClient.send(messagePayload);
+            // This case should be rare now, but acts as a fallback
+            finalMessage = await webhookClient.send({ ...messagePayload, wait: true });
         }
         
-        await updateDoc(announcerRef, { state: desiredState, raidId: newRaidId, messageId: finalMessage.id, startTimeMs: currentRaid?.startTimeMs || null });
-        logger.info(`[${newRaidId}] Anúncio atualizado para o estado: '${desiredState}'.`);
+        await updateDoc(announcerRef, { state: desiredState, raidId: newRaidId, messageId: finalMessage.id });
+        logger.info(`[${newRaidId}] Raid Announcer updated to state: '${desiredState}'.`);
 
     } catch (error) {
-        logger.error('[raidAnnouncer] Erro crítico no ciclo de vida da raid:', error);
+        logger.error('[raidAnnouncer] Critical error in lifecycle:', error);
     }
 }
 
