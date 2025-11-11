@@ -3,7 +3,9 @@ export const avatarIndexArticle = {
   id: 'avatar-index',
   title: 'Avatar Index',
   summary: 'Uma tabela de referência completa para os bônus de energia concedidos pelos Avatares de cada mundo, tanto no nível base quanto no nível 175.',
-  content: `Esta página serve como um índice para os bônus de energia de todos os Avatares no jogo, organizados por mundo e rank. Use estas tabelas para planejar qual avatar obter para maximizar seus ganhos de energia.`,
+  content: `Esta página serve como um índice para os bônus de energia de todos os Avatares no jogo, organizados por mundo e rank. Use estas tabelas para planejar qual avatar obter para maximizar seus ganhos de energia.
+
+**Observação:** Os cabeçalhos da tabela foram atualizados para refletir o novo nível máximo de 175, porém os valores de stats para este nível ainda não foram atualizados e podem corresponder aos valores do nível 150. As informações serão corrigidas assim que os dados oficiais da wiki estiverem disponíveis.`,
   tags: ['avatar', 'energia', 'index', 'guia', 'bônus', 'lvl 175'],
   sharedHeaders: ['Avatar', 'Rank', 'Raridade', 'Stats (Base)', 'Stats (lvl 175)'],
   tables: {
@@ -292,5 +294,7 @@ export const avatarIndexArticle = {
     },
   },
 };
+
+    
 
     
