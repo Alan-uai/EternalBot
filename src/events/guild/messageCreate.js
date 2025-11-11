@@ -164,8 +164,17 @@ export async function execute(message) {
             let attachments = [];
 
             for (const section of result.structuredResponse) {
-                replyContent += `**${section.titulo}**\n${section.conteudo}\n\n`;
-                if (section.table) {
+                // Se a seção tiver um título, adicione-o em negrito.
+                if (section.titulo) {
+                    replyContent += `**${section.titulo}**\n`;
+                }
+                // Adicione o conteúdo de texto da seção.
+                if (section.conteudo) {
+                    replyContent += `${section.conteudo}\n\n`;
+                }
+                
+                // Se a seção tiver uma tabela, gere a imagem e a adicione aos anexos.
+                if (section.table && section.table.rows && section.table.rows.length > 0) {
                     try {
                         const tableImage = await createTableImage(section.table.headers, section.table.rows);
                         attachments.push(new AttachmentBuilder(tableImage, { name: `table-${section.titulo.toLowerCase().replace(/ /g, '-')}.png` }));
