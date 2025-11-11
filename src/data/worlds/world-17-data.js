@@ -3,11 +3,13 @@ export const world17Data = {
   id: 'world-17',
   title: 'Mundo 17 - Ilha dos Investigadores',
   summary: 'Mundo sombrio que introduz os poderes de Investigadores e Kagunes, a progressão de Damage Cells, e a Ghoul Raid.',
-  content: 'Este mundo introduz dois novos tipos de poderes gacha: Investigadores (energia) e Kagunes (dano). As progressões principais são através dos poderes "Damage Cells" e "Kagune Leveling".',
+  content: `Este mundo introduz dois novos tipos de poderes gacha: Investigadores (energia) e Kagunes (dano). As progressões principais são através dos poderes "Damage Cells" e "Kagune Leveling".
+
+**Dica para Missões:** Qualquer missão deste mundo que peça para coletar tokens pode ser completada instantaneamente trocando **Exchanger Tokens** pela quantidade necessária ou se você já tiver os tokens no inventário.`,
   tags: ['investigadores', 'kagune', 'mundo 17', '17', 'guia', 'geral', 'damage cells', 'ghoul raid', 'ghoul mask'],
   npcs: [
     { name: 'Ghoul Rank C', rank: 'E', exp: 6e12, hp: '1QnTG' },
-    { name: 'Ghoul Rank B', rank: 'D', exp: 9e12, hp: '10QnTG' },
+    { name: 'Ghoul Rank B', 'rank': 'D', exp: 9e12, hp: '10QnTG' },
     { name: 'Ghoul Rank A', rank: 'C', exp: 1.3e13, hp: '100QnTG' },
     { name: 'Ghoul Rank S', rank: 'B', exp: 1.9e13, hp: '1ssTG' },
     { name: 'Ghoul Rank SS', rank: 'A', exp: 2.8e13, hp: '10ssTG' },
@@ -97,5 +99,3 @@ export const world17Data = {
     }
   ]
 };
-
-  

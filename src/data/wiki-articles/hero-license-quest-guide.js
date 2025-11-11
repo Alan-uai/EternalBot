@@ -5,6 +5,11 @@ export const heroLicenseQuestGuideArticle = {
   summary: 'Um guia com os vídeos mostrando a localização de cada NPC da Hero License Quest em suas respectivas classes e mundos.',
   content: `A "Hero License Quest" é uma questline secundária que se estende por múltiplos mundos e tem como objetivo principal a obtenção e evolução do poder **"Hero License Class"**.
 
+### Dica Estratégica para Missões de Coleta
+**Atalho importante:** Para qualquer missão desta quest que exigir a coleta de uma certa quantidade de tokens (ex: "Coletar 500 Dragon Race Token"), você **não** precisa farmá-los. A missão será completada instantaneamente se você:
+1.  Já possuir a quantidade necessária de tokens no seu inventário ao aceitar a missão.
+2.  Trocar **Exchanger Tokens** pela quantidade exata de tokens necessários. Esta é a maneira mais rápida de completar essas etapas.
+
 A missão é iniciada em um painel, e cada classe (F, E, D, etc.) representa uma etapa da jornada. Ao completar a missão final de cada classe, você recebe uma versão de raridade superior do poder (ex: License F Class, License E Class), tornando-o mais forte.
 
 Abaixo estão os vídeos que mostram a localização exata de cada NPC para as tarefas da quest.`,

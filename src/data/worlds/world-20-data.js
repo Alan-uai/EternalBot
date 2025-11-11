@@ -3,6 +3,9 @@ export const world20Data = {
   id: 'world-20',
   title: 'Mundo 20 - Planeta Namekusei',
   summary: 'O mundo final antes do lobby 2, com as raids Green Planet e Suffering e chefes poderosos.',
+  content: `O mundo final antes do Lobby 2.
+
+**Dica para Missões:** Qualquer missão deste mundo que peça para coletar tokens pode ser completada instantaneamente trocando **Exchanger Tokens** pela quantidade necessária ou se você já tiver os tokens no inventário.`,
   npcs: [
     { name: 'Soldado de Freeza', rank: 'E', exp: 8e15, hp: '1dQDR' },
     { name: 'Forças Especiais Ginyu', rank: 'D', exp: 1.2e16, hp: '10dQDR' },
@@ -110,5 +113,3 @@ export const world20Data = {
     }
   ],
 };
-
-  
