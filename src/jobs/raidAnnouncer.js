@@ -113,7 +113,18 @@ async function handleRaidLifecycle(container) {
 
         let finalContent = '';
         if (activeRaidDetails.roleId && desiredState === 'open') {
-             finalContent = `──────────── <@&${activeRaidDetails.roleId}> ────────────`;
+             const baseLine = '───────────────────────────────';
+             const totalWidth = baseLine.length;
+             const mentionText = `<@&${activeRaidDetails.roleId}>`;
+             
+             // Calcula o espaço total ocupado pelo conteúdo central (menção + 2 espaços)
+             const centralContentLength = mentionText.length + 2; 
+             
+             // Calcula o preenchimento para cada lado, garantindo que não seja negativo
+             const paddingLength = Math.max(0, Math.floor((totalWidth - centralContentLength) / 2));
+             const padding = '─'.repeat(paddingLength);
+             
+             finalContent = `${padding} ${mentionText} ${padding}`;
         }
         
         let stateColor;
