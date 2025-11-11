@@ -97,6 +97,7 @@ async function handleRaidLifecycle(container) {
         
         const transitionGifUrl = await assetService.getAsset(`Tran${assetPrefix}${assetSuffix}`);
         const finalGifUrl = await assetService.getAsset(`${assetPrefix}${assetSuffix}`);
+        
         let finalAvatarUrl = await assetService.getAsset(assetPrefix + assetSuffix);
         if (!finalAvatarUrl) {
             finalAvatarUrl = await assetService.getAsset('DungeonLobby');
@@ -112,9 +113,7 @@ async function handleRaidLifecycle(container) {
 
         let finalContent = '';
         if (activeRaidDetails.roleId && desiredState === 'open') {
-            const mention = `<@&${activeRaidDetails.roleId}>`;
-            const bar = '─'.repeat(20); // Caractere mais fino para evitar quebra de linha
-            finalContent = `${bar} ${mention} ${bar}`;
+             finalContent = `──────────── <@&${activeRaidDetails.roleId}> ────────────`;
         }
         
         let stateColor;
