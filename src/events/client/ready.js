@@ -23,7 +23,9 @@ async function initializeWebhooks(client) {
         { name: 'Códigos Ativos do Jogo', channelId: config.CODES_CHANNEL_ID, docId: 'gameCodes' },
         { name: 'Anunciador de Farms', channelId: config.FARMING_PANEL_CHANNEL_ID, docId: 'farmAnnouncer' },
         { name: 'Painel de Farms', channelId: config.FARMING_PANEL_CHANNEL_ID, docId: 'farmingPanel' },
-        { name: 'Suporte | Denúncias | Formulários', channelId: config.SUPPORT_PANEL_CHANNEL_ID, docId: 'supportPanel' }
+        { name: 'Suporte | Denúncias | Formulários', channelId: config.SUPPORT_PANEL_CHANNEL_ID, docId: 'supportPanel' },
+        { name: 'Gui Noel', channelId: config.COMMUNITY_HELP_CHANNEL_ID, docId: 'christmasAnnouncer' },
+        { name: 'Gui Trevoso Halloween 🎃', channelId: config.COMMUNITY_HELP_CHANNEL_ID, docId: 'halloweenAnnouncer' }
     ];
 
     for (const webhookConfig of requiredWebhooks) {
