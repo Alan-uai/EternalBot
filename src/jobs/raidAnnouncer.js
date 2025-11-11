@@ -113,14 +113,18 @@ async function handleRaidLifecycle(container) {
 
         let finalContent = '';
         if (activeRaidDetails.roleId && desiredState === 'open') {
+             const guild = await client.guilds.fetch(config.GUILD_ID);
+             const role = await guild.roles.fetch(activeRaidDetails.roleId);
+             const roleName = role ? role.name : activeRaidDetails.Dificuldade;
+             
              const baseLine = '───────────────────────────────';
              const totalWidth = baseLine.length;
              const mentionText = `<@&${activeRaidDetails.roleId}>`;
              
-             // Calcula o espaço total ocupado pelo conteúdo central (menção + 2 espaços)
-             const centralContentLength = mentionText.length + 2; 
+             // O cálculo do espaço agora usa o NOME do cargo, mas o texto final usa a MENÇÃO
+             const centralContentLength = roleName.length + 2; // Nome + 2 espaços
              
-             // Calcula o preenchimento para cada lado, garantindo que não seja negativo
+             // Garante que o padding não seja negativo se o nome for muito grande
              const paddingLength = Math.max(0, Math.floor((totalWidth - centralContentLength) / 2));
              const padding = '─'.repeat(paddingLength);
              
