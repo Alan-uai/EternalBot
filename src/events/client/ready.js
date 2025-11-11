@@ -24,8 +24,8 @@ async function initializeWebhooks(client) {
         { name: 'Anunciador de Farms', channelId: config.FARMING_PANEL_CHANNEL_ID, docId: 'farmAnnouncer' },
         { name: 'Painel de Farms', channelId: config.FARMING_PANEL_CHANNEL_ID, docId: 'farmingPanel' },
         { name: 'Suporte | Denúncias | Formulários', channelId: config.SUPPORT_PANEL_CHANNEL_ID, docId: 'supportPanel' },
-        { name: 'Gui Noel', channelId: config.COMMUNITY_HELP_CHANNEL_ID, docId: 'christmasAnnouncer' },
-        { name: 'Gui Trevoso Halloween 🎃', channelId: config.COMMUNITY_HELP_CHANNEL_ID, docId: 'halloweenAnnouncer' }
+        // Adiciona webhooks de feriados
+        ...config.HOLIDAYS.map(h => ({ name: h.webhookName, channelId: config.COMMUNITY_HELP_CHANNEL_ID, docId: h.docId }))
     ];
 
     for (const webhookConfig of requiredWebhooks) {
