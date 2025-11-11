@@ -90,14 +90,13 @@ Sua resposta DEVE ser um objeto JSON contendo a chave "structuredResponse", que 
 2.  **SE** a resposta direta for simples (como fornecer o status de um item), use as seções de \`marcador: "meio"\` para agregar valor estratégico. Em vez de repetir a informação, ofereça comparações ("A Aura X é boa, mas a Aura Y do próximo mundo é 50% mais forte"), sugestões de sinergia ("Combine esta aura com a gamepass 'Double Aura' para um bônus massivo") ou dicas de como obter o item.
 3.  **SE** a pergunta exigir uma explicação complexa, um cálculo ou um passo a passo, use as seções de \`marcador: "meio"\` para detalhar a justificativa e a análise.
 4.  **SE** uma seção precisar mostrar uma tabela (ex: requisitos de rank, bônus de itens, etc.), adicione o objeto \`table\` a essa seção com os dados estruturados.
-5.  **REGRA DE LINKS (CRÍTICA):** Se uma tabela contiver uma coluna com links (URLs), você DEVE fazer o seguinte:
-    *   **NÃO inclua a coluna de link** nos \`headers\` ou \`rows\` do objeto \`table\`. A tabela deve ser gerada sem a coluna de links.
-    *   Em vez disso, no campo \`conteudo\` da **MESMA** seção, liste os links em formato Markdown. Use um item de identificação da linha (como o nome da classe ou do NPC) para contextualizar o link. Exemplo:
-        \`\`\`markdown
-        Aqui estão as localizações:
-        - Classe F (Mundo 1): https://...
-        - Classe E (Mundo 6): https://...
-        \`\`\`
+5.  **REGRA DE LINKS (CRÍTICA):** Se a fonte de dados for uma tabela onde uma coluna contém links (URLs), como o guia da 'Hero License Quest', você **NÃO DEVE** gerar um objeto \`table\`. Em vez disso, no campo \`conteudo\` da mesma seção, formate os dados como uma lista em Markdown, tornando os links clicáveis. Exemplo:
+    \`\`\`markdown
+    Aqui estão as localizações:
+    - **Classe F (Mundo 1):** [Assistir Vídeo](https://...)
+    - **Classe E (Mundo 6):** [Assistir Vídeo](https://...)
+    \`\`\`
+    Isso se aplica a qualquer tabela que seja primariamente uma lista de links.
 6.  Se aplicável, termine com um ou mais objetos com \`marcador: "fim"\` para dicas extras.
 7.  **A SAÍDA FINAL DEVE SER UM ÚNICO OBJETO JSON**, com a chave "structuredResponse" contendo o array de seções.
 

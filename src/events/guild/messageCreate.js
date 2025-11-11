@@ -84,6 +84,11 @@ export async function execute(message) {
 
     if (message.author.bot) return;
 
+    // --- Impede que o bot responda a si mesmo ou a outras respostas no fio ---
+    if (message.reference) {
+        return;
+    }
+
     // --- Processamento de Respostas da Comunidade ---
     if (message.channel.id === config.COMMUNITY_HELP_CHANNEL_ID && message.reference) {
         try {
