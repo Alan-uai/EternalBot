@@ -21,7 +21,7 @@ const RAID_NAMES = {
 };
 
 // Mapeamento de Avatares para cada estado
-const RAID_AVATAR_SUFFIXES = {
+const RAID_AVATAR_ASSETS = {
     'next_up': 'PR',
     'starting_soon': '5m',
     'open': 'A',
@@ -75,14 +75,16 @@ async function handleRaidLifecycle(container) {
             return;
         }
         const webhookClient = new WebhookClient({ url: webhookUrl });
-
+        
+        // Sempre deleta a mensagem anterior ao mudar de estado
         if (announcerState.messageId) {
             await webhookClient.deleteMessage(announcerState.messageId).catch(() => {
                 logger.warn(`[raidAnnouncer] Could not delete old message ${announcerState.messageId}. It might have been deleted manually.`);
             });
-            await updateDoc(announcerRef, { messageId: null });
+             await updateDoc(announcerRef, { messageId: null });
         }
         
+        // Se o ciclo acabou, limpa e sai
         if (desiredState === 'finished') {
             await updateDoc(announcerRef, { state: 'finished', raidId: null, messageId: null });
             logger.info(`[raidAnnouncer] Raid cycle finished, panel cleared.`);
@@ -90,15 +92,17 @@ async function handleRaidLifecycle(container) {
         }
 
         const assetPrefix = RAID_AVATAR_PREFIXES[newRaidId] || 'Easy';
-        const assetSuffix = RAID_AVATAR_SUFFIXES[desiredState];
+        const assetSuffix = RAID_AVATAR_ASSETS[desiredState];
         const finalWebhookName = RAID_NAMES[desiredState] || RAID_NAMES[newRaidId];
         
         const transitionGifUrl = await assetService.getAsset(`Tran${assetPrefix}${assetSuffix}`);
         const finalGifUrl = await assetService.getAsset(`${assetPrefix}${assetSuffix}`);
-        const finalAvatarUrl = await assetService.getAsset(assetPrefix + assetSuffix) || await assetService.getAsset('DungeonLobby');
+        let finalAvatarUrl = await assetService.getAsset(assetPrefix + assetSuffix);
+        if (!finalAvatarUrl) {
+            finalAvatarUrl = await assetService.getAsset('DungeonLobby');
+        }
 
         const embed = new EmbedBuilder()
-            .setColor(0x2F3136)
             .addFields(
                 { name: 'Dificuldade', value: activeRaidDetails['Dificuldade'], inline: true },
                 { name: 'Vida do Chefe', value: `\`${activeRaidDetails['Vida Último Boss']}\``, inline: true },
@@ -109,21 +113,22 @@ async function handleRaidLifecycle(container) {
         let finalContent = '';
         if (activeRaidDetails.roleId && desiredState === 'open') {
             const mention = `<@&${activeRaidDetails.roleId}>`;
-            const bar = '█'.repeat(20); // Ajuste a quantidade conforme necessário
+            const bar = '─'.repeat(20); // Caractere mais fino para evitar quebra de linha
             finalContent = `${bar} ${mention} ${bar}`;
         }
         
         let stateColor;
         switch (desiredState) {
-            case 'starting_soon': stateColor = 0xFFA500; break;
-            case 'open': stateColor = 0xFF4B4B; break;
-            case 'closing_soon': stateColor = 0x000000; break;
-            default: stateColor = 0x2F3136; break;
+            case 'starting_soon': stateColor = 0xFFA500; break; // Laranja
+            case 'open': stateColor = 0x00FF00; break; // Verde
+            case 'closing_soon': stateColor = 0xFF4B4B; break; // Vermelho
+            default: stateColor = 0x2F3136; break; // Padrão
         }
         embed.setColor(stateColor);
         
         const hasTransition = !!transitionGifUrl;
 
+        // Posta a nova mensagem (com a transição, se houver)
         const sentMessage = await webhookClient.send({
             username: finalWebhookName,
             avatarURL: finalAvatarUrl,
@@ -132,13 +137,16 @@ async function handleRaidLifecycle(container) {
             wait: true
         });
 
+        // Salva o ID da nova mensagem
         await updateDoc(announcerRef, { state: desiredState, raidId: newRaidId, messageId: sentMessage.id });
         logger.info(`[${newRaidId}] Posted message for state: '${desiredState}'.`);
 
-        if (hasTransition && finalGifUrl) {
+        // Se houve transição, edita para o GIF final após 10s
+        if (hasTransition && finalGifUrl && transitionGifUrl !== finalGifUrl) {
             await sleep(10000); // Duração da transição
             
             const latestAnnouncerDoc = await getDoc(announcerRef);
+            // Confirma que a mensagem ainda é a que acabamos de postar antes de editar
             if (latestAnnouncerDoc.data().messageId === sentMessage.id) {
                 embed.setImage(finalGifUrl);
                 await webhookClient.editMessage(sentMessage.id, {
@@ -146,7 +154,7 @@ async function handleRaidLifecycle(container) {
                 });
                 logger.info(`[${newRaidId}] Edited message to final GIF for state: '${desiredState}'.`);
             } else {
-                logger.warn(`[${newRaidId}] State changed during sleep. Aborting edit for message ${sentMessage.id}.`);
+                 logger.warn(`[${newRaidId}] State changed during sleep. Aborting edit for message ${sentMessage.id}.`);
             }
         }
     } catch (error) {
