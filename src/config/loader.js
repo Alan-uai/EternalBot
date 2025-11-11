@@ -50,7 +50,6 @@ export function loadConfig(logger) {
             '1429357530106298428'  // Leaf
         ],
         HOLIDAYS: [
-            { date: '01-01', docId: 'newYearAnnouncer', webhookName: 'Gui Festivo', title: '🎆 Feliz Ano Novo! 🎆', description: 'O Gui deseja a todos um próspero Ano Novo, cheio de sucesso, felicidade e, claro, muitos drops supremos!', color: 0xFFFF00, imageAsset: 'NewYearBanner' },
             { date: '04-21', docId: 'easterAnnouncer', webhookName: 'Gui Coelhinho', title: '🐰 Feliz Páscoa! 🐰', description: 'O Gui Coelhinho está passando para desejar uma Páscoa doce e cheia de alegrias para toda a comunidade!', color: 0xFFC0CB, imageAsset: 'EasterBanner' },
             { date: '05-12', docId: 'mothersDayAnnouncer', webhookName: 'Gui Homenageia', title: '💖 Feliz Dia das Mães! 💖', description: 'Um dia especial para todas as mães da nossa comunidade! Obrigado por todo o amor e apoio. Vocês são nossas verdadeiras heroínas!', color: 0xFF69B4 },
             { date: '08-11', docId: 'fathersDayAnnouncer', webhookName: 'Gui Homenageia', title: '👔 Feliz Dia dos Pais! 👔', description: 'Para todos os pais que nos inspiram e nos ensinam a sermos mais fortes, dentro e fora do jogo. Feliz Dia dos Pais!', color: 0x1E90FF },

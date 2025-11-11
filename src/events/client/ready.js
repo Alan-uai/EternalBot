@@ -25,7 +25,9 @@ async function initializeWebhooks(client) {
         { name: 'Painel de Farms', channelId: config.FARMING_PANEL_CHANNEL_ID, docId: 'farmingPanel' },
         { name: 'Suporte | Denúncias | Formulários', channelId: config.SUPPORT_PANEL_CHANNEL_ID, docId: 'supportPanel' },
         // Adiciona webhooks de feriados
-        ...config.HOLIDAYS.map(h => ({ name: h.webhookName, channelId: config.COMMUNITY_HELP_CHANNEL_ID, docId: h.docId }))
+        ...config.HOLIDAYS.map(h => ({ name: h.webhookName, channelId: config.COMMUNITY_HELP_CHANNEL_ID, docId: h.docId })),
+        // Adiciona webhook de Ano Novo
+        { name: 'Gui Festivo', channelId: config.COMMUNITY_HELP_CHANNEL_ID, docId: 'newYearAnnouncer' }
     ];
 
     for (const webhookConfig of requiredWebhooks) {
