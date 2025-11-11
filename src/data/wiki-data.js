@@ -37,6 +37,7 @@ import { championsIndexArticle } from './wiki-articles/champions-index.js';
 import { colorsAndIconsGuideArticle } from './wiki-articles/colors-and-icons-guide.js';
 import { damageSwordsArticle } from './wiki-articles/damage-swords.js';
 import { energyGainPerRankArticle } from './wiki-articles/energy-gain.js';
+import { exchangerTokenFarmGuideArticle } from './wiki-articles/guia-de-farm-de-exchanger-tokens.js';
 import { gamepassTierListArticle } from './wiki-articles/gamepass-tier-list.js';
 import { gettingStartedArticle } from './wiki-articles/getting-started.js';
 import { guildWarsArticle } from './wiki-articles/guild-wars.js';
@@ -135,4 +136,5 @@ export const allWikiArticles = [
     howPowersWorkGuideArticle,
     punchMachineQuestGuideArticle,
     heroLicenseQuestGuideArticle,
+    exchangerTokenFarmGuideArticle,
 ];
