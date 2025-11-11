@@ -151,29 +151,23 @@ export async function execute(message) {
             history: history.length > 0 ? history : undefined,
         });
         
-        if (!result || !result.structuredResponse || result.structuredResponse.length === 0) {
-            throw new Error("Resposta da IA inválida ou vazia.");
-        }
+        const firstSection = result?.structuredResponse?.[0];
 
-        const firstSection = result.structuredResponse[0];
-
-        if (firstSection.titulo === 'Resposta não encontrada') {
+        // A única verificação necessária: a resposta tem o título de 'não encontrada'?
+        if (firstSection?.titulo === 'Resposta não encontrada') {
             await handleUnansweredQuestion(message, question, imageAttachment);
         } else { 
             let replyContent = '';
             let attachments = [];
 
             for (const section of result.structuredResponse) {
-                // Se a seção tiver um título, adicione-o em negrito.
                 if (section.titulo) {
                     replyContent += `**${section.titulo}**\n`;
                 }
-                // Adicione o conteúdo de texto da seção.
                 if (section.conteudo) {
                     replyContent += `${section.conteudo}\n\n`;
                 }
                 
-                // Se a seção tiver uma tabela, gere a imagem e a adicione aos anexos.
                 if (section.table && section.table.rows && section.table.rows.length > 0) {
                     try {
                         const tableImage = await createTableImage(section.table.headers, section.table.rows);

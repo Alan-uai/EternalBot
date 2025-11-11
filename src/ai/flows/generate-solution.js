@@ -1,5 +1,3 @@
-
-
 // src/ai/flows/generate-solution.js
 import { ai } from '../genkit.js';
 import { z } from 'zod';
@@ -186,12 +184,10 @@ const generateSolutionFlow = ai.defineFlow(
 
     try {
       const {output} = await prompt(input);
-      if (!output || !output.structuredResponse || output.structuredResponse.length === 0) {
+      if (!output || !output.structuredResponse || output.structuredResponse.length === 0 || !output.structuredResponse[0]?.conteudo) {
+        // Se a IA não conseguir gerar uma resposta estruturada válida, retorne o fallback.
+        console.warn("A IA retornou uma resposta vazia ou mal formatada. Acionando fallback.");
         return fallbackResponse;
-      }
-      // Valida se a resposta não é uma resposta de erro genérica da IA ou vazia
-      if (output.structuredResponse[0]?.titulo === "Resposta não encontrada" || !output.structuredResponse[0]?.conteudo) {
-          return fallbackResponse;
       }
       return output;
     } catch (error) {
@@ -200,5 +196,3 @@ const generateSolutionFlow = ai.defineFlow(
     }
   }
 );
-
-    
