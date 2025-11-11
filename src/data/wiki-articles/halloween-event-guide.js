@@ -57,13 +57,13 @@ Existem dois tipos de zumbis no jogo. Os de Energia são exclusivos do evento de
   tags: ['guia', 'evento', 'halloween', 'raid', 'halloween bag', 'progressão', 'mundo 1', 'energia', 'dano', 'moedas', 'imp tail', 'zombie', 'spooky portions', 'ghost power', 'graveyard defense', 'star luck'],
   tables: {
     halloweenAvatars: {
-      headers: ['Name', 'Stats (Energy)', 'Stats (lvl 150 Energy)', 'Stats (Star Luck)', 'Stats (lvl 150 Star Luck)'],
+      headers: ['Name', 'Stats (Energy)', 'Stats (lvl 175 Energy)', 'Stats (Star Luck)', 'Stats (lvl 175 Star Luck)'],
       rows: [
-        { Name: 'Carrotto', 'Stats (Energy)': '2.34k', 'Stats (lvl 150 Energy)': '19.9k', 'Stats (Star Luck)': '5%', 'Stats (lvl 150 Star Luck)': '5%' },
-        { Name: 'Evil Bald Man', 'Stats (Energy)': '228k', 'Stats (lvl 150 Energy)': '1.93M', 'Stats (Star Luck)': '10%', 'Stats (lvl 150 Star Luck)': '10%' },
-        { Name: 'Pumpkinado', 'Stats (Energy)': '22.4M', 'Stats (lvl 150 Energy)': '190M', 'Stats (Star Luck)': '15%', 'Stats (lvl 150 Star Luck)': '15%' },
-        { Name: 'Bald Warlock', 'Stats (Energy)': '2.19B', 'Stats (lvl 150 Energy)': '18.6B', 'Stats (Star Luck)': '20%', 'Stats (lvl 150 Star Luck)': '20%' },
-        { Name: 'Spook-suke', 'Stats (Energy)': '214B', 'Stats (lvl 150 Energy)': '1.82T', 'Stats (Star Luck)': '25%', 'Stats (lvl 150 Star Luck)': '25%' }
+        { Name: 'Carrotto', 'Stats (Energy)': '2.34k', 'Stats (lvl 175 Energy)': '19.9k', 'Stats (Star Luck)': '5%', 'Stats (lvl 175 Star Luck)': '5%' },
+        { Name: 'Evil Bald Man', 'Stats (Energy)': '228k', 'Stats (lvl 175 Energy)': '1.93M', 'Stats (Star Luck)': '10%', 'Stats (lvl 175 Star Luck)': '10%' },
+        { Name: 'Pumpkinado', 'Stats (Energy)': '22.4M', 'Stats (lvl 175 Energy)': '190M', 'Stats (Star Luck)': '15%', 'Stats (lvl 175 Star Luck)': '15%' },
+        { Name: 'Bald Warlock', 'Stats (Energy)': '2.19B', 'Stats (lvl 175 Energy)': '18.6B', 'Stats (Star Luck)': '20%', 'Stats (lvl 175 Star Luck)': '20%' },
+        { Name: 'Spook-suke', 'Stats (Energy)': '214B', 'Stats (lvl 175 Energy)': '1.82T', 'Stats (Star Luck)': '25%', 'Stats (lvl 175 Star Luck)': '25%' }
       ]
     },
     energyZombies: {
@@ -111,3 +111,5 @@ Existem dois tipos de zumbis no jogo. Os de Energia são exclusivos do evento de
     }
   ]
 };
+
+    
