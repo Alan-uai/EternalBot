@@ -16,21 +16,18 @@ async function sendReply(message, parts) {
     for (let i = 0; i < parts.length; i++) {
         const part = parts[i];
         const isLastPart = i === parts.length - 1;
+        const options = {
+            content: part.content || null,
+            files: part.attachments,
+            components: isLastPart ? [feedbackRow] : []
+        };
 
         if (i === 0) {
             // A primeira mensagem é uma resposta direta
-            replyMessage = await message.reply({
-                content: part.content,
-                files: part.attachments,
-                components: isLastPart ? [feedbackRow] : []
-            });
+            replyMessage = await message.reply(options);
         } else {
             // As mensagens subsequentes são enviadas no canal
-            await message.channel.send({
-                content: part.content,
-                files: part.attachments,
-                components: isLastPart ? [feedbackRow] : []
-            });
+            await message.channel.send(options);
         }
     }
     return replyMessage; // Retorna a primeira mensagem para referência
@@ -182,70 +179,43 @@ export async function execute(message) {
             history: history.length > 0 ? history : undefined,
         });
 
-        // A lógica de fallback agora está dentro de generateSolution. Se a resposta for a de fallback,
-        // acionamos o fluxo de curadoria.
         if (result?.structuredResponse?.[0]?.titulo === 'Resposta não encontrada') {
-            // A IA não soube responder, então aciona o fluxo de curadoria.
             await handleUnansweredQuestion(message, question, imageAttachment);
-            // Envia a mensagem de fallback da IA para o usuário.
             await message.reply(result.structuredResponse[0].conteudo);
         } else {
-            // A IA conseguiu responder.
             const messageParts = [];
-            let currentContent = '';
-            let currentAttachments = [];
-
             for (const section of result.structuredResponse) {
-                let sectionContent = '';
-                if (section.titulo) {
-                    sectionContent += `**${section.titulo}**\n`;
+                let textContent = '';
+                if (section.titulo) textContent += `**${section.titulo}**\n`;
+                if (section.conteudo) textContent += `${section.conteudo}\n\n`;
+
+                if (textContent.trim()) {
+                    messageParts.push({ content: textContent, attachments: [] });
                 }
-                if (section.conteudo) {
-                    sectionContent += `${section.conteudo}\n\n`;
-                }
-                
-                let sectionAttachments = [];
+
                 if (section.table && section.table.rows && section.table.rows.length > 0) {
                     try {
                         const tableImage = await createTableImage(section.table.headers, section.table.rows);
-                        sectionAttachments.push(new AttachmentBuilder(tableImage, { name: `table-${section.titulo.toLowerCase().replace(/ /g, '-')}.png` }));
+                        const attachment = new AttachmentBuilder(tableImage, { name: `table-${section.titulo?.toLowerCase().replace(/ /g, '-') || 'data'}.png` });
+                        messageParts.push({ content: null, attachments: [attachment] });
                     } catch (tableError) {
                         logger.error("Erro ao gerar imagem da tabela:", tableError);
-                        sectionContent += `\n*(Erro ao renderizar a tabela como imagem.)*`;
+                        messageParts.push({ content: `*(Erro ao renderizar a tabela ${section.titulo} como imagem.)*`, attachments: [] });
                     }
                 }
-
-                // Verifica se adicionar a nova seção excede o limite de 2000 caracteres
-                if (currentContent.length + sectionContent.length > 2000) {
-                    // Finaliza a parte atual e começa uma nova
-                    messageParts.push({ content: currentContent, attachments: currentAttachments });
-                    currentContent = sectionContent;
-                    currentAttachments = sectionAttachments;
-                } else {
-                    currentContent += sectionContent;
-                    currentAttachments.push(...sectionAttachments);
-                }
             }
-             // Adiciona a última parte
-            if (currentContent) {
-                messageParts.push({ content: currentContent, attachments: currentAttachments });
-            }
-
+            
             const replyMessage = await sendReply(message, messageParts);
             
             // Salva o contexto para o feedback, usando o conteúdo da primeira parte como referência
             client.container.interactions.set(`question_${message.id}`, question);
-            client.container.interactions.set(`answer_${message.id}`, messageParts[0].content);
+            client.container.interactions.set(`answer_${message.id}`, messageParts[0]?.content || 'Resposta em imagem.');
             client.container.interactions.set(`history_${message.id}`, history);
             client.container.interactions.set(`replyMessageId_${message.id}`, replyMessage.id);
         }
     } catch (error) {
         logger.error('Erro na execução do evento messageCreate:', error);
-        // O fallback dentro de generateSolution já deve ter sido acionado,
-        // mas em caso de erro na própria estrutura do fluxo, acionamos a curadoria.
         await handleUnansweredQuestion(message, question, imageAttachment);
         await message.reply('Ocorreu um erro inesperado ao processar sua pergunta. Um especialista foi notificado.').catch(() => {});
     }
 }
-
-    
