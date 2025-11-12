@@ -222,7 +222,7 @@ async function handleFinish(interaction, flowData) {
     
     const newFarm = {
         hostId: interaction.user.id,
-        hostUsername: interaction.user.username, // Save the global username as a fallback
+        hostUsername: interaction.user.username,
         dayOfWeek: flowData.day,
         time: flowData.time,
         raidName: flowData.raidName,
@@ -278,7 +278,7 @@ async function handleParticipationToggle(interaction) {
     // Host view: if host clicks their own farm, show participants
     if (userId === farmData.hostId) {
         const participants = farmData.participants || [];
-        const participantMentions = participants.map(pId => `<@${pId}>`).join('\n') || 'Nenhum participante ainda.';
+        const participantMentions = participants.length > 0 ? participants.map(pId => `<@${pId}>`).join('\n') : 'Nenhum participante ainda.';
         
         const embed = new EmbedBuilder()
             .setColor(0x1ABC9C)
@@ -309,38 +309,31 @@ async function handleParticipationToggle(interaction) {
         const requiredRank = farmData.restrictions.rank;
         const requiredWorld = farmData.restrictions.world;
 
-        if (requiredDps) {
-            if (!userData.dps) profileIsIncomplete = true;
-            else if (parseNumber(userData.dps) < parseNumber(requiredDps)) {
-                meetsRequirements = false;
-                unmetReasons.push(`DPS (Seu: ${userData.dps} | Req: ${requiredDps})`);
-            }
-        }
-        if (requiredRank) {
-             if (!userData.rank) profileIsIncomplete = true;
-            else if ((userData.rank || 0) < parseInt(requiredRank)) {
-                meetsRequirements = false;
-                unmetReasons.push(`Rank (Seu: ${userData.rank || 'N/A'} | Req: ${requiredRank})`);
-            }
-        }
-        if (requiredWorld) {
-            if (!userData.currentWorld) profileIsIncomplete = true;
-            else if ((userData.currentWorld || 0) < parseInt(requiredWorld)) {
-                meetsRequirements = false;
-                unmetReasons.push(`Mundo (Seu: ${userData.currentWorld || 'N/A'} | Req: ${requiredWorld})`);
-            }
-        }
-        
+        if (requiredDps && !userData.dps) profileIsIncomplete = true;
+        if (requiredRank && !userData.rank) profileIsIncomplete = true;
+        if (requiredWorld && !userData.currentWorld) profileIsIncomplete = true;
+
         if (profileIsIncomplete) {
             return interaction.editReply({ content: 'Seu perfil está incompleto. Por favor, use o comando `/perfil` para adicionar suas informações de DPS, Rank e Mundo antes de entrar neste farm.' });
         }
 
+        if (requiredDps && parseNumber(userData.dps) < parseNumber(requiredDps)) {
+            meetsRequirements = false;
+            unmetReasons.push(`DPS (Seu: ${userData.dps} | Req: ${requiredDps})`);
+        }
+        if (requiredRank && (userData.rank || 0) < parseInt(requiredRank)) {
+            meetsRequirements = false;
+            unmetReasons.push(`Rank (Seu: ${userData.rank || 'N/A'} | Req: ${requiredRank})`);
+        }
+        if (requiredWorld && (userData.currentWorld || 0) < parseInt(requiredWorld)) {
+            meetsRequirements = false;
+            unmetReasons.push(`Mundo (Seu: ${userData.currentWorld || 'N/A'} | Req: ${requiredWorld})`);
+        }
 
         if (!meetsRequirements) {
             const hostUser = await interaction.client.users.fetch(farmData.hostId).catch(() => ({ username: 'o host' }));
             
             const farmsRef = collection(firestore, 'scheduled_farms');
-            // Query for other farms of the same raid
             const sameRaidQuery = query(farmsRef, where("raidName", "==", farmData.raidName), where("hostId", "!=", farmData.hostId));
             const otherSameRaidFarmsSnap = await getDocs(sameRaidQuery);
             
@@ -359,21 +352,7 @@ async function handleParticipationToggle(interaction) {
                     .addOptions(otherFarmOptions);
                 components.push(new ActionRowBuilder().addComponents(selectMenu));
             } else {
-                // If no other farms for the same raid, find ALL other farms
-                const allOtherFarmsQuery = query(farmsRef, where("hostId", "!=", farmData.hostId));
-                const allOtherFarmsSnap = await getDocs(allOtherFarmsQuery);
-                if (!allOtherFarmsSnap.empty) {
-                    responseContent += "\n\nTente outro Farm:";
-                    const allFarmOptions = allOtherFarmsSnap.docs.map(fDoc => ({
-                        label: `${fDoc.data().time} - ${fDoc.data().raidName} (Host: ${fDoc.data().hostUsername})`,
-                        value: fDoc.id,
-                    }));
-                     const selectMenu = new StringSelectMenuBuilder()
-                        .setCustomId('farming_participate')
-                        .setPlaceholder('Nenhum farm igual, mas talvez estes interessem:')
-                        .addOptions(allFarmOptions.slice(0, 25)); // Limit to 25 options
-                    components.push(new ActionRowBuilder().addComponents(selectMenu));
-                }
+                responseContent += "\n\nTente outro Farm, selecionando algum que te agrade no menu do painel.";
             }
 
             return interaction.editReply({ content: responseContent, components });
