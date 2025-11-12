@@ -110,7 +110,7 @@ async function handleTagSubmit(interaction) {
 }
 
 
-async function openNotificationsPanel(interaction) {
+async function openNotificationsPanel(interaction, isUpdate = false) {
     const { firestore } = initializeFirebase();
     const userRef = doc(firestore, 'users', interaction.user.id);
     const userSnap = await getDoc(userRef);
@@ -188,12 +188,12 @@ async function openNotificationsPanel(interaction) {
 
     const replyOptions = { embeds: [embed], components, ephemeral: true };
     
-    // Se a interação foi um clique de botão, precisamos responder de uma nova forma
-    // pois a mensagem original era efêmera.
-    if (interaction.isButton()) {
-        await interaction.reply(replyOptions);
-    } else {
+    if (isUpdate) {
+        // Para atualizações (como menus de seleção), usamos update()
         await interaction.update(replyOptions);
+    } else {
+        // Para a abertura inicial ou após apagar, usamos reply()
+        await interaction.reply(replyOptions);
     }
 }
 
@@ -206,23 +206,24 @@ async function handleDmToggle(interaction) {
     
     await updateDoc(userRef, { 'notificationPrefs.dmEnabled': !currentStatus });
     
-    // Em vez de atualizar a interação, vamos deletar a resposta deferida e reenviar o painel.
+    // Apaga a resposta "thinking" e reabre o painel com uma nova mensagem
     await interaction.deleteReply();
-    await openNotificationsPanel(interaction);
+    await openNotificationsPanel(interaction, false);
 }
+
 
 async function handleSolingInterestSelect(interaction) {
     const { firestore } = initializeFirebase();
     const userRef = doc(firestore, 'users', interaction.user.id);
     await updateDoc(userRef, { 'notificationPrefs.solingInterests': interaction.values });
-    await openNotificationsPanel(interaction);
+    await openNotificationsPanel(interaction, true);
 }
 
 async function handleFarmInterestSelect(interaction) {
     const { firestore } = initializeFirebase();
     const userRef = doc(firestore, 'users', interaction.user.id);
     await updateDoc(userRef, { 'notificationPrefs.farmInterests': interaction.values });
-    await openNotificationsPanel(interaction);
+    await openNotificationsPanel(interaction, true);
 }
 
 
@@ -287,11 +288,11 @@ export async function handleInteraction(interaction, container) {
         } else if (interaction.customId === TAG_CONFIG_BUTTON_ID) {
             await openTagModal(interaction);
         } else if (interaction.customId === NOTIFICATIONS_CONFIG_BUTTON_ID) {
-            await openNotificationsPanel(interaction);
+            await openNotificationsPanel(interaction, false);
         } else if (interaction.customId === NOTIFICATIONS_DM_TOGGLE_ID) {
             await handleDmToggle(interaction);
         } else if (interaction.customId === NOTIFICATIONS_BACK_TO_MAIN_ID) {
-            await openNotificationsPanel(interaction);
+            await openNotificationsPanel(interaction, true);
         } else if (action === 'notify' && params[0] === 'host' && params[1] === 'soling') {
             await handleHostNotifyToggle(interaction, 'soling');
         } else if (action === 'notify' && params[0] === 'host' && params[1] === 'farm') {
