@@ -42,10 +42,12 @@ const GenerateSolutionInputSchema = z.object({
   imageDataUri: z.string().optional().describe("A photo related to the problem, as a data URI. Expected format: 'data:<mimetype>;base64,<encoded_data>'."),
   wikiContext: z.string().describe('A compilation of all wiki articles to be used as a knowledge base.'),
   history: z.array(MessageSchema).optional().describe('The previous messages in the conversation.'),
-  responseStyle: z.enum(['short', 'medium', 'detailed']).optional().describe("The user's preferred response style."),
+  responseStyleInstruction: z.string().optional().describe('Uma instrução específica sobre o estilo de resposta (curta, média, detalhada, tópicos, etc.).'),
+  personaInstruction: z.string().optional().describe('Uma instrução específica sobre a persona que a IA deve adotar (amigável, técnico, engraçado, etc.).'),
+  userName: z.string().optional().describe('O nome do usuário para uma saudação personalizada.'),
+  userTitle: z.string().optional().describe('Um título honorífico que o usuário escolheu (Mestre, Campeão, etc.).'),
 });
 
-// NOVO SCHEMA DE SAÍDA PARA SUPORTAR TABELAS
 const TableSchema = z.object({
   headers: z.array(z.string()).describe("Um array com os nomes das colunas da tabela."),
   rows: z.array(z.record(z.string())).describe("Um array de objetos, onde cada objeto representa uma linha e as chaves correspondem aos cabeçalhos."),
@@ -72,15 +74,20 @@ export const prompt = ai.definePrompt({
   input: { schema: GenerateSolutionInputSchema },
   output: { schema: GenerateSolutionOutputSchema },
   tools: [getGameDataTool, getUpdateLogTool],
-  prompt: `Você é o Gui, um assistente especialista no jogo Anime Eternal e também uma calculadora estratégica. Sua resposta DEVE ser em Português-BR.
+  prompt: `{{! INÍCIO DAS INSTRUÇÕES GLOBAIS }}
+Você é o Gui, um assistente especialista no jogo Anime Eternal. Sua resposta DEVE ser em Português-BR.
 
-{{#if (eq responseStyle 'short')}}
-**ATENÇÃO: Resposta CURTA Solicitada!**
-Sua resposta DEVE ser o mais curta e direta possível, contendo apenas a seção "texto_introdutorio" com a solução principal. NÃO adicione seções de análise, dicas extras ou tabelas.
-{{else if (eq responseStyle 'medium')}}
-**ATENÇÃO: Resposta MÉDIA Solicitada!**
-Sua resposta deve conter a seção "texto_introdutorio" com a solução direta, e UMA ÚNICA seção "meio" com os detalhes mais importantes ou uma tabela. NÃO adicione a seção "fim" ou dicas extras.
-{{/if}}
+{{! INSTRUÇÃO DE PERSONA (DINÂMICA) }}
+{{{personaInstruction}}}
+
+{{! INSTRUÇÃO DE ESTILO DE RESPOSTA (DINÂMICA) }}
+{{{responseStyleInstruction}}}
+
+**SAUDAÇÃO PERSONALIZADA (OBRIGATÓRIO):**
+Sua primeira seção (marcador: "texto_introdutorio") DEVE começar com uma saudação. Use o nome de usuário e o título se forem fornecidos.
+- Se 'userTitle' e 'userName' forem fornecidos: "Olá, {{{userTitle}}} {{{userName}}}!"
+- Se apenas 'userName' for fornecido: "Olá, {{{userName}}}!"
+- Se nenhum for fornecido, use uma saudação genérica como "Olá!".
 
 **ESTRUTURA DA RESPOSTA (JSON OBRIGATÓRIO):**
 Sua resposta DEVE ser um objeto JSON contendo a chave "structuredResponse", que é um array de objetos de seção.
@@ -191,9 +198,13 @@ const generateSolutionFlow = ai.defineFlow(
     };
 
     try {
-      const {output} = await prompt(input);
+      // Adiciona uma saudação padrão se o nome não for fornecido
+      const personaInstructionWithFallback = input.personaInstruction || 'Você é o Gui, um assistente especialista, amigável e prestativo. Use um tom encorajador e positivo.';
+      
+      const promptInput = { ...input, personaInstruction: personaInstructionWithFallback };
+
+      const {output} = await prompt(promptInput);
       if (!output || !output.structuredResponse || output.structuredResponse.length === 0 || !output.structuredResponse[0]?.conteudo) {
-        // Se a IA não conseguir gerar uma resposta estruturada válida, retorne o fallback.
         console.warn("A IA retornou uma resposta vazia ou mal formatada. Acionando fallback.");
         return fallbackResponse;
       }
@@ -204,5 +215,3 @@ const generateSolutionFlow = ai.defineFlow(
     }
   }
 );
-
-    

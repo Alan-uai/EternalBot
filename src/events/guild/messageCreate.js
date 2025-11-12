@@ -5,6 +5,8 @@ import { generateSolution } from '../../ai/flows/generate-solution.js';
 import { createTableImage } from '../../utils/createTableImage.js';
 import { doc, getDoc } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
+import { personas } from '../../ai/personas.js';
+import { responseStyles } from '../../ai/response-styles.js';
 
 
 // Função para enviar respostas, dividindo se necessário
@@ -153,10 +155,19 @@ export async function execute(message) {
 
     await message.channel.sendTyping();
     
-    // Busca preferência do usuário
+    // Busca preferências do usuário
     const userRef = doc(firestore, 'users', message.author.id);
     const userSnap = await getDoc(userRef);
-    const responseStyle = userSnap.exists() ? userSnap.data().aiResponsePreference : null;
+    const userData = userSnap.exists() ? userSnap.data() : {};
+    
+    const responseStyleKey = userData.aiResponsePreference || 'detailed';
+    const personaKey = userData.aiPersonality || 'amigavel';
+    const userTitle = userData.userTitle || undefined;
+    const userName = userData.customName || message.author.username;
+
+    // Busca as instruções modulares
+    const responseStyleInstruction = responseStyles[responseStyleKey]?.instruction || '';
+    const personaInstruction = personas[personaKey]?.instruction || personas.amigavel.instruction;
 
     let imageDataUri = null;
     if (imageAttachment) {
@@ -179,7 +190,7 @@ export async function execute(message) {
             const role = repliedToMessage.author.id === client.user.id ? 'assistant' : 'user';
             const content = repliedToMessage.content.replace(/<@!?(\d+)>/g, '').trim();
             history.unshift({ role, content });
-            currentMessage = repliedToMessage; // Move to the previous message in the chain
+            currentMessage = repliedToMessage;
         }
     } catch (error) {
         logger.warn("Não foi possível buscar o histórico completo da conversa:", error);
@@ -191,7 +202,10 @@ export async function execute(message) {
             imageDataUri: imageDataUri || undefined,
             wikiContext: wikiContext.getContext(),
             history: history.length > 0 ? history : undefined,
-            responseStyle: responseStyle || undefined, // Passa a preferência para a IA
+            responseStyleInstruction,
+            personaInstruction,
+            userName,
+            userTitle,
         });
 
         if (result?.structuredResponse?.[0]?.titulo === 'Resposta não encontrada') {
@@ -234,5 +248,3 @@ export async function execute(message) {
         await message.reply('Ocorreu um erro inesperado ao processar sua pergunta. Um especialista foi notificado.').catch(() => {});
     }
 }
-
-    

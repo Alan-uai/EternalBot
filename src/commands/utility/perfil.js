@@ -1,6 +1,6 @@
 // src/commands/utility/perfil.js
-import { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle, ChannelType, PermissionsBitField, EmbedBuilder, AttachmentBuilder } from 'discord.js';
-import { doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, query, where, getDocs } from 'firebase/firestore';
+import { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder } from 'discord.js';
+import { doc, getDoc } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
 import { createProfileImage } from '../../utils/createProfileImage.js';
 
@@ -9,17 +9,13 @@ const COMMUNITY_HELP_CHANNEL_ID = '1426957344897761282';
 const ALLOWED_CHANNELS = [FORMULARIO_CHANNEL_ID, COMMUNITY_HELP_CHANNEL_ID];
 
 export const CUSTOM_ID_PREFIX = 'perfil';
-export const FORM_BUTTON_ID = `${CUSTOM_ID_PREFIX}_abrir`;
-export const IMPORT_BUTTON_ID = `${CUSTOM_ID_PREFIX}_importar`;
-export const FORM_MODAL_ID = `${CUSTOM_ID_PREFIX}_modal`;
-export const IMPORT_MODAL_ID = `${CUSTOM_ID_PREFIX}_importar_modal`;
-const NOTIFICATION_BUTTON_PREFIX = `${CUSTOM_ID_PREFIX}_notify`;
-const PREFERENCE_BUTTON_PREFIX = `${CUSTOM_ID_PREFIX}_prefs`;
+export const UPDATE_PROFILE_BUTTON_ID = `${CUSTOM_ID_PREFIX}_update`;
+export const CUSTOMIZE_AI_BUTTON_ID = `${CUSTOM_ID_PREFIX}_customize_ai`;
 
 
 export const data = new SlashCommandBuilder()
     .setName('perfil')
-    .setDescription('Cria, atualiza ou visualiza seu perfil de jogador.')
+    .setDescription('Cria, atualiza ou visualiza um perfil de jogador.')
     .addUserOption(option => 
         option.setName('usuario')
               .setDescription('O usuário do qual você quer ver o perfil (opcional).')
@@ -31,45 +27,37 @@ export async function execute(interaction) {
     }
     
     const targetUser = interaction.options.getUser('usuario') || interaction.user;
+    const isViewingSelf = targetUser.id === interaction.user.id;
 
-    await interaction.deferReply({ ephemeral: targetUser.id !== interaction.user.id });
+    await interaction.deferReply({ ephemeral: true }); // SEMPRE efêmero agora
     
     const { firestore } = initializeFirebase();
     const userRef = doc(firestore, 'users', targetUser.id);
     const userSnap = await getDoc(userRef);
 
     if (!userSnap.exists()) {
-        // Se o perfil não existe E o usuário está tentando ver o seu próprio perfil
-        if (targetUser.id === interaction.user.id) {
+        if (isViewingSelf) {
              const { openProfileForm } = await import('../../interactions/buttons/iniciar-perfil.js');
-             // Mostra o formulário de criação diretamente
-             await interaction.deleteReply(); // Deleta o "Thinking..." para o modal aparecer corretamente
-             return openProfileForm(interaction);
+             await interaction.deleteReply();
+             return openProfileForm(interaction, true); // Passa true para indicar que é a criação inicial
         } else {
-            // Se está tentando ver o perfil de outro que não existe
             return interaction.editReply(`O usuário ${targetUser.username} ainda não tem um perfil no Guia Eterno.`);
         }
     }
     
-    // Se o perfil existe, mostra a imagem
     try {
-        const profileImage = await createProfileImage(userSnap.data(), targetUser);
+        const userData = userSnap.data();
+        const profileImage = await createProfileImage(userData, targetUser);
         const attachment = new AttachmentBuilder(profileImage, { name: 'profile-image.png' });
         
         const components = [];
-        // Mostra os botões de gerenciamento apenas se o usuário estiver vendo seu próprio perfil
-        if(targetUser.id === interaction.user.id) {
-            const managementRow1 = new ActionRowBuilder()
+        if(isViewingSelf) {
+            const managementRow = new ActionRowBuilder()
                 .addComponents(
-                    new ButtonBuilder().setCustomId(`${CUSTOM_ID_PREFIX}_update_${targetUser.id}`).setLabel('Atualizar Perfil').setStyle(ButtonStyle.Primary).setEmoji('📝'),
-                    new ButtonBuilder().setCustomId(`${CUSTOM_ID_PREFIX}_dungeonconfig_${targetUser.id}`).setLabel('Config. Dungeon').setStyle(ButtonStyle.Secondary).setEmoji('⚙️')
+                    new ButtonBuilder().setCustomId(`${UPDATE_PROFILE_BUTTON_ID}_${targetUser.id}`).setLabel('Atualizar Perfil').setStyle(ButtonStyle.Primary).setEmoji('📝'),
+                    new ButtonBuilder().setCustomId(`${CUSTOMIZE_AI_BUTTON_ID}_${targetUser.id}`).setLabel('Personalizar o Gui').setStyle(ButtonStyle.Secondary).setEmoji('🤖')
                 );
-            const managementRow2 = new ActionRowBuilder()
-                .addComponents(
-                    new ButtonBuilder().setCustomId(`${NOTIFICATION_BUTTON_PREFIX}_toggle_${targetUser.id}`).setLabel('Notificações').setStyle(ButtonStyle.Secondary).setEmoji('🔔'),
-                    new ButtonBuilder().setCustomId(`${PREFERENCE_BUTTON_PREFIX}_open_${targetUser.id}`).setLabel('Preferências de Resposta').setStyle(ButtonStyle.Secondary).setEmoji('🤖')
-                );
-            components.push(managementRow1, managementRow2);
+            components.push(managementRow);
         }
 
         return interaction.editReply({ files: [attachment], components });

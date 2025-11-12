@@ -1,16 +1,27 @@
 // src/interactions/buttons/iniciar-perfil.js
-import { ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, AttachmentBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, AttachmentBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } from 'discord.js';
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, query, where, getDocs } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
 import { createProfileImage } from '../../utils/createProfileImage.js';
-import { CUSTOM_ID_PREFIX, FORM_MODAL_ID, IMPORT_MODAL_ID } from '../../commands/utility/perfil.js';
-import { openDungeonSettingsModal } from './dungeonconfig.js'; // Importar a função
+import { CUSTOM_ID_PREFIX, UPDATE_PROFILE_BUTTON_ID, CUSTOMIZE_AI_BUTTON_ID } from '../../commands/utility/perfil.js';
+import { personas } from '../../ai/personas.js';
+import { responseStyles } from '../../ai/response-styles.js';
 
 export const customIdPrefix = CUSTOM_ID_PREFIX;
-const NOTIFICATION_BUTTON_PREFIX = `${CUSTOM_ID_PREFIX}_notify`;
-const PREFERENCE_BUTTON_PREFIX = `${CUSTOM_ID_PREFIX}_prefs`;
 
-export async function openProfileForm(interaction) {
+// Novos IDs para o painel de personalização da IA
+const FORM_MODAL_ID = `${CUSTOM_ID_PREFIX}_form_modal`;
+const CUSTOMIZE_MODAL_ID = `${CUSTOM_ID_PREFIX}_customize_modal`;
+const RESPONSE_STYLE_SELECT_ID = `${CUSTOM_ID_PREFIX}_select_style`;
+const PERSONA_SELECT_ID = `${CUSTOM_ID_PREFIX}_select_persona`;
+const TITLE_SELECT_ID = `${CUSTOM_ID_PREFIX}_select_title`;
+const SET_CUSTOM_TITLE_BUTTON_ID = `${CUSTOM_ID_PREFIX}_button_custom_title`;
+const TITLE_MODAL_ID = `${CUSTOM_ID_PREFIX}_modal_title`;
+
+const PREDEFINED_TITLES = ['Nenhum', 'Mestre', 'Campeão', 'Aventureiro', 'Sábio', 'Lendário'];
+
+// Função para abrir o formulário principal de perfil
+export async function openProfileForm(interaction, isInitialSetup = false) {
     const { firestore } = initializeFirebase();
     const userRef = doc(firestore, 'users', interaction.user.id);
     const userSnap = await getDoc(userRef);
@@ -18,7 +29,7 @@ export async function openProfileForm(interaction) {
 
     const modal = new ModalBuilder()
         .setCustomId(FORM_MODAL_ID)
-        .setTitle('Formulário de Perfil - Guia Eterno');
+        .setTitle(isInitialSetup ? 'Crie Seu Perfil - Guia Eterno' : 'Atualizar Perfil');
 
     const worldInput = new TextInputBuilder()
         .setCustomId('currentWorld')
@@ -71,22 +82,7 @@ export async function openProfileForm(interaction) {
     await interaction.showModal(modal);
 }
 
-async function handleOpenImportModal(interaction) {
-    const modal = new ModalBuilder()
-        .setCustomId(IMPORT_MODAL_ID)
-        .setTitle('Importar Perfil do Site');
-
-    const emailInput = new TextInputBuilder()
-        .setCustomId('email')
-        .setLabel("E-mail da sua conta do site")
-        .setPlaceholder("Ex: seuemail@gmail.com")
-        .setStyle(TextInputStyle.Short)
-        .setRequired(true);
-
-    modal.addComponents(new ActionRowBuilder().addComponents(emailInput));
-    await interaction.showModal(modal);
-}
-
+// Função para processar o formulário de perfil
 async function handleFormSubmit(interaction) {
     await interaction.deferReply({ ephemeral: true });
 
@@ -109,12 +105,12 @@ async function handleFormSubmit(interaction) {
             const [dia, mes] = parts;
             const date = new Date(2000, mes - 1, dia);
              if (date.getMonth() === parseInt(mes, 10) - 1 && date.getDate() === parseInt(dia, 10)) {
-                profileData.birthday = `${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`; // MM-DD
+                profileData.birthday = `${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
              } else {
-                 return interaction.editReply('A data de aniversário fornecida é inválida. Use o formato DD/MM.');
+                 return interaction.editReply({ content: 'A data de aniversário fornecida é inválida. Use o formato DD/MM.' });
              }
         } else if (birthdayValue.trim() !== '') {
-            return interaction.editReply('Formato de data de aniversário inválido. Use DD/MM.');
+            return interaction.editReply({ content: 'Formato de data de aniversário inválido. Use DD/MM.' });
         }
     }
     
@@ -127,8 +123,8 @@ async function handleFormSubmit(interaction) {
             id: user.id, 
             username: user.username, 
             createdAt: serverTimestamp(),
-            reputationPoints: 0,
-            credits: 0
+            reputationPoints: 0, credits: 0,
+            aiPersonality: 'amigavel', aiResponsePreference: 'detailed'
         });
     }
     
@@ -138,217 +134,166 @@ async function handleFormSubmit(interaction) {
         const profileImage = await createProfileImage(updatedUserSnap.data(), user);
         const attachment = new AttachmentBuilder(profileImage, { name: 'profile-image.png' });
         
-        const managementRow1 = new ActionRowBuilder()
+        const managementRow = new ActionRowBuilder()
             .addComponents(
-                new ButtonBuilder().setCustomId(`${CUSTOM_ID_PREFIX}_update_${user.id}`).setLabel('Atualizar Perfil').setStyle(ButtonStyle.Primary).setEmoji('📝'),
-                new ButtonBuilder().setCustomId(`${CUSTOM_ID_PREFIX}_dungeonconfig_${user.id}`).setLabel('Config. Dungeon').setStyle(ButtonStyle.Secondary).setEmoji('⚙️')
-            );
-        const managementRow2 = new ActionRowBuilder()
-            .addComponents(
-                new ButtonBuilder().setCustomId(`${NOTIFICATION_BUTTON_PREFIX}_toggle_${user.id}`).setLabel('Notificações').setStyle(ButtonStyle.Secondary).setEmoji('🔔'),
-                new ButtonBuilder().setCustomId(`${PREFERENCE_BUTTON_PREFIX}_open_${user.id}`).setLabel('Preferências de Resposta').setStyle(ButtonStyle.Secondary).setEmoji('🤖')
+                new ButtonBuilder().setCustomId(`${UPDATE_PROFILE_BUTTON_ID}_${user.id}`).setLabel('Atualizar Perfil').setStyle(ButtonStyle.Primary).setEmoji('📝'),
+                new ButtonBuilder().setCustomId(`${CUSTOMIZE_AI_BUTTON_ID}_${user.id}`).setLabel('Personalizar o Gui').setStyle(ButtonStyle.Secondary).setEmoji('🤖')
             );
             
-        await interaction.editReply({ content: 'Seu perfil foi atualizado com sucesso!', files: [attachment], components: [managementRow1, managementRow2] });
+        await interaction.editReply({ content: 'Seu perfil foi atualizado com sucesso!', files: [attachment], components: [managementRow] });
     } catch (e) {
-        console.error("Erro ao criar imagem de perfil no /perfil (submit):", e);
+        console.error("Erro ao criar imagem de perfil (submit):", e);
         await interaction.editReply('Seu perfil foi salvo, mas ocorreu um erro ao gerar a imagem de exibição.');
     }
 }
 
-async function handleImportSubmit(interaction) {
-    await interaction.deferReply({ ephemeral: true });
-
-    const email = interaction.fields.getTextInputValue('email');
-    const { firestore } = initializeFirebase();
-    const discordUser = interaction.user;
-
-    const usersRef = collection(firestore, 'users');
-    const q = query(usersRef, where("email", "==", email));
-
-    const querySnapshot = await getDocs(q);
-
-    if (querySnapshot.empty) {
-        return interaction.editReply({ content: `Nenhum perfil encontrado no site com o e-mail \`${email}\`. Verifique o e-mail e tente novamente.`, ephemeral: true });
-    }
-
-    const webUserData = querySnapshot.docs[0].data();
-    
-    const discordUserRef = doc(firestore, 'users', discordUser.id);
-    
-    const profileDataToUpdate = {
-        ...webUserData,
-        id: discordUser.id, 
-        username: discordUser.username,
-        email: email,
-    };
-
-    const userSnap = await getDoc(discordUserRef);
-    if(userSnap.exists()) {
-        await updateDoc(discordUserRef, { ...profileDataToUpdate, lastUpdated: serverTimestamp() });
-    } else {
-        await setDoc(discordUserRef, { ...profileDataToUpdate, createdAt: serverTimestamp() }, { merge: true });
-    }
-    
-    const updatedUserSnap = await getDoc(discordUserRef);
-
-    try {
-        const profileImage = await createProfileImage(updatedUserSnap.data(), discordUser);
-        const attachment = new AttachmentBuilder(profileImage, { name: 'profile-image.png' });
-        
-        const managementRow1 = new ActionRowBuilder()
-            .addComponents(
-                new ButtonBuilder().setCustomId(`${CUSTOM_ID_PREFIX}_update_${discordUser.id}`).setLabel('Atualizar Perfil').setStyle(ButtonStyle.Primary).setEmoji('📝'),
-                new ButtonBuilder().setCustomId(`${CUSTOM_ID_PREFIX}_dungeonconfig_${discordUser.id}`).setLabel('Config. Dungeon').setStyle(ButtonStyle.Secondary).setEmoji('⚙️')
-            );
-        const managementRow2 = new ActionRowBuilder()
-            .addComponents(
-                new ButtonBuilder().setCustomId(`${NOTIFICATION_BUTTON_PREFIX}_toggle_${discordUser.id}`).setLabel('Notificações').setStyle(ButtonStyle.Secondary).setEmoji('🔔'),
-                new ButtonBuilder().setCustomId(`${PREFERENCE_BUTTON_PREFIX}_open_${discordUser.id}`).setLabel('Preferências de Resposta').setStyle(ButtonStyle.Secondary).setEmoji('🤖')
-            );
-            
-        await interaction.editReply({ content: 'Seu perfil foi importado com sucesso!', files: [attachment], components: [managementRow1, managementRow2] });
-    } catch (e) {
-        console.error("Erro ao criar imagem de perfil no /perfil (import):", e);
-        await interaction.editReply('Seu perfil foi importado, mas ocorreu um erro ao gerar a imagem de exibição.');
-    }
-}
-
-async function handleNotificationToggle(interaction, targetUserId) {
-     if (interaction.user.id !== targetUserId) {
-        return interaction.reply({ content: 'Você só pode alterar suas próprias configurações.', ephemeral: true });
-    }
-    
-    const row = new ActionRowBuilder()
-        .addComponents(
-            new ButtonBuilder().setCustomId(`${NOTIFICATION_BUTTON_PREFIX}_enable`).setLabel('Ativar DMs').setStyle(ButtonStyle.Success),
-            new ButtonBuilder().setCustomId(`${NOTIFICATION_BUTTON_PREFIX}_disable`).setLabel('Desativar DMs').setStyle(ButtonStyle.Danger),
-        );
-
-    await interaction.reply({
-        content: 'Deseja ativar ou desativar as notificações por DM para eventos como confirmações no /soling?',
-        components: [row],
-        ephemeral: true,
-    });
-}
-
-async function handleNotificationUpdate(interaction, enable) {
-    await interaction.deferUpdate();
-    const { firestore } = initializeFirebase();
-    const userRef = doc(firestore, 'users', interaction.user.id);
-    
-    try {
-        await setDoc(userRef, { 
-            dungeonSettings: { notificationsEnabled: enable }
-        }, { merge: true });
-        
-        const message = enable ? 'Notificações por DM ativadas com sucesso!' : 'Notificações por DM desativadas.';
-        await interaction.editReply({ content: message, components: [] });
-
-    } catch (error) {
-        console.error("Erro ao atualizar configuração de notificação:", error);
-        await interaction.editReply({ content: 'Ocorreu um erro ao salvar sua preferência.', components: [] });
-    }
-}
-
-async function handleOpenPreferenceMenu(interaction, targetUserId) {
-    if (interaction.user.id !== targetUserId) {
-        return interaction.reply({ content: 'Você só pode alterar suas próprias configurações.', ephemeral: true });
-    }
-
+// Função para abrir o painel de personalização da IA
+async function openAiCustomizationPanel(interaction) {
     const { firestore } = initializeFirebase();
     const userRef = doc(firestore, 'users', interaction.user.id);
     const userSnap = await getDoc(userRef);
-    const currentPreference = userSnap.exists() ? userSnap.data().aiResponsePreference || 'detailed' : 'detailed';
+    const userData = userSnap.exists() ? userSnap.data() : {};
 
-    const row = new ActionRowBuilder()
-        .addComponents(
-            new ButtonBuilder()
-                .setCustomId(`${PREFERENCE_BUTTON_PREFIX}_set_short`)
-                .setLabel('Curta')
-                .setStyle(currentPreference === 'short' ? ButtonStyle.Success : ButtonStyle.Secondary)
-                .setDisabled(currentPreference === 'short'),
-            new ButtonBuilder()
-                .setCustomId(`${PREFERENCE_BUTTON_PREFIX}_set_medium`)
-                .setLabel('Média')
-                .setStyle(currentPreference === 'medium' ? ButtonStyle.Success : ButtonStyle.Secondary)
-                .setDisabled(currentPreference === 'medium'),
-            new ButtonBuilder()
-                .setCustomId(`${PREFERENCE_BUTTON_PREFIX}_set_detailed`)
-                .setLabel('Detalhada (Padrão)')
-                .setStyle(currentPreference === 'detailed' ? ButtonStyle.Success : ButtonStyle.Secondary)
-                .setDisabled(currentPreference === 'detailed')
-        );
+    const currentStyle = userData.aiResponsePreference || 'detailed';
+    const currentPersona = userData.aiPersonality || 'amigavel';
+    const currentTitle = userData.userTitle || 'Nenhum';
+    const currentName = userData.customName || interaction.user.username;
+
+    const styleMenu = new StringSelectMenuBuilder()
+        .setCustomId(RESPONSE_STYLE_SELECT_ID)
+        .setPlaceholder('Nível de Detalhe da Resposta')
+        .addOptions(Object.entries(responseStyles).map(([key, { name }]) => ({
+            label: name,
+            value: key,
+            default: key === currentStyle
+        })));
+
+    const personaMenu = new StringSelectMenuBuilder()
+        .setCustomId(PERSONA_SELECT_ID)
+        .setPlaceholder('Personalidade do Gui')
+        .addOptions(Object.entries(personas).map(([key, { name }]) => ({
+            label: name,
+            value: key,
+            default: key === currentPersona
+        })));
+
+    const titleMenu = new StringSelectMenuBuilder()
+        .setCustomId(TITLE_SELECT_ID)
+        .setPlaceholder('Como o Gui deve te chamar?')
+        .addOptions(PREDEFINED_TITLES.map(title => ({
+            label: title,
+            value: title,
+            default: title === currentTitle
+        })));
+
+    const customTitleButton = new ButtonBuilder()
+        .setCustomId(SET_CUSTOM_TITLE_BUTTON_ID)
+        .setLabel(`Definir Nome/Título (Atual: ${currentName})`)
+        .setStyle(ButtonStyle.Secondary)
+        .setEmoji('✏️');
 
     await interaction.reply({
-        content: 'Escolha o seu estilo de resposta preferido da IA.\n- **Curta:** Solução direta, sem extras.\n- **Média:** Solução com um pouco mais de detalhe ou uma tabela.\n- **Detalhada:** Resposta completa com análise e dicas.',
-        components: [row],
-        ephemeral: true,
+        content: 'Personalize como o Gui interage com você!',
+        components: [
+            new ActionRowBuilder().addComponents(styleMenu),
+            new ActionRowBuilder().addComponents(personaMenu),
+            new ActionRowBuilder().addComponents(titleMenu),
+            new ActionRowBuilder().addComponents(customTitleButton)
+        ],
+        ephemeral: true
     });
 }
 
-async function handleSetPreference(interaction, preference) {
+// Funções para salvar as preferências
+async function savePreference(interaction, key, value) {
     await interaction.deferUpdate();
     const { firestore } = initializeFirebase();
     const userRef = doc(firestore, 'users', interaction.user.id);
-
-    try {
-        await setDoc(userRef, { aiResponsePreference: preference }, { merge: true });
-        const message = `Sua preferência foi atualizada para respostas **${preference}**!`;
-        await interaction.editReply({ content: message, components: [] });
-    } catch (error) {
-        console.error("Erro ao salvar preferência de resposta da IA:", error);
-        await interaction.editReply({ content: 'Ocorreu um erro ao salvar sua preferência.', components: [] });
-    }
+    await setDoc(userRef, { [key]: value }, { merge: true });
+    await interaction.followUp({ content: `Preferência de **${key.replace('ai', '')}** atualizada com sucesso!`, ephemeral: true });
 }
 
+// Função para abrir modal de título/nome customizado
+async function openTitleModal(interaction) {
+    const { firestore } = initializeFirebase();
+    const userRef = doc(firestore, 'users', interaction.user.id);
+    const userSnap = await getDoc(userRef);
+    const userData = userSnap.exists() ? userSnap.data() : {};
 
+    const modal = new ModalBuilder()
+        .setCustomId(TITLE_MODAL_ID)
+        .setTitle('Definir Nome/Título Personalizado');
+
+    const nameInput = new TextInputBuilder()
+        .setCustomId('customName')
+        .setLabel("Nome Personalizado (opcional)")
+        .setPlaceholder("Como você quer que o Gui te chame?")
+        .setStyle(TextInputStyle.Short)
+        .setValue(userData.customName || '')
+        .setRequired(false);
+
+    const titleInput = new TextInputBuilder()
+        .setCustomId('customTitle')
+        .setLabel("Título Personalizado (opcional)")
+        .setPlaceholder("Ex: O Destruidor de Mundos")
+        .setStyle(TextInputStyle.Short)
+        .setValue(userData.userTitle || '')
+        .setRequired(false);
+
+    modal.addComponents(new ActionRowBuilder().addComponents(nameInput), new ActionRowBuilder().addComponents(titleInput));
+    await interaction.showModal(modal);
+}
+
+// Função para salvar o título/nome customizado
+async function handleTitleModalSubmit(interaction) {
+    await interaction.deferReply({ ephemeral: true });
+    const customName = interaction.fields.getTextInputValue('customName');
+    const customTitle = interaction.fields.getTextInputValue('customTitle');
+
+    const { firestore } = initializeFirebase();
+    const userRef = doc(firestore, 'users', interaction.user.id);
+    
+    await setDoc(userRef, { 
+        customName: customName || null,
+        userTitle: customTitle || null 
+    }, { merge: true });
+
+    await interaction.editReply({ content: 'Seu nome e/ou título foram atualizados!' });
+}
+
+// Handler principal de interações
 export async function handleInteraction(interaction) {
     if (interaction.isButton()) {
         const [prefix, action, ...params] = interaction.customId.split('_');
-        
         if (prefix !== CUSTOM_ID_PREFIX) return;
 
         const targetUserId = params[0];
 
-        if (action === 'abrir') await openProfileForm(interaction);
-        else if (action === 'importar') await handleOpenImportModal(interaction);
-        else if (action === 'update') {
+        if (action === 'update') {
             if (interaction.user.id !== targetUserId) return interaction.reply({ content: 'Você só pode atualizar seu próprio perfil.', ephemeral: true });
             await openProfileForm(interaction);
-        }
-        else if (action === 'dungeonconfig') {
-            if (interaction.user.id !== targetUserId) return interaction.reply({ content: 'Você só pode configurar suas próprias dungeons.', ephemeral: true });
-            await openDungeonSettingsModal(interaction);
-        }
-        else if (action === 'notify') {
-             if (interaction.customId === `${NOTIFICATION_BUTTON_PREFIX}_toggle_${targetUserId}`) {
-                await handleNotificationToggle(interaction, targetUserId);
-             } else if (interaction.customId === `${NOTIFICATION_BUTTON_PREFIX}_enable`) {
-                await handleNotificationUpdate(interaction, true);
-             } else if (interaction.customId === `${NOTIFICATION_BUTTON_PREFIX}_disable`) {
-                await handleNotificationUpdate(interaction, false);
-             }
-        }
-        else if (action === 'prefs') {
-            if (interaction.customId === `${PREFERENCE_BUTTON_PREFIX}_open_${targetUserId}`) {
-                await handleOpenPreferenceMenu(interaction, targetUserId);
-            } else if (interaction.customId === `${PREFERENCE_BUTTON_PREFIX}_set_detailed`) {
-                await handleSetPreference(interaction, 'detailed');
-            } else if (interaction.customId === `${PREFERENCE_BUTTON_PREFIX}_set_medium`) {
-                await handleSetPreference(interaction, 'medium');
-            } else if (interaction.customId === `${PREFERENCE_BUTTON_PREFIX}_set_short`) {
-                await handleSetPreference(interaction, 'short');
-            }
+        } else if (action === 'customize' && params[0] === 'ai') {
+            if (interaction.user.id !== targetUserId) return interaction.reply({ content: 'Você só pode personalizar suas próprias configurações.', ephemeral: true });
+            await openAiCustomizationPanel(interaction);
+        } else if (action === 'button' && params[0] === 'custom' && params[1] === 'title') {
+            await openTitleModal(interaction);
         }
         
     } else if (interaction.isModalSubmit()) {
         if (interaction.customId === FORM_MODAL_ID) {
             await handleFormSubmit(interaction);
-        } else if (interaction.customId === IMPORT_MODAL_ID) {
-            await handleImportSubmit(interaction);
+        } else if (interaction.customId === TITLE_MODAL_ID) {
+            await handleTitleModalSubmit(interaction);
+        }
+
+    } else if (interaction.isStringSelectMenu()) {
+        if (interaction.customId === RESPONSE_STYLE_SELECT_ID) {
+            await savePreference(interaction, 'aiResponsePreference', interaction.values[0]);
+        } else if (interaction.customId === PERSONA_SELECT_ID) {
+            await savePreference(interaction, 'aiPersonality', interaction.values[0]);
+        } else if (interaction.customId === TITLE_SELECT_ID) {
+            const title = interaction.values[0] === 'Nenhum' ? null : interaction.values[0];
+            await savePreference(interaction, 'userTitle', title);
         }
     }
 }
-
-    
