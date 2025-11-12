@@ -5,32 +5,18 @@ import { getRaidTimings } from '../utils/raidTimings.js';
 
 const ANNOUNCER_DOC_ID = 'raidAnnouncer';
 
-const RAID_AVATAR_PREFIXES = {
-    'Easy': 'Esy', 'Medium': 'Med', 'Hard': 'Hd', 'Insane': 'Isne',
-    'Crazy': 'Czy', 'Nightmare': 'Mare', 'Leaf Raid': 'Lf'
-};
-
 // Mapeamento de Nomes de Webhook para cada estado
 const RAID_NAMES = {
-    'Easy': 'Jajá Vem Aí!', 'Medium': 'Jajá Vem Aí!', 'Hard': 'Jajá Vem Aí!',
-    'Insane': 'Jajá Vem Aí!', 'Crazy': 'Jajá Vem Aí!', 'Nightmare': 'Jajá Vem Aí!',
-    'Leaf Raid': 'Jajá Vem Aí!',
+    'next_up': 'Próxima Raid',
     'starting_soon': 'Fique Ligado!',
     'open': 'Ela Chegou 🥳🎉',
     'closing_soon': 'Corra! Falta Pouco'
 };
 
-// Mapeamento de Avatares para cada estado
-const RAID_AVATAR_ASSETS = {
-    'next_up': 'PR',
-    'starting_soon': '5m',
-    'open': 'A',
-    'closing_soon': 'F'
-};
-
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 function formatTime(totalSeconds) {
+    if (isNaN(totalSeconds) || totalSeconds < 0) return '`N/D`';
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = Math.floor(totalSeconds % 60);
     const milliseconds = Math.round((totalSeconds - Math.floor(totalSeconds)) * 1000);
@@ -98,19 +84,17 @@ async function handleRaidLifecycle(container) {
             return;
         }
 
-        const assetPrefix = RAID_AVATAR_PREFIXES[newRaidId] || 'Esy';
-        const assetSuffix = RAID_AVATAR_ASSETS[desiredState];
-        const finalWebhookName = RAID_NAMES[desiredState] || RAID_NAMES[newRaidId];
-        
-        const transitionGifUrl = await assetService.getAsset(`Tran${assetPrefix}${assetSuffix}`);
-        const finalGifUrl = await assetService.getAsset(`${assetPrefix}${assetSuffix}`);
-        
-        // O avatar é sempre estático e baseado apenas no prefixo (Esy, Med, etc.)
-        let finalAvatarUrl = await assetService.getAsset(assetPrefix);
-        if (!finalAvatarUrl) {
-            finalAvatarUrl = await assetService.getAsset('DungeonLobby');
+        const raidAssets = assetService.raidAssets[newRaidId];
+        if (!raidAssets) {
+            logger.error(`[raidAnnouncer] Assets para a raid '${newRaidId}' não foram encontrados no AssetService.`);
+            return;
         }
 
+        const finalWebhookName = RAID_NAMES[desiredState] || newRaidId;
+        const finalAvatarUrl = raidAssets.avatars[desiredState] || raidAssets.fallbackAvatar || await assetService.getAsset('BotAvatar');
+        const transitionGifUrl = raidAssets.gifs.transition;
+        const finalGifUrl = raidAssets.gifs.final;
+        
         const embed = new EmbedBuilder()
             .addFields(
                 { name: 'Dificuldade', value: activeRaidDetails['Dificuldade'], inline: true },
@@ -119,15 +103,17 @@ async function handleRaidLifecycle(container) {
                 { name: 'Entrar no Jogo', value: `**[Clique aqui para ir para o jogo](${config.GAME_LINK})**`, inline: false }
             );
         
-        // Adiciona campo de tempo de conclusão, exceto para Nightmare e Leaf Raid
         if (newRaidId !== 'Nightmare' && newRaidId !== 'Leaf Raid') {
-            const baseTimeSeconds = 72.025; // 1m 12.025s
+            const baseTimeSeconds = 72.025; 
             const maxSpeed = 250;
+            const mediumSpeed = 175;
+            const minSpeed = 100;
             
-            const minTime = baseTimeSeconds * (maxSpeed / 100); // 100% speed
-            const mediumTime = baseTimeSeconds * (maxSpeed / 175); // 175% speed
+            const maxTime = baseTimeSeconds * (maxSpeed / maxSpeed); // Base time
+            const mediumTime = baseTimeSeconds * (maxSpeed / mediumSpeed);
+            const minTime = baseTimeSeconds * (maxSpeed / minSpeed);
             
-            const timeFieldValue = `> **Máximo (250%):** ${formatTime(baseTimeSeconds)}\n` +
+            const timeFieldValue = `> **Máximo (250%):** ${formatTime(maxTime)}\n` +
                                    `> **Médio (175%):** ${formatTime(mediumTime)}\n` +
                                    `> **Mínimo (100%):** ${formatTime(minTime)}`;
             
@@ -140,18 +126,12 @@ async function handleRaidLifecycle(container) {
              const guild = await client.guilds.fetch(config.GUILD_ID);
              const role = await guild.roles.fetch(activeRaidDetails.roleId);
              const roleName = role ? role.name : activeRaidDetails.Dificuldade;
-             
              const baseLine = '───────────────────────────────';
              const totalWidth = baseLine.length;
              const mentionText = `<@&${activeRaidDetails.roleId}>`;
-             
-             // O cálculo do espaço agora usa o NOME do cargo, mas o texto final usa a MENÇÃO
-             const centralContentLength = roleName.length + 2; // Nome + 2 espaços
-             
-             // Garante que o padding não seja negativo se o nome for muito grande
+             const centralContentLength = roleName.length + 2; 
              const paddingLength = Math.max(0, Math.floor((totalWidth - centralContentLength) / 2));
              const padding = '─'.repeat(paddingLength);
-             
              finalContent = `${padding} ${mentionText} ${padding}`;
         }
         
@@ -171,7 +151,6 @@ async function handleRaidLifecycle(container) {
             embed.setImage(initialGif);
         }
         
-        // Posta a nova mensagem (com a transição, se houver)
         const sentMessage = await webhookClient.send({
             username: finalWebhookName,
             avatarURL: finalAvatarUrl,
@@ -180,16 +159,13 @@ async function handleRaidLifecycle(container) {
             wait: true
         });
 
-        // Salva o ID da nova mensagem
         await updateDoc(announcerRef, { state: desiredState, raidId: newRaidId, messageId: sentMessage.id });
         logger.info(`[${newRaidId}] Posted message for state: '${desiredState}'.`);
 
-        // Se houve transição, edita para o GIF final após 10s
         if (hasTransition && finalGifUrl && transitionGifUrl !== finalGifUrl) {
             await sleep(10000); // Duração da transição
             
             const latestAnnouncerDoc = await getDoc(announcerRef);
-            // Confirma que a mensagem ainda é a que acabamos de postar antes de editar
             if (latestAnnouncerDoc.data().messageId === sentMessage.id) {
                 embed.setImage(finalGifUrl);
                 await webhookClient.editMessage(sentMessage.id, {

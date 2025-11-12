@@ -1,6 +1,26 @@
 // src/services/assetService.js
 import { doc, writeBatch, collection, getDocs, getDoc } from 'firebase/firestore';
 import { v2 as cloudinary } from 'cloudinary';
+import { lobbyDungeonsArticle } from '../data/wiki-articles/lobby-dungeons.js';
+
+// Mapeamento de raids para seus prefixos e nomes de asset
+const RAID_ASSET_MAP = lobbyDungeonsArticle.tables.lobbySchedule.rows.reduce((acc, raid) => {
+    const name = raid.Dificuldade;
+    const prefixMap = {
+        'Easy': 'Esy', 'Medium': 'Med', 'Hard': 'Hd', 'Insane': 'Isne',
+        'Crazy': 'Czy', 'Nightmare': 'Mare', 'Leaf Raid': 'Lf'
+    };
+    if (prefixMap[name]) {
+        acc[name] = {
+            prefix: prefixMap[name],
+            // O nome do GIF de transição/final é baseado no nome completo da raid + PR
+            // O caso especial 'Leaf' é tratado na lógica de busca
+            baseName: name === 'Leaf Raid' ? 'Leaf' : name,
+        };
+    }
+    return acc;
+}, {});
+
 
 export class AssetService {
     /**
@@ -12,6 +32,7 @@ export class AssetService {
         this.firestore = firestore;
         this.logger = logger;
         this.assetsCache = new Map();
+        this.raidAssets = {}; // Novo objeto para armazenar assets de raid estruturados
         this.isInitialized = false;
 
         const url = config.CLOUDINARY_URL;
@@ -36,6 +57,35 @@ export class AssetService {
     
     isBaseUrlValid() {
         return !!this.v2;
+    }
+    
+    /**
+     * Organiza os assets de raid em uma estrutura aninhada para fácil acesso.
+     */
+    _organizeRaidAssets() {
+        this.raidAssets = {}; // Limpa para garantir que não haja dados antigos
+
+        for (const raidName in RAID_ASSET_MAP) {
+            const { prefix, baseName } = RAID_ASSET_MAP[raidName];
+            
+            this.raidAssets[raidName] = {
+                // Avatares baseados em estado (Ex: EsyA, Med5m)
+                avatars: {
+                    next_up: this.assetsCache.get(`${prefix}PR`),
+                    starting_soon: this.assetsCache.get(`${prefix}5m`),
+                    open: this.assetsCache.get(`${prefix}A`),
+                    closing_soon: this.assetsCache.get(`${prefix}F`),
+                },
+                // GIFs baseados no nome da raid (Ex: TranEasyPR, EasyPR)
+                gifs: {
+                    transition: this.assetsCache.get(`Tran${baseName}PR`),
+                    final: this.assetsCache.get(`${baseName}PR`),
+                },
+                // Fallback para o avatar estático principal
+                fallbackAvatar: this.assetsCache.get(prefix) || this.assetsCache.get('DungeonLobby'),
+            };
+        }
+        this.logger.info('[AssetService] Assets de Raid organizados para acesso rápido.');
     }
 
     /**
@@ -81,10 +131,12 @@ export class AssetService {
             await batch.commit();
             this.isInitialized = true;
             this.logger.info(`[AssetService] Sincronizados ${assets.length} assets e carregados no cache.`);
+            
+            this._organizeRaidAssets(); // Organiza os assets de raid após carregar tudo
 
         } catch (err) {
             this.logger.error('[AssetService] Falha ao sincronizar assets do Cloudinary:', err);
-            this.logger.warn('[AssetService] Tentando carregar assets do cache do Firestore como fallback...');
+            this.logger.warn('[AssetService] Tentando carregar assets do Firestore como fallback...');
             await this.loadFromFirestore();
         }
     }
@@ -98,6 +150,7 @@ export class AssetService {
             });
             this.isInitialized = true;
             this.logger.info(`[AssetService] Carregados ${this.assetsCache.size} assets do Firestore para o cache.`);
+            this._organizeRaidAssets(); // Tenta organizar mesmo com dados do Firestore
         } catch (error) {
             this.logger.error('[AssetService] Falha ao carregar assets do cache do Firestore:', error);
         }
