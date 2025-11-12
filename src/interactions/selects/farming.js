@@ -292,54 +292,88 @@ async function handleParticipationToggle(interaction) {
     await interaction.deferReply({ ephemeral: true });
 
     // Check restrictions
-    if (farmData.restrictions) {
+    if (farmData.restrictions && (farmData.restrictions.dps || farmData.restrictions.rank || farmData.restrictions.world)) {
         const userRef = doc(firestore, 'users', userId);
         const userSnap = await getDoc(userRef);
 
-        if (!userSnap.exists() || !userSnap.data().dps) {
-            return interaction.editReply({ content: 'Você precisa ter um perfil completo (`/perfil`) para entrar em farms com restrições.' });
+        if (!userSnap.exists()) {
+            return interaction.editReply({ content: 'Você precisa ter um perfil (`/perfil`) para entrar em farms com restrições.' });
         }
 
         const userData = userSnap.data();
         let meetsRequirements = true;
         let unmetReasons = [];
+        let profileIsIncomplete = false;
+        
+        const requiredDps = farmData.restrictions.dps;
+        const requiredRank = farmData.restrictions.rank;
+        const requiredWorld = farmData.restrictions.world;
 
-        if (farmData.restrictions.dps && parseNumber(userData.dps) < parseNumber(farmData.restrictions.dps)) {
-            meetsRequirements = false;
-            unmetReasons.push(`DPS (Seu: ${userData.dps} | Req: ${farmData.restrictions.dps})`);
+        if (requiredDps) {
+            if (!userData.dps) profileIsIncomplete = true;
+            else if (parseNumber(userData.dps) < parseNumber(requiredDps)) {
+                meetsRequirements = false;
+                unmetReasons.push(`DPS (Seu: ${userData.dps} | Req: ${requiredDps})`);
+            }
         }
-        if (farmData.restrictions.rank && (userData.rank || 0) < parseInt(farmData.restrictions.rank)) {
-            meetsRequirements = false;
-            unmetReasons.push(`Rank (Seu: ${userData.rank || 0} | Req: ${farmData.restrictions.rank})`);
+        if (requiredRank) {
+             if (!userData.rank) profileIsIncomplete = true;
+            else if ((userData.rank || 0) < parseInt(requiredRank)) {
+                meetsRequirements = false;
+                unmetReasons.push(`Rank (Seu: ${userData.rank || 'N/A'} | Req: ${requiredRank})`);
+            }
         }
-        if (farmData.restrictions.world && (userData.currentWorld || 0) < parseInt(farmData.restrictions.world)) {
-            meetsRequirements = false;
-            unmetReasons.push(`Mundo (Seu: ${userData.currentWorld || 0} | Req: ${farmData.restrictions.world})`);
+        if (requiredWorld) {
+            if (!userData.currentWorld) profileIsIncomplete = true;
+            else if ((userData.currentWorld || 0) < parseInt(requiredWorld)) {
+                meetsRequirements = false;
+                unmetReasons.push(`Mundo (Seu: ${userData.currentWorld || 'N/A'} | Req: ${requiredWorld})`);
+            }
         }
+        
+        if (profileIsIncomplete) {
+            return interaction.editReply({ content: 'Seu perfil está incompleto. Por favor, use o comando `/perfil` para adicionar suas informações de DPS, Rank e Mundo antes de entrar neste farm.' });
+        }
+
 
         if (!meetsRequirements) {
             const hostUser = await interaction.client.users.fetch(farmData.hostId).catch(() => ({ username: 'o host' }));
             
             const farmsRef = collection(firestore, 'scheduled_farms');
-            const q = query(farmsRef, where("raidName", "==", farmData.raidName), where("hostId", "!=", farmData.hostId));
-            const otherFarmsSnap = await getDocs(q);
-
-            let responseContent = `Perdão🙏, porém o senhor(a) **${hostUser.username}** ativou restrições às quais você não tem os requeridos.\nMotivos: ${unmetReasons.join(', ')}.`;
-            const components = [];
+            // Query for other farms of the same raid
+            const sameRaidQuery = query(farmsRef, where("raidName", "==", farmData.raidName), where("hostId", "!=", farmData.hostId));
+            const otherSameRaidFarmsSnap = await getDocs(sameRaidQuery);
             
-            if (!otherFarmsSnap.empty) {
-                const otherFarmOptions = otherFarmsSnap.docs.map(fDoc => ({
+            let responseContent = `Perdão🙏, porém o senhor(a) **${hostUser.username}** ativou restrições aos quais você não tem os requeridos.\nMotivos: ${unmetReasons.join(', ')}.`;
+            const components = [];
+
+            if (!otherSameRaidFarmsSnap.empty) {
+                responseContent += "\n\nTente outro do mesmo Farm:";
+                const otherFarmOptions = otherSameRaidFarmsSnap.docs.map(fDoc => ({
                     label: `${fDoc.data().time} - Host: ${fDoc.data().hostUsername}`,
                     value: fDoc.id,
                 }));
-
                 const selectMenu = new StringSelectMenuBuilder()
                     .setCustomId('farming_participate')
                     .setPlaceholder('Tente outro farm para esta mesma raid:')
                     .addOptions(otherFarmOptions);
-                
                 components.push(new ActionRowBuilder().addComponents(selectMenu));
-                responseContent += "\n\nTalvez um desses outros farms para a mesma raid lhe interesse:";
+            } else {
+                // If no other farms for the same raid, find ALL other farms
+                const allOtherFarmsQuery = query(farmsRef, where("hostId", "!=", farmData.hostId));
+                const allOtherFarmsSnap = await getDocs(allOtherFarmsQuery);
+                if (!allOtherFarmsSnap.empty) {
+                    responseContent += "\n\nTente outro Farm:";
+                    const allFarmOptions = allOtherFarmsSnap.docs.map(fDoc => ({
+                        label: `${fDoc.data().time} - ${fDoc.data().raidName} (Host: ${fDoc.data().hostUsername})`,
+                        value: fDoc.id,
+                    }));
+                     const selectMenu = new StringSelectMenuBuilder()
+                        .setCustomId('farming_participate')
+                        .setPlaceholder('Nenhum farm igual, mas talvez estes interessem:')
+                        .addOptions(allFarmOptions.slice(0, 25)); // Limit to 25 options
+                    components.push(new ActionRowBuilder().addComponents(selectMenu));
+                }
             }
 
             return interaction.editReply({ content: responseContent, components });
