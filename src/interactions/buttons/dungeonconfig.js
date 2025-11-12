@@ -1,6 +1,6 @@
 // src/interactions/buttons/dungeonconfig.js
 import { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, StringSelectMenuBuilder, EmbedBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
-import { CUSTOM_ID_PREFIX as DUNGEON_CONFIG_PREFIX, SOLING_CONFIG_BUTTON_ID, TAG_CONFIG_BUTTON_ID, NOTIFICATIONS_CONFIG_BUTTON_ID } from '../../commands/utility/dungeonconfig.js';
+import { CUSTOM_ID_PREFIX as DUNGEON_CONFIG_PREFIX, SOLING_CONFIG_BUTTON_ID, FARMING_CONFIG_BUTTON_ID, TAG_CONFIG_BUTTON_ID, NOTIFICATIONS_CONFIG_BUTTON_ID } from '../../commands/utility/dungeonconfig.js';
 import { doc, updateDoc, getDoc, collection, query, where, getDocs, deleteDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
 import { getAvailableRaids } from '../../commands/utility/soling.js';
@@ -18,6 +18,9 @@ const NOTIFICATIONS_HOST_SELECT_ID = `${customIdPrefix}_notify_host_select`;
 const NOTIFICATIONS_HOST_SOLING_TOGGLE_ID = `${customIdPrefix}_notify_host_soling_toggle`;
 const NOTIFICATIONS_HOST_FARM_TOGGLE_ID = `${customIdPrefix}_notify_host_farm_toggle`;
 const NOTIFICATIONS_BACK_TO_MAIN_ID = `${customIdPrefix}_notify_back_main`;
+
+// IDs for Farming Management
+const FARM_DELETE_SELECT_ID = `${customIdPrefix}_farm_delete_select`;
 
 
 const WEEKDAYS_PT = {
@@ -189,16 +192,13 @@ async function openNotificationsPanel(interaction, isUpdate = false) {
     const replyOptions = { embeds: [embed], components, ephemeral: true };
     
     if (isUpdate) {
-        // Para atualizações (como menus de seleção), usamos update()
         await interaction.update(replyOptions);
     } else {
-        // Para a abertura inicial ou após apagar, usamos reply()
         await interaction.reply(replyOptions);
     }
 }
 
 async function handleDmToggle(interaction) {
-    await interaction.deferReply({ ephemeral: true });
     const { firestore } = initializeFirebase();
     const userRef = doc(firestore, 'users', interaction.user.id);
     const userSnap = await getDoc(userRef);
@@ -206,8 +206,7 @@ async function handleDmToggle(interaction) {
     
     await updateDoc(userRef, { 'notificationPrefs.dmEnabled': !currentStatus });
     
-    // Apaga a resposta "thinking" e reabre o painel com uma nova mensagem
-    await interaction.deleteReply();
+    await interaction.deleteReply().catch(() => {});
     await openNotificationsPanel(interaction, false);
 }
 
@@ -278,6 +277,57 @@ async function handleHostNotifyToggle(interaction, type) {
     await openHostManagementPanel(interaction, hostId);
 }
 
+async function openFarmingManagementPanel(interaction) {
+    const { firestore } = initializeFirebase();
+    const farmsRef = collection(firestore, 'scheduled_farms');
+    const q = query(farmsRef, where("hostId", "==", interaction.user.id));
+    const querySnapshot = await getDocs(q);
+
+    if (querySnapshot.empty) {
+        return interaction.reply({ content: 'Você não tem nenhum farm agendado para gerenciar.', ephemeral: true });
+    }
+
+    const farmOptions = querySnapshot.docs.map(doc => {
+        const farm = doc.data();
+        return {
+            label: `${WEEKDAYS_PT[farm.dayOfWeek]} às ${farm.time} - ${farm.raidName}`,
+            description: `Participantes: ${farm.participants.length}`,
+            value: doc.id
+        };
+    });
+
+    const selectMenu = new StringSelectMenuBuilder()
+        .setCustomId(FARM_DELETE_SELECT_ID)
+        .setPlaceholder('Selecione um farm para deletar...')
+        .addOptions(farmOptions);
+
+    await interaction.reply({
+        content: 'Selecione um dos seus farms agendados para removê-lo permanentemente.',
+        components: [new ActionRowBuilder().addComponents(selectMenu)],
+        ephemeral: true
+    });
+}
+
+async function handleFarmDelete(interaction) {
+    const farmId = interaction.values[0];
+    if (!farmId) return;
+
+    await interaction.deferUpdate();
+    const { firestore } = initializeFirebase();
+    const farmRef = doc(firestore, 'scheduled_farms', farmId);
+    
+    // Você pode adicionar uma verificação extra para garantir que o usuário é o dono do farm
+    // mas o query na função openFarmingManagementPanel já faz essa filtragem.
+    try {
+        await deleteDoc(farmRef);
+        await interaction.editReply({ content: 'O farm selecionado foi deletado com sucesso.', components: [] });
+    } catch (error) {
+        console.error("Erro ao deletar farm:", error);
+        await interaction.editReply({ content: 'Ocorreu um erro ao tentar deletar o farm.', components: [] });
+    }
+}
+
+
 export async function handleInteraction(interaction, container) {
     if (interaction.isButton()) {
         const [prefix, action, ...params] = interaction.customId.split('_');
@@ -285,6 +335,8 @@ export async function handleInteraction(interaction, container) {
 
         if (interaction.customId === SOLING_CONFIG_BUTTON_ID) {
             await openSolingSettingsModal(interaction);
+        } else if (interaction.customId === FARMING_CONFIG_BUTTON_ID) {
+            await openFarmingManagementPanel(interaction);
         } else if (interaction.customId === TAG_CONFIG_BUTTON_ID) {
             await openTagModal(interaction);
         } else if (interaction.customId === NOTIFICATIONS_CONFIG_BUTTON_ID) {
@@ -318,6 +370,8 @@ export async function handleInteraction(interaction, container) {
                 const selectedHostId = interaction.values[0];
                 await openHostManagementPanel(interaction, selectedHostId);
              }
+        } else if (interaction.customId === FARM_DELETE_SELECT_ID) {
+            await handleFarmDelete(interaction);
         }
     }
 }
