@@ -110,10 +110,23 @@ async function handleAnnouncements(container, farms) {
                 embed.addFields({ name: '🔗 Servidor Privado', value: `**[Clique aqui para entrar](${serverLink})**` });
             }
 
+            let messageContent = '';
+            if (tempRole) {
+                const baseLine = '───────────────────────────────';
+                const totalWidth = baseLine.length;
+                const mentionText = `${tempRole}`;
+                const centralContentLength = tempRole.name.length + 2; 
+                const paddingLength = Math.max(0, Math.floor((totalWidth - centralContentLength) / 2));
+                const padding = '─'.repeat(paddingLength);
+                messageContent = `${padding} ${mentionText} ${padding}`;
+            } else {
+                messageContent = farm.participants.map(id => `<@${id}>`).join(' ');
+            }
+
             const messagePayload = {
                 username: `${farm.raidName} Aberta`,
                 embeds: [embed],
-                content: tempRole ? `${tempRole}` : farm.participants.map(id => `<@${id}>`).join(' ')
+                content: messageContent,
             };
 
             const openAnnouncement = await webhookClient.send(messagePayload);
