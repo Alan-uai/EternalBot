@@ -158,9 +158,9 @@ async function openAiCustomizationPanel(interaction) {
         ephemeral: true,
     };
     
-    // CORREÇÃO: Usar followUp se a interação já foi respondida.
-    if (interaction.replied || interaction.deferred) {
-        await interaction.followUp(replyOptions);
+    // CORREÇÃO: Usar update() se for uma atualização de um painel anterior
+    if (interaction.isButton() || interaction.isStringSelectMenu()) {
+        await interaction.update(replyOptions);
     } else {
         await interaction.reply(replyOptions);
     }
@@ -171,7 +171,18 @@ async function savePreference(interaction, key, value) {
     const { firestore } = initializeFirebase();
     const userRef = doc(firestore, 'users', interaction.user.id);
     await updateDoc(userRef, { [key]: value });
-    await interaction.update({ content: 'Preferência salva com sucesso!', components: interaction.message.components });
+
+    // Atualiza o menu para mostrar a seleção
+    const newComponents = interaction.message.components.map(row => {
+        const newRow = ActionRowBuilder.from(row);
+        const menuComponent = newRow.components.find(comp => comp.customId === interaction.customId);
+        if (menuComponent && menuComponent.type === 3 /* StringSelect */) {
+            menuComponent.options.forEach(opt => opt.setDefault(opt.value === value));
+        }
+        return newRow;
+    });
+
+    await interaction.update({ components: newComponents });
 }
 
 async function handleToggleContext(interaction) {
@@ -183,7 +194,6 @@ async function handleToggleContext(interaction) {
     await updateDoc(userRef, { 'aiUseProfileContext': !currentStatus });
     
     // Recria e edita o painel
-    const updatedUserData = (await getDoc(userRef)).data();
     const embed = EmbedBuilder.from(interaction.message.embeds[0]);
     const components = interaction.message.components.map(row => {
         const newRow = ActionRowBuilder.from(row);
@@ -255,11 +265,11 @@ async function openGoalsPanel(interaction) {
     }
     
     const replyOptions = { embeds: [embed], components, ephemeral: true };
-    // CORREÇÃO: Usar followUp se a interação já foi respondida.
-    if (interaction.replied || interaction.deferred) {
-        await interaction.followUp(replyOptions);
+
+    if (interaction.isButton() || interaction.isStringSelectMenu()) {
+        await interaction.update(replyOptions);
     } else {
-        await interaction.reply(replyOptions);
+        await interaction.editReply(replyOptions);
     }
 }
 
@@ -279,7 +289,7 @@ async function handleGoalModalSubmit(interaction) {
     const { firestore } = initializeFirebase();
     const userRef = doc(firestore, 'users', interaction.user.id);
     await updateDoc(userRef, { goals: arrayUnion(goalText) });
-    await openGoalsPanel(interaction); // Passa a interação do modal
+    await openGoalsPanel(interaction); 
 }
 
 async function handleRemoveGoal(interaction) {
@@ -295,7 +305,7 @@ async function handleRemoveGoal(interaction) {
     if (goalToRemove) {
         await updateDoc(userRef, { goals: arrayRemove(goalToRemove) });
     }
-    await openGoalsPanel(interaction); // Passa a interação do menu
+    await openGoalsPanel(interaction); 
 }
 
 
@@ -335,28 +345,24 @@ async function handleFollow(interaction, targetUserId) {
 // Handler principal de interações
 export async function handleInteraction(interaction) {
     const [prefix, action, ...params] = interaction.customId.split('_');
-    const basePrefix = prefix; // 'perfil'
-
-    if (!customIdPrefix.some(p => p.startsWith(basePrefix))) return;
 
     // --- LÓGICA DE BOTÕES ---
     if (interaction.isButton()) {
-        const fullPrefix = `${prefix}_${action}`;
         const targetUserId = params[0];
 
-        if (fullPrefix === UPDATE_PROFILE_BUTTON_ID && interaction.user.id === targetUserId) {
+        if (interaction.customId.startsWith(UPDATE_PROFILE_BUTTON_ID) && interaction.user.id === targetUserId) {
             await openProfileForm(interaction);
-        } else if (fullPrefix === CUSTOMIZE_AI_BUTTON_ID && interaction.user.id === targetUserId) {
+        } else if (interaction.customId.startsWith(CUSTOMIZE_AI_BUTTON_ID) && interaction.user.id === targetUserId) {
             await openAiCustomizationPanel(interaction);
         } else if (interaction.customId === OPEN_CUSTOM_TITLE_MODAL_ID) {
             await openTitleModal(interaction);
         } else if (interaction.customId === TOGGLE_PROFILE_CONTEXT_ID) {
             await handleToggleContext(interaction);
-        } else if (fullPrefix === GOALS_PANEL_BUTTON_ID && interaction.user.id === targetUserId) {
-            await openGoalsPanel(interaction);
+        } else if (interaction.customId.startsWith(GOALS_PANEL_BUTTON_ID)) {
+             await openGoalsPanel(interaction);
         } else if (interaction.customId === ADD_GOAL_BUTTON_ID) {
             await handleAddGoal(interaction);
-        } else if (fullPrefix === FOLLOW_HOST_BUTTON_ID) {
+        } else if (interaction.customId.startsWith(FOLLOW_HOST_BUTTON_ID)) {
             await handleFollow(interaction, targetUserId);
         }
         

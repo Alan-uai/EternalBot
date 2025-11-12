@@ -5,7 +5,8 @@ import { initializeFirebase } from '../../firebase/index.js';
 import { getAvailableRaids } from '../../commands/utility/soling.js';
 import { execute as executeDungeonConfig } from '../../commands/utility/dungeonconfig.js';
 
-
+// Adicionando a constante que estava faltando
+const DUNGEON_CONFIG_PREFIX = 'dungeonconfig';
 export const customIdPrefix = DUNGEON_CONFIG_PREFIX;
 
 // Re-exportando os IDs para serem usados externamente
@@ -201,9 +202,10 @@ async function openNotificationsPanel(interaction, isUpdate = false) {
 
     const replyOptions = { embeds: [embed], components, ephemeral: true };
     
-     if (interaction.replied || interaction.deferred) {
-        await interaction.deleteReply().catch(() => {});
-        await interaction.followUp(replyOptions).catch(()=>{});
+     if (isUpdate) {
+        await interaction.update(replyOptions).catch(async () => {
+             await interaction.editReply(replyOptions).catch(()=>{});
+        });
     } else {
         await interaction.reply(replyOptions).catch(()=>{});
     }
