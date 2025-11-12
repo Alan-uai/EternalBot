@@ -168,6 +168,11 @@
         "birthday": { "type": "string", "description": "The user's birthday in MM-DD format.", "pattern": "^(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$" },
         "reputationPoints": { "type": "number", "description": "Points awarded to a user for helpful feedback." },
         "credits": { "type": "number", "description": "F2P currency earned from achievements, used for Gamepasses." },
+        "aiResponsePreference": {
+          "type": "string",
+          "enum": ["detailed", "short"],
+          "description": "User's preference for AI response style (detailed or short)."
+        },
         "dungeonSettings": {
             "type": "object",
             "description": "User preferences for dungeon finder messages.",

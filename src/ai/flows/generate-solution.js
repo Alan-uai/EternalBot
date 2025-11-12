@@ -42,6 +42,7 @@ const GenerateSolutionInputSchema = z.object({
   imageDataUri: z.string().optional().describe("A photo related to the problem, as a data URI. Expected format: 'data:<mimetype>;base64,<encoded_data>'."),
   wikiContext: z.string().describe('A compilation of all wiki articles to be used as a knowledge base.'),
   history: z.array(MessageSchema).optional().describe('The previous messages in the conversation.'),
+  isShortPreference: z.boolean().optional().describe('If true, the user wants a short, direct answer.'),
 });
 
 // NOVO SCHEMA DE SAÍDA PARA SUPORTAR TABELAS
@@ -72,6 +73,11 @@ export const prompt = ai.definePrompt({
   output: { schema: GenerateSolutionOutputSchema },
   tools: [getGameDataTool, getUpdateLogTool],
   prompt: `Você é o Gui, um assistente especialista no jogo Anime Eternal e também uma calculadora estratégica. Sua resposta DEVE ser em Português-BR.
+
+{{#if isShortPreference}}
+**ATENÇÃO: Resposta Curta Solicitada!**
+Sua resposta DEVE ser o mais curta e direta possível, contendo apenas a seção "texto_introdutorio" com a solução principal. NÃO adicione seções de análise, dicas extras ou tabelas.
+{{/if}}
 
 **ESTRUTURA DA RESPOSTA (JSON OBRIGATÓRIO):**
 Sua resposta DEVE ser um objeto JSON contendo a chave "structuredResponse", que é um array de objetos de seção.

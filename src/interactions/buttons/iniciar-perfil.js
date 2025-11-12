@@ -8,6 +8,7 @@ import { openDungeonSettingsModal } from './dungeonconfig.js'; // Importar a fun
 
 export const customIdPrefix = CUSTOM_ID_PREFIX;
 const NOTIFICATION_BUTTON_PREFIX = `${CUSTOM_ID_PREFIX}_notify`;
+const PREFERENCE_BUTTON_PREFIX = `${CUSTOM_ID_PREFIX}_prefs`;
 
 export async function openProfileForm(interaction) {
     const { firestore } = initializeFirebase();
@@ -137,14 +138,18 @@ async function handleFormSubmit(interaction) {
         const profileImage = await createProfileImage(updatedUserSnap.data(), user);
         const attachment = new AttachmentBuilder(profileImage, { name: 'profile-image.png' });
         
-        const managementRow = new ActionRowBuilder()
+        const managementRow1 = new ActionRowBuilder()
             .addComponents(
                 new ButtonBuilder().setCustomId(`${CUSTOM_ID_PREFIX}_update_${user.id}`).setLabel('Atualizar Perfil').setStyle(ButtonStyle.Primary).setEmoji('📝'),
-                new ButtonBuilder().setCustomId(`${CUSTOM_ID_PREFIX}_dungeonconfig_${user.id}`).setLabel('Config. Dungeon').setStyle(ButtonStyle.Secondary).setEmoji('⚙️'),
-                new ButtonBuilder().setCustomId(`${NOTIFICATION_BUTTON_PREFIX}_toggle_${user.id}`).setLabel('Notificações').setStyle(ButtonStyle.Secondary).setEmoji('🔔')
+                new ButtonBuilder().setCustomId(`${CUSTOM_ID_PREFIX}_dungeonconfig_${user.id}`).setLabel('Config. Dungeon').setStyle(ButtonStyle.Secondary).setEmoji('⚙️')
+            );
+        const managementRow2 = new ActionRowBuilder()
+            .addComponents(
+                new ButtonBuilder().setCustomId(`${NOTIFICATION_BUTTON_PREFIX}_toggle_${user.id}`).setLabel('Notificações').setStyle(ButtonStyle.Secondary).setEmoji('🔔'),
+                new ButtonBuilder().setCustomId(`${PREFERENCE_BUTTON_PREFIX}_open_${user.id}`).setLabel('Preferências de Resposta').setStyle(ButtonStyle.Secondary).setEmoji('🤖')
             );
             
-        await interaction.editReply({ content: 'Seu perfil foi atualizado com sucesso!', files: [attachment], components: [managementRow] });
+        await interaction.editReply({ content: 'Seu perfil foi atualizado com sucesso!', files: [attachment], components: [managementRow1, managementRow2] });
     } catch (e) {
         console.error("Erro ao criar imagem de perfil no /perfil (submit):", e);
         await interaction.editReply('Seu perfil foi salvo, mas ocorreu um erro ao gerar a imagem de exibição.');
@@ -191,14 +196,18 @@ async function handleImportSubmit(interaction) {
         const profileImage = await createProfileImage(updatedUserSnap.data(), discordUser);
         const attachment = new AttachmentBuilder(profileImage, { name: 'profile-image.png' });
         
-        const managementRow = new ActionRowBuilder()
+        const managementRow1 = new ActionRowBuilder()
             .addComponents(
                 new ButtonBuilder().setCustomId(`${CUSTOM_ID_PREFIX}_update_${discordUser.id}`).setLabel('Atualizar Perfil').setStyle(ButtonStyle.Primary).setEmoji('📝'),
-                new ButtonBuilder().setCustomId(`${CUSTOM_ID_PREFIX}_dungeonconfig_${discordUser.id}`).setLabel('Config. Dungeon').setStyle(ButtonStyle.Secondary).setEmoji('⚙️'),
-                new ButtonBuilder().setCustomId(`${NOTIFICATION_BUTTON_PREFIX}_toggle_${discordUser.id}`).setLabel('Notificações').setStyle(ButtonStyle.Secondary).setEmoji('🔔')
+                new ButtonBuilder().setCustomId(`${CUSTOM_ID_PREFIX}_dungeonconfig_${discordUser.id}`).setLabel('Config. Dungeon').setStyle(ButtonStyle.Secondary).setEmoji('⚙️')
+            );
+        const managementRow2 = new ActionRowBuilder()
+            .addComponents(
+                new ButtonBuilder().setCustomId(`${NOTIFICATION_BUTTON_PREFIX}_toggle_${discordUser.id}`).setLabel('Notificações').setStyle(ButtonStyle.Secondary).setEmoji('🔔'),
+                new ButtonBuilder().setCustomId(`${PREFERENCE_BUTTON_PREFIX}_open_${discordUser.id}`).setLabel('Preferências de Resposta').setStyle(ButtonStyle.Secondary).setEmoji('🤖')
             );
             
-        await interaction.editReply({ content: 'Seu perfil foi importado com sucesso!', files: [attachment], components: [managementRow] });
+        await interaction.editReply({ content: 'Seu perfil foi importado com sucesso!', files: [attachment], components: [managementRow1, managementRow2] });
     } catch (e) {
         console.error("Erro ao criar imagem de perfil no /perfil (import):", e);
         await interaction.editReply('Seu perfil foi importado, mas ocorreu um erro ao gerar a imagem de exibição.');
@@ -242,12 +251,60 @@ async function handleNotificationUpdate(interaction, enable) {
     }
 }
 
+async function handleOpenPreferenceMenu(interaction, targetUserId) {
+    if (interaction.user.id !== targetUserId) {
+        return interaction.reply({ content: 'Você só pode alterar suas próprias configurações.', ephemeral: true });
+    }
+
+    const { firestore } = initializeFirebase();
+    const userRef = doc(firestore, 'users', interaction.user.id);
+    const userSnap = await getDoc(userRef);
+    const currentPreference = userSnap.exists() ? userSnap.data().aiResponsePreference || 'detailed' : 'detailed';
+
+    const row = new ActionRowBuilder()
+        .addComponents(
+            new ButtonBuilder()
+                .setCustomId(`${PREFERENCE_BUTTON_PREFIX}_set_detailed`)
+                .setLabel('Respostas Detalhadas')
+                .setStyle(currentPreference === 'detailed' ? ButtonStyle.Success : ButtonStyle.Secondary)
+                .setDisabled(currentPreference === 'detailed'),
+            new ButtonBuilder()
+                .setCustomId(`${PREFERENCE_BUTTON_PREFIX}_set_short`)
+                .setLabel('Respostas Curtas')
+                .setStyle(currentPreference === 'short' ? ButtonStyle.Success : ButtonStyle.Secondary)
+                .setDisabled(currentPreference === 'short')
+        );
+
+    await interaction.reply({
+        content: 'Escolha o seu estilo de resposta preferido da IA. A opção "curta" fornece apenas a solução direta, sem dicas ou análises extras.',
+        components: [row],
+        ephemeral: true,
+    });
+}
+
+async function handleSetPreference(interaction, preference) {
+    await interaction.deferUpdate();
+    const { firestore } = initializeFirebase();
+    const userRef = doc(firestore, 'users', interaction.user.id);
+
+    try {
+        await setDoc(userRef, { aiResponsePreference: preference }, { merge: true });
+        const message = `Sua preferência foi atualizada para respostas **${preference === 'detailed' ? 'detalhadas' : 'curtas'}**!`;
+        await interaction.editReply({ content: message, components: [] });
+    } catch (error) {
+        console.error("Erro ao salvar preferência de resposta da IA:", error);
+        await interaction.editReply({ content: 'Ocorreu um erro ao salvar sua preferência.', components: [] });
+    }
+}
+
 
 export async function handleInteraction(interaction) {
     if (interaction.isButton()) {
-        const [prefix, action, targetUserId] = interaction.customId.split('_');
+        const [prefix, action, ...params] = interaction.customId.split('_');
         
         if (prefix !== CUSTOM_ID_PREFIX) return;
+
+        const targetUserId = params[0];
 
         if (action === 'abrir') await openProfileForm(interaction);
         else if (action === 'importar') await handleOpenImportModal(interaction);
@@ -268,6 +325,15 @@ export async function handleInteraction(interaction) {
                 await handleNotificationUpdate(interaction, false);
              }
         }
+        else if (action === 'prefs') {
+            if (interaction.customId === `${PREFERENCE_BUTTON_PREFIX}_open_${targetUserId}`) {
+                await handleOpenPreferenceMenu(interaction, targetUserId);
+            } else if (interaction.customId === `${PREFERENCE_BUTTON_PREFIX}_set_detailed`) {
+                await handleSetPreference(interaction, 'detailed');
+            } else if (interaction.customId === `${PREFERENCE_BUTTON_PREFIX}_set_short`) {
+                await handleSetPreference(interaction, 'short');
+            }
+        }
         
     } else if (interaction.isModalSubmit()) {
         if (interaction.customId === FORM_MODAL_ID) {
@@ -277,5 +343,3 @@ export async function handleInteraction(interaction) {
         }
     }
 }
-
-    

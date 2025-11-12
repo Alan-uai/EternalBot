@@ -14,6 +14,7 @@ export const IMPORT_BUTTON_ID = `${CUSTOM_ID_PREFIX}_importar`;
 export const FORM_MODAL_ID = `${CUSTOM_ID_PREFIX}_modal`;
 export const IMPORT_MODAL_ID = `${CUSTOM_ID_PREFIX}_importar_modal`;
 const NOTIFICATION_BUTTON_PREFIX = `${CUSTOM_ID_PREFIX}_notify`;
+const PREFERENCE_BUTTON_PREFIX = `${CUSTOM_ID_PREFIX}_prefs`;
 
 
 export const data = new SlashCommandBuilder()
@@ -58,13 +59,17 @@ export async function execute(interaction) {
         const components = [];
         // Mostra os botões de gerenciamento apenas se o usuário estiver vendo seu próprio perfil
         if(targetUser.id === interaction.user.id) {
-            const managementRow = new ActionRowBuilder()
+            const managementRow1 = new ActionRowBuilder()
                 .addComponents(
                     new ButtonBuilder().setCustomId(`${CUSTOM_ID_PREFIX}_update_${targetUser.id}`).setLabel('Atualizar Perfil').setStyle(ButtonStyle.Primary).setEmoji('📝'),
-                    new ButtonBuilder().setCustomId(`${CUSTOM_ID_PREFIX}_dungeonconfig_${targetUser.id}`).setLabel('Config. Dungeon').setStyle(ButtonStyle.Secondary).setEmoji('⚙️'),
-                    new ButtonBuilder().setCustomId(`${NOTIFICATION_BUTTON_PREFIX}_toggle_${targetUser.id}`).setLabel('Notificações').setStyle(ButtonStyle.Secondary).setEmoji('🔔')
+                    new ButtonBuilder().setCustomId(`${CUSTOM_ID_PREFIX}_dungeonconfig_${targetUser.id}`).setLabel('Config. Dungeon').setStyle(ButtonStyle.Secondary).setEmoji('⚙️')
                 );
-            components.push(managementRow);
+            const managementRow2 = new ActionRowBuilder()
+                .addComponents(
+                    new ButtonBuilder().setCustomId(`${NOTIFICATION_BUTTON_PREFIX}_toggle_${targetUser.id}`).setLabel('Notificações').setStyle(ButtonStyle.Secondary).setEmoji('🔔'),
+                    new ButtonBuilder().setCustomId(`${PREFERENCE_BUTTON_PREFIX}_open_${targetUser.id}`).setLabel('Preferências de Resposta').setStyle(ButtonStyle.Secondary).setEmoji('🤖')
+                );
+            components.push(managementRow1, managementRow2);
         }
 
         return interaction.editReply({ files: [attachment], components });

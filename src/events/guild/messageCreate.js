@@ -3,6 +3,9 @@ import { Events, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, Str
 import axios from 'axios';
 import { generateSolution } from '../../ai/flows/generate-solution.js';
 import { createTableImage } from '../../utils/createTableImage.js';
+import { doc, getDoc } from 'firebase/firestore';
+import { initializeFirebase } from '../../firebase/index.js';
+
 
 // Função para enviar respostas, dividindo se necessário
 async function sendReply(message, parts) {
@@ -80,7 +83,8 @@ export const name = Events.MessageCreate;
 
 export async function execute(message) {
     const { client, config, logger, services } = message.client.container;
-    const { wikiContext } = services;
+    const { wikiContext, firebase } = services;
+    const { firestore } = firebase;
 
     if (message.author.bot) return;
 
@@ -149,6 +153,12 @@ export async function execute(message) {
 
     await message.channel.sendTyping();
     
+    // Busca preferência do usuário
+    const userRef = doc(firestore, 'users', message.author.id);
+    const userSnap = await getDoc(userRef);
+    const userPreference = userSnap.exists() ? userSnap.data().aiResponsePreference : 'detailed';
+    const isShortPreference = userPreference === 'short';
+
     let imageDataUri = null;
     if (imageAttachment) {
         try {
@@ -182,6 +192,7 @@ export async function execute(message) {
             imageDataUri: imageDataUri || undefined,
             wikiContext: wikiContext.getContext(),
             history: history.length > 0 ? history : undefined,
+            isShortPreference, // Passa a preferência para a IA
         });
 
         if (result?.structuredResponse?.[0]?.titulo === 'Resposta não encontrada') {
