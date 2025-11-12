@@ -11,6 +11,7 @@ const ALLOWED_CHANNELS = [FORMULARIO_CHANNEL_ID, COMMUNITY_HELP_CHANNEL_ID];
 export const CUSTOM_ID_PREFIX = 'perfil';
 export const UPDATE_PROFILE_BUTTON_ID = `${CUSTOM_ID_PREFIX}_update`;
 export const CUSTOMIZE_AI_BUTTON_ID = `${CUSTOM_ID_PREFIX}_customize_ai`;
+export const GOALS_PANEL_BUTTON_ID = `${CUSTOM_ID_PREFIX}_goals_panel`;
 
 
 export const data = new SlashCommandBuilder()
@@ -29,7 +30,7 @@ export async function execute(interaction) {
     const targetUser = interaction.options.getUser('usuario') || interaction.user;
     const isViewingSelf = targetUser.id === interaction.user.id;
 
-    await interaction.deferReply({ ephemeral: true }); // SEMPRE efêmero agora
+    await interaction.deferReply({ ephemeral: true });
     
     const { firestore } = initializeFirebase();
     const userRef = doc(firestore, 'users', targetUser.id);
@@ -55,7 +56,8 @@ export async function execute(interaction) {
             const managementRow = new ActionRowBuilder()
                 .addComponents(
                     new ButtonBuilder().setCustomId(`${UPDATE_PROFILE_BUTTON_ID}_${targetUser.id}`).setLabel('Atualizar Perfil').setStyle(ButtonStyle.Primary).setEmoji('📝'),
-                    new ButtonBuilder().setCustomId(`${CUSTOMIZE_AI_BUTTON_ID}_${targetUser.id}`).setLabel('Personalizar o Gui').setStyle(ButtonStyle.Secondary).setEmoji('🤖')
+                    new ButtonBuilder().setCustomId(`${CUSTOMIZE_AI_BUTTON_ID}_${targetUser.id}`).setLabel('Personalizar o Gui').setStyle(ButtonStyle.Secondary).setEmoji('🤖'),
+                    new ButtonBuilder().setCustomId(`${GOALS_PANEL_BUTTON_ID}_${targetUser.id}`).setLabel('Minhas Metas').setStyle(ButtonStyle.Secondary).setEmoji('🎯')
                 );
             components.push(managementRow);
         }

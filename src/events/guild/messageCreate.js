@@ -8,6 +8,7 @@ import { initializeFirebase } from '../../firebase/index.js';
 import { personas } from '../../ai/personas.js';
 import { responseStyles } from '../../ai/response-styles.js';
 import { languages } from '../../ai/languages.js';
+import { emojiStyles } from '../../ai/emoji-styles.js';
 
 
 // Função para enviar respostas, dividindo se necessário
@@ -164,13 +165,23 @@ export async function execute(message) {
     const responseStyleKey = userData.aiResponsePreference || 'detailed';
     const personaKey = userData.aiPersonality || 'amigavel';
     const languageKey = userData.aiLanguage || 'pt_br';
+    const emojiKey = userData.aiEmojiPreference || 'moderate';
+    const useProfileContext = userData.aiUseProfileContext || false;
+
     const userTitle = userData.userTitle || undefined;
     const userName = userData.customName || message.author.username;
 
     // Busca as instruções modulares
-    const responseStyleInstruction = responseStyles[responseStyleKey]?.instruction || responseStyles.detailed.instruction;
-    const personaInstruction = personas[personaKey]?.instruction || personas.amigavel.instruction;
-    const languageInstruction = languages[languageKey]?.instruction || languages.pt_br.instruction;
+    const responseStyleInstruction = responseStyles[responseStyleKey]?.instruction;
+    const personaInstruction = personas[personaKey]?.instruction;
+    const languageInstruction = languages[languageKey]?.instruction;
+    const emojiInstruction = emojiStyles[emojiKey]?.instruction;
+    
+    let userProfileContext = undefined;
+    if (useProfileContext && userSnap.exists()) {
+        const { currentWorld, rank, dps } = userData;
+        userProfileContext = `Mundo Atual: ${currentWorld || 'N/D'}, Rank: ${rank || 'N/D'}, DPS: ${dps || 'N/D'}`;
+    }
 
     let imageDataUri = null;
     if (imageAttachment) {
@@ -204,10 +215,12 @@ export async function execute(message) {
             problemDescription: question,
             imageDataUri: imageDataUri || undefined,
             wikiContext: wikiContext.getContext(),
+            userProfileContext,
             history: history.length > 0 ? history : undefined,
             responseStyleInstruction,
             personaInstruction,
             languageInstruction,
+            emojiInstruction,
             userName,
             userTitle,
         });
