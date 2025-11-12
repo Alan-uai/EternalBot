@@ -30,6 +30,13 @@ const RAID_AVATAR_ASSETS = {
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
+function formatTime(totalSeconds) {
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = Math.floor(totalSeconds % 60);
+    const milliseconds = Math.round((totalSeconds - Math.floor(totalSeconds)) * 1000);
+    return `\`${minutes}m ${seconds.toString().padStart(2, '0')}s ${milliseconds.toString().padStart(3, '0')}ms\``;
+}
+
 async function handleRaidLifecycle(container) {
     const { client, config, logger, services } = container;
     const { firebase, assetService } = services;
@@ -109,8 +116,24 @@ async function handleRaidLifecycle(container) {
                 { name: 'Dificuldade', value: activeRaidDetails['Dificuldade'], inline: true },
                 { name: 'Vida do Chefe', value: `\`${activeRaidDetails['Vida Último Boss']}\``, inline: true },
                 { name: 'Dano Recomendado', value: `\`${activeRaidDetails['Dano Recomendado']}\``, inline: true },
-                { name: 'Entrar no Jogo', value: `**[Clique aqui para ir para o jogo](${config.GAME_LINK})**` }
+                { name: 'Entrar no Jogo', value: `**[Clique aqui para ir para o jogo](${config.GAME_LINK})**`, inline: false }
             );
+        
+        // Adiciona campo de tempo de conclusão, exceto para Nightmare e Leaf Raid
+        if (newRaidId !== 'Nightmare' && newRaidId !== 'Leaf Raid') {
+            const baseTimeSeconds = 72.025; // 1m 12.025s
+            const maxSpeed = 250;
+            
+            const minTime = baseTimeSeconds * (maxSpeed / 100); // 100% speed
+            const mediumTime = baseTimeSeconds * (maxSpeed / 175); // 175% speed
+            
+            const timeFieldValue = `> **Máximo (250%):** ${formatTime(baseTimeSeconds)}\n` +
+                                   `> **Médio (175%):** ${formatTime(mediumTime)}\n` +
+                                   `> **Mínimo (100%):** ${formatTime(minTime)}`;
+            
+            embed.addFields({ name: 'Tempo Estimado de Conclusão', value: timeFieldValue, inline: false });
+        }
+
 
         let finalContent = '';
         if (activeRaidDetails.roleId && desiredState === 'open') {
