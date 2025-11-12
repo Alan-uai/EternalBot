@@ -18,7 +18,8 @@ export async function execute(interaction) {
         reply: interaction.reply.bind(interaction),
         followUp: interaction.followUp.bind(interaction),
         deferReply: interaction.deferReply.bind(interaction),
-        message: interaction, // Adiciona a propriedade message para que o handler possa referenciá-la
+        // Correção: Adiciona a propriedade message que faltava no objeto
+        message: interaction.message || interaction, 
     };
     
     await profileInteractionHandler(fakeInteraction);

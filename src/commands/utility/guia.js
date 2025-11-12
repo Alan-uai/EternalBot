@@ -5,16 +5,17 @@ export const data = new SlashCommandBuilder()
     .setName('guia')
     .setDescription('Lista todos os comandos disponíveis e suas funções.');
 
-export async function execute(interaction) {
+export async function execute(interaction, container) {
     await interaction.deferReply({ ephemeral: true });
 
-    const { commands } = interaction.client;
+    // Correção: Acessar os comandos através do container injetado
+    const { commands } = container;
     
     // Filtra comandos que não devem ser mostrados ao usuário
     const visibleCommands = commands.filter(cmd => 
         cmd.data.name !== 'gerenciar' && 
         cmd.data.name !== 'chat' &&
-        cmd.data.default_member_permissions === undefined // Esconde comandos de admin
+        !cmd.data.default_member_permissions // Esconde comandos de admin
     );
 
     const embed = new EmbedBuilder()

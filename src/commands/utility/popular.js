@@ -90,7 +90,7 @@ export async function execute(interaction) {
                         }
                     }
                 }
-            } else if (article.tables) { // Apenas processa se o artigo tiver tabelas
+            } else if (article.tables) { // Correção: Apenas processa se o artigo tiver tabelas
                  // Trata outros artigos com tabelas como coleções
                 if (article.id === 'stands-world-16') {
                     count += await populateCollection(batch, firestore, 'stands', article.tables.stands.rows);
