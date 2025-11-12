@@ -254,8 +254,33 @@ export const world1Data = {
         { name: 'Poção de Experiência', amount: 1 },
         { name: 'Poção de Danos', amount: 1 }
       ]
+    },
+    {
+      name: 'Masmorra Maluca',
+      requirement: 'Completar a Masmorra Maluca 0/50 vezes',
+      rewards: [
+        { name: 'Poção da Alma', amount: 1 },
+        { name: 'Poção de Experiência', amount: 1 }
+      ]
+    },
+    {
+      name: 'Pesadelo do Calabouço',
+      requirement: 'Completar a Pesadelo do Calabouço 0/50 vezes',
+      rewards: [
+        { name: 'Poção de Danos', amount: 1 },
+        { name: 'Poção de Energia', amount: 1 }
+      ]
+    },
+    {
+      name: 'Masmorra da Folha',
+      requirement: 'Completar a Masmorra da Folha 0/50 vezes',
+      rewards: [
+        { name: 'Soltar Poção', amount: 1 },
+        { name: 'Poção de Danos', amount: 1 },
+        { name: 'Poção de Energia', amount: 1 }
+      ]
     }
   ]
 };
 
-  
+    
