@@ -7,7 +7,7 @@ const ANNOUNCER_DOC_ID = 'raidAnnouncer';
 
 // Mapeamento de Nomes de Webhook para cada estado
 const RAID_NAMES = {
-    'next_up': 'Próxima Raid',
+    'next_up': 'Jajá Vem Aí!',
     'starting_soon': 'Fique Ligado!',
     'open': 'Ela Chegou 🥳🎉',
     'closing_soon': 'Corra! Falta Pouco'
@@ -92,8 +92,8 @@ async function handleRaidLifecycle(container) {
 
         const finalWebhookName = RAID_NAMES[desiredState] || newRaidId;
         const finalAvatarUrl = raidAssets.avatars[desiredState] || raidAssets.fallbackAvatar || await assetService.getAsset('BotAvatar');
-        const transitionGifUrl = raidAssets.gifs.transition;
-        const finalGifUrl = raidAssets.gifs.final;
+        const transitionGifUrl = raidAssets.gifs.transition[desiredState];
+        const finalGifUrl = raidAssets.gifs.final[desiredState];
         
         const embed = new EmbedBuilder()
             .addFields(
