@@ -213,7 +213,7 @@ async function handleFinish(interaction, flowData) {
     
     const newFarm = {
         hostId: interaction.user.id,
-        hostUsername: interaction.user.username,
+        hostUsername: interaction.user.username, // Save the global username as a fallback
         dayOfWeek: flowData.day,
         time: flowData.time,
         raidName: flowData.raidName,

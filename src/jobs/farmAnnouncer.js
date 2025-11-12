@@ -26,7 +26,8 @@ async function handleAnnouncements(container, farms) {
     });
     if (!guild) return;
 
-    const now = new Date();
+    // Use a date object configured for Brazil's timezone (UTC-3)
+    const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
     const fiveMinutesFromNow = new Date(now.getTime() + 5 * 60 * 1000);
 
     for (const farm of farms) {
@@ -36,14 +37,17 @@ async function handleAnnouncements(container, farms) {
 
         // --- Anúncio de 5 minutos ---
         if (farmTime > now && farmTime <= fiveMinutesFromNow && !farm.announced5m) {
-            const host = await client.users.fetch(farm.hostId).catch(() => null);
+            const hostMember = await guild.members.fetch(farm.hostId).catch(() => null);
+            const hostUser = hostMember ? hostMember.user : await client.users.fetch(farm.hostId).catch(() => null);
+            const hostDisplayName = hostMember ? hostMember.displayName : farm.hostUsername;
+
             const userSnap = await getDoc(doc(firestore, 'users', farm.hostId));
             const serverLink = userSnap.exists() ? userSnap.data()?.dungeonSettings?.serverLink : null;
             const customMessage = farm.customMessage || 'Preparem-se para o farm!';
 
             const embed = new EmbedBuilder()
                 .setColor(0xFFA500)
-                .setAuthor({ name: `Farm de ${host?.username || farm.hostUsername}`, iconURL: host?.displayAvatarURL() })
+                .setAuthor({ name: `Farm de ${hostDisplayName}`, iconURL: hostUser?.displayAvatarURL() })
                 .setTitle(`A Raid ${farm.raidName} começa em 5 minutos!`)
                 .setDescription(customMessage);
             if (serverLink) {
@@ -69,7 +73,10 @@ async function handleAnnouncements(container, farms) {
                 await webhookClient.deleteMessage(farm.announcementId).catch(e => logger.warn(`[farmAnnouncer] Não foi possível deletar a mensagem de 5min: ${e.message}`));
             }
 
-            const host = await client.users.fetch(farm.hostId).catch(() => null);
+            const hostMember = await guild.members.fetch(farm.hostId).catch(() => null);
+            const hostUser = hostMember ? hostMember.user : await client.users.fetch(farm.hostId).catch(() => null);
+            const hostDisplayName = hostMember ? hostMember.displayName : farm.hostUsername;
+
             const userSnap = await getDoc(doc(firestore, 'users', farm.hostId));
             const serverLink = userSnap.exists() ? userSnap.data()?.dungeonSettings?.serverLink : null;
             const customMessage = farm.customMessage || 'O farm começou! Boa sorte!';
@@ -96,7 +103,7 @@ async function handleAnnouncements(container, farms) {
 
             const embed = new EmbedBuilder()
                 .setColor(0x00FF00)
-                .setAuthor({ name: `Farm de ${host?.username || farm.hostUsername}`, iconURL: host?.displayAvatarURL() })
+                .setAuthor({ name: `Farm de ${hostDisplayName}`, iconURL: hostUser?.displayAvatarURL() })
                 .setTitle(`✅ Farm Aberto: ${farm.raidName}`)
                 .setDescription(customMessage);
              if (serverLink) {
@@ -131,7 +138,7 @@ async function handleAnnouncements(container, farms) {
                     const followerUser = await client.users.fetch(followerDoc.id).catch(() => null);
                     if(followerUser) {
                         try {
-                             await followerUser.send(`🔔 O host **${farm.hostUsername}** que você segue iniciou um farm de **${farm.raidName}**! [Clique aqui para ver o anúncio](${openAnnouncement.url})`);
+                             await followerUser.send(`🔔 O host **${hostDisplayName}** que você segue iniciou um farm de **${farm.raidName}**! [Clique aqui para ver o anúncio](${openAnnouncement.url})`);
                         } catch(e) {
                             logger.warn(`Não foi possível enviar DM para o seguidor ${followerUser.tag}`);
                         }
@@ -153,7 +160,7 @@ async function handleAnnouncements(container, farms) {
                     const user = await client.users.fetch(interestedUserId).catch(()=>null);
                     if(user){
                         try {
-                            await user.send(`🔔 Um novo farm para **${farm.raidName}**, uma raid de seu interesse, foi criado por **${farm.hostUsername}**! [Clique aqui para ver o anúncio](${openAnnouncement.url})`);
+                            await user.send(`🔔 Um novo farm para **${farm.raidName}**, uma raid de seu interesse, foi criado por **${hostDisplayName}**! [Clique aqui para ver o anúncio](${openAnnouncement.url})`);
                         } catch(e) {
                             logger.warn(`Não foi possível notificar ${user.tag} sobre o farm de interesse.`);
                         }
@@ -174,7 +181,7 @@ export async function run(container) {
     const { firestore } = services.firebase;
     
     try {
-        const now = new Date();
+        const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
         const currentDay = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][now.getDay()];
         
         const q = query(collection(firestore, 'scheduled_farms'), where("dayOfWeek", "==", currentDay));

@@ -38,7 +38,7 @@ async function cleanupOldFarmsAndResources(container) {
     const guild = await client.guilds.fetch(config.GUILD_ID).catch(() => null);
     if (!guild) return;
 
-    const now = new Date();
+    const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
     const currentDayIndex = now.getDay();
     
     const batch = writeBatch(firestore);
@@ -94,7 +94,7 @@ export async function run(container) {
     try {
         await cleanupOldFarmsAndResources(container);
 
-        const now = new Date();
+        const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
         const currentDay = WEEKDAYS[now.getDay()];
         
         const allFarmsForWeek = [];
@@ -127,16 +127,24 @@ export async function run(container) {
                 .setDescription('Nenhum farm agendado para hoje. Use o comando `/farming` para criar um!');
             embeds.push(emptyEmbed);
         } else {
-            const farmsByHost = allFarmsToday.reduce((acc, farm) => {
-                if (!acc[farm.hostId]) {
-                    acc[farm.hostId] = {
-                        hostUsername: farm.hostUsername,
+            const guild = await client.guilds.fetch(config.GUILD_ID).catch(()=>null);
+            const farmsByHost = {};
+
+            for(const farm of allFarmsToday) {
+                 if (!farmsByHost[farm.hostId]) {
+                    let hostDisplayName = farm.hostUsername;
+                    if(guild) {
+                        const member = await guild.members.fetch(farm.hostId).catch(() => null);
+                        if(member) hostDisplayName = member.displayName;
+                    }
+                    farmsByHost[farm.hostId] = {
+                        hostDisplayName: hostDisplayName,
+                        hostId: farm.hostId,
                         farms: []
                     };
                 }
-                acc[farm.hostId].farms.push(farm);
-                return acc;
-            }, {});
+                farmsByHost[farm.hostId].farms.push(farm);
+            }
 
             for (const hostId in farmsByHost) {
                 const hostData = farmsByHost[hostId];
@@ -147,7 +155,7 @@ export async function run(container) {
 
                 const hostEmbed = new EmbedBuilder()
                     .setColor(0x3498DB)
-                    .setAuthor({ name: `Farms de ${hostUser.username}`, iconURL: hostUser.displayAvatarURL() })
+                    .setAuthor({ name: `Farms de ${hostData.hostDisplayName}`, iconURL: hostUser.displayAvatarURL() })
                     .setTimestamp();
                 
                 hostData.farms.forEach(farm => {
