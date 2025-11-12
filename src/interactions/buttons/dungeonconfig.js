@@ -12,7 +12,8 @@ const TAG_MODAL_ID = `${customIdPrefix}_tag_modal`;
 
 // IDs for Notification Panel
 const NOTIFICATIONS_DM_TOGGLE_ID = `${customIdPrefix}_notify_dm_toggle`;
-const NOTIFICATIONS_RAID_SELECT_ID = `${customIdPrefix}_notify_raid_select`;
+const NOTIFICATIONS_SOLING_RAID_SELECT_ID = `${customIdPrefix}_notify_soling_select`; // Renomeado
+const NOTIFICATIONS_FARM_RAID_SELECT_ID = `${customIdPrefix}_notify_farm_select`;   // Novo
 const NOTIFICATIONS_HOST_SELECT_ID = `${customIdPrefix}_notify_host_select`;
 const NOTIFICATIONS_HOST_TYPE_SELECT_ID = `${customIdPrefix}_notify_host_type_select`;
 
@@ -107,15 +108,16 @@ async function handleTagSubmit(interaction) {
 }
 
 
-async function openNotificationsPanel(interaction) {
-    const { firestore, client } = initializeFirebase();
-    const userRef = doc(firestore, 'users', interaction.user.id);
+async function openNotificationsPanel(interaction, user) {
+    const { firestore } = initializeFirebase();
+    const userRef = doc(firestore, 'users', user.id);
     const userSnap = await getDoc(userRef);
     const userData = userSnap.exists() ? userSnap.data() : {};
     const notificationPrefs = userData.notificationPrefs || {};
 
-    const dmEnabled = notificationPrefs.dmEnabled !== false; // Padrão é true
-    const raidInterests = notificationPrefs.raidInterests || [];
+    const dmEnabled = notificationPrefs.dmEnabled !== false;
+    const solingInterests = notificationPrefs.solingInterests || [];
+    // const farmInterests = notificationPrefs.farmInterests || []; // Futura implementação
     const following = userData.following || [];
 
     const embed = new EmbedBuilder()
@@ -133,19 +135,28 @@ async function openNotificationsPanel(interaction) {
     const raidOptions = Object.values(availableRaids).flat().map(raid => ({
         label: raid.label,
         value: raid.value,
-        default: raidInterests.includes(raid.value)
-    })).slice(0, 25); // Limita a 25 para o menu
+        default: solingInterests.includes(raid.value)
+    })).slice(0, 25);
 
-    const raidSelect = new ActionRowBuilder().addComponents(
+    const solingSelect = new ActionRowBuilder().addComponents(
         new StringSelectMenuBuilder()
-            .setCustomId(NOTIFICATIONS_RAID_SELECT_ID)
-            .setPlaceholder('Selecione seus interesses de /soling...')
+            .setCustomId(NOTIFICATIONS_SOLING_RAID_SELECT_ID)
+            .setPlaceholder('Selecione interesses de /soling...')
             .setMinValues(0)
-            .setMaxValues(raidOptions.length)
+            .setMaxValues(Math.min(raidOptions.length, 25))
             .addOptions(raidOptions.length > 0 ? raidOptions : [{label: 'Nenhuma raid disponível', value: 'none'}])
     );
     
-    const components = [dmToggle, raidSelect];
+    // Placeholder para o menu de farms, pode ser implementado no futuro
+    const farmSelect = new ActionRowBuilder().addComponents(
+        new StringSelectMenuBuilder()
+            .setCustomId(NOTIFICATIONS_FARM_RAID_SELECT_ID)
+            .setPlaceholder('Interesses de /farming (Em breve)')
+            .setDisabled(true)
+            .addOptions([{ label: 'Em breve', value: 'soon' }])
+    );
+    
+    const components = [dmToggle, solingSelect, farmSelect];
 
     if (following.length > 0) {
         const hostOptions = await Promise.all(following.map(async (hostId) => {
@@ -168,11 +179,11 @@ async function openNotificationsPanel(interaction) {
         embed.addFields({name: 'Hosts Seguidos', value: 'Você não segue nenhum host. Use o botão "Seguir" no perfil de outros jogadores.'});
     }
 
-    await interaction.reply({
-        embeds: [embed],
-        components,
-        ephemeral: true
-    });
+    if (interaction.isButton()) {
+        await interaction.reply({ embeds: [embed], components, ephemeral: true });
+    } else {
+        await interaction.update({ embeds: [embed], components, ephemeral: true });
+    }
 }
 
 async function handleDmToggle(interaction) {
@@ -182,16 +193,14 @@ async function handleDmToggle(interaction) {
     const currentStatus = userSnap.exists() ? (userSnap.data().notificationPrefs?.dmEnabled !== false) : true;
     
     await updateDoc(userRef, { 'notificationPrefs.dmEnabled': !currentStatus });
-    await openNotificationsPanel(interaction.message.interaction);
-    await interaction.deferUpdate();
+    await openNotificationsPanel(interaction, interaction.user);
 }
 
-async function handleRaidInterestSelect(interaction) {
+async function handleSolingInterestSelect(interaction) {
     const { firestore } = initializeFirebase();
     const userRef = doc(firestore, 'users', interaction.user.id);
-    await updateDoc(userRef, { 'notificationPrefs.raidInterests': interaction.values });
-    await openNotificationsPanel(interaction.message.interaction);
-    await interaction.deferUpdate();
+    await updateDoc(userRef, { 'notificationPrefs.solingInterests': interaction.values });
+    await openNotificationsPanel(interaction, interaction.user);
 }
 
 async function handleHostSelect(interaction) {
@@ -232,15 +241,12 @@ async function handleHostTypeSelect(interaction) {
         [`${updatePath}.notifyFarms`]: selectedTypes.includes('farm'),
     });
     
-    // Atualiza o painel para mostrar o estado mais recente
-    await openNotificationsPanel(interaction.message.interaction);
-    await interaction.deferUpdate();
+    await openNotificationsPanel(interaction, interaction.user);
 }
 
 
 export async function handleInteraction(interaction, container) {
     if (interaction.isButton()) {
-        // IDs do comando principal
         if (interaction.customId === SOLING_CONFIG_BUTTON_ID) {
             await openSolingSettingsModal(interaction);
         } else if (interaction.customId === FARMING_CONFIG_BUTTON_ID) {
@@ -248,8 +254,7 @@ export async function handleInteraction(interaction, container) {
         } else if (interaction.customId === TAG_CONFIG_BUTTON_ID) {
             await openTagModal(interaction);
         } else if (interaction.customId === NOTIFICATIONS_CONFIG_BUTTON_ID) {
-            await openNotificationsPanel(interaction);
-        // IDs do painel de notificações
+            await openNotificationsPanel(interaction, interaction.user);
         } else if (interaction.customId === NOTIFICATIONS_DM_TOGGLE_ID) {
             await handleDmToggle(interaction);
         }
@@ -264,8 +269,8 @@ export async function handleInteraction(interaction, container) {
         if (prefix !== customIdPrefix) return;
 
         if (action === 'notify') {
-             if (subAction === 'raid') {
-                await handleRaidInterestSelect(interaction);
+             if (subAction === 'soling') {
+                await handleSolingInterestSelect(interaction);
              } else if (subAction === 'host') {
                 await handleHostSelect(interaction);
              } else if (subAction === 'type') {
