@@ -6,7 +6,7 @@ import { getRaidTimings } from '../utils/raidTimings.js';
 const ANNOUNCER_DOC_ID = 'raidAnnouncer';
 
 const RAID_AVATAR_PREFIXES = {
-    'Easy': 'Easy', 'Medium': 'Med', 'Hard': 'Hd', 'Insane': 'Isne',
+    'Easy': 'Esy', 'Medium': 'Med', 'Hard': 'Hd', 'Insane': 'Isne',
     'Crazy': 'Czy', 'Nightmare': 'Mare', 'Leaf Raid': 'Lf'
 };
 
@@ -91,14 +91,15 @@ async function handleRaidLifecycle(container) {
             return;
         }
 
-        const assetPrefix = RAID_AVATAR_PREFIXES[newRaidId] || 'Easy';
+        const assetPrefix = RAID_AVATAR_PREFIXES[newRaidId] || 'Esy';
         const assetSuffix = RAID_AVATAR_ASSETS[desiredState];
         const finalWebhookName = RAID_NAMES[desiredState] || RAID_NAMES[newRaidId];
         
         const transitionGifUrl = await assetService.getAsset(`Tran${assetPrefix}${assetSuffix}`);
         const finalGifUrl = await assetService.getAsset(`${assetPrefix}${assetSuffix}`);
         
-        let finalAvatarUrl = await assetService.getAsset(assetPrefix + assetSuffix);
+        // O avatar é sempre estático e baseado apenas no prefixo (Esy, Med, etc.)
+        let finalAvatarUrl = await assetService.getAsset(assetPrefix);
         if (!finalAvatarUrl) {
             finalAvatarUrl = await assetService.getAsset('DungeonLobby');
         }
@@ -141,12 +142,17 @@ async function handleRaidLifecycle(container) {
         embed.setColor(stateColor);
         
         const hasTransition = !!transitionGifUrl;
+        const initialGif = hasTransition ? transitionGifUrl : finalGifUrl;
 
+        if (initialGif) {
+            embed.setImage(initialGif);
+        }
+        
         // Posta a nova mensagem (com a transição, se houver)
         const sentMessage = await webhookClient.send({
             username: finalWebhookName,
             avatarURL: finalAvatarUrl,
-            embeds: [embed.setImage(hasTransition ? transitionGifUrl : finalGifUrl)],
+            embeds: [embed],
             content: finalContent,
             wait: true
         });
