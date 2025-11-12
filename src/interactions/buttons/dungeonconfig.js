@@ -1,6 +1,5 @@
 // src/interactions/buttons/dungeonconfig.js
 import { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, StringSelectMenuBuilder, EmbedBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
-import { CUSTOM_ID_PREFIX as DUNGEON_CONFIG_PREFIX, SOLING_CONFIG_BUTTON_ID, FARMING_CONFIG_BUTTON_ID, TAG_CONFIG_BUTTON_ID, NOTIFICATIONS_CONFIG_BUTTON_ID } from '../../commands/utility/dungeonconfig.js';
 import { doc, updateDoc, getDoc, collection, query, where, getDocs, deleteDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
 import { getAvailableRaids } from '../../commands/utility/soling.js';
@@ -8,6 +7,12 @@ import { execute as executeDungeonConfig } from '../../commands/utility/dungeonc
 
 
 export const customIdPrefix = DUNGEON_CONFIG_PREFIX;
+
+// Re-exportando os IDs para serem usados externamente
+export const SOLING_CONFIG_BUTTON_ID = `${customIdPrefix}_soling_open`;
+export const FARMING_CONFIG_BUTTON_ID = `${customIdPrefix}_farming_open`;
+export const TAG_CONFIG_BUTTON_ID = `${customIdPrefix}_tag_open`;
+export const NOTIFICATIONS_CONFIG_BUTTON_ID = `${customIdPrefix}_notifications_open`;
 
 const SOLING_MODAL_ID = `${customIdPrefix}_soling_modal`;
 const TAG_MODAL_ID = `${customIdPrefix}_tag_modal`;
@@ -25,6 +30,7 @@ const NOTIFICATIONS_BACK_TO_MAIN_ID = `${customIdPrefix}_notify_back_main`;
 const FARM_MANAGE_SELECT_ID = `${customIdPrefix}_farm_manage_select`;
 const FARM_DELETE_BTN_ID = `${customIdPrefix}_farm_delete`;
 const FARM_EDIT_BTN_ID = `${customIdPrefix}_farm_edit`;
+const FARM_EDIT_MODAL_ID = `${customIdPrefix}_farm_edit_modal`; // Novo ID para o modal de edição
 
 
 const WEEKDAYS_PT = {
@@ -195,13 +201,11 @@ async function openNotificationsPanel(interaction, isUpdate = false) {
 
     const replyOptions = { embeds: [embed], components, ephemeral: true };
     
-    if (isUpdate) {
-        // CORREÇÃO: deleta a mensagem antiga e envia uma nova
-        await interaction.deleteReply().catch(() => {}); // Ignora erro se já foi deletada
-        await interaction.followUp(replyOptions);
+     if (interaction.replied || interaction.deferred) {
+        await interaction.deleteReply().catch(() => {});
+        await interaction.followUp(replyOptions).catch(()=>{});
     } else {
-         await interaction.deleteReply().catch(()=>{});
-         await interaction.followUp(replyOptions);
+        await interaction.reply(replyOptions).catch(()=>{});
     }
 }
 
@@ -297,7 +301,7 @@ async function openFarmingManagementPanel(interaction) {
         const farm = doc.data();
         return {
             label: `${WEEKDAYS_PT[farm.dayOfWeek]} às ${farm.time} - ${farm.raidName}`,
-            description: `Participantes: ${farm.participants.length}`,
+            description: `Participantes: ${farm.participants?.length || 1}`,
             value: doc.id
         };
     });
@@ -342,43 +346,61 @@ async function handleFarmDeleteButton(interaction, farmId) {
 }
 
 async function handleFarmEditButton(interaction, farmId) {
-    // Implementação da Lógica de Edição
-    const { client } = interaction;
-    const { firestore } = client.container.services.firebase;
+    const { firestore } = initializeFirebase();
     const farmRef = doc(firestore, 'scheduled_farms', farmId);
     const farmSnap = await getDoc(farmRef);
 
     if (!farmSnap.exists()) {
         return interaction.update({ content: 'Este farm não existe mais.', components: [] });
     }
-    
-    const farmData = farmSnap.data();
-    
-    // Armazena os dados do farm antigo para preencher o fluxo de criação
-    const flowData = {
-        day: farmData.dayOfWeek,
-        time: farmData.time,
-        raidName: farmData.raidName,
-        quantity: farmData.quantity,
-        customMessage: farmData.customMessage,
-        customTag: farmData.customTag,
-        restrictions: farmData.restrictions,
-        isEditing: true, // Flag para indicar edição
-        farmId: farmId // ID do farm que está sendo editado
-    };
-    client.container.interactions.set(`farming_flow_${interaction.user.id}`, flowData);
-    
-    await interaction.deferUpdate();
 
-    // Re-inicia o fluxo de agendamento a partir da seleção de dia
-    const { execute: executeFarmingCommand } = await import('../../commands/utility/farming.js');
-    // Simula uma nova interação para o comando, mas a mensagem original (com botões de edit/delete) será editada.
-    const fakeInteraction = {
-        ...interaction,
-        update: (options) => interaction.message.edit(options), // Redireciona update para edit
-        reply: (options) => interaction.followUp(options)
-    };
-    await executeFarmingCommand(fakeInteraction);
+    const farmData = farmSnap.data();
+
+    const modal = new ModalBuilder()
+        .setCustomId(`${FARM_EDIT_MODAL_ID}_${farmId}`)
+        .setTitle('Editar Agendamento de Farm');
+    
+    modal.addComponents(
+        new ActionRowBuilder().addComponents(
+            new TextInputBuilder().setCustomId('time').setLabel("Horário (HH:MM)").setStyle(TextInputStyle.Short).setValue(farmData.time).setRequired(true)
+        ),
+        new ActionRowBuilder().addComponents(
+            new TextInputBuilder().setCustomId('quantity').setLabel("Quantidade Média de Raids").setStyle(TextInputStyle.Short).setValue(String(farmData.quantity)).setRequired(true)
+        ),
+        new ActionRowBuilder().addComponents(
+            new TextInputBuilder().setCustomId('customMessage').setLabel("Mensagem Personalizada (Opcional)").setStyle(TextInputStyle.Paragraph).setValue(farmData.customMessage || '').setRequired(false)
+        )
+    );
+    
+    await interaction.showModal(modal);
+}
+
+async function handleFarmEditModalSubmit(interaction, farmId) {
+    await interaction.deferReply({ ephemeral: true });
+
+    const time = interaction.fields.getTextInputValue('time');
+    const quantityStr = interaction.fields.getTextInputValue('quantity');
+    const customMessage = interaction.fields.getTextInputValue('customMessage');
+    const quantity = parseInt(quantityStr, 10);
+
+    if (!/^\d{2}:\d{2}$/.test(time) || isNaN(quantity) || quantity <= 0) {
+        return interaction.editReply({ content: 'Por favor, insira um horário válido (HH:MM) e uma quantidade numérica positiva.' });
+    }
+    
+    const { firestore } = initializeFirebase();
+    const farmRef = doc(firestore, 'scheduled_farms', farmId);
+
+    try {
+        await updateDoc(farmRef, {
+            time,
+            quantity,
+            customMessage: customMessage || null
+        });
+        await interaction.editReply({ content: 'Farm atualizado com sucesso!' });
+    } catch(error) {
+        console.error("Erro ao editar farm:", error);
+        await interaction.editReply({ content: 'Ocorreu um erro ao atualizar o farm.' });
+    }
 }
 
 
@@ -390,7 +412,7 @@ export async function handleInteraction(interaction, container) {
         return executeDungeonConfig(interaction);
     }
     
-    if (prefix !== customIdPrefix) return;
+    if (prefix !== 'dungeonconfig') return;
 
     if (interaction.isButton()) {
         if (interaction.customId === SOLING_CONFIG_BUTTON_ID) {
@@ -420,6 +442,9 @@ export async function handleInteraction(interaction, container) {
             await handleSolingSettingsSubmit(interaction);
         } else if (interaction.customId === TAG_MODAL_ID) {
             await handleTagSubmit(interaction);
+        } else if (interaction.customId.startsWith(FARM_EDIT_MODAL_ID)) {
+            const farmId = interaction.customId.split('_').pop();
+            await handleFarmEditModalSubmit(interaction, farmId);
         }
     } else if (interaction.isStringSelectMenu()) {
         if (action === 'notify') {

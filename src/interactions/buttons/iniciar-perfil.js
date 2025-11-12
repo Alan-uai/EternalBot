@@ -9,7 +9,7 @@ import { languages } from '../../ai/languages.js';
 import { emojiStyles } from '../../ai/emoji-styles.js';
 
 // Alteração: Array de prefixos para garantir que todos os botões sejam reconhecidos
-export const customIdPrefix = ['perfil_update', 'perfil_customize_ai', 'perfil_goals_panel', 'perfil_follow', 'perfil'];
+export const customIdPrefix = ['perfil_update', 'perfil_customize_ai', 'perfil_goals_panel', 'perfil_follow', 'perfil', 'perfil_toggle_context', 'perfil_button_custom_title', 'perfil_goals_add', 'perfil_select_style', 'perfil_select_persona', 'perfil_select_language', 'perfil_select_emoji', 'perfil_goals_remove'];
 
 export const UPDATE_PROFILE_BUTTON_ID = `perfil_update`;
 export const CUSTOMIZE_AI_BUTTON_ID = `perfil_customize_ai`;
@@ -56,7 +56,7 @@ export async function openProfileForm(interaction, isInitialSetup = false) {
             new TextInputBuilder().setCustomId('dps').setLabel("Dano Total (DPS)").setPlaceholder("Ex: 1.5sx").setStyle(TextInputStyle.Short).setValue(userData.dps || '').setRequired(true)
         ),
         new ActionRowBuilder().addComponents(
-            new TextInputBuilder().setCustomId('totalEnergy').setLabel("Energia Atual (Acumulada)").setPlaceholder("Ex: 1.5sx").setStyle(TextInputStyle.Short).setValue(userData.totalEnergy || '').setRequired(true)
+            new TextInputBuilder().setCustomId('energyPerClick').setLabel("Energia por Clique").setPlaceholder("Ex: 10Qn").setStyle(TextInputStyle.Short).setValue(userData.energyPerClick || '').setRequired(false)
         ),
         new ActionRowBuilder().addComponents(
             new TextInputBuilder().setCustomId('birthday').setLabel("Aniversário (DD/MM)").setPlaceholder("Ex: 25/12. Opcional.").setStyle(TextInputStyle.Short).setValue(userData.birthday ? userData.birthday.split('-').reverse().join('/') : '').setRequired(false)
@@ -88,7 +88,7 @@ async function handleFormSubmit(interaction) {
         currentWorld: parseInt(interaction.fields.getTextInputValue('currentWorld'), 10) || 1,
         rank: parseInt(interaction.fields.getTextInputValue('rank'), 10) || 1,
         dps: interaction.fields.getTextInputValue('dps'),
-        totalEnergy: interaction.fields.getTextInputValue('totalEnergy'),
+        energyPerClick: interaction.fields.getTextInputValue('energyPerClick') || null,
         birthday: birthdayFormatted,
         id: interaction.user.id,
     };

@@ -67,7 +67,7 @@ export async function execute(interaction) {
                 .addComponents(
                      new ButtonBuilder().setCustomId(`${GOALS_PANEL_BUTTON_ID}_${targetUser.id}`).setLabel('Minhas Metas').setStyle(ButtonStyle.Secondary).setEmoji('🎯'),
                      // Este botão agora tem o customId do comando, para ser tratado pelo handler correto
-                     new ButtonBuilder().setCustomId(dungeonConfigData.name).setLabel('Configurações de Dungeon').setStyle(ButtonStyle.Secondary).setEmoji('⚙️')
+                     new ButtonBuilder().setCustomId('dungeonconfig').setLabel('Configurações de Dungeon').setStyle(ButtonStyle.Secondary).setEmoji('⚙️')
                 );
             components.push(row1, row2);
         } else {

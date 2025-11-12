@@ -80,8 +80,7 @@ export async function createProfileImage(userData, discordUser) {
     // Stats de Poder
     const powerStats = [
         { label: 'Dano Total (DPS)', value: userData.dps || 'N/D' },
-        { label: 'Energia Acumulada', value: userData.totalEnergy || 'N/D' },
-        { label: 'Ganho de Energia (p/ clique)', value: userData.energyPerClick || 'N/D' },
+        { label: 'Energia por Clique', value: userData.energyPerClick || 'N/D' },
     ];
     
     const powerStatXStart = 450;
