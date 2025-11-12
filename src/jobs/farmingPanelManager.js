@@ -159,9 +159,20 @@ export async function run(container) {
                     .setTimestamp();
                 
                 hostData.farms.forEach(farm => {
+                    let restrictionsText = '';
+                    if (farm.restrictions) {
+                        const { dps, rank, world } = farm.restrictions;
+                        if (dps || rank || world) {
+                            restrictionsText += '\n> **⚠️ Restrições Ativas:**';
+                            if (dps) restrictionsText += `\n> • DPS Mínimo: \`${dps}\``;
+                            if (rank) restrictionsText += `\n> • Rank Mínimo: \`${rank}\``;
+                            if (world) restrictionsText += `\n> • Mundo Mínimo: \`${world}\``;
+                        }
+                    }
+
                     hostEmbed.addFields({
                         name: `Raid: ${farm.raidName} às ${farm.time}`,
-                        value: `> Quantidade Média: **${farm.quantity}**\n> Participantes: **${farm.participants.length}**`,
+                        value: `> Quantidade Média: **${farm.quantity}**\n> Participantes: **${farm.participants.length}**${restrictionsText}`,
                         inline: false
                     });
                 });
@@ -171,7 +182,7 @@ export async function run(container) {
         
         const participationMenu = new StringSelectMenuBuilder()
             .setCustomId('farming_participate')
-            .setPlaceholder('Clique para participar de um farm...')
+            .setPlaceholder('Clique para participar ou gerenciar um farm...')
             .setOptions(allFarmsToday.length > 0 ? allFarmsToday.map(farm => ({
                 label: `${farm.time} - ${farm.raidName}`,
                 description: `Host: ${farm.hostUsername} | ${farm.participants.length} participante(s)`,

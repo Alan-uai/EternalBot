@@ -1,7 +1,7 @@
 // src/interactions/selects/farming.js
-import { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
 import { getAvailableRaids } from '../../commands/utility/soling.js';
-import { collection, addDoc, serverTimestamp, getDoc, doc } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, getDoc, doc, updateDoc, arrayUnion, arrayRemove, getDocs, where, query } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
 
 export const customIdPrefix = 'farming';
@@ -26,6 +26,15 @@ const OPTIONS_MODAL_ID = `${customIdPrefix}_options_modal`;
 const RESTRICTIONS_MODAL_ID = `${customIdPrefix}_restrictions_modal`;
 const CUSTOM_TAG_MODAL_ID = `${customIdPrefix}_tag_modal`;
 
+// Função para converter notações (k, M, B, T...) em números
+function parseNumber(value) {
+    if (typeof value === 'number') return value;
+    if (typeof value !== 'string') return 0;
+    const suffixes = { k: 1e3, m: 1e6, b: 1e9, t: 1e12, qd: 1e15, qn: 1e18, sx: 1e21, sp: 1e24, o: 1e27, n: 1e30, de: 1e33, ud: 1e36, dd: 1e39, td: 1e42, qdd: 1e45, qnd: 1e48, sxd: 1e51, spd: 1e54, ocd: 1e57, nvd: 1e60, vgn: 1e63, uvg: 1e66, dvg: 1e69, tvg: 1e72, qtv: 1e75, qnv: 1e78, sev: 1e81, spg: 1e84, ovg: 1e87, nvg: 1e90, tgn: 1e93, utg: 1e96, dtg: 1e99, tstg: 1e102, qtg: 1e105, qntg: 1e108, sstg: 1e111, sptg: 1e114, octg: 1e117, notg: 1e120, qdr: 1e123 };
+    const numPart = parseFloat(value);
+    const suffix = value.replace(/[\d.-]/g, '').toLowerCase();
+    return numPart * (suffixes[suffix] || 1);
+}
 
 // Handle Day Selection
 async function handleDaySelect(interaction) {
@@ -250,8 +259,103 @@ async function handleFinish(interaction, flowData) {
 
 // Handle participation toggle from the panel
 async function handleParticipationToggle(interaction) {
-    // This function remains the same as before.
+    const { firestore } = initializeFirebase();
+    const farmId = interaction.values[0];
+    const userId = interaction.user.id;
+
+    if (farmId === 'none' || farmId === 'no_farm') {
+        return interaction.update({ content: 'Nenhum farm disponível para interação.', components: [] });
+    }
+
+    const farmRef = doc(firestore, 'scheduled_farms', farmId);
+    const farmSnap = await getDoc(farmRef);
+    if (!farmSnap.exists()) {
+        return interaction.reply({ content: 'Este farm não está mais disponível.', ephemeral: true });
+    }
+
+    const farmData = farmSnap.data();
+
+    // Host view: if host clicks their own farm, show participants
+    if (userId === farmData.hostId) {
+        const participants = farmData.participants || [];
+        const participantMentions = participants.map(pId => `<@${pId}>`).join('\n') || 'Nenhum participante ainda.';
+        
+        const embed = new EmbedBuilder()
+            .setColor(0x1ABC9C)
+            .setTitle(`👥 Participantes de ${farmData.raidName} às ${farmData.time}`)
+            .setDescription(participantMentions);
+
+        return interaction.reply({ embeds: [embed], ephemeral: true });
+    }
+    
+    // User view: check restrictions and toggle participation
+    await interaction.deferReply({ ephemeral: true });
+
+    // Check restrictions
+    if (farmData.restrictions) {
+        const userRef = doc(firestore, 'users', userId);
+        const userSnap = await getDoc(userRef);
+
+        if (!userSnap.exists() || !userSnap.data().dps) {
+            return interaction.editReply({ content: 'Você precisa ter um perfil completo (`/perfil`) para entrar em farms com restrições.' });
+        }
+
+        const userData = userSnap.data();
+        let meetsRequirements = true;
+        let unmetReasons = [];
+
+        if (farmData.restrictions.dps && parseNumber(userData.dps) < parseNumber(farmData.restrictions.dps)) {
+            meetsRequirements = false;
+            unmetReasons.push(`DPS (Seu: ${userData.dps} | Req: ${farmData.restrictions.dps})`);
+        }
+        if (farmData.restrictions.rank && (userData.rank || 0) < parseInt(farmData.restrictions.rank)) {
+            meetsRequirements = false;
+            unmetReasons.push(`Rank (Seu: ${userData.rank || 0} | Req: ${farmData.restrictions.rank})`);
+        }
+        if (farmData.restrictions.world && (userData.currentWorld || 0) < parseInt(farmData.restrictions.world)) {
+            meetsRequirements = false;
+            unmetReasons.push(`Mundo (Seu: ${userData.currentWorld || 0} | Req: ${farmData.restrictions.world})`);
+        }
+
+        if (!meetsRequirements) {
+            const hostUser = await interaction.client.users.fetch(farmData.hostId).catch(() => ({ username: 'o host' }));
+            
+            const farmsRef = collection(firestore, 'scheduled_farms');
+            const q = query(farmsRef, where("raidName", "==", farmData.raidName), where("hostId", "!=", farmData.hostId));
+            const otherFarmsSnap = await getDocs(q);
+
+            let responseContent = `Perdão🙏, porém o senhor(a) **${hostUser.username}** ativou restrições às quais você não tem os requeridos.\nMotivos: ${unmetReasons.join(', ')}.`;
+            const components = [];
+            
+            if (!otherFarmsSnap.empty) {
+                const otherFarmOptions = otherFarmsSnap.docs.map(fDoc => ({
+                    label: `${fDoc.data().time} - Host: ${fDoc.data().hostUsername}`,
+                    value: fDoc.id,
+                }));
+
+                const selectMenu = new StringSelectMenuBuilder()
+                    .setCustomId('farming_participate')
+                    .setPlaceholder('Tente outro farm para esta mesma raid:')
+                    .addOptions(otherFarmOptions);
+                
+                components.push(new ActionRowBuilder().addComponents(selectMenu));
+                responseContent += "\n\nTalvez um desses outros farms para a mesma raid lhe interesse:";
+            }
+
+            return interaction.editReply({ content: responseContent, components });
+        }
+    }
+
+    const isParticipating = farmData.participants.includes(userId);
+    if (isParticipating) {
+        await updateDoc(farmRef, { participants: arrayRemove(userId) });
+        await interaction.editReply({ content: `Você removeu sua presença do farm de **${farmData.raidName}** às ${farmData.time}.` });
+    } else {
+        await updateDoc(farmRef, { participants: arrayUnion(userId) });
+        await interaction.editReply({ content: `Sua presença foi confirmada no farm de **${farmData.raidName}** às ${farmData.time}!` });
+    }
 }
+
 
 export async function handleInteraction(interaction, container) {
     if (interaction.isStringSelectMenu()) {
