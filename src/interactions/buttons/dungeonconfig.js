@@ -196,7 +196,9 @@ async function openNotificationsPanel(interaction, isUpdate = false) {
     const replyOptions = { embeds: [embed], components, ephemeral: true };
     
     if (isUpdate) {
-        await interaction.update(replyOptions);
+        // CORREÇÃO: deleta a mensagem antiga e envia uma nova
+        await interaction.deleteReply().catch(() => {}); // Ignora erro se já foi deletada
+        await interaction.followUp(replyOptions);
     } else {
          await interaction.deleteReply().catch(()=>{});
          await interaction.followUp(replyOptions);
@@ -340,10 +342,12 @@ async function handleFarmDeleteButton(interaction, farmId) {
 }
 
 async function handleFarmEditButton(interaction, farmId) {
-    const { client, services } = interaction;
-    const { firestore } = services.firebase;
+    // Implementação da Lógica de Edição
+    const { client } = interaction;
+    const { firestore } = client.container.services.firebase;
     const farmRef = doc(firestore, 'scheduled_farms', farmId);
     const farmSnap = await getDoc(farmRef);
+
     if (!farmSnap.exists()) {
         return interaction.update({ content: 'Este farm não existe mais.', components: [] });
     }
@@ -363,11 +367,18 @@ async function handleFarmEditButton(interaction, farmId) {
         farmId: farmId // ID do farm que está sendo editado
     };
     client.container.interactions.set(`farming_flow_${interaction.user.id}`, flowData);
+    
+    await interaction.deferUpdate();
 
-    // Inicia o fluxo de edição (mesmo que o de criação, mas com dados pré-populados)
-    // Vamos começar pela seleção de dia para simplicidade
-    const { execute: executeFarming } = await import('../../commands/utility/farming.js');
-    await executeFarming(interaction, true); // O 'true' indica que é uma re-edição
+    // Re-inicia o fluxo de agendamento a partir da seleção de dia
+    const { execute: executeFarmingCommand } = await import('../../commands/utility/farming.js');
+    // Simula uma nova interação para o comando, mas a mensagem original (com botões de edit/delete) será editada.
+    const fakeInteraction = {
+        ...interaction,
+        update: (options) => interaction.message.edit(options), // Redireciona update para edit
+        reply: (options) => interaction.followUp(options)
+    };
+    await executeFarmingCommand(fakeInteraction);
 }
 
 

@@ -157,7 +157,8 @@ async function openAiCustomizationPanel(interaction) {
         ],
         ephemeral: true,
     };
-
+    
+    // CORREÇÃO: Usar followUp se a interação já foi respondida.
     if (interaction.replied || interaction.deferred) {
         await interaction.followUp(replyOptions);
     } else {
@@ -254,6 +255,7 @@ async function openGoalsPanel(interaction) {
     }
     
     const replyOptions = { embeds: [embed], components, ephemeral: true };
+    // CORREÇÃO: Usar followUp se a interação já foi respondida.
     if (interaction.replied || interaction.deferred) {
         await interaction.followUp(replyOptions);
     } else {
@@ -277,7 +279,7 @@ async function handleGoalModalSubmit(interaction) {
     const { firestore } = initializeFirebase();
     const userRef = doc(firestore, 'users', interaction.user.id);
     await updateDoc(userRef, { goals: arrayUnion(goalText) });
-    await openGoalsPanel(interaction.message.interaction);
+    await openGoalsPanel(interaction); // Passa a interação do modal
 }
 
 async function handleRemoveGoal(interaction) {
@@ -293,7 +295,7 @@ async function handleRemoveGoal(interaction) {
     if (goalToRemove) {
         await updateDoc(userRef, { goals: arrayRemove(goalToRemove) });
     }
-    await openGoalsPanel(interaction.message.interaction);
+    await openGoalsPanel(interaction); // Passa a interação do menu
 }
 
 
