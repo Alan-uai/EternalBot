@@ -1,7 +1,6 @@
 // src/commands/utility/metas.js
 import { SlashCommandBuilder } from 'discord.js';
-import { handleInteraction as profileInteractionHandler } from '../../interactions/buttons/iniciar-perfil.js';
-import { CUSTOM_ID_PREFIX } from '../../interactions/buttons/iniciar-perfil.js';
+import { handleInteraction as profileInteractionHandler, GOALS_PANEL_BUTTON_ID } from '../../interactions/buttons/iniciar-perfil.js';
 
 export const data = new SlashCommandBuilder()
     .setName('metas')
@@ -14,11 +13,12 @@ export async function execute(interaction) {
     const fakeInteraction = {
         ...interaction,
         isButton: () => true,
-        customId: `${CUSTOM_ID_PREFIX}_goals_panel_${interaction.user.id}`,
+        customId: `${GOALS_PANEL_BUTTON_ID}_${interaction.user.id}`,
         // Garante que o handler possa responder ou seguir
         reply: interaction.reply.bind(interaction),
         followUp: interaction.followUp.bind(interaction),
         deferReply: interaction.deferReply.bind(interaction),
+        message: interaction, // Adiciona a propriedade message para que o handler possa referenciá-la
     };
     
     await profileInteractionHandler(fakeInteraction);

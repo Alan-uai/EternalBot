@@ -9,7 +9,8 @@ const __dirname = path.dirname(__filename);
 const INTERACTIONS_PATH = path.join(__dirname, '..', 'interactions');
 
 function validateInteraction(mod, file) {
-    if (!mod.customIdPrefix) {
+    // A validação agora checará se customIdPrefix é um array ou uma string
+    if (!mod.customIdPrefix || (Array.isArray(mod.customIdPrefix) && mod.customIdPrefix.length === 0)) {
         return `O manipulador em ${file} não possui a propriedade "customIdPrefix".`;
     }
     if (typeof mod.handleInteraction !== 'function') {
@@ -17,6 +18,7 @@ function validateInteraction(mod, file) {
     }
     return null;
 }
+
 
 async function loadHandlersFromDirectory(directoryPath, container) {
     const { logger, interactions } = container;
@@ -32,14 +34,18 @@ async function loadHandlersFromDirectory(directoryPath, container) {
             
             if (Object.keys(handlerModule).length === 0) continue;
 
+            const validationError = validateInteraction(handlerModule, file);
+            if (validationError) {
+                logger.warn(validationError);
+                continue;
+            }
+
+            // Garante que estamos sempre trabalhando com um array de prefixos
             const prefixes = Array.isArray(handlerModule.customIdPrefix) ? handlerModule.customIdPrefix : [handlerModule.customIdPrefix];
 
             for (const prefix of prefixes) {
-                const validationMod = { ...handlerModule, customIdPrefix: prefix };
-                const validationError = validateInteraction(validationMod, file);
-                if (validationError) {
-                    logger.warn(validationError);
-                    continue;
+                if(interactions.has(prefix)) {
+                    logger.warn(`Prefixo de interação duplicado detectado: '${prefix}' no arquivo ${file}. Isso pode levar a comportamento inesperado.`);
                 }
                 interactions.set(prefix, handlerModule.handleInteraction);
                 logger.info(`Manipulador de interação carregado para o prefixo: ${prefix}`);
