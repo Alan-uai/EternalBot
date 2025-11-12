@@ -7,6 +7,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
 import { personas } from '../../ai/personas.js';
 import { responseStyles } from '../../ai/response-styles.js';
+import { languages } from '../../ai/languages.js';
 
 
 // Função para enviar respostas, dividindo se necessário
@@ -162,12 +163,14 @@ export async function execute(message) {
     
     const responseStyleKey = userData.aiResponsePreference || 'detailed';
     const personaKey = userData.aiPersonality || 'amigavel';
+    const languageKey = userData.aiLanguage || 'pt_br';
     const userTitle = userData.userTitle || undefined;
     const userName = userData.customName || message.author.username;
 
     // Busca as instruções modulares
-    const responseStyleInstruction = responseStyles[responseStyleKey]?.instruction || '';
+    const responseStyleInstruction = responseStyles[responseStyleKey]?.instruction || responseStyles.detailed.instruction;
     const personaInstruction = personas[personaKey]?.instruction || personas.amigavel.instruction;
+    const languageInstruction = languages[languageKey]?.instruction || languages.pt_br.instruction;
 
     let imageDataUri = null;
     if (imageAttachment) {
@@ -204,6 +207,7 @@ export async function execute(message) {
             history: history.length > 0 ? history : undefined,
             responseStyleInstruction,
             personaInstruction,
+            languageInstruction,
             userName,
             userTitle,
         });

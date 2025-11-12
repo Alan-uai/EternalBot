@@ -6,6 +6,7 @@ import { createProfileImage } from '../../utils/createProfileImage.js';
 import { CUSTOM_ID_PREFIX, UPDATE_PROFILE_BUTTON_ID, CUSTOMIZE_AI_BUTTON_ID } from '../../commands/utility/perfil.js';
 import { personas } from '../../ai/personas.js';
 import { responseStyles } from '../../ai/response-styles.js';
+import { languages } from '../../ai/languages.js';
 
 export const customIdPrefix = CUSTOM_ID_PREFIX;
 
@@ -14,6 +15,7 @@ const FORM_MODAL_ID = `${CUSTOM_ID_PREFIX}_form_modal`;
 const CUSTOMIZE_MODAL_ID = `${CUSTOM_ID_PREFIX}_customize_modal`;
 const RESPONSE_STYLE_SELECT_ID = `${CUSTOM_ID_PREFIX}_select_style`;
 const PERSONA_SELECT_ID = `${CUSTOM_ID_PREFIX}_select_persona`;
+const LANGUAGE_SELECT_ID = `${CUSTOM_ID_PREFIX}_select_language`;
 const TITLE_SELECT_ID = `${CUSTOM_ID_PREFIX}_select_title`;
 const SET_CUSTOM_TITLE_BUTTON_ID = `${CUSTOM_ID_PREFIX}_button_custom_title`;
 const TITLE_MODAL_ID = `${CUSTOM_ID_PREFIX}_modal_title`;
@@ -156,6 +158,7 @@ async function openAiCustomizationPanel(interaction) {
 
     const currentStyle = userData.aiResponsePreference || 'detailed';
     const currentPersona = userData.aiPersonality || 'amigavel';
+    const currentLanguage = userData.aiLanguage || 'pt_br';
     const currentTitle = userData.userTitle || 'Nenhum';
     const currentName = userData.customName || interaction.user.username;
 
@@ -177,6 +180,15 @@ async function openAiCustomizationPanel(interaction) {
             default: key === currentPersona
         })));
 
+    const languageMenu = new StringSelectMenuBuilder()
+        .setCustomId(LANGUAGE_SELECT_ID)
+        .setPlaceholder('Idioma da Resposta')
+        .addOptions(Object.entries(languages).map(([key, { name }]) => ({
+            label: name,
+            value: key,
+            default: key === currentLanguage
+        })));
+
     const titleMenu = new StringSelectMenuBuilder()
         .setCustomId(TITLE_SELECT_ID)
         .setPlaceholder('Como o Gui deve te chamar?')
@@ -196,7 +208,8 @@ async function openAiCustomizationPanel(interaction) {
         content: 'Personalize como o Gui interage com você!',
         components: [
             new ActionRowBuilder().addComponents(styleMenu),
-            new ActionRowBuilder().addComponents(personaMenu),
+            new ActionRowRowBuilder().addComponents(personaMenu),
+            new ActionRowBuilder().addComponents(languageMenu),
             new ActionRowBuilder().addComponents(titleMenu),
             new ActionRowBuilder().addComponents(customTitleButton)
         ],
@@ -210,7 +223,7 @@ async function savePreference(interaction, key, value) {
     const { firestore } = initializeFirebase();
     const userRef = doc(firestore, 'users', interaction.user.id);
     await setDoc(userRef, { [key]: value }, { merge: true });
-    await interaction.followUp({ content: `Preferência de **${key.replace('ai', '')}** atualizada com sucesso!`, ephemeral: true });
+    await interaction.followUp({ content: `Preferência atualizada com sucesso!`, ephemeral: true });
 }
 
 // Função para abrir modal de título/nome customizado
@@ -291,6 +304,8 @@ export async function handleInteraction(interaction) {
             await savePreference(interaction, 'aiResponsePreference', interaction.values[0]);
         } else if (interaction.customId === PERSONA_SELECT_ID) {
             await savePreference(interaction, 'aiPersonality', interaction.values[0]);
+        } else if (interaction.customId === LANGUAGE_SELECT_ID) {
+            await savePreference(interaction, 'aiLanguage', interaction.values[0]);
         } else if (interaction.customId === TITLE_SELECT_ID) {
             const title = interaction.values[0] === 'Nenhum' ? null : interaction.values[0];
             await savePreference(interaction, 'userTitle', title);

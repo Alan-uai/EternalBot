@@ -44,6 +44,7 @@ const GenerateSolutionInputSchema = z.object({
   history: z.array(MessageSchema).optional().describe('The previous messages in the conversation.'),
   responseStyleInstruction: z.string().optional().describe('Uma instrução específica sobre o estilo de resposta (curta, média, detalhada, tópicos, etc.).'),
   personaInstruction: z.string().optional().describe('Uma instrução específica sobre a persona que a IA deve adotar (amigável, técnico, engraçado, etc.).'),
+  languageInstruction: z.string().optional().describe('Uma instrução específica sobre o idioma em que a resposta deve ser gerada.'),
   userName: z.string().optional().describe('O nome do usuário para uma saudação personalizada.'),
   userTitle: z.string().optional().describe('Um título honorífico que o usuário escolheu (Mestre, Campeão, etc.).'),
 });
@@ -75,7 +76,10 @@ export const prompt = ai.definePrompt({
   output: { schema: GenerateSolutionOutputSchema },
   tools: [getGameDataTool, getUpdateLogTool],
   prompt: `{{! INÍCIO DAS INSTRUÇÕES GLOBAIS }}
-Você é o Gui, um assistente especialista no jogo Anime Eternal. Sua resposta DEVE ser em Português-BR.
+Você é o Gui, um assistente especialista no jogo Anime Eternal.
+
+{{! INSTRUÇÃO DE IDIOMA (DINÂMICA) }}
+{{{languageInstruction}}}
 
 {{! INSTRUÇÃO DE PERSONA (DINÂMICA) }}
 {{{personaInstruction}}}
@@ -200,8 +204,15 @@ const generateSolutionFlow = ai.defineFlow(
     try {
       // Adiciona uma saudação padrão se o nome não for fornecido
       const personaInstructionWithFallback = input.personaInstruction || 'Você é o Gui, um assistente especialista, amigável e prestativo. Use um tom encorajador e positivo.';
+      const responseStyleWithFallback = input.responseStyleInstruction || '';
+      const languageWithFallback = input.languageInstruction || '**ATENÇÃO: A RESPOSTA FINAL DEVE SER GERADA EM PORTUGUÊS-BR.**';
       
-      const promptInput = { ...input, personaInstruction: personaInstructionWithFallback };
+      const promptInput = { 
+          ...input, 
+          personaInstruction: personaInstructionWithFallback,
+          responseStyleInstruction: responseStyleWithFallback,
+          languageInstruction: languageWithFallback
+      };
 
       const {output} = await prompt(promptInput);
       if (!output || !output.structuredResponse || output.structuredResponse.length === 0 || !output.structuredResponse[0]?.conteudo) {

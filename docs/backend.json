@@ -170,12 +170,15 @@
         "credits": { "type": "number", "description": "F2P currency earned from achievements, used for Gamepasses." },
         "aiResponsePreference": {
           "type": "string",
-          "enum": ["short", "medium", "detailed", "bullets", "tables", "strategy", "beginner"],
           "description": "User's preference for AI response style."
         },
         "aiPersonality": {
           "type": "string",
           "description": "User's preference for AI personality."
+        },
+        "aiLanguage": {
+          "type": "string",
+          "description": "User's preferred language for AI responses."
         },
         "userTitle": {
             "type": "string",
