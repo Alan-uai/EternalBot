@@ -90,7 +90,6 @@ async function handleTypeSelection(interaction, type) {
 
         Object.entries(categorizedRaids).forEach(([category, raids]) => {
             if (raids.length > 0) {
-                // Se a categoria tiver mais de 25 raids, ela precisa ser dividida
                 const chunkSize = 25;
                 for (let i = 0; i < raids.length; i += chunkSize) {
                     const chunk = raids.slice(i, i + chunkSize);
@@ -130,7 +129,6 @@ async function handleRaidSelection(interaction, type) {
         const { firestore } = initializeFirebase();
         const selectedRaidValue = interaction.values[0];
         
-        // Obter todas as raids novamente para encontrar o label
         const categorizedRaids = getAvailableRaids();
         const allRaidsFlat = Object.values(categorizedRaids).flat();
         const selectedRaidLabel = allRaidsFlat.find(r => r.value === selectedRaidValue)?.label || selectedRaidValue;
@@ -168,8 +166,8 @@ async function handlePostRequest(interaction) {
     };
 
     try {
-        const { firestore } = initializeFirebase();
-        const { assetService } = interaction.client.container.services;
+        const { firestore, client } = initializeFirebase();
+        const { assetService, logger } = interaction.client.container.services;
 
         const tempData = interaction.client.container.interactions.get(`soling_temp_${interaction.user.id}`);
         if (!tempData) {
@@ -234,21 +232,9 @@ async function handlePostRequest(interaction) {
         
         const row = new ActionRowBuilder()
             .addComponents(
-                new ButtonBuilder()
-                    .setCustomId(`soling_confirm_${newRequestId}_${user.id}`)
-                    .setLabel(confirmLabel)
-                    .setStyle(ButtonStyle.Success)
-                    .setEmoji('🤝'),
-                new ButtonBuilder()
-                    .setCustomId(`soling_manage_${newRequestId}_${user.id}`)
-                    .setLabel('Gerenciar')
-                    .setStyle(ButtonStyle.Primary)
-                    .setEmoji('⚙️'),
-                new ButtonBuilder()
-                    .setCustomId(`soling_finish_${newRequestId}_${user.id}`)
-                    .setLabel('Finalizar')
-                    .setStyle(ButtonStyle.Danger)
-                    .setEmoji('🗑️')
+                new ButtonBuilder().setCustomId(`soling_confirm_${newRequestId}_${user.id}`).setLabel(confirmLabel).setStyle(ButtonStyle.Success).setEmoji('🤝'),
+                new ButtonBuilder().setCustomId(`soling_manage_${newRequestId}_${user.id}`).setLabel('Gerenciar').setStyle(ButtonStyle.Primary).setEmoji('⚙️'),
+                new ButtonBuilder().setCustomId(`soling_finish_${newRequestId}_${user.id}`).setLabel('Finalizar').setStyle(ButtonStyle.Danger).setEmoji('🗑️')
             );
         
         const message = await webhookClient.send({
@@ -266,7 +252,7 @@ async function handlePostRequest(interaction) {
              const timeoutId = setTimeout(async () => {
                 await cleanupRaidResources(interaction.client, newRequestData);
             }, dungeonSettings.deleteAfterMinutes * 60 * 1000);
-            newRequestData.timeoutId = timeoutId.toString();
+            newRequestData.timeoutId = timeoutId.toString(); // Not a real field, just for concept
         }
 
         batch.set(newRequestRef, newRequestData);
@@ -276,11 +262,57 @@ async function handlePostRequest(interaction) {
         await replyOrFollowUp({ content: 'Seu pedido foi postado com sucesso!' });
 
         interaction.client.container.interactions.delete(`soling_temp_${interaction.user.id}`);
+
+        // Notificar interessados
+        const interestedUsersQuery = query(collection(firestore, 'users'), where('notificationPrefs.raidInterests', 'array-contains', raidNome.toLowerCase().replace(/ /g, '_')));
+        const interestedUsersSnap = await getDocs(interestedUsersQuery);
+
+        interestedUsersSnap.forEach(async (doc) => {
+            const followerId = doc.id;
+            if (followerId === user.id) return; // Don't notify the host
+
+            const followerPrefs = doc.data().notificationPrefs || {};
+            if (followerPrefs.dmEnabled !== false) {
+                 const followerUser = await interaction.client.users.fetch(followerId).catch(()=>null);
+                 if(followerUser){
+                     try {
+                        await followerUser.send(`🔔 Um novo grupo de **/soling** para a raid **${raidNome}** que você tem interesse foi criado por **${user.username}**! [Clique aqui para ver o anúncio](${message.url})`);
+                     } catch(e){
+                         logger.warn(`Não foi possível notificar ${followerUser.tag} sobre o /soling.`);
+                     }
+                 }
+            }
+        });
+        
+        // Notificar seguidores do host
+        const hostFollowersQuery = query(collection(firestore, 'users'), where('following', 'array-contains', user.id));
+        const hostFollowersSnap = await getDocs(hostFollowersQuery);
+
+        hostFollowersSnap.forEach(async (doc) => {
+            const followerId = doc.id;
+            const followerPrefs = doc.data().notificationPrefs || {};
+            const hostSettings = followerPrefs.hostSettings?.[user.id] || {};
+
+            if (followerPrefs.dmEnabled !== false && hostSettings.notifySolings !== false) {
+                const followerUser = await interaction.client.users.fetch(followerId).catch(() => null);
+                if (followerUser) {
+                    try {
+                        await followerUser.send(`🔔 O host **${user.username}** que você segue criou um grupo de **/soling** para a raid **${raidNome}**! [Clique aqui para ver o anúncio](${message.url})`);
+                    } catch(e) {
+                         logger.warn(`Não foi possível notificar o seguidor ${followerUser.tag} sobre o /soling.`);
+                    }
+                }
+            }
+        });
+
+
     } catch(error) {
         console.error("Erro em handlePostRequest:", error);
         await replyOrFollowUp({ content: 'Ocorreu um erro ao postar seu pedido.' }).catch(console.error);
     }
 }
+
+// O resto do arquivo (manageRaidChannelsAndThreads, handleConfirm, etc) permanece o mesmo
 
 async function manageRaidChannelsAndThreads(interaction, requestRef, newlyConfirmedUser = null) {
     const { client } = interaction;

@@ -1,6 +1,6 @@
 // src/commands/utility/perfil.js
 import { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder } from 'discord.js';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
 import { createProfileImage } from '../../utils/createProfileImage.js';
 
@@ -12,6 +12,7 @@ export const CUSTOM_ID_PREFIX = 'perfil';
 export const UPDATE_PROFILE_BUTTON_ID = `${CUSTOM_ID_PREFIX}_update`;
 export const CUSTOMIZE_AI_BUTTON_ID = `${CUSTOM_ID_PREFIX}_customize_ai`;
 export const GOALS_PANEL_BUTTON_ID = `${CUSTOM_ID_PREFIX}_goals_panel`;
+export const FOLLOW_HOST_BUTTON_ID = `${CUSTOM_ID_PREFIX}_follow`;
 
 
 export const data = new SlashCommandBuilder()
@@ -39,8 +40,11 @@ export async function execute(interaction) {
     if (!userSnap.exists()) {
         if (isViewingSelf) {
              const { openProfileForm } = await import('../../interactions/buttons/iniciar-perfil.js');
-             await interaction.deleteReply();
-             return openProfileForm(interaction, true); // Passa true para indicar que é a criação inicial
+             // Não deletamos o reply, apenas editamos para abrir o formulário
+             await openProfileForm(interaction, true);
+             // Como openProfileForm abre um modal, não precisamos fazer mais nada aqui.
+             // O deferReply será consumido pelo showModal.
+             return;
         } else {
             return interaction.editReply(`O usuário ${targetUser.username} ainda não tem um perfil no Guia Eterno.`);
         }
@@ -60,11 +64,25 @@ export async function execute(interaction) {
                     new ButtonBuilder().setCustomId(`${GOALS_PANEL_BUTTON_ID}_${targetUser.id}`).setLabel('Minhas Metas').setStyle(ButtonStyle.Secondary).setEmoji('🎯')
                 );
             components.push(managementRow);
+        } else {
+             // Lógica do botão Seguir
+            const viewerRef = doc(firestore, 'users', interaction.user.id);
+            const viewerSnap = await getDoc(viewerRef);
+            const viewerData = viewerSnap.exists() ? viewerSnap.data() : {};
+            const isFollowing = viewerData.following?.includes(targetUser.id);
+
+            const followButton = new ButtonBuilder()
+                .setCustomId(`${FOLLOW_HOST_BUTTON_ID}_${targetUser.id}`)
+                .setLabel(isFollowing ? 'Deixar de Seguir' : 'Seguir Host')
+                .setStyle(isFollowing ? ButtonStyle.Danger : ButtonStyle.Success)
+                .setEmoji(isFollowing ? '❌' : '➕');
+                
+            components.push(new ActionRowBuilder().addComponents(followButton));
         }
 
-        return interaction.editReply({ files: [attachment], components });
+        return interaction.editReply({ files: [attachment], components, ephemeral: true });
     } catch(e) {
         console.error("Erro ao criar imagem de perfil no /perfil:", e);
-        return interaction.editReply('Ocorreu um erro ao gerar a imagem de perfil do usuário.');
+        return interaction.editReply({ content: 'Ocorreu um erro ao gerar a imagem de perfil do usuário.', ephemeral: true });
     }
 }

@@ -30,31 +30,55 @@ async function getFarmsForDay(firestore, dayOfWeek) {
     return farms;
 }
 
-// Function to delete farms from past days
-async function cleanupOldFarms(firestore, currentDayIndex, logger) {
+// Function to delete farms from past days and cleanup their resources
+async function cleanupOldFarmsAndResources(container) {
+    const { client, config, logger, services } = container;
+    const { firestore } = services.firebase;
+
+    const guild = await client.guilds.fetch(config.GUILD_ID).catch(() => null);
+    if (!guild) return;
+
+    const now = new Date();
+    const currentDayIndex = now.getDay();
+    
     const batch = writeBatch(firestore);
     let deletedCount = 0;
 
-    for (let i = 0; i < WEEKDAYS.length; i++) {
-        // Delete farms for days that are before today in the week cycle
-        if ((i < currentDayIndex && currentDayIndex - i > 0) || (currentDayIndex === 0 && i > 0) /* Sunday case */) {
-            const pastDay = WEEKDAYS[i];
-            const farmsRef = collection(firestore, 'scheduled_farms');
-            const q = query(farmsRef, where("dayOfWeek", "==", pastDay));
-            const snapshot = await getDocs(q);
+    // Cleanup expired farms from today
+    const expiredTodayQuery = query(collection(firestore, 'scheduled_farms'), where("expiresAt", "<=", now));
+    const expiredSnapshot = await getDocs(expiredTodayQuery);
 
+    for (const farmDoc of expiredSnapshot.docs) {
+        const farm = farmDoc.data();
+        logger.info(`[farmingPanel] Limpando farm expirado de hoje: ${farm.raidName} (ID: ${farmDoc.id})`);
+        if (farm.tempRoleId) {
+            const role = await guild.roles.fetch(farm.tempRoleId).catch(() => null);
+            if (role) await role.delete('Limpeza de cargo de farm expirado.');
+        }
+        batch.delete(farmDoc.ref);
+        deletedCount++;
+    }
+
+    // Cleanup farms from past days
+    for (let i = 0; i < WEEKDAYS.length; i++) {
+        if (i < currentDayIndex) {
+            const pastDay = WEEKDAYS[i];
+            const q = query(collection(firestore, 'scheduled_farms'), where("dayOfWeek", "==", pastDay));
+            const snapshot = await getDocs(q);
             if (!snapshot.empty) {
                 snapshot.forEach(doc => {
                     batch.delete(doc.ref);
                     deletedCount++;
                 });
+                 logger.info(`[farmingPanel] Agendando para limpeza ${snapshot.size} farm(s) de ${WEEKDAYS_PT[pastDay]}.`);
             }
         }
     }
 
+
     if (deletedCount > 0) {
         await batch.commit();
-        logger.info(`[farmingPanel] Limpeza concluída: ${deletedCount} farm(s) de dias passados foram removidos.`);
+        logger.info(`[farmingPanel] Limpeza concluída: ${deletedCount} registro(s) de farm antigo(s) e/ou expirado(s) removido(s).`);
     }
 }
 
@@ -68,11 +92,11 @@ export async function run(container) {
     const { firestore } = firebase;
 
     try {
-        const now = new Date(new Date().getTime() - 3 * 60 * 60 * 1000);
+        await cleanupOldFarmsAndResources(container);
+
+        const now = new Date();
         const currentDay = WEEKDAYS[now.getDay()];
         
-        await cleanupOldFarms(firestore, now.getDay(), logger);
-
         const allFarmsForWeek = [];
         for (const day of WEEKDAYS) {
             allFarmsForWeek.push(...await getFarmsForDay(firestore, day));
@@ -93,7 +117,6 @@ export async function run(container) {
         
         const webhookClient = new WebhookClient({ url: webhookUrl });
 
-        // Generate schedule image
         const scheduleImage = await imageGenerator.createScheduleImage(allFarmsForWeek);
         const attachment = new AttachmentBuilder(scheduleImage, { name: 'schedule.png' });
 
@@ -138,7 +161,6 @@ export async function run(container) {
             }
         }
         
-        // Participation Menu
         const participationMenu = new StringSelectMenuBuilder()
             .setCustomId('farming_participate')
             .setPlaceholder('Clique para participar de um farm...')

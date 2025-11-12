@@ -157,12 +157,10 @@ export async function execute(message) {
 
     await message.channel.sendTyping();
     
-    // Busca preferências do usuário
     const userRef = doc(firestore, 'users', message.author.id);
     const userSnap = await getDoc(userRef);
     const userData = userSnap.exists() ? userSnap.data() : {};
     
-    // Define os valores padrão se não estiverem configurados
     const responseStyleKey = userData.aiResponsePreference || 'detailed';
     const personaKey = userData.aiPersonality || 'amigavel';
     const languageKey = userData.aiLanguage || 'pt_br';
@@ -172,7 +170,6 @@ export async function execute(message) {
     const userTitle = userData.userTitle || undefined;
     const userName = userData.customName || message.author.username;
 
-    // Busca as instruções modulares
     const responseStyleInstruction = responseStyles[responseStyleKey]?.instruction || '';
     const personaInstruction = personas[personaKey]?.instruction || '';
     const languageInstruction = languages[languageKey]?.instruction || '';
@@ -198,7 +195,6 @@ export async function execute(message) {
         }
     }
 
-    // Busca o histórico da conversa
     const history = [];
     let currentMessage = message;
     const historyLimit = 10;
@@ -258,7 +254,6 @@ export async function execute(message) {
             
             const replyMessage = await sendReply(message, messageParts);
             
-            // Salva o contexto para o feedback, usando o conteúdo da primeira parte como referência
             client.container.interactions.set(`question_${message.id}`, question);
             client.container.interactions.set(`answer_${message.id}`, messageParts[0]?.content || 'Resposta em imagem.');
             client.container.interactions.set(`history_${message.id}`, history);
