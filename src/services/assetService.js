@@ -11,11 +11,11 @@ const RAID_ASSET_MAP = lobbyDungeonsArticle.tables.lobbySchedule.rows.reduce((ac
         'Crazy': 'Czy', 'Nightmare': 'Mare', 'Leaf Raid': 'Lf'
     };
     if (prefixMap[name]) {
+        // O nome base para GIFs é o nome completo, exceto para 'Leaf Raid'
+        const baseName = name === 'Leaf Raid' ? 'Leaf' : name;
         acc[name] = {
             prefix: prefixMap[name],
-            // O nome do GIF de transição/final é baseado no nome completo da raid + PR
-            // O caso especial 'Leaf' é tratado na lógica de busca
-            baseName: name === 'Leaf Raid' ? 'Leaf' : name,
+            baseName: baseName,
         };
     }
     return acc;
@@ -32,7 +32,7 @@ export class AssetService {
         this.firestore = firestore;
         this.logger = logger;
         this.assetsCache = new Map();
-        this.raidAssets = {}; // Novo objeto para armazenar assets de raid estruturados
+        this.raidAssets = {}; // Objeto para armazenar assets de raid estruturados
         this.isInitialized = false;
 
         const url = config.CLOUDINARY_URL;
@@ -60,32 +60,49 @@ export class AssetService {
     }
     
     /**
-     * Organiza os assets de raid em uma estrutura aninhada para fácil acesso.
+     * Organiza os assets de raid em uma estrutura aninhada para fácil acesso,
+     * seguindo a lógica de nomenclatura corrigida.
      */
     _organizeRaidAssets() {
         this.raidAssets = {}; // Limpa para garantir que não haja dados antigos
+        const states = {
+            next_up: 'PR',
+            starting_soon: '5m',
+            open: 'A',
+            closing_soon: 'F'
+        };
 
         for (const raidName in RAID_ASSET_MAP) {
             const { prefix, baseName } = RAID_ASSET_MAP[raidName];
             
             this.raidAssets[raidName] = {
-                // Avatares baseados em estado (Ex: EsyA, Med5m)
-                avatars: {
-                    next_up: this.assetsCache.get(`${prefix}PR`),
-                    starting_soon: this.assetsCache.get(`${prefix}5m`),
-                    open: this.assetsCache.get(`${prefix}A`),
-                    closing_soon: this.assetsCache.get(`${prefix}F`),
-                },
-                // GIFs baseados no nome da raid (Ex: TranEasyPR, EasyPR)
+                avatars: {},
                 gifs: {
-                    transition: this.assetsCache.get(`Tran${baseName}PR`),
-                    final: this.assetsCache.get(`${baseName}PR`),
-                },
-                // Fallback para o avatar estático principal
-                fallbackAvatar: this.assetsCache.get(prefix) || this.assetsCache.get('DungeonLobby'),
+                    transition: {},
+                    final: {}
+                }
             };
+            
+            for (const state in states) {
+                const suffix = states[state];
+                
+                // 1. Monta os Avatares (Ex: EsyA, Med5m)
+                this.raidAssets[raidName].avatars[state] = this.assetsCache.get(`${prefix}${suffix}`);
+                
+                // 2. Monta os GIFs Finais (Ex: EasyA, Medium5m)
+                this.raidAssets[raidName].gifs.final[state] = this.assetsCache.get(`${baseName}${suffix}`);
+                
+                // 3. Monta os GIFs de Transição (Ex: TranEasyA, TranMedium5m), pulando o estado 'closing_soon'
+                if (state !== 'closing_soon') {
+                    this.raidAssets[raidName].gifs.transition[state] = this.assetsCache.get(`Tran${baseName}${suffix}`);
+                }
+            }
+
+            // Adiciona um fallback genérico para o avatar caso algum estado específico falhe
+            this.raidAssets[raidName].fallbackAvatar = this.assetsCache.get(`${prefix}PR`) || this.assetsCache.get('DungeonLobby');
         }
-        this.logger.info('[AssetService] Assets de Raid organizados para acesso rápido.');
+        
+        this.logger.info('[AssetService] Assets de Raid organizados com a nova estrutura.');
     }
 
     /**
