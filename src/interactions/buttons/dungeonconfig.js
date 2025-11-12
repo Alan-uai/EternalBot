@@ -1,6 +1,6 @@
 // src/interactions/buttons/dungeonconfig.js
 import { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, StringSelectMenuBuilder, EmbedBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
-import { CUSTOM_ID_PREFIX as DUNGEON_CONFIG_PREFIX, SOLING_CONFIG_BUTTON_ID, FARMING_CONFIG_BUTTON_ID, TAG_CONFIG_BUTTON_ID, NOTIFICATIONS_CONFIG_BUTTON_ID } from '../../commands/utility/dungeonconfig.js';
+import { CUSTOM_ID_PREFIX as DUNGEON_CONFIG_PREFIX, SOLING_CONFIG_BUTTON_ID, TAG_CONFIG_BUTTON_ID, NOTIFICATIONS_CONFIG_BUTTON_ID } from '../../commands/utility/dungeonconfig.js';
 import { doc, updateDoc, getDoc, collection, query, where, getDocs, deleteDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
 import { getAvailableRaids } from '../../commands/utility/soling.js';
@@ -12,10 +12,12 @@ const TAG_MODAL_ID = `${customIdPrefix}_tag_modal`;
 
 // IDs for Notification Panel
 const NOTIFICATIONS_DM_TOGGLE_ID = `${customIdPrefix}_notify_dm_toggle`;
-const NOTIFICATIONS_SOLING_RAID_SELECT_ID = `${customIdPrefix}_notify_soling_select`; // Renomeado
-const NOTIFICATIONS_FARM_RAID_SELECT_ID = `${customIdPrefix}_notify_farm_select`;   // Novo
+const NOTIFICATIONS_SOLING_RAID_SELECT_ID = `${customIdPrefix}_notify_soling_select`;
+const NOTIFICATIONS_FARM_RAID_SELECT_ID = `${customIdPrefix}_notify_farm_select`;
 const NOTIFICATIONS_HOST_SELECT_ID = `${customIdPrefix}_notify_host_select`;
-const NOTIFICATIONS_HOST_TYPE_SELECT_ID = `${customIdPrefix}_notify_host_type_select`;
+const NOTIFICATIONS_HOST_SOLING_TOGGLE_ID = `${customIdPrefix}_notify_host_soling_toggle`;
+const NOTIFICATIONS_HOST_FARM_TOGGLE_ID = `${customIdPrefix}_notify_host_farm_toggle`;
+const NOTIFICATIONS_BACK_TO_MAIN_ID = `${customIdPrefix}_notify_back_main`;
 
 
 const WEEKDAYS_PT = {
@@ -117,12 +119,13 @@ async function openNotificationsPanel(interaction, user) {
 
     const dmEnabled = notificationPrefs.dmEnabled !== false;
     const solingInterests = notificationPrefs.solingInterests || [];
-    // const farmInterests = notificationPrefs.farmInterests || []; // Futura implementação
+    const farmInterests = notificationPrefs.farmInterests || [];
     const following = userData.following || [];
 
     const embed = new EmbedBuilder()
         .setColor(0x3498DB)
-        .setTitle('🔔 Preferências de Notificação');
+        .setTitle('🔔 Preferências de Notificação')
+        .setFooter({ text: 'Gerencie como você recebe alertas sobre farms, solings e hosts.'});
 
     const dmToggle = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
@@ -135,8 +138,12 @@ async function openNotificationsPanel(interaction, user) {
     const raidOptions = Object.values(availableRaids).flat().map(raid => ({
         label: raid.label,
         value: raid.value,
-        default: solingInterests.includes(raid.value)
     })).slice(0, 25);
+    
+    // Fallback if no raids are available
+    if (raidOptions.length === 0) {
+        raidOptions.push({label: 'Nenhuma raid disponível', value: 'none'});
+    }
 
     const solingSelect = new ActionRowBuilder().addComponents(
         new StringSelectMenuBuilder()
@@ -144,16 +151,16 @@ async function openNotificationsPanel(interaction, user) {
             .setPlaceholder('Selecione interesses de /soling...')
             .setMinValues(0)
             .setMaxValues(Math.min(raidOptions.length, 25))
-            .addOptions(raidOptions.length > 0 ? raidOptions : [{label: 'Nenhuma raid disponível', value: 'none'}])
+            .addOptions(raidOptions.map(opt => ({...opt, default: solingInterests.includes(opt.value)})))
     );
     
-    // Placeholder para o menu de farms, pode ser implementado no futuro
     const farmSelect = new ActionRowBuilder().addComponents(
         new StringSelectMenuBuilder()
             .setCustomId(NOTIFICATIONS_FARM_RAID_SELECT_ID)
-            .setPlaceholder('Interesses de /farming (Em breve)')
-            .setDisabled(true)
-            .addOptions([{ label: 'Em breve', value: 'soon' }])
+            .setPlaceholder('Selecione interesses de /farming...')
+            .setMinValues(0)
+            .setMaxValues(Math.min(raidOptions.length, 25))
+            .addOptions(raidOptions.map(opt => ({...opt, default: farmInterests.includes(opt.value)})))
     );
     
     const components = [dmToggle, solingSelect, farmSelect];
@@ -179,10 +186,14 @@ async function openNotificationsPanel(interaction, user) {
         embed.addFields({name: 'Hosts Seguidos', value: 'Você não segue nenhum host. Use o botão "Seguir" no perfil de outros jogadores.'});
     }
 
-    if (interaction.isButton()) {
-        await interaction.reply({ embeds: [embed], components, ephemeral: true });
+    const replyOptions = { embeds: [embed], components, ephemeral: true };
+
+    if (interaction.isButton() || interaction.replied || interaction.deferred) {
+        // Se for o clique inicial do botão, ou se já houver uma resposta, edita/responde
+        await interaction.reply(replyOptions).catch(() => interaction.editReply(replyOptions));
     } else {
-        await interaction.update({ embeds: [embed], components, ephemeral: true });
+        // Se for uma atualização de um menu/modal
+        await interaction.update(replyOptions);
     }
 }
 
@@ -193,7 +204,8 @@ async function handleDmToggle(interaction) {
     const currentStatus = userSnap.exists() ? (userSnap.data().notificationPrefs?.dmEnabled !== false) : true;
     
     await updateDoc(userRef, { 'notificationPrefs.dmEnabled': !currentStatus });
-    await openNotificationsPanel(interaction, interaction.user);
+    await interaction.deferUpdate(); // Acknowledge the interaction
+    await openNotificationsPanel({ ...interaction, isButton: () => true }, interaction.user); // Re-open with a fake isButton
 }
 
 async function handleSolingInterestSelect(interaction) {
@@ -203,61 +215,86 @@ async function handleSolingInterestSelect(interaction) {
     await openNotificationsPanel(interaction, interaction.user);
 }
 
-async function handleHostSelect(interaction) {
-    const selectedHostId = interaction.values[0];
-    
+async function handleFarmInterestSelect(interaction) {
+    const { firestore } = initializeFirebase();
+    const userRef = doc(firestore, 'users', interaction.user.id);
+    await updateDoc(userRef, { 'notificationPrefs.farmInterests': interaction.values });
+    await openNotificationsPanel(interaction, interaction.user);
+}
+
+
+async function openHostManagementPanel(interaction, selectedHostId) {
     const { firestore } = initializeFirebase();
     const userRef = doc(firestore, 'users', interaction.user.id);
     const userSnap = await getDoc(userRef);
     const notificationPrefs = userSnap.exists() ? userSnap.data().notificationPrefs || {} : {};
     const hostSettings = notificationPrefs.hostSettings?.[selectedHostId] || {};
 
-    const typeSelectMenu = new StringSelectMenuBuilder()
-        .setCustomId(`${NOTIFICATIONS_HOST_TYPE_SELECT_ID}_${selectedHostId}`)
-        .setPlaceholder('Escolha quais notificações receber')
-        .setMinValues(0)
-        .setMaxValues(2)
-        .addOptions([
-            { label: 'Solings', value: 'soling', default: hostSettings.notifySolings !== false },
-            { label: 'Farms', value: 'farm', default: hostSettings.notifyFarms !== false },
-        ]);
+    const notifySolings = hostSettings.notifySolings !== false;
+    const notifyFarms = hostSettings.notifyFarms !== false;
 
-    await interaction.update({
-        content: `Configurando notificações para o host selecionado. Escolha quais tipos de postagens você quer ser notificado:`,
-        components: [new ActionRowBuilder().addComponents(typeSelectMenu)],
-    });
+    const hostUser = await interaction.client.users.fetch(selectedHostId).catch(() => null);
+
+    const embed = new EmbedBuilder()
+        .setColor(0x1ABC9C)
+        .setTitle(`⚙️ Gerenciar Notificações de ${hostUser?.username || 'Host'}`);
+
+    const buttons = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+            .setCustomId(`${NOTIFICATIONS_HOST_SOLING_TOGGLE_ID}_${selectedHostId}`)
+            .setLabel(`Notificar Solings: ${notifySolings ? 'Sim' : 'Não'}`)
+            .setStyle(notifySolings ? ButtonStyle.Success : ButtonStyle.Secondary),
+        new ButtonBuilder()
+            .setCustomId(`${NOTIFICATIONS_HOST_FARM_TOGGLE_ID}_${selectedHostId}`)
+            .setLabel(`Notificar Farms: ${notifyFarms ? 'Sim' : 'Não'}`)
+            .setStyle(notifyFarms ? ButtonStyle.Success : ButtonStyle.Secondary),
+        new ButtonBuilder()
+            .setCustomId(NOTIFICATIONS_BACK_TO_MAIN_ID)
+            .setLabel('Voltar')
+            .setStyle(ButtonStyle.Primary)
+    );
+
+    await interaction.update({ embeds: [embed], components: [buttons] });
 }
 
-async function handleHostTypeSelect(interaction) {
+async function handleHostNotifyToggle(interaction, type) {
     const hostId = interaction.customId.split('_').pop();
-    const selectedTypes = interaction.values;
-    
     const { firestore } = initializeFirebase();
     const userRef = doc(firestore, 'users', interaction.user.id);
+    const userSnap = await getDoc(userRef);
+    const prefs = userSnap.data()?.notificationPrefs || {};
+    
+    const key = type === 'soling' ? 'notifySolings' : 'notifyFarms';
+    const currentStatus = prefs.hostSettings?.[hostId]?.[key] !== false;
 
-    const updatePath = `notificationPrefs.hostSettings.${hostId}`;
     await updateDoc(userRef, {
-        [`${updatePath}.notifySolings`]: selectedTypes.includes('soling'),
-        [`${updatePath}.notifyFarms`]: selectedTypes.includes('farm'),
+        [`notificationPrefs.hostSettings.${hostId}.${key}`]: !currentStatus,
     });
     
-    await openNotificationsPanel(interaction, interaction.user);
+    await openHostManagementPanel(interaction, hostId);
 }
-
 
 export async function handleInteraction(interaction, container) {
     if (interaction.isButton()) {
+        const [prefix, action, ...params] = interaction.customId.split('_');
+        if (prefix !== customIdPrefix) return;
+
         if (interaction.customId === SOLING_CONFIG_BUTTON_ID) {
             await openSolingSettingsModal(interaction);
-        } else if (interaction.customId === FARMING_CONFIG_BUTTON_ID) {
-             await interaction.reply({ content: 'Esta funcionalidade será migrada para o comando `/farming`. Por agora, use o comando para agendar.', ephemeral: true });
         } else if (interaction.customId === TAG_CONFIG_BUTTON_ID) {
             await openTagModal(interaction);
         } else if (interaction.customId === NOTIFICATIONS_CONFIG_BUTTON_ID) {
             await openNotificationsPanel(interaction, interaction.user);
         } else if (interaction.customId === NOTIFICATIONS_DM_TOGGLE_ID) {
             await handleDmToggle(interaction);
+        } else if (interaction.customId === NOTIFICATIONS_BACK_TO_MAIN_ID) {
+            await openNotificationsPanel(interaction, interaction.user);
+        } else if (action === 'notify' && params[0] === 'host' && params[1] === 'soling') {
+            await handleHostNotifyToggle(interaction, 'soling');
+        } else if (action === 'notify' && params[0] === 'host' && params[1] === 'farm') {
+            await handleHostNotifyToggle(interaction, 'farm');
         }
+
     } else if (interaction.isModalSubmit()) {
         if (interaction.customId === SOLING_MODAL_ID) {
             await handleSolingSettingsSubmit(interaction);
@@ -265,16 +302,17 @@ export async function handleInteraction(interaction, container) {
             await handleTagSubmit(interaction);
         }
     } else if (interaction.isStringSelectMenu()) {
-        const [prefix, action, subAction, ...params] = interaction.customId.split('_');
+        const [prefix, action, subAction] = interaction.customId.split('_');
         if (prefix !== customIdPrefix) return;
 
         if (action === 'notify') {
              if (subAction === 'soling') {
                 await handleSolingInterestSelect(interaction);
+             } else if (subAction === 'farm') {
+                await handleFarmInterestSelect(interaction);
              } else if (subAction === 'host') {
-                await handleHostSelect(interaction);
-             } else if (subAction === 'type') {
-                 await handleHostTypeSelect(interaction);
+                const selectedHostId = interaction.values[0];
+                await openHostManagementPanel(interaction, selectedHostId);
              }
         }
     }

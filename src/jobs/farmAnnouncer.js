@@ -120,6 +120,7 @@ async function handleAnnouncements(container, farms) {
             logger.info(`[farmAnnouncer] Anúncio de ABERTURA enviado para a raid ${farm.raidName}.`);
 
             // Notificar seguidores
+            const farmRaidValue = farm.raidName.toLowerCase().replace(/ /g, '_');
             const followersSnapshot = await getDocs(query(collection(firestore, 'users'), where('following', 'array-contains', farm.hostId)));
             followersSnapshot.forEach(async (followerDoc) => {
                 const followerData = followerDoc.data();
@@ -133,6 +134,28 @@ async function handleAnnouncements(container, farms) {
                              await followerUser.send(`🔔 O host **${farm.hostUsername}** que você segue iniciou um farm de **${farm.raidName}**! [Clique aqui para ver o anúncio](${openAnnouncement.url})`);
                         } catch(e) {
                             logger.warn(`Não foi possível enviar DM para o seguidor ${followerUser.tag}`);
+                        }
+                    }
+                }
+            });
+
+             // Notificar interessados na raid
+            const raidInterestQuery = query(collection(firestore, 'users'), where('notificationPrefs.farmInterests', 'array-contains', farmRaidValue));
+            const interestedUsersSnap = await getDocs(raidInterestQuery);
+
+            interestedUsersSnap.forEach(async (doc) => {
+                const interestedUserId = doc.id;
+                // Evita notificar o host e quem já é seguidor (para não duplicar)
+                if (interestedUserId === farm.hostId || followersSnapshot.docs.some(d => d.id === interestedUserId)) return;
+                
+                const prefs = doc.data().notificationPrefs || {};
+                if (prefs.dmEnabled !== false) {
+                    const user = await client.users.fetch(interestedUserId).catch(()=>null);
+                    if(user){
+                        try {
+                            await user.send(`🔔 Um novo farm para **${farm.raidName}**, uma raid de seu interesse, foi criado por **${farm.hostUsername}**! [Clique aqui para ver o anúncio](${openAnnouncement.url})`);
+                        } catch(e) {
+                            logger.warn(`Não foi possível notificar ${user.tag} sobre o farm de interesse.`);
                         }
                     }
                 }

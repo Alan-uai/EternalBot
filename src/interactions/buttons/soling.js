@@ -110,7 +110,7 @@ async function handleTypeSelection(interaction, type) {
             return interaction.followUp({ content: 'Não há raids disponíveis para selecionar no momento.', ephemeral: true });
         }
         
-        await interaction.followUp({
+        await interaction.editReply({
             content: 'Agora, selecione a raid:',
             components,
             ephemeral: true,
@@ -160,13 +160,13 @@ async function handlePostRequest(interaction) {
      const replyOrFollowUp = async (options) => {
         const ephemeralOptions = { ...options, ephemeral: true, components: [] };
         if (interaction.replied || interaction.deferred) {
-            return await interaction.followUp(ephemeralOptions);
+            return await interaction.editReply(ephemeralOptions).catch(() => interaction.followUp(ephemeralOptions));
         }
         return await interaction.reply(ephemeralOptions);
     };
 
     try {
-        const { firestore, client } = initializeFirebase();
+        const { firestore } = initializeFirebase();
         const { assetService, logger } = interaction.client.container.services;
 
         const tempData = interaction.client.container.interactions.get(`soling_temp_${interaction.user.id}`);
@@ -263,13 +263,16 @@ async function handlePostRequest(interaction) {
 
         interaction.client.container.interactions.delete(`soling_temp_${interaction.user.id}`);
 
-        // Notificar interessados
-        const interestedUsersQuery = query(collection(firestore, 'users'), where('notificationPrefs.raidInterests', 'array-contains', raidNome.toLowerCase().replace(/ /g, '_')));
+        // --- Lógica de Notificação ---
+        const raidValue = raidNome.toLowerCase().replace(/ /g, '_');
+
+        // 1. Notificar interessados na raid específica
+        const interestedUsersQuery = query(collection(firestore, 'users'), where('notificationPrefs.solingInterests', 'array-contains', raidValue));
         const interestedUsersSnap = await getDocs(interestedUsersQuery);
 
         interestedUsersSnap.forEach(async (doc) => {
             const followerId = doc.id;
-            if (followerId === user.id) return; // Don't notify the host
+            if (followerId === user.id) return;
 
             const followerPrefs = doc.data().notificationPrefs || {};
             if (followerPrefs.dmEnabled !== false) {
@@ -278,13 +281,13 @@ async function handlePostRequest(interaction) {
                      try {
                         await followerUser.send(`🔔 Um novo grupo de **/soling** para a raid **${raidNome}** que você tem interesse foi criado por **${user.username}**! [Clique aqui para ver o anúncio](${message.url})`);
                      } catch(e){
-                         logger.warn(`Não foi possível notificar ${followerUser.tag} sobre o /soling.`);
+                         logger.warn(`Não foi possível notificar ${followerUser.tag} sobre o /soling de interesse.`);
                      }
                  }
             }
         });
         
-        // Notificar seguidores do host
+        // 2. Notificar seguidores do host
         const hostFollowersQuery = query(collection(firestore, 'users'), where('following', 'array-contains', user.id));
         const hostFollowersSnap = await getDocs(hostFollowersQuery);
 
