@@ -24,6 +24,8 @@ const CATEGORY_NAMES = {
 
 const OPTIONS_MODAL_ID = `${customIdPrefix}_options_modal`;
 const RESTRICTIONS_MODAL_ID = `${customIdPrefix}_restrictions_modal`;
+const CUSTOM_TAG_MODAL_ID = `${customIdPrefix}_tag_modal`;
+
 
 // Handle Day Selection
 async function handleDaySelect(interaction) {
@@ -166,7 +168,7 @@ async function handleOptionsButtons(interaction) {
              const userSnap = await getDoc(doc(firestore, 'users', interaction.user.id));
              const prefilledTag = userSnap.exists() ? userSnap.data().hostTag || '' : '';
 
-            const modal = new ModalBuilder().setCustomId(OPTIONS_MODAL_ID).setTitle('Opções de Anúncio');
+            const modal = new ModalBuilder().setCustomId(CUSTOM_TAG_MODAL_ID).setTitle('Opções de Anúncio');
             modal.addComponents(
                  new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('customTag').setLabel("Nome da Chamada (Cargo)").setStyle(TextInputStyle.Short).setRequired(false).setPlaceholder('Ex: Farm dos Campeões').setValue(flowData.customTag || prefilledTag))
             );
@@ -185,12 +187,12 @@ async function handleOptionsModal(interaction) {
         return interaction.reply({ content: 'Sua sessão expirou.', ephemeral: true });
     }
     
-    // Verifica qual modal foi submetido e atualiza os dados
     if (interaction.customId === OPTIONS_MODAL_ID) {
-        const customMessage = interaction.fields.getTextInputValue('customMessage');
-        const customTag = interaction.fields.getTextInputValue('customTag');
-        if (customMessage !== undefined) flowData.customMessage = customMessage;
-        if (customTag !== undefined) flowData.customTag = customTag;
+        flowData.customMessage = interaction.fields.getTextInputValue('customMessage');
+    }
+    
+    if (interaction.customId === CUSTOM_TAG_MODAL_ID) {
+        flowData.customTag = interaction.fields.getTextInputValue('customTag');
     }
     
     if(interaction.customId === RESTRICTIONS_MODAL_ID) {
@@ -273,7 +275,7 @@ export async function handleInteraction(interaction, container) {
          if(prefix !== customIdPrefix || action !== 'btn') return;
          await handleOptionsButtons(interaction);
     } else if (interaction.isModalSubmit()) {
-        if(interaction.customId === OPTIONS_MODAL_ID || interaction.customId === RESTRICTIONS_MODAL_ID) {
+        if(interaction.customId === OPTIONS_MODAL_ID || interaction.customId === RESTRICTIONS_MODAL_ID || interaction.customId === CUSTOM_TAG_MODAL_ID) {
             await handleOptionsModal(interaction);
         }
     }

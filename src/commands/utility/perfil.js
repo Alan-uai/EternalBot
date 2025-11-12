@@ -3,6 +3,8 @@ import { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, Atta
 import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
 import { createProfileImage } from '../../utils/createProfileImage.js';
+import { DUNGEON_CONFIG_BUTTON_ID } from '../../commands/utility/dungeonconfig.js';
+
 
 const FORMULARIO_CHANNEL_ID = '1429260045371310200';
 const COMMUNITY_HELP_CHANNEL_ID = '1426957344897761282';
@@ -57,13 +59,17 @@ export async function execute(interaction) {
         
         const components = [];
         if(isViewingSelf) {
-            const managementRow = new ActionRowBuilder()
+            const row1 = new ActionRowBuilder()
                 .addComponents(
                     new ButtonBuilder().setCustomId(`${UPDATE_PROFILE_BUTTON_ID}_${targetUser.id}`).setLabel('Atualizar Perfil').setStyle(ButtonStyle.Primary).setEmoji('📝'),
                     new ButtonBuilder().setCustomId(`${CUSTOMIZE_AI_BUTTON_ID}_${targetUser.id}`).setLabel('Personalizar o Gui').setStyle(ButtonStyle.Secondary).setEmoji('🤖'),
-                    new ButtonBuilder().setCustomId(`${GOALS_PANEL_BUTTON_ID}_${targetUser.id}`).setLabel('Minhas Metas').setStyle(ButtonStyle.Secondary).setEmoji('🎯')
                 );
-            components.push(managementRow);
+            const row2 = new ActionRowBuilder()
+                .addComponents(
+                     new ButtonBuilder().setCustomId(`${GOALS_PANEL_BUTTON_ID}_${targetUser.id}`).setLabel('Minhas Metas').setStyle(ButtonStyle.Secondary).setEmoji('🎯'),
+                     new ButtonBuilder().setCustomId(DUNGEON_CONFIG_BUTTON_ID).setLabel('Configurações de Dungeon').setStyle(ButtonStyle.Secondary).setEmoji('⚙️')
+                );
+            components.push(row1, row2);
         } else {
              // Lógica do botão Seguir
             const viewerRef = doc(firestore, 'users', interaction.user.id);
