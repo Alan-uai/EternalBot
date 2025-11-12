@@ -61,7 +61,7 @@ const SectionSchema = z.object({
   marcador: z.enum(["texto_introdutorio", "meio", "fim"]).describe("O marcador da seção."),
   titulo: z.string().describe("O título da seção."),
   conteudo: z.string().describe("O conteúdo em texto da seção, formatado em Markdown."),
-  table: TableSchema.optional().describe("Se esta seção contiver uma tabela, forneça os dados estruturados aqui."),
+  table: TableSchema.optional().describe("Se esta seção contiver uma tabela de DADOS (stats, custos, etc.), forneça os dados estruturados aqui. NÃO use para listas de links."),
 });
 
 const GenerateSolutionOutputSchema = z.object({
@@ -100,25 +100,36 @@ Sua resposta DEVE ser um objeto JSON contendo a chave "structuredResponse", que 
 - \`marcador\`: Use "texto_introdutorio", "meio", ou "fim".
 - \`titulo\`: O título da seção (ex: "Solução Direta", "Análise de Farm").
 - \`conteudo\`: O conteúdo textual da seção em formato Markdown.
-- \`table\`: (Opcional) Se a seção contiver dados tabulares, você DEVE estruturá-los aqui. O objeto \`table\` deve ter duas chaves:
+- \`table\`: (Opcional) Se a seção contiver dados tabulares (stats, custos, drops), você DEVE estruturá-los aqui. O objeto \`table\` deve ter duas chaves:
     - \`headers\`: Um array de strings com os nomes das colunas (ex: ["Mundo", "Chefe", "HP"]).
     - \`rows\`: Um array de objetos, onde cada objeto é uma linha e as chaves correspondem aos cabeçalhos (ex: [{"Mundo": 1, "Chefe": "Kid Kohan", "HP": "2.5Qd"}]).
-    - **IMPORTANTE:** Não inclua tabelas formatadas em Markdown no campo \`conteudo\`. Use o objeto \`table\` para isso.
+    - **IMPORTANTE:** Não inclua tabelas formatadas em Markdown no campo \`conteudo\`. Use o objeto \`table\` APENAS para dados.
 
-**REGRAS DE ESTRUTURAÇÃO DO JSON:**
+**REGRAS DE ESTRUTURAÇÃO DO JSON (CRÍTICO):**
 1.  **SEMPRE** comece com um objeto com \`marcador: "texto_introdutorio"\`. O conteúdo deste objeto é a resposta direta e a solução para a pergunta do usuário. O título pode ser "Solução Direta".
-2.  **SE** a resposta direta for simples (como fornecer o status de um item), use as seções de \`marcador: "meio"\` para agregar valor estratégico. Em vez de repetir a informação, ofereça comparações ("A Aura X é boa, mas a Aura Y do próximo mundo é 50% mais forte"), sugestões de sinergia ("Combine esta aura com a gamepass 'Double Aura' para um bônus massivo") ou dicas de como obter o item.
-3.  **SE** a pergunta exigir uma explicação complexa, um cálculo ou um passo a passo, use as seções de \`marcador: "meio"\` para detalhar a justificativa e a análise.
-4.  **SE** uma seção precisar mostrar uma tabela (ex: requisitos de rank, bônus de itens, etc.), adicione o objeto \`table\` a essa seção com os dados estruturados.
-5.  **REGRA DE LINKS (CRÍTICA):** Se a fonte de dados for uma tabela onde uma coluna contém links (URLs), como o guia da 'Hero License Quest', você **NÃO DEVE** gerar um objeto \`table\`. Em vez disso, no campo \`conteudo\` da mesma seção, formate os dados como uma lista em Markdown, tornando os links clicáveis. Exemplo:
-    \`\`\`markdown
-    Aqui estão as localizações:
-    - **Classe F (Mundo 1):** [Assistir Vídeo](https://...)
-    - **Classe E (Mundo 6):** [Assistir Vídeo](https://...)
+2.  **REGRA DE LINKS (CRÍTICA):** Se a fonte de dados for uma tabela onde uma coluna contém links (URLs), como o guia da 'Hero License Quest', você **NÃO DEVE** gerar um objeto \`table\`. Em vez disso, no campo \`conteudo\` da mesma seção, formate os dados como uma lista em Markdown, tornando os links clicáveis.
+    **Exemplo CORRETO (para listas com links):**
+    \`\`\`json
+    {
+      "marcador": "meio",
+      "titulo": "Localização da Hero License Quest",
+      "conteudo": "Aqui estão as localizações:\\n- **Classe F (Mundo 1):** [Assistir Vídeo](https://...)\\n- **Classe E (Mundo 6):** [Assistir Vídeo](https://...)"
+    }
+    \`\`\`
+    **Exemplo ERRADO (NUNCA FAÇA ISSO):**
+    \`\`\`json
+    {
+      "marcador": "meio",
+      "titulo": "Localização da Hero License Quest",
+      "conteudo": "Veja a tabela abaixo.",
+      "table": { "headers": ["Classe", "Link"], "rows": [{"Classe": "F", "Link": "https://..."}] }
+    }
     \`\`\`
     Isso se aplica a qualquer tabela que seja primariamente uma lista de links.
-6.  Se aplicável, termine com um ou mais objetos com \`marcador: "fim"\` para dicas extras.
-7.  **A SAÍDA FINAL DEVE SER UM ÚNICO OBJETO JSON**, com a chave "structuredResponse" contendo o array de seções.
+3.  **SE** a resposta direta for simples (como fornecer o status de um item), use as seções de \`marcador: "meio"\` para agregar valor estratégico. Em vez de repetir a informação, ofereça comparações ("A Aura X é boa, mas a Aura Y do próximo mundo é 50% mais forte"), sugestões de sinergia ("Combine esta aura com a gamepass 'Double Aura' para um bônus massivo") ou dicas de como obter o item.
+4.  **SE** a pergunta exigir uma explicação complexa, um cálculo ou um passo a passo, use as seções de \`marcador: "meio"\` para detalhar a justificativa e a análise.
+5.  Se aplicável, termine com um ou mais objetos com \`marcador: "fim"\` para dicas extras.
+6.  **A SAÍDA FINAL DEVE SER UM ÚNICO OBJETO JSON**, com a chave "structuredResponse" contendo o array de seções.
 
 ### Termos e Sinônimos do Jogo (Use para traduzir a pergunta do usuário)
 - "Adolla": Refere-se exclusivamente ao poder de progressão do Mundo 19. Sinônimos: "poder do mundo 19", "poder de fire force". Não é um item de comida.

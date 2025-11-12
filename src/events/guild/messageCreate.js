@@ -11,33 +11,22 @@ import { languages } from '../../ai/languages.js';
 import { emojiStyles } from '../../ai/emoji-styles.js';
 
 
-// Função para enviar respostas, dividindo se necessário
-async function sendReply(message, parts) {
+// Função para enviar a resposta consolidada
+async function sendConsolidatedReply(message, content, attachments) {
     const feedbackRow = new ActionRowBuilder()
         .addComponents(
             new ButtonBuilder().setCustomId(`feedback_like_${message.id}`).setLabel('👍').setStyle(ButtonStyle.Success),
             new ButtonBuilder().setCustomId(`feedback_dislike_${message.author.id}_${message.id}`).setLabel('👎').setStyle(ButtonStyle.Danger)
         );
 
-    let replyMessage;
-    for (let i = 0; i < parts.length; i++) {
-        const part = parts[i];
-        const isLastPart = i === parts.length - 1;
-        const options = {
-            content: part.content || null,
-            files: part.attachments,
-            components: isLastPart ? [feedbackRow] : []
-        };
-
-        if (i === 0) {
-            // A primeira mensagem é uma resposta direta
-            replyMessage = await message.reply(options);
-        } else {
-            // As mensagens subsequentes são enviadas no canal
-            await message.channel.send(options);
-        }
-    }
-    return replyMessage; // Retorna a primeira mensagem para referência
+    const options = {
+        content: content || null,
+        files: attachments,
+        components: [feedbackRow]
+    };
+    
+    // Responde diretamente à mensagem do usuário para manter o fio da conversa
+    return await message.reply(options);
 }
 
 
@@ -93,9 +82,12 @@ export async function execute(message) {
     if (message.author.bot) return;
 
     // --- Impede que o bot responda a si mesmo ou a outras respostas no fio ---
-    if (message.reference) {
-        return;
+    if (message.reference && message.mentions.has(client.user.id)) {
+        // Ignora se for uma resposta a uma mensagem do próprio bot, exceto se for uma menção direta
+    } else if (message.reference) {
+         return;
     }
+
 
     // --- Processamento de Respostas da Comunidade ---
     if (message.channel.id === config.COMMUNITY_HELP_CHANNEL_ID && message.reference) {
@@ -230,32 +222,35 @@ export async function execute(message) {
             await handleUnansweredQuestion(message, question, imageAttachment);
             await message.reply(result.structuredResponse[0].conteudo);
         } else {
-            const messageParts = [];
-            for (const section of result.structuredResponse) {
-                let textContent = '';
-                if (section.titulo) textContent += `**${section.titulo}**\n`;
-                if (section.conteudo) textContent += `${section.conteudo}\n\n`;
+            let finalContent = '';
+            const finalAttachments = [];
 
-                if (textContent.trim()) {
-                    messageParts.push({ content: textContent, attachments: [] });
-                }
+            for (const section of result.structuredResponse) {
+                if (section.titulo) finalContent += `**${section.titulo}**\n`;
+                if (section.conteudo) finalContent += `${section.conteudo}\n\n`;
 
                 if (section.table && section.table.rows && section.table.rows.length > 0) {
                     try {
                         const tableImage = await createTableImage(section.table.headers, section.table.rows);
-                        const attachment = new AttachmentBuilder(tableImage, { name: `table-${section.titulo?.toLowerCase().replace(/ /g, '-') || 'data'}.png` });
-                        messageParts.push({ content: null, attachments: [attachment] });
+                        const attachment = new AttachmentBuilder(tableImage, { name: `table-${section.titulo?.toLowerCase().replace(/\s/g, '-') || 'data'}.png` });
+                        finalAttachments.push(attachment);
                     } catch (tableError) {
                         logger.error("Erro ao gerar imagem da tabela:", tableError);
-                        messageParts.push({ content: `*(Erro ao renderizar a tabela ${section.titulo} como imagem.)*`, attachments: [] });
+                        finalContent += `*(Erro ao renderizar a tabela "${section.titulo}" como imagem.)*\n\n`;
                     }
                 }
             }
+
+            // Garante que a mensagem não exceda o limite do Discord
+            if (finalContent.length > 2000) {
+                finalContent = finalContent.substring(0, 1997) + '...';
+            }
             
-            const replyMessage = await sendReply(message, messageParts);
+            const replyMessage = await sendConsolidatedReply(message, finalContent, finalAttachments);
             
+            // Armazena dados para o sistema de feedback
             client.container.interactions.set(`question_${message.id}`, question);
-            client.container.interactions.set(`answer_${message.id}`, messageParts[0]?.content || 'Resposta em imagem.');
+            client.container.interactions.set(`answer_${message.id}`, finalContent || 'Resposta em imagem.');
             client.container.interactions.set(`history_${message.id}`, history);
             client.container.interactions.set(`replyMessageId_${message.id}`, replyMessage.id);
         }
