@@ -6,15 +6,29 @@ export const data = new SlashCommandBuilder()
     .setDescription('Agenda ou visualiza farms de raids.');
 
 export async function execute(interaction) {
-    const dayOptions = [
-        { label: 'Segunda-feira', value: 'monday' },
-        { label: 'Terça-feira', value: 'tuesday' },
-        { label: 'Quarta-feira', value: 'wednesday' },
-        { label: 'Quinta-feira', value: 'thursday' },
-        { label: 'Sexta-feira', value: 'friday' },
-        { label: 'Sábado', value: 'saturday' },
-        { label: 'Domingo', value: 'sunday' },
+    const weekdays = [
+        { key: 'sunday', label: 'Domingo' },
+        { key: 'monday', label: 'Segunda-feira' },
+        { key: 'tuesday', label: 'Terça-feira' },
+        { key: 'wednesday', label: 'Quarta-feira' },
+        { key: 'thursday', label: 'Quinta-feira' },
+        { key: 'friday', label: 'Sexta-feira' },
+        { key: 'saturday', label: 'Sábado' },
     ];
+
+    const todayIndex = new Date().getDay(); // Domingo = 0, Segunda = 1, etc.
+    const reorderedWeekdays = [
+        ...weekdays.slice(todayIndex),
+        ...weekdays.slice(0, todayIndex)
+    ];
+
+    const dayOptions = reorderedWeekdays.map((day, index) => {
+        const isToday = index === 0;
+        return {
+            label: isToday ? `${day.label} (hoje)` : day.label,
+            value: day.key,
+        };
+    });
 
     const dayMenu = new StringSelectMenuBuilder()
         .setCustomId('farming_select_day')

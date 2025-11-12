@@ -3,18 +3,17 @@ import { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, Atta
 import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
 import { createProfileImage } from '../../utils/createProfileImage.js';
-import { DUNGEON_CONFIG_BUTTON_ID } from '../../commands/utility/dungeonconfig.js';
+// Corrigido: Importa o ID do botão do local correto onde foi exportado
+import { DUNGEON_CONFIG_BUTTON_ID } from './dungeonconfig.js';
 
 
 const FORMULARIO_CHANNEL_ID = '1429260045371310200';
 const COMMUNITY_HELP_CHANNEL_ID = '1426957344897761282';
 const ALLOWED_CHANNELS = [FORMULARIO_CHANNEL_ID, COMMUNITY_HELP_CHANNEL_ID];
 
-export const CUSTOM_ID_PREFIX = 'perfil';
-export const UPDATE_PROFILE_BUTTON_ID = `${CUSTOM_ID_PREFIX}_update`;
-export const CUSTOMIZE_AI_BUTTON_ID = `${CUSTOM_ID_PREFIX}_customize_ai`;
-export const GOALS_PANEL_BUTTON_ID = `${CUSTOM_ID_PREFIX}_goals_panel`;
-export const FOLLOW_HOST_BUTTON_ID = `${CUSTOM_ID_PREFIX}_follow`;
+// Os prefixos/IDs dos botões do perfil são gerenciados dentro do próprio handler de interação.
+// Não é mais necessário exportá-los daqui.
+import { UPDATE_PROFILE_BUTTON_ID, CUSTOMIZE_AI_BUTTON_ID, GOALS_PANEL_BUTTON_ID, FOLLOW_HOST_BUTTON_ID } from '../../interactions/buttons/iniciar-perfil.js';
 
 
 export const data = new SlashCommandBuilder()

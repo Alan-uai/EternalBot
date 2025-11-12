@@ -1,8 +1,5 @@
 // src/commands/utility/metas.js
 import { SlashCommandBuilder } from 'discord.js';
-
-// Este comando será um atalho para abrir o botão "Minhas Metas" no perfil.
-// A lógica principal estará no manipulador de interação do perfil.
 import { handleInteraction as profileInteractionHandler } from '../../interactions/buttons/iniciar-perfil.js';
 import { CUSTOM_ID_PREFIX } from '../../interactions/buttons/iniciar-perfil.js';
 
@@ -17,7 +14,11 @@ export async function execute(interaction) {
     const fakeInteraction = {
         ...interaction,
         isButton: () => true,
-        customId: `${CUSTOM_ID_PREFIX}_goals_panel_${interaction.user.id}`
+        customId: `${CUSTOM_ID_PREFIX}_goals_panel_${interaction.user.id}`,
+        // Garante que o handler possa responder ou seguir
+        reply: interaction.reply.bind(interaction),
+        followUp: interaction.followUp.bind(interaction),
+        deferReply: interaction.deferReply.bind(interaction),
     };
     
     await profileInteractionHandler(fakeInteraction);

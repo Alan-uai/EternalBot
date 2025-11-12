@@ -29,10 +29,10 @@ const CHARACTERS = [
 
 const CHANNELS_TO_POST = [
     '1426957344897761282', // community-help
-    '1429346724174102748', // general
+    '1429309293076680744', // chat (substituído do 'general')
     '1429347347539820625', // fanart
     '1429295728379039756', // farming-panel
-    '1431283115518591057', // raid-announcer
+    '1429260587648417964', // raid-announcer (substituído do ID antigo)
     '1426958926208958626', // bot-spam
     '1426958336057675857', // updlog
     '1429346813919494214', // codes
@@ -111,8 +111,11 @@ export async function run(container) {
         const announcerDocSnap = await getDoc(announcerDocRef);
 
         let webhookUrl = announcerDocSnap.exists() ? announcerDocSnap.data().webhookUrl : null;
+        
+        // Garante a existência do webhook
+        const avatar = await assetService.getAsset(character.assetId) || await assetService.getAsset('BotAvatar');
+        
         if (!webhookUrl) {
-            const avatar = await assetService.getAsset(character.assetId);
             const newWebhook = await channel.createWebhook({ name: webhookName, avatar, reason: 'Webhook para o sistema de charadas.' });
             webhookUrl = newWebhook.url;
             await setDoc(announcerDocRef, { webhookUrl });
@@ -134,7 +137,6 @@ export async function run(container) {
             .setDescription(`*${riddle.text}*`)
             .setFooter({ text: `Os ${riddle.maxWinners} primeiros a acertar ganham reputação! O sussurro desaparece em 1 hora.` });
 
-        const avatar = await assetService.getAsset(character.assetId);
         await webhookClient.edit({ name: character.name, avatar: avatar });
         const message = await webhookClient.send({
             embeds: [embed],
