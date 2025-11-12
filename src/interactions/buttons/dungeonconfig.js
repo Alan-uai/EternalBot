@@ -4,6 +4,8 @@ import { CUSTOM_ID_PREFIX as DUNGEON_CONFIG_PREFIX, SOLING_CONFIG_BUTTON_ID, FAR
 import { doc, updateDoc, getDoc, collection, query, where, getDocs, deleteDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
 import { getAvailableRaids } from '../../commands/utility/soling.js';
+import { execute as executeDungeonConfig } from '../../commands/utility/dungeonconfig.js';
+
 
 export const customIdPrefix = DUNGEON_CONFIG_PREFIX;
 
@@ -20,7 +22,9 @@ const NOTIFICATIONS_HOST_FARM_TOGGLE_ID = `${customIdPrefix}_notify_host_farm_to
 const NOTIFICATIONS_BACK_TO_MAIN_ID = `${customIdPrefix}_notify_back_main`;
 
 // IDs for Farming Management
-const FARM_DELETE_SELECT_ID = `${customIdPrefix}_farm_delete_select`;
+const FARM_MANAGE_SELECT_ID = `${customIdPrefix}_farm_manage_select`;
+const FARM_DELETE_BTN_ID = `${customIdPrefix}_farm_delete`;
+const FARM_EDIT_BTN_ID = `${customIdPrefix}_farm_edit`;
 
 
 const WEEKDAYS_PT = {
@@ -194,7 +198,8 @@ async function openNotificationsPanel(interaction, isUpdate = false) {
     if (isUpdate) {
         await interaction.update(replyOptions);
     } else {
-        await interaction.reply(replyOptions);
+         await interaction.deleteReply().catch(()=>{});
+         await interaction.followUp(replyOptions);
     }
 }
 
@@ -206,8 +211,7 @@ async function handleDmToggle(interaction) {
     
     await updateDoc(userRef, { 'notificationPrefs.dmEnabled': !currentStatus });
     
-    await interaction.deleteReply().catch(() => {});
-    await openNotificationsPanel(interaction, false);
+    await openNotificationsPanel(interaction, true);
 }
 
 
@@ -297,27 +301,35 @@ async function openFarmingManagementPanel(interaction) {
     });
 
     const selectMenu = new StringSelectMenuBuilder()
-        .setCustomId(FARM_DELETE_SELECT_ID)
-        .setPlaceholder('Selecione um farm para deletar...')
+        .setCustomId(FARM_MANAGE_SELECT_ID)
+        .setPlaceholder('Selecione um farm para gerenciar...')
         .addOptions(farmOptions);
 
     await interaction.reply({
-        content: 'Selecione um dos seus farms agendados para removê-lo permanentemente.',
+        content: 'Selecione um dos seus farms agendados para editar ou excluir.',
         components: [new ActionRowBuilder().addComponents(selectMenu)],
         ephemeral: true
     });
 }
 
-async function handleFarmDelete(interaction) {
+async function handleFarmSelectForManagement(interaction) {
     const farmId = interaction.values[0];
-    if (!farmId) return;
+    const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId(`${FARM_EDIT_BTN_ID}_${farmId}`).setLabel('Editar').setStyle(ButtonStyle.Primary).setEmoji('✏️'),
+        new ButtonBuilder().setCustomId(`${FARM_DELETE_BTN_ID}_${farmId}`).setLabel('Excluir').setStyle(ButtonStyle.Danger).setEmoji('🗑️')
+    );
 
+    await interaction.update({
+        content: `Você selecionou um farm. O que deseja fazer?`,
+        components: [row]
+    });
+}
+
+async function handleFarmDeleteButton(interaction, farmId) {
     await interaction.deferUpdate();
     const { firestore } = initializeFirebase();
     const farmRef = doc(firestore, 'scheduled_farms', farmId);
     
-    // Você pode adicionar uma verificação extra para garantir que o usuário é o dono do farm
-    // mas o query na função openFarmingManagementPanel já faz essa filtragem.
     try {
         await deleteDoc(farmRef);
         await interaction.editReply({ content: 'O farm selecionado foi deletado com sucesso.', components: [] });
@@ -327,12 +339,49 @@ async function handleFarmDelete(interaction) {
     }
 }
 
+async function handleFarmEditButton(interaction, farmId) {
+    const { client, services } = interaction;
+    const { firestore } = services.firebase;
+    const farmRef = doc(firestore, 'scheduled_farms', farmId);
+    const farmSnap = await getDoc(farmRef);
+    if (!farmSnap.exists()) {
+        return interaction.update({ content: 'Este farm não existe mais.', components: [] });
+    }
+    
+    const farmData = farmSnap.data();
+    
+    // Armazena os dados do farm antigo para preencher o fluxo de criação
+    const flowData = {
+        day: farmData.dayOfWeek,
+        time: farmData.time,
+        raidName: farmData.raidName,
+        quantity: farmData.quantity,
+        customMessage: farmData.customMessage,
+        customTag: farmData.customTag,
+        restrictions: farmData.restrictions,
+        isEditing: true, // Flag para indicar edição
+        farmId: farmId // ID do farm que está sendo editado
+    };
+    client.container.interactions.set(`farming_flow_${interaction.user.id}`, flowData);
+
+    // Inicia o fluxo de edição (mesmo que o de criação, mas com dados pré-populados)
+    // Vamos começar pela seleção de dia para simplicidade
+    const { execute: executeFarming } = await import('../../commands/utility/farming.js');
+    await executeFarming(interaction, true); // O 'true' indica que é uma re-edição
+}
+
 
 export async function handleInteraction(interaction, container) {
-    if (interaction.isButton()) {
-        const [prefix, action, ...params] = interaction.customId.split('_');
-        if (prefix !== customIdPrefix) return;
+     const [prefix, action, ...params] = interaction.customId.split('_');
+    
+    // Delega para o handler do comando dungeonconfig se o ID for o nome do comando
+    if (interaction.customId === 'dungeonconfig') {
+        return executeDungeonConfig(interaction);
+    }
+    
+    if (prefix !== customIdPrefix) return;
 
+    if (interaction.isButton()) {
         if (interaction.customId === SOLING_CONFIG_BUTTON_ID) {
             await openSolingSettingsModal(interaction);
         } else if (interaction.customId === FARMING_CONFIG_BUTTON_ID) {
@@ -349,6 +398,10 @@ export async function handleInteraction(interaction, container) {
             await handleHostNotifyToggle(interaction, 'soling');
         } else if (action === 'notify' && params[0] === 'host' && params[1] === 'farm') {
             await handleHostNotifyToggle(interaction, 'farm');
+        } else if (action === 'farm' && params[0] === 'delete') {
+            await handleFarmDeleteButton(interaction, params[1]);
+        } else if (action === 'farm' && params[0] === 'edit') {
+            await handleFarmEditButton(interaction, params[1]);
         }
 
     } else if (interaction.isModalSubmit()) {
@@ -358,20 +411,17 @@ export async function handleInteraction(interaction, container) {
             await handleTagSubmit(interaction);
         }
     } else if (interaction.isStringSelectMenu()) {
-        const [prefix, action, subAction] = interaction.customId.split('_');
-        if (prefix !== customIdPrefix) return;
-
         if (action === 'notify') {
-             if (subAction === 'soling') {
+             if (params[0] === 'soling') {
                 await handleSolingInterestSelect(interaction);
-             } else if (subAction === 'farm') {
+             } else if (params[0] === 'farm') {
                 await handleFarmInterestSelect(interaction);
-             } else if (subAction === 'host') {
+             } else if (params[0] === 'host') {
                 const selectedHostId = interaction.values[0];
                 await openHostManagementPanel(interaction, selectedHostId);
              }
-        } else if (interaction.customId === FARM_DELETE_SELECT_ID) {
-            await handleFarmDelete(interaction);
+        } else if (action === 'farm' && params[0] === 'manage') {
+            await handleFarmSelectForManagement(interaction);
         }
     }
 }

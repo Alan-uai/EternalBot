@@ -3,8 +3,8 @@ import { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, Atta
 import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
 import { createProfileImage } from '../../utils/createProfileImage.js';
-// Corrigido: Importa o ID do botão do handler de comando correto
-import { SOLING_CONFIG_BUTTON_ID as DUNGEON_CONFIG_BUTTON_ID } from './dungeonconfig.js';
+// Importa o ID do comando correto
+import { data as dungeonConfigData } from './dungeonconfig.js';
 
 
 const FORMULARIO_CHANNEL_ID = '1429260045371310200';
@@ -66,7 +66,8 @@ export async function execute(interaction) {
             const row2 = new ActionRowBuilder()
                 .addComponents(
                      new ButtonBuilder().setCustomId(`${GOALS_PANEL_BUTTON_ID}_${targetUser.id}`).setLabel('Minhas Metas').setStyle(ButtonStyle.Secondary).setEmoji('🎯'),
-                     new ButtonBuilder().setCustomId(DUNGEON_CONFIG_BUTTON_ID).setLabel('Configurações de Dungeon').setStyle(ButtonStyle.Secondary).setEmoji('⚙️')
+                     // Este botão agora tem o customId do comando, para ser tratado pelo handler correto
+                     new ButtonBuilder().setCustomId(dungeonConfigData.name).setLabel('Configurações de Dungeon').setStyle(ButtonStyle.Secondary).setEmoji('⚙️')
                 );
             components.push(row1, row2);
         } else {

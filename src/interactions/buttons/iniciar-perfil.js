@@ -8,30 +8,31 @@ import { responseStyles } from '../../ai/response-styles.js';
 import { languages } from '../../ai/languages.js';
 import { emojiStyles } from '../../ai/emoji-styles.js';
 
-export const customIdPrefix = 'perfil';
+// Alteração: Array de prefixos para garantir que todos os botões sejam reconhecidos
+export const customIdPrefix = ['perfil_update', 'perfil_customize_ai', 'perfil_goals_panel', 'perfil_follow', 'perfil'];
 
-export const UPDATE_PROFILE_BUTTON_ID = `${customIdPrefix}_update`;
-export const CUSTOMIZE_AI_BUTTON_ID = `${customIdPrefix}_customize_ai`;
-export const GOALS_PANEL_BUTTON_ID = `${customIdPrefix}_goals_panel`;
-export const FOLLOW_HOST_BUTTON_ID = `${customIdPrefix}_follow`;
-export const OPEN_CUSTOM_TITLE_MODAL_ID = `${customIdPrefix}_button_custom_title`;
-export const TOGGLE_PROFILE_CONTEXT_ID = `${customIdPrefix}_toggle_context`;
-export const ADD_GOAL_BUTTON_ID = `${customIdPrefix}_goals_add`;
+export const UPDATE_PROFILE_BUTTON_ID = `perfil_update`;
+export const CUSTOMIZE_AI_BUTTON_ID = `perfil_customize_ai`;
+export const GOALS_PANEL_BUTTON_ID = `perfil_goals_panel`;
+export const FOLLOW_HOST_BUTTON_ID = `perfil_follow`;
+export const OPEN_CUSTOM_TITLE_MODAL_ID = `perfil_button_custom_title`;
+export const TOGGLE_PROFILE_CONTEXT_ID = `perfil_toggle_context`;
+export const ADD_GOAL_BUTTON_ID = `perfil_goals_add`;
 
 
 // Novos IDs para o painel de personalização da IA
-const FORM_MODAL_ID = `${customIdPrefix}_form_modal`;
-const CUSTOMIZE_MODAL_ID = `${customIdPrefix}_customize_modal`;
-const RESPONSE_STYLE_SELECT_ID = `${customIdPrefix}_select_style`;
-const PERSONA_SELECT_ID = `${customIdPrefix}_select_persona`;
-const LANGUAGE_SELECT_ID = `${customIdPrefix}_select_language`;
-const EMOJI_SELECT_ID = `${customIdPrefix}_select_emoji`;
-const TITLE_MODAL_ID = `${customIdPrefix}_modal_title`;
+const FORM_MODAL_ID = `perfil_form_modal`;
+const CUSTOMIZE_MODAL_ID = `perfil_customize_modal`;
+const RESPONSE_STYLE_SELECT_ID = `perfil_select_style`;
+const PERSONA_SELECT_ID = `perfil_select_persona`;
+const LANGUAGE_SELECT_ID = `perfil_select_language`;
+const EMOJI_SELECT_ID = `perfil_select_emoji`;
+const TITLE_MODAL_ID = `perfil_modal_title`;
 
 
 // IDs para o painel de metas
-const GOALS_MODAL_ID = `${customIdPrefix}_goals_modal`;
-const REMOVE_GOAL_SELECT_ID = `${customIdPrefix}_goals_remove`;
+const GOALS_MODAL_ID = `perfil_goals_modal`;
+const REMOVE_GOAL_SELECT_ID = `perfil_goals_remove`;
 
 // Função para abrir o formulário principal de perfil
 export async function openProfileForm(interaction, isInitialSetup = false) {
@@ -145,7 +146,7 @@ async function openAiCustomizationPanel(interaction) {
         new ButtonBuilder().setCustomId(OPEN_CUSTOM_TITLE_MODAL_ID).setLabel('Definir Nome/Título').setStyle(ButtonStyle.Secondary)
     );
     
-    await interaction.reply({
+    const replyOptions = {
         embeds: [embed],
         components: [
             new ActionRowBuilder().addComponents(styleMenu),
@@ -155,7 +156,13 @@ async function openAiCustomizationPanel(interaction) {
             miscButtons
         ],
         ephemeral: true,
-    });
+    };
+
+    if (interaction.replied || interaction.deferred) {
+        await interaction.followUp(replyOptions);
+    } else {
+        await interaction.reply(replyOptions);
+    }
 }
 
 // Função para salvar as preferências
@@ -167,13 +174,28 @@ async function savePreference(interaction, key, value) {
 }
 
 async function handleToggleContext(interaction) {
+    await interaction.deferUpdate();
     const { firestore } = initializeFirebase();
     const userRef = doc(firestore, 'users', interaction.user.id);
     const userSnap = await getDoc(userRef);
     const currentStatus = userSnap.exists() ? userSnap.data().aiUseProfileContext || false : false;
     await updateDoc(userRef, { 'aiUseProfileContext': !currentStatus });
-    await openAiCustomizationPanel(interaction.message.interaction);
-    await interaction.deferUpdate();
+    
+    // Recria e edita o painel
+    const updatedUserData = (await getDoc(userRef)).data();
+    const embed = EmbedBuilder.from(interaction.message.embeds[0]);
+    const components = interaction.message.components.map(row => {
+        const newRow = ActionRowBuilder.from(row);
+        newRow.components.forEach(component => {
+            if (component.customId === TOGGLE_PROFILE_CONTEXT_ID) {
+                const newStatus = !currentStatus;
+                component.setLabel(`Contexto do Perfil: ${newStatus ? 'Ligado' : 'Desligado'}`).setStyle(newStatus ? ButtonStyle.Success : ButtonStyle.Secondary);
+            }
+        });
+        return newRow;
+    });
+
+    await interaction.editReply({ embeds: [embed], components });
 }
 
 async function openTitleModal(interaction) {
@@ -195,7 +217,7 @@ async function openTitleModal(interaction) {
 }
 
 async function handleTitleModalSubmit(interaction) {
-    await interaction.deferUpdate();
+    await interaction.deferReply({ ephemeral: true });
     const customName = interaction.fields.getTextInputValue('customName');
     const customTitle = interaction.fields.getTextInputValue('customTitle');
 
@@ -203,7 +225,7 @@ async function handleTitleModalSubmit(interaction) {
     const userRef = doc(firestore, 'users', interaction.user.id);
     
     await updateDoc(userRef, { customName: customName || null, userTitle: customTitle || null });
-    await openAiCustomizationPanel(interaction.message.interaction);
+    await interaction.editReply({ content: 'Nome e título personalizados salvos com sucesso!' });
 }
 
 async function openGoalsPanel(interaction) {
@@ -231,7 +253,12 @@ async function openGoalsPanel(interaction) {
         components.push(new ActionRowBuilder().addComponents(removeMenu));
     }
     
-    await interaction.reply({ embeds: [embed], components, ephemeral: true });
+    const replyOptions = { embeds: [embed], components, ephemeral: true };
+    if (interaction.replied || interaction.deferred) {
+        await interaction.followUp(replyOptions);
+    } else {
+        await interaction.reply(replyOptions);
+    }
 }
 
 async function handleAddGoal(interaction) {
@@ -245,15 +272,16 @@ async function handleAddGoal(interaction) {
 }
 
 async function handleGoalModalSubmit(interaction) {
+    await interaction.deferUpdate();
     const goalText = interaction.fields.getTextInputValue('goal_text');
     const { firestore } = initializeFirebase();
     const userRef = doc(firestore, 'users', interaction.user.id);
     await updateDoc(userRef, { goals: arrayUnion(goalText) });
-    await openGoalsPanel(interaction);
-    await interaction.deferUpdate();
+    await openGoalsPanel(interaction.message.interaction);
 }
 
 async function handleRemoveGoal(interaction) {
+    await interaction.deferUpdate();
     const { firestore } = initializeFirebase();
     const userRef = doc(firestore, 'users', interaction.user.id);
     const userSnap = await getDoc(userRef);
@@ -265,9 +293,7 @@ async function handleRemoveGoal(interaction) {
     if (goalToRemove) {
         await updateDoc(userRef, { goals: arrayRemove(goalToRemove) });
     }
-
-    await openGoalsPanel(interaction);
-    await interaction.deferUpdate();
+    await openGoalsPanel(interaction.message.interaction);
 }
 
 
@@ -307,27 +333,28 @@ async function handleFollow(interaction, targetUserId) {
 // Handler principal de interações
 export async function handleInteraction(interaction) {
     const [prefix, action, ...params] = interaction.customId.split('_');
-    if (prefix !== CUSTOM_ID_PREFIX) return;
+    const basePrefix = prefix; // 'perfil'
+
+    if (!customIdPrefix.some(p => p.startsWith(basePrefix))) return;
 
     // --- LÓGICA DE BOTÕES ---
     if (interaction.isButton()) {
+        const fullPrefix = `${prefix}_${action}`;
         const targetUserId = params[0];
 
-        if (action === 'update' && interaction.user.id === targetUserId) {
+        if (fullPrefix === UPDATE_PROFILE_BUTTON_ID && interaction.user.id === targetUserId) {
             await openProfileForm(interaction);
-        } else if (action === 'customize' && params[0] === 'ai' && interaction.user.id === targetUserId) {
+        } else if (fullPrefix === CUSTOMIZE_AI_BUTTON_ID && interaction.user.id === targetUserId) {
             await openAiCustomizationPanel(interaction);
-        } else if (action === 'button' && params[0] === 'custom' && params[1] === 'title') {
+        } else if (interaction.customId === OPEN_CUSTOM_TITLE_MODAL_ID) {
             await openTitleModal(interaction);
-        } else if (action === 'toggle' && params[0] === 'context') {
+        } else if (interaction.customId === TOGGLE_PROFILE_CONTEXT_ID) {
             await handleToggleContext(interaction);
-        } else if (action === 'goals') {
-             if (params[0] === 'panel' && interaction.user.id === targetUserId) {
-                 await openGoalsPanel(interaction);
-             } else if (params[0] === 'add') {
-                 await handleAddGoal(interaction);
-             }
-        } else if (action === 'follow') {
+        } else if (fullPrefix === GOALS_PANEL_BUTTON_ID && interaction.user.id === targetUserId) {
+            await openGoalsPanel(interaction);
+        } else if (interaction.customId === ADD_GOAL_BUTTON_ID) {
+            await handleAddGoal(interaction);
+        } else if (fullPrefix === FOLLOW_HOST_BUTTON_ID) {
             await handleFollow(interaction, targetUserId);
         }
         

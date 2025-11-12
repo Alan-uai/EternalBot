@@ -220,7 +220,7 @@ async function handleOptionsModal(interaction) {
 async function handleFinish(interaction, flowData) {
     const { firestore } = initializeFirebase();
     
-    const newFarm = {
+    const farmData = {
         hostId: interaction.user.id,
         hostUsername: interaction.user.username,
         dayOfWeek: flowData.day,
@@ -238,18 +238,25 @@ async function handleFinish(interaction, flowData) {
         customTag: flowData.customTag || null,
         restrictions: flowData.restrictions || null,
     };
+    
+    const collectionRef = collection(firestore, 'scheduled_farms');
 
     try {
-        await addDoc(collection(firestore, 'scheduled_farms'), newFarm);
+        if (flowData.isEditing && flowData.farmId) {
+            const farmRef = doc(collectionRef, flowData.farmId);
+            await updateDoc(farmRef, farmData);
+        } else {
+            await addDoc(collectionRef, farmData);
+        }
 
         await interaction.update({
-            content: `✅ **Farm agendado com sucesso!**\nO painel de farms será atualizado com seu agendamento.\n\n- **Dia:** ${WEEKDAYS_PT[newFarm.dayOfWeek]}\n- **Horário:** ${newFarm.time}\n- **Raid:** ${newFarm.raidName}\n- **Quantidade:** ${newFarm.quantity}`,
+            content: `✅ **Farm ${flowData.isEditing ? 'editado' : 'agendado'} com sucesso!**\nO painel de farms será atualizado com seu agendamento.\n\n- **Dia:** ${WEEKDAYS_PT[farmData.dayOfWeek]}\n- **Horário:** ${farmData.time}\n- **Raid:** ${farmData.raidName}\n- **Quantidade:** ${farmData.quantity}`,
             components: [],
         });
     } catch (error) {
-        console.error("Erro ao salvar farm agendado:", error);
+        console.error(`Erro ao salvar farm ${flowData.isEditing ? 'editado' : 'agendado'}:`, error);
         await interaction.update({
-            content: '❌ Ocorreu um erro ao tentar agendar seu farm. Por favor, tente novamente.',
+            content: `❌ Ocorreu um erro ao tentar ${flowData.isEditing ? 'editar' : 'agendar'} seu farm. Por favor, tente novamente.`,
             components: [],
         });
     } finally {
@@ -297,7 +304,7 @@ async function handleParticipationToggle(interaction) {
         const userSnap = await getDoc(userRef);
 
         if (!userSnap.exists()) {
-            return interaction.editReply({ content: 'Você precisa ter um perfil (`/perfil`) para entrar em farms com restrições.' });
+            return interaction.editReply({ content: 'Você precisa ter um perfil (`/perfil`) para entrar em farms com restrições. Por favor, crie um e tente novamente.' });
         }
 
         const userData = userSnap.data();
@@ -309,12 +316,12 @@ async function handleParticipationToggle(interaction) {
         const requiredRank = farmData.restrictions.rank;
         const requiredWorld = farmData.restrictions.world;
 
-        if (requiredDps && !userData.dps) profileIsIncomplete = true;
+        if (requiredDps && (!userData.dps || userData.dps.trim() === '')) profileIsIncomplete = true;
         if (requiredRank && !userData.rank) profileIsIncomplete = true;
         if (requiredWorld && !userData.currentWorld) profileIsIncomplete = true;
 
         if (profileIsIncomplete) {
-            return interaction.editReply({ content: 'Seu perfil está incompleto. Por favor, use o comando `/perfil` para adicionar suas informações de DPS, Rank e Mundo antes de entrar neste farm.' });
+            return interaction.editReply({ content: 'Seu perfil está incompleto. Por favor, use o comando `/perfil` e clique em "Atualizar Perfil" para preencher suas informações de DPS, Rank e Mundo antes de entrar neste farm.' });
         }
 
         if (requiredDps && parseNumber(userData.dps) < parseNumber(requiredDps)) {
