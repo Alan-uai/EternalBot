@@ -3,8 +3,8 @@ import { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, Atta
 import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
 import { createProfileImage } from '../../utils/createProfileImage.js';
-// Corrigido: Importa o ID do botão do handler de interação correto
-import { DUNGEON_CONFIG_BUTTON_ID } from '../../interactions/buttons/dungeonconfig.js';
+// Corrigido: Importa o ID do botão do handler de comando correto
+import { SOLING_CONFIG_BUTTON_ID as DUNGEON_CONFIG_BUTTON_ID } from './dungeonconfig.js';
 
 
 const FORMULARIO_CHANNEL_ID = '1429260045371310200';

@@ -110,9 +110,9 @@ async function handleTagSubmit(interaction) {
 }
 
 
-async function openNotificationsPanel(interaction, user) {
+async function openNotificationsPanel(interaction) {
     const { firestore } = initializeFirebase();
-    const userRef = doc(firestore, 'users', user.id);
+    const userRef = doc(firestore, 'users', interaction.user.id);
     const userSnap = await getDoc(userRef);
     const userData = userSnap.exists() ? userSnap.data() : {};
     const notificationPrefs = userData.notificationPrefs || {};
@@ -187,39 +187,42 @@ async function openNotificationsPanel(interaction, user) {
     }
 
     const replyOptions = { embeds: [embed], components, ephemeral: true };
-
-    if (interaction.isButton() || interaction.replied || interaction.deferred) {
-        // Se for o clique inicial do botão, ou se já houver uma resposta, edita/responde
-        await interaction.reply(replyOptions).catch(() => interaction.editReply(replyOptions));
+    
+    // Se a interação foi um clique de botão, precisamos responder de uma nova forma
+    // pois a mensagem original era efêmera.
+    if (interaction.isButton()) {
+        await interaction.reply(replyOptions);
     } else {
-        // Se for uma atualização de um menu/modal
         await interaction.update(replyOptions);
     }
 }
 
 async function handleDmToggle(interaction) {
+    await interaction.deferReply({ ephemeral: true });
     const { firestore } = initializeFirebase();
     const userRef = doc(firestore, 'users', interaction.user.id);
     const userSnap = await getDoc(userRef);
     const currentStatus = userSnap.exists() ? (userSnap.data().notificationPrefs?.dmEnabled !== false) : true;
     
     await updateDoc(userRef, { 'notificationPrefs.dmEnabled': !currentStatus });
-    await interaction.deferUpdate(); // Acknowledge the interaction
-    await openNotificationsPanel({ ...interaction, isButton: () => true }, interaction.user); // Re-open with a fake isButton
+    
+    // Em vez de atualizar a interação, vamos deletar a resposta deferida e reenviar o painel.
+    await interaction.deleteReply();
+    await openNotificationsPanel(interaction);
 }
 
 async function handleSolingInterestSelect(interaction) {
     const { firestore } = initializeFirebase();
     const userRef = doc(firestore, 'users', interaction.user.id);
     await updateDoc(userRef, { 'notificationPrefs.solingInterests': interaction.values });
-    await openNotificationsPanel(interaction, interaction.user);
+    await openNotificationsPanel(interaction);
 }
 
 async function handleFarmInterestSelect(interaction) {
     const { firestore } = initializeFirebase();
     const userRef = doc(firestore, 'users', interaction.user.id);
     await updateDoc(userRef, { 'notificationPrefs.farmInterests': interaction.values });
-    await openNotificationsPanel(interaction, interaction.user);
+    await openNotificationsPanel(interaction);
 }
 
 
@@ -284,11 +287,11 @@ export async function handleInteraction(interaction, container) {
         } else if (interaction.customId === TAG_CONFIG_BUTTON_ID) {
             await openTagModal(interaction);
         } else if (interaction.customId === NOTIFICATIONS_CONFIG_BUTTON_ID) {
-            await openNotificationsPanel(interaction, interaction.user);
+            await openNotificationsPanel(interaction);
         } else if (interaction.customId === NOTIFICATIONS_DM_TOGGLE_ID) {
             await handleDmToggle(interaction);
         } else if (interaction.customId === NOTIFICATIONS_BACK_TO_MAIN_ID) {
-            await openNotificationsPanel(interaction, interaction.user);
+            await openNotificationsPanel(interaction);
         } else if (action === 'notify' && params[0] === 'host' && params[1] === 'soling') {
             await handleHostNotifyToggle(interaction, 'soling');
         } else if (action === 'notify' && params[0] === 'host' && params[1] === 'farm') {
