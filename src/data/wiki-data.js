@@ -1,4 +1,3 @@
-
 // src/data/wiki-data.js
 
 // Este arquivo agrega todos os artigos da wiki e dados de mundos em um só lugar.
@@ -28,6 +27,7 @@ import { world23Data } from './worlds/world-23-data.js';
 import { world24Data } from './worlds/world-24-data.js';
 import { world25Data } from './worlds/world-25-data.js';
 import { world26Data } from './worlds/world-26-data.js';
+import { worldHalloweenData } from './worlds/world-halloween-data.js';
 
 import { achievementsGuideArticle } from './wiki-articles/achievements-guide.js';
 import { auraArticle } from './wiki-articles/aura-system.js';
@@ -97,6 +97,7 @@ export const allWikiArticles = [
     world24Data,
     world25Data,
     world26Data,
+    worldHalloweenData,
 
     // Wiki Articles
     gettingStartedArticle,
