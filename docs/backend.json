@@ -170,8 +170,8 @@
         "credits": { "type": "number", "description": "F2P currency earned from achievements, used for Gamepasses." },
         "aiResponsePreference": {
           "type": "string",
-          "enum": ["detailed", "short"],
-          "description": "User's preference for AI response style (detailed or short)."
+          "enum": ["short", "medium", "detailed"],
+          "description": "User's preference for AI response style (short, medium, or detailed)."
         },
         "dungeonSettings": {
             "type": "object",
@@ -858,3 +858,5 @@
     "reasoning": "The Firestore structure is organized with 'worlds' as the top-level collection to logically separate game content. Each world document contains sub-collections for 'powers', 'npcs', 'pets', 'dungeons', 'accessories', 'shadows' and 'stands', creating a hierarchical and scalable data model. This allows for efficient querying of specific game data. For example, to get all shadows for 'World 7', you query the '/worlds/world7/shadows' sub-collection. A new top-level collection 'achievements' is added to store all game achievements, which is separate from world-specific data."
   }
 }
+
+    

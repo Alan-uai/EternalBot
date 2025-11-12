@@ -264,19 +264,24 @@ async function handleOpenPreferenceMenu(interaction, targetUserId) {
     const row = new ActionRowBuilder()
         .addComponents(
             new ButtonBuilder()
-                .setCustomId(`${PREFERENCE_BUTTON_PREFIX}_set_detailed`)
-                .setLabel('Respostas Detalhadas')
-                .setStyle(currentPreference === 'detailed' ? ButtonStyle.Success : ButtonStyle.Secondary)
-                .setDisabled(currentPreference === 'detailed'),
-            new ButtonBuilder()
                 .setCustomId(`${PREFERENCE_BUTTON_PREFIX}_set_short`)
-                .setLabel('Respostas Curtas')
+                .setLabel('Curta')
                 .setStyle(currentPreference === 'short' ? ButtonStyle.Success : ButtonStyle.Secondary)
-                .setDisabled(currentPreference === 'short')
+                .setDisabled(currentPreference === 'short'),
+            new ButtonBuilder()
+                .setCustomId(`${PREFERENCE_BUTTON_PREFIX}_set_medium`)
+                .setLabel('Média')
+                .setStyle(currentPreference === 'medium' ? ButtonStyle.Success : ButtonStyle.Secondary)
+                .setDisabled(currentPreference === 'medium'),
+            new ButtonBuilder()
+                .setCustomId(`${PREFERENCE_BUTTON_PREFIX}_set_detailed`)
+                .setLabel('Detalhada (Padrão)')
+                .setStyle(currentPreference === 'detailed' ? ButtonStyle.Success : ButtonStyle.Secondary)
+                .setDisabled(currentPreference === 'detailed')
         );
 
     await interaction.reply({
-        content: 'Escolha o seu estilo de resposta preferido da IA. A opção "curta" fornece apenas a solução direta, sem dicas ou análises extras.',
+        content: 'Escolha o seu estilo de resposta preferido da IA.\n- **Curta:** Solução direta, sem extras.\n- **Média:** Solução com um pouco mais de detalhe ou uma tabela.\n- **Detalhada:** Resposta completa com análise e dicas.',
         components: [row],
         ephemeral: true,
     });
@@ -289,7 +294,7 @@ async function handleSetPreference(interaction, preference) {
 
     try {
         await setDoc(userRef, { aiResponsePreference: preference }, { merge: true });
-        const message = `Sua preferência foi atualizada para respostas **${preference === 'detailed' ? 'detalhadas' : 'curtas'}**!`;
+        const message = `Sua preferência foi atualizada para respostas **${preference}**!`;
         await interaction.editReply({ content: message, components: [] });
     } catch (error) {
         console.error("Erro ao salvar preferência de resposta da IA:", error);
@@ -330,6 +335,8 @@ export async function handleInteraction(interaction) {
                 await handleOpenPreferenceMenu(interaction, targetUserId);
             } else if (interaction.customId === `${PREFERENCE_BUTTON_PREFIX}_set_detailed`) {
                 await handleSetPreference(interaction, 'detailed');
+            } else if (interaction.customId === `${PREFERENCE_BUTTON_PREFIX}_set_medium`) {
+                await handleSetPreference(interaction, 'medium');
             } else if (interaction.customId === `${PREFERENCE_BUTTON_PREFIX}_set_short`) {
                 await handleSetPreference(interaction, 'short');
             }
@@ -343,3 +350,5 @@ export async function handleInteraction(interaction) {
         }
     }
 }
+
+    

@@ -156,8 +156,7 @@ export async function execute(message) {
     // Busca preferência do usuário
     const userRef = doc(firestore, 'users', message.author.id);
     const userSnap = await getDoc(userRef);
-    const userPreference = userSnap.exists() ? userSnap.data().aiResponsePreference : 'detailed';
-    const isShortPreference = userPreference === 'short';
+    const responseStyle = userSnap.exists() ? userSnap.data().aiResponsePreference : null;
 
     let imageDataUri = null;
     if (imageAttachment) {
@@ -192,7 +191,7 @@ export async function execute(message) {
             imageDataUri: imageDataUri || undefined,
             wikiContext: wikiContext.getContext(),
             history: history.length > 0 ? history : undefined,
-            isShortPreference, // Passa a preferência para a IA
+            responseStyle: responseStyle || undefined, // Passa a preferência para a IA
         });
 
         if (result?.structuredResponse?.[0]?.titulo === 'Resposta não encontrada') {
@@ -235,3 +234,5 @@ export async function execute(message) {
         await message.reply('Ocorreu um erro inesperado ao processar sua pergunta. Um especialista foi notificado.').catch(() => {});
     }
 }
+
+    
