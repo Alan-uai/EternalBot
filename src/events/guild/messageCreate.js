@@ -162,6 +162,7 @@ export async function execute(message) {
     const userSnap = await getDoc(userRef);
     const userData = userSnap.exists() ? userSnap.data() : {};
     
+    // Define os valores padrão se não estiverem configurados
     const responseStyleKey = userData.aiResponsePreference || 'detailed';
     const personaKey = userData.aiPersonality || 'amigavel';
     const languageKey = userData.aiLanguage || 'pt_br';
@@ -172,16 +173,19 @@ export async function execute(message) {
     const userName = userData.customName || message.author.username;
 
     // Busca as instruções modulares
-    const responseStyleInstruction = responseStyles[responseStyleKey]?.instruction;
-    const personaInstruction = personas[personaKey]?.instruction;
-    const languageInstruction = languages[languageKey]?.instruction;
-    const emojiInstruction = emojiStyles[emojiKey]?.instruction;
+    const responseStyleInstruction = responseStyles[responseStyleKey]?.instruction || '';
+    const personaInstruction = personas[personaKey]?.instruction || '';
+    const languageInstruction = languages[languageKey]?.instruction || '';
+    const emojiInstruction = emojiStyles[emojiKey]?.instruction || '';
     
     let userProfileContext = undefined;
     if (useProfileContext && userSnap.exists()) {
         const { currentWorld, rank, dps } = userData;
         userProfileContext = `Mundo Atual: ${currentWorld || 'N/D'}, Rank: ${rank || 'N/D'}, DPS: ${dps || 'N/D'}`;
     }
+
+    const userGoals = userData.goals || [];
+    const userGoalsContext = userGoals.length > 0 ? `Metas do Usuário: ${userGoals.join(', ')}` : undefined;
 
     let imageDataUri = null;
     if (imageAttachment) {
@@ -216,6 +220,7 @@ export async function execute(message) {
             imageDataUri: imageDataUri || undefined,
             wikiContext: wikiContext.getContext(),
             userProfileContext,
+            userGoalsContext,
             history: history.length > 0 ? history : undefined,
             responseStyleInstruction,
             personaInstruction,

@@ -1,9 +1,9 @@
 // src/jobs/farmingPanelManager.js
 import { EmbedBuilder, WebhookClient, ActionRowBuilder, StringSelectMenuBuilder, AttachmentBuilder } from 'discord.js';
-import { doc, getDoc, setDoc, collection, query, where, getDocs, deleteDoc, writeBatch, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, query, where, getDocs, deleteDoc, writeBatch } from 'firebase/firestore';
 
 const PANEL_DOC_ID = 'farmingPanel';
-const ANNOUNCER_DOC_ID = 'farmAnnouncer'; // Novo ID para o webhook central
+const PERSISTENT_WEBHOOK_NAME = 'Painel de Farms';
 const WEEKDAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 const WEEKDAYS_PT = {
     monday: 'Segunda-feira',
@@ -58,97 +58,6 @@ async function cleanupOldFarms(firestore, currentDayIndex, logger) {
     }
 }
 
-async function handleAnnouncements(container, farms) {
-    const { client, config, logger, services } = container;
-    const { firebase } = services;
-    const { firestore } = firebase;
-    
-    // Get the central webhook for farm announcements
-    const announcerDocRef = doc(firestore, 'bot_config', ANNOUNCER_DOC_ID);
-    const announcerDoc = await getDoc(announcerDocRef);
-    if (!announcerDoc.exists() || !announcerDoc.data().webhookUrl) {
-        logger.warn(`[farmingPanel] Webhook de anúncio de farm (${ANNOUNCER_DOC_ID}) não encontrado. Nenhum anúncio será enviado.`);
-        return;
-    }
-    const webhookUrl = announcerDoc.data().webhookUrl;
-    const webhookClient = new WebhookClient({ url: webhookUrl });
-
-    // Timezone correction: UTC-3
-    const now = new Date(new Date().getTime() - 3 * 60 * 60 * 1000);
-    const fiveMinutesFromNow = new Date(now.getTime() + 5 * 60 * 1000);
-
-    for (const farm of farms) {
-        const [hour, minute] = farm.time.split(':');
-        const farmTime = new Date(now);
-        farmTime.setHours(hour, minute, 0, 0);
-
-        // 5-minute warning
-        if (farmTime > now && farmTime <= fiveMinutesFromNow && !farm.announced5m) {
-            const channel = await client.channels.fetch(config.FARMING_PANEL_CHANNEL_ID).catch(() => null);
-            if(channel) {
-                const host = await client.users.fetch(farm.hostId).catch(() => null);
-                const userSnap = await getDoc(doc(firestore, 'users', farm.hostId));
-                const serverLink = userSnap.exists() ? userSnap.data()?.dungeonSettings?.serverLink : null;
-
-                const embed = new EmbedBuilder()
-                    .setColor(0xFFA500)
-                    .setAuthor({ name: `Farm de ${host?.username || farm.hostUsername}`, iconURL: host?.displayAvatarURL() })
-                    .setTitle(`A Raid ${farm.raidName} começa em 5 minutos!`)
-                    .setDescription('Prepare-se para o farm!');
-                if (serverLink) {
-                    embed.addFields({ name: '🔗 Servidor Privado', value: `**[Clique aqui para entrar](${serverLink})**` });
-                }
-
-                const announcementMessage = await webhookClient.send({
-                    username: `5m | ${farm.raidName}`,
-                    embeds: [embed],
-                    wait: true
-                });
-
-                await updateDoc(doc(firestore, 'scheduled_farms', farm.id), { 
-                    announced5m: true,
-                    announcementId: announcementMessage.id
-                });
-                logger.info(`[farmingPanel] Anúncio de 5 minutos enviado para a raid ${farm.raidName}.`);
-            }
-        }
-
-        // "Open" announcement
-        if (farmTime <= now && !farm.announcedOpen) {
-            const channel = await client.channels.fetch(config.FARMING_PANEL_CHANNEL_ID).catch(() => null);
-            if(channel) {
-                // Delete the 5-minute warning message if it exists
-                if (farm.announcementId) {
-                    await webhookClient.deleteMessage(farm.announcementId).catch(e => logger.warn(`[farmingPanel] Não foi possível deletar a mensagem de 5min: ${e.message}`));
-                }
-
-                const host = await client.users.fetch(farm.hostId).catch(() => null);
-                const userSnap = await getDoc(doc(firestore, 'users', farm.hostId));
-                const serverLink = userSnap.exists() ? userSnap.data()?.dungeonSettings?.serverLink : null;
-
-                const embed = new EmbedBuilder()
-                    .setColor(0x00FF00)
-                    .setAuthor({ name: `Farm de ${host?.username || farm.hostUsername}`, iconURL: host?.displayAvatarURL() })
-                    .setTitle(`✅ Farm Aberto: ${farm.raidName}`)
-                    .setDescription('O farm começou! Boa sorte!');
-                 if (serverLink) {
-                    embed.addFields({ name: '🔗 Servidor Privado', value: `**[Clique aqui para entrar](${serverLink})**` });
-                }
-
-                await webhookClient.send({
-                    username: `${farm.raidName} Aberta`,
-                    embeds: [embed],
-                    content: farm.participants.map(id => `<@${id}>`).join(' ')
-                });
-
-                await updateDoc(doc(firestore, 'scheduled_farms', farm.id), { 
-                    announcedOpen: true 
-                });
-                logger.info(`[farmingPanel] Anúncio de ABERTURA enviado para a raid ${farm.raidName}.`);
-            }
-        }
-    }
-}
 
 export const name = 'farmingPanelManager';
 export const schedule = '*/60 * * * * *'; // A cada minuto
@@ -171,9 +80,6 @@ export async function run(container) {
 
         const allFarmsToday = allFarmsForWeek.filter(farm => farm.dayOfWeek === currentDay);
         
-        // Handle announcements
-        await handleAnnouncements(container, allFarmsToday);
-
         const panelWebhookDocRef = doc(firestore, 'bot_config', PANEL_DOC_ID);
         const docSnap = await getDoc(panelWebhookDocRef);
         
@@ -181,7 +87,7 @@ export async function run(container) {
         let messageId = docSnap.exists() ? docSnap.data().messageId : null;
 
         if (!webhookUrl) {
-            logger.warn(`[farmingPanel] URL do webhook '${PANEL_DOC_ID}' não encontrada. O job 'ready' deve criá-la.`);
+            logger.warn(`[farmingPanelManager] URL do webhook '${PANEL_DOC_ID}' não encontrada. O job 'ready' deve criá-la.`);
             return;
         }
         
@@ -249,7 +155,7 @@ export async function run(container) {
         const row = new ActionRowBuilder().addComponents(participationMenu);
 
         const payload = {
-            username: `Painel de Farms - ${WEEKDAYS_PT[currentDay]}`,
+            username: `${PERSISTENT_WEBHOOK_NAME} - ${WEEKDAYS_PT[currentDay]}`,
             avatarURL: client.user.displayAvatarURL(),
             embeds: embeds,
             components: [row],
@@ -260,11 +166,11 @@ export async function run(container) {
             try {
                 await webhookClient.editMessage(messageId, payload);
             } catch (error) {
-                const newMessage = await webhookClient.send(payload);
+                const newMessage = await webhookClient.send({ ...payload, wait: true });
                 await setDoc(panelWebhookDocRef, { messageId: newMessage.id }, { merge: true });
             }
         } else {
-            const newMessage = await webhookClient.send(payload);
+            const newMessage = await webhookClient.send({ ...payload, wait: true });
             await setDoc(panelWebhookDocRef, { messageId: newMessage.id }, { merge: true });
         }
 

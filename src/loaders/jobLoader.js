@@ -53,7 +53,9 @@ export async function loadJobs(container) {
 
             if (jobModule.schedule) {
                 if (cron.validate(jobModule.schedule)) {
-                    task = cron.schedule(jobModule.schedule, runJob);
+                    task = cron.schedule(jobModule.schedule, runJob, {
+                        timezone: "America/Sao_Paulo"
+                    });
                     logger.info(`Job agendado via cron '${jobModule.name}': ${jobModule.schedule}`);
                 } else {
                     logger.error(`Formato de cron inválido para o job '${jobModule.name}': ${jobModule.schedule}`);

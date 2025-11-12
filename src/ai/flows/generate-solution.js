@@ -42,6 +42,7 @@ const GenerateSolutionInputSchema = z.object({
   imageDataUri: z.string().optional().describe("A photo related to the problem, as a data URI. Expected format: 'data:<mimetype>;base64,<encoded_data>'."),
   wikiContext: z.string().describe('A compilation of all wiki articles to be used as a knowledge base.'),
   userProfileContext: z.string().optional().describe("Dados do perfil do jogador (mundo atual, rank, DPS) para contextualizar a resposta."),
+  userGoalsContext: z.string().optional().describe("As metas atuais que o jogador definiu para si mesmo."),
   history: z.array(MessageSchema).optional().describe('The previous messages in the conversation.'),
   responseStyleInstruction: z.string().optional().describe('Uma instrução específica sobre o estilo de resposta (curta, média, detalhada, tópicos, etc.).'),
   personaInstruction: z.string().optional().describe('Uma instrução específica sobre a persona que a IA deve adotar (amigável, técnico, engraçado, etc.).'),
@@ -88,7 +89,7 @@ Você é o Gui, um assistente especialista no jogo Anime Eternal.
 
 **SAUDAÇÃO PERSONALIZADA (OBRIGATÓRIO):**
 Sua primeira seção (marcador: "texto_introdutorio") DEVE começar com uma saudação. Use o nome de usuário e o título se forem fornecidos.
-- Se 'userTitle' e 'userName' forem fornecidos: "Olá, {{{userTitle}}} {{{userName}}}!"
+- Se 'userTitle' e 'customName' forem fornecidos: "Olá, {{{userTitle}}} {{{userName}}}!"
 - Se apenas 'userName' for fornecido: "Olá, {{{userName}}}!"
 - Se nenhum for fornecido, use uma saudação genérica como "Olá!".
 
@@ -130,7 +131,9 @@ Sua resposta DEVE ser um objeto JSON contendo a chave "structuredResponse", que 
 - "W1", "W2", etc: abreviação para Mundo 1, Mundo 2, etc.
 
 ### Estratégia Principal de Raciocínio (Hierarquia de Análise)
-1.  **USE O PERFIL DO USUÁRIO PRIMEIRO:** Se o contexto do perfil do usuário for fornecido, ele é sua fonte de verdade. Use-o para entender o progresso atual do jogador e dar respostas e sugestões altamente personalizadas.
+1.  **PERFIL DO USUÁRIO E METAS (FONTE PRIMÁRIA):**
+    - **SE** o contexto do perfil do usuário for fornecido (\`userProfileContext\`), use-o para entender o progresso atual do jogador.
+    - **SE** as metas do usuário forem fornecidas (\`userGoalsContext\`), sua resposta DEVE tentar conectar a solução com uma das metas. Exemplo: "Notei que uma de suas metas é conseguir a Foice X. Para isso, você precisará farmar no Mundo 21..."
 2.  **CONTEXTO DA CONVERSA:** Se o histórico da conversa existir, use-o para entender o contexto e resolver pronomes. Se o histórico já explicou um conceito, NÃO o repita. Vá direto ao ponto.
 3.  **ANÁLISE DE IMAGEM (AVANÇADA):** Se uma imagem for fornecida, ela é uma fonte primária. Não apenas identifique itens. ANALISE o que a imagem revela sobre o jogador. Compare os status e equipamentos dele com o que é esperado para o mundo em que ele está (baseado no wiki). Se você vir uma grande oportunidade de melhoria (ex: energia baixa para o mundo, mas muitos créditos), sua resposta DEVE sugerir proativamente a melhor ação (ex: 'Notei que sua energia está um pouco baixa para o Mundo X. Com os créditos que você tem, comprar a gamepass Y seria o maior salto de poder agora.').
 4.  **BASE DE CONHECIMENTO (WIKI):** Use o wiki para obter dados brutos (stats, drops, etc.) para suportar sua análise e sugestões.
@@ -147,6 +150,11 @@ Se a resposta não estiver nas ferramentas ou no wiki, gere um JSON com um únic
 {{#if userProfileContext}}
 CONTEXTO DO PERFIL DO USUÁRIO (FONTE PRIMÁRIA):
 {{{userProfileContext}}}
+{{/if}}
+
+{{#if userGoalsContext}}
+METAS DO USUÁRIO:
+{{{userGoalsContext}}}
 {{/if}}
 
 {{#if history}}

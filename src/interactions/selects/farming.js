@@ -154,6 +154,11 @@ async function handleQuantitySelect(interaction) {
         quantity: selectedQuantity,
         participants: [interaction.user.id],
         createdAt: serverTimestamp(),
+        // Novos campos para gerenciar anúncios
+        announced5m: false,
+        announcedOpen: false,
+        announcementId: null,
+        tempRoleId: null,
     };
 
     try {

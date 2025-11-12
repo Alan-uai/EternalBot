@@ -18,6 +18,39 @@ function validateInteraction(mod, file) {
     return null;
 }
 
+async function loadHandlersFromDirectory(directoryPath, container) {
+    const { logger, interactions } = container;
+    
+    if (!fs.existsSync(directoryPath)) return;
+    
+    const interactionFiles = fs.readdirSync(directoryPath).filter(file => file.endsWith('.js'));
+    
+    for (const file of interactionFiles) {
+        const filePath = path.join(directoryPath, file);
+        try {
+            const handlerModule = await import(`file://${filePath}?t=${Date.now()}`);
+            
+            if (Object.keys(handlerModule).length === 0) continue;
+
+            const prefixes = Array.isArray(handlerModule.customIdPrefix) ? handlerModule.customIdPrefix : [handlerModule.customIdPrefix];
+
+            for (const prefix of prefixes) {
+                const validationMod = { ...handlerModule, customIdPrefix: prefix };
+                const validationError = validateInteraction(validationMod, file);
+                if (validationError) {
+                    logger.warn(validationError);
+                    continue;
+                }
+                interactions.set(prefix, handlerModule.handleInteraction);
+                logger.info(`Manipulador de interação carregado para o prefixo: ${prefix}`);
+            }
+                
+        } catch (err) {
+            logger.error(`Falha ao carregar o manipulador de interação ${file}:`, err);
+        }
+    }
+}
+
 export async function loadInteractions(container) {
     const { logger, interactions } = container;
     
@@ -32,32 +65,8 @@ export async function loadInteractions(container) {
     
     for (const folder of interactionFolders) {
         const folderPath = path.join(INTERACTIONS_PATH, folder);
-        if(!fs.statSync(folderPath).isDirectory()) continue;
-        
-        const interactionFiles = fs.readdirSync(folderPath).filter(file => file.endsWith('.js'));
-
-        for (const file of interactionFiles) {
-            const filePath = path.join(folderPath, file);
-            try {
-                const handlerModule = await import(`file://${filePath}?t=${Date.now()}`);
-                
-                // Adicionado para registrar múltiplos prefixos se o handler exportar um array
-                const prefixes = Array.isArray(handlerModule.customIdPrefix) ? handlerModule.customIdPrefix : [handlerModule.customIdPrefix];
-
-                for (const prefix of prefixes) {
-                    const validationMod = { ...handlerModule, customIdPrefix: prefix };
-                    const validationError = validateInteraction(validationMod, file);
-                    if(validationError){
-                        logger.warn(validationError);
-                        continue;
-                    }
-                    interactions.set(prefix, handlerModule.handleInteraction);
-                    logger.info(`Manipulador de interação carregado para o prefixo: ${prefix}`);
-                }
-                
-            } catch (err) {
-                logger.error(`Falha ao carregar o manipulador de interação ${file}:`, err);
-            }
+        if (fs.statSync(folderPath).isDirectory()) {
+            await loadHandlersFromDirectory(folderPath, container);
         }
     }
 }

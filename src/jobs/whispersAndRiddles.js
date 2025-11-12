@@ -1,9 +1,10 @@
 // src/jobs/whispersAndRiddles.js
-import { EmbedBuilder, WebhookClient } from 'discord.js';
-import { doc, getDoc, setDoc, collection, query, getDocs, orderBy, limit } from 'firebase/firestore';
+import { EmbedBuilder, WebhookClient, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { doc, getDoc, setDoc, collection, query, getDocs, orderBy, limit, updateDoc, serverTimestamp, deleteDoc } from 'firebase/firestore';
 
 const JOB_ID = 'whispersAndRiddles';
-const RIDDLE_DOC_ID = 'currentRiddle';
+export const RIDDLE_DOC_ID = 'currentRiddle'; // Exportado para uso no handler do botão
+const RIDDLE_LIFETIME_MS = 60 * 60 * 1000; // 1 hora
 
 const CHARACTERS = [
     // Comuns (mais frequentes)
@@ -14,7 +15,7 @@ const CHARACTERS = [
     { name: "Lattum", assetId: 'Lattum', weight: 10 },
     { name: "Sha'a", assetId: 'Shaa', weight: 10 },
     { name: "Shadow", assetId: 'Shadow', weight: 5 },
-    { name: "Ign", assetId: 'Ign', weight dystopian: 5 },
+    { name: "Ign", assetId: 'Ign', weight: 5 },
     { name: "Ik", assetId: 'Ik', weight: 5 },
     { name: "Naame", assetId: 'Naame', weight: 5 },
     { name: "UwU", assetId: 'UwU', weight: 5 },
@@ -27,14 +28,14 @@ const CHARACTERS = [
 ];
 
 const CHANNELS_TO_POST = [
-    '1426957344897761282',
-    '1429346724174102748',
-    '1429347347539820625',
-    '1429295728379039756',
-    '1431283115518591057',
-    '1426958926208958626',
-    '1426958336057675857',
-    '1429346813919494214',
+    '1426957344897761282', // community-help
+    '1429346724174102748', // general
+    '1429347347539820625', // fanart
+    '1429295728379039756', // farming-panel
+    '1431283115518591057', // raid-announcer
+    '1426958926208958626', // bot-spam
+    '1426958336057675857', // updlog
+    '1429346813919494214', // codes
 ];
 
 function getWeightedRandomCharacter() {
@@ -52,23 +53,38 @@ function getWeightedRandomCharacter() {
 export const name = JOB_ID;
 export const schedule = '0 */2 * * *'; // A cada 2 horas
 
+async function cleanupOldRiddle(container) {
+    const { client, logger, services } = container;
+    const { firestore } = services.firebase;
+    
+    const currentRiddleRef = doc(firestore, 'bot_config', RIDDLE_DOC_ID);
+    const riddleSnap = await getDoc(currentRiddleRef);
+
+    if (riddleSnap.exists()) {
+        const riddleData = riddleSnap.data();
+        if (riddleData.messageId && riddleData.webhookUrl) {
+            const webhookClient = new WebhookClient({ url: riddleData.webhookUrl });
+            try {
+                await webhookClient.deleteMessage(riddleData.messageId);
+                logger.info(`[${JOB_ID}] Mensagem da charada antiga (${riddleData.id}) removida.`);
+            } catch (e) {
+                logger.warn(`[${JOB_ID}] Falha ao remover mensagem da charada antiga. Pode já ter sido removida.`);
+            }
+        }
+        await deleteDoc(currentRiddleRef);
+    }
+}
+
+
 export async function run(container) {
-    const { client, config, logger, services } = container;
-    const { firebase, assetService } = services;
-    const { firestore } = firebase;
+    const { client, logger, services } = container;
+    const { firestore, assetService } = services;
 
     logger.info(`[${JOB_ID}] Iniciando job de charadas e sussurros...`);
 
     try {
-        // 1. Verificar se já existe uma charada ativa
-        const currentRiddleRef = doc(firestore, 'bot_config', RIDDLE_DOC_ID);
-        const currentRiddleSnap = await getDoc(currentRiddleRef);
-        if (currentRiddleSnap.exists() && currentRiddleSnap.data().isActive) {
-            logger.info(`[${JOB_ID}] Uma charada já está ativa. Pulando esta execução.`);
-            return;
-        }
+        await cleanupOldRiddle(container);
 
-        // 2. Selecionar uma nova charada do Firestore
         const riddlesCollectionRef = collection(firestore, 'riddles');
         const q = query(riddlesCollectionRef, orderBy('lastUsedAt', 'asc'), limit(1));
         const querySnapshot = await getDocs(q);
@@ -81,7 +97,6 @@ export async function run(container) {
         const riddleDoc = querySnapshot.docs[0];
         const riddle = { id: riddleDoc.id, ...riddleDoc.data() };
 
-        // 3. Selecionar um personagem e canal aleatórios
         const character = getWeightedRandomCharacter();
         const channelId = CHANNELS_TO_POST[Math.floor(Math.random() * CHANNELS_TO_POST.length)];
         const channel = await client.channels.fetch(channelId).catch(() => null);
@@ -91,7 +106,6 @@ export async function run(container) {
             return;
         }
         
-        // 4. Obter o webhook para o canal
         const webhookName = `Sussurros de ${character.name}`;
         const announcerDocRef = doc(firestore, 'bot_config', `${JOB_ID}_${channel.id}`);
         const announcerDocSnap = await getDoc(announcerDocRef);
@@ -105,31 +119,41 @@ export async function run(container) {
         }
         const webhookClient = new WebhookClient({ url: webhookUrl });
 
-        // 5. Preparar e enviar a mensagem
+        const row = new ActionRowBuilder()
+            .addComponents(
+                new ButtonBuilder()
+                    .setCustomId(`riddle_answer_${riddle.id}`)
+                    .setLabel('Responder Sussurro')
+                    .setStyle(ButtonStyle.Primary)
+                    .setEmoji('🤫')
+            );
+            
         const embed = new EmbedBuilder()
-            .setColor(0x9932CC) // Roxo escuro
+            .setColor(0x9932CC)
             .setAuthor({ name: `${character.name} sussurra...` })
             .setDescription(`*${riddle.text}*`)
-            .setFooter({ text: `Responda com /sussurro [sua resposta]. ${riddle.maxWinners} primeiros a acertar ganham reputação!` });
+            .setFooter({ text: `Os ${riddle.maxWinners} primeiros a acertar ganham reputação! O sussurro desaparece em 1 hora.` });
 
         const avatar = await assetService.getAsset(character.assetId);
         await webhookClient.edit({ name: character.name, avatar: avatar });
-        await webhookClient.send({
+        const message = await webhookClient.send({
             embeds: [embed],
+            components: [row]
         });
 
-        // 6. Atualizar o estado da charada no Firestore
         const newRiddleData = {
             ...riddle,
             isActive: true,
             postedAt: serverTimestamp(),
+            expiresAt: new Date(Date.now() + RIDDLE_LIFETIME_MS),
             solvedBy: [],
             channelId: channel.id,
             characterName: character.name,
+            messageId: message.id,
+            webhookUrl: webhookClient.url,
         };
-        await setDoc(currentRiddleRef, newRiddleData);
+        await setDoc(doc(firestore, 'bot_config', RIDDLE_DOC_ID), newRiddleData);
 
-        // 7. Atualizar a charada usada para que ela vá para o fim da fila
         await updateDoc(doc(firestore, 'riddles', riddle.id), {
             lastUsedAt: serverTimestamp()
         });
