@@ -3,7 +3,6 @@ import { ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, Webho
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, query, where, getDocs, writeBatch, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
 import { getAvailableRaids } from '../../commands/utility/soling.js';
-import { createProfileImage } from '../../utils/createProfileImage.js';
 
 export const customIdPrefix = 'soling';
 
