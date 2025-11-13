@@ -1,5 +1,5 @@
 
-// src/interactions/buttons/soling.js
+// src/interactions/buttons/helpers.js
 import { ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, WebhookClient, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, AttachmentBuilder, ChannelType, OverwriteType } from 'discord.js';
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, query, where, getDocs, writeBatch, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
@@ -83,9 +83,15 @@ function createStatusEmbed(requestData, hostUser, hostRobloxId) {
     return embed;
 }
 
-async function handleTypeSelection(interaction, type) {
+export async function handleTypeSelection(interaction, type) {
     try {
-        await interaction.deferUpdate();
+        const isEphemeral = !interaction.replied && !interaction.deferred;
+        if (isEphemeral) {
+            await interaction.deferReply({ ephemeral: true });
+        } else {
+            await interaction.deferUpdate();
+        }
+
         const categorizedRaids = getAvailableRaids();
         const components = [];
 
@@ -108,11 +114,11 @@ async function handleTypeSelection(interaction, type) {
         });
 
         if (components.length === 0) {
-            return interaction.followUp({ content: 'Não há raids disponíveis para selecionar no momento.', ephemeral: true });
+            return interaction.editReply({ content: 'Não há raids disponíveis para selecionar no momento.', components: [] });
         }
         
         await interaction.editReply({
-            content: 'Agora, selecione a raid:',
+            content: 'Selecione a raid:',
             components,
             ephemeral: true,
         });
@@ -425,17 +431,17 @@ async function handleConfirm(interaction, requestId, ownerId) {
             await handleManageMembers(interaction, requestId, ownerId, true);
         } else {
              // Ação de usuário comum: confirmar presença
-            await interaction.deferUpdate();
+            await interaction.deferReply({ ephemeral: true });
             const newUser = { userId: interaction.user.id, username: interaction.user.username };
             const requestSnap = await getDoc(requestRef);
             if (!requestSnap.exists() || requestSnap.data().status !== 'active') {
-                return interaction.followUp({ content: 'Este pedido de /soling não está mais ativo.', ephemeral: true });
+                return interaction.editReply({ content: 'Este pedido de /soling não está mais ativo.' });
             }
 
             const requestData = requestSnap.data();
             const confirmedUsers = requestData?.confirmedUsers || [];
             if (confirmedUsers.some(u => u.userId === newUser.userId)) {
-                return interaction.followUp({ content: 'Você já confirmou sua presença.', ephemeral: true });
+                return interaction.editReply({ content: 'Você já confirmou sua presença.' });
             }
 
             await updateDoc(requestRef, {
@@ -450,7 +456,10 @@ async function handleConfirm(interaction, requestId, ownerId) {
             const userSnap = await getDoc(doc(firestore, 'users', ownerId));
             const robloxId = userSnap.exists() ? userSnap.data().robloxId : null;
             const updatedEmbed = createStatusEmbed(updatedData, owner, robloxId);
-            await interaction.message.edit({ embeds: [updatedEmbed] });
+            
+            // Busca a mensagem original do webhook para editar
+            const originalWebhookClient = new WebhookClient({ url: updatedData.webhookUrl });
+            await originalWebhookClient.editMessage(updatedData.messageId, { embeds: [updatedEmbed] });
 
 
             if (owner) {
@@ -464,12 +473,12 @@ async function handleConfirm(interaction, requestId, ownerId) {
                     }
                 }
             }
-            await interaction.followUp({ content: 'Sua presença foi confirmada! O anúncio foi atualizado.', ephemeral: true });
+            await interaction.editReply({ content: 'Sua presença foi confirmada! O anúncio foi atualizado.' });
         }
     
     } catch (error) {
          console.error("Erro em handleConfirm:", error);
-         await interaction.followUp({ content: 'Ocorreu um erro ao confirmar presença.', ephemeral: true }).catch(console.error);
+         await interaction.editReply({ content: 'Ocorreu um erro ao confirmar presença.' }).catch(console.error);
     }
 }
 
@@ -606,7 +615,7 @@ async function handleToggleUserConfirmation(interaction, requestId, ownerId) {
             const voiceChannel = await interaction.client.channels.fetch(requestData.voiceChannelId).catch(()=>null);
             if(voiceChannel) await voiceChannel.permissionOverwrites.delete(userToRemove.id);
 
-            const thread = await interaction.channel.threads.fetch(requestData.threadId).catch(()=>null);
+            const thread = await interaction.client.channels.fetch(requestData.threadId).catch(()=>null);
             if(thread) await thread.members.remove(userToRemove.id);
         }
     } 
@@ -626,7 +635,7 @@ async function handleToggleUserConfirmation(interaction, requestId, ownerId) {
         await webhookClient.editMessage(messageId, { embeds: [updatedEmbed] }).catch(e => console.error("Falha ao editar mensagem do webhook:", e));
     }
 
-    await interaction.followUp({ content: `Presença de ${userObject.username} foi removida.`, ephemeral: true });
+    await interaction.editReply({ content: `Presença de ${userObject.username} foi removida.`, ephemeral: true });
 }
 
 async function cleanupRaidResources(client, requestData, batch) {
@@ -679,13 +688,13 @@ async function handleFinish(interaction, requestId, ownerId) {
 
         if (requestSnap.exists() && requestSnap.data().status === 'active') {
             await cleanupRaidResources(interaction.client, requestSnap.data());
-             await interaction.followUp({ content: 'Seu anúncio foi finalizado e os canais associados foram removidos.', ephemeral: true });
+             await interaction.editReply({ content: 'Seu anúncio foi finalizado e os canais associados foram removidos.', ephemeral: true });
         } else {
-             await interaction.followUp({ content: 'Este anúncio já foi finalizado.', ephemeral: true });
+             await interaction.editReply({ content: 'Este anúncio já foi finalizado.', ephemeral: true });
         }
     } catch(e) {
         console.warn(`Não foi possível finalizar o anúncio (Request ID: ${requestId}):`, e.message);
-        await interaction.followUp({ content: 'Não foi possível encontrar ou remover o anúncio. Ele pode já ter sido removido.', ephemeral: true }).catch(console.error);
+        await interaction.editReply({ content: 'Não foi possível encontrar ou remover o anúncio. Ele pode já ter sido removido.', ephemeral: true }).catch(console.error);
     }
 }
 
@@ -699,8 +708,8 @@ export async function handleInteraction(interaction, container) {
             const requestId = params[0];
             const ownerId = params[1];
 
-            if (action === 'type') {
-                await handleTypeSelection(interaction, requestId); // requestId aqui é o 'type'
+            if (action === 'type') { // Esta ação não é mais usada diretamente pelo usuário
+                await handleTypeSelection(interaction, requestId); 
             } else if (action === 'confirm') {
                 await handleConfirm(interaction, requestId, ownerId);
             } else if (action === 'finish') {

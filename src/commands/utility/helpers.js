@@ -1,6 +1,7 @@
 
 // src/commands/utility/helpers.js
-import { SlashCommandBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder } from 'discord.js';
+import { SlashCommandBuilder } from 'discord.js';
+import { handleTypeSelection } from '../../interactions/buttons/helpers.js';
 
 const ALLOWED_CHANNEL_ID = '1429260519151501483';
 
@@ -14,21 +15,8 @@ export async function execute(interaction) {
     }
     
     try {
-        const helpButton = new ActionRowBuilder()
-            .addComponents(
-                new ButtonBuilder()
-                    .setCustomId('soling_type_help')
-                    .setLabel('Preciso de Ajuda')
-                    .setStyle(ButtonStyle.Primary)
-                    .setEmoji('🙋‍♂️'),
-            );
-
-        await interaction.reply({
-            content: 'Clique no botão abaixo para selecionar a raid para a qual você precisa de ajuda.',
-            components: [helpButton],
-            ephemeral: true
-        });
-
+        // Pula a seleção de botão e vai direto para a seleção de raid
+        await handleTypeSelection(interaction, 'help');
     } catch (error) {
         console.error('Erro no comando /helpers (execute):', error);
          if (interaction.replied || interaction.deferred) {
