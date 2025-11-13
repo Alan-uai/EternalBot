@@ -1,3 +1,4 @@
+
 // src/commands/utility/soling.js
 import { SlashCommandBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, StringSelectMenuBuilder } from 'discord.js';
 import { lobbyDungeonsArticle } from '../../data/wiki-articles/lobby-dungeons.js';
@@ -11,7 +12,7 @@ const ALLOWED_CHANNEL_IDS = ['1429295597374144563', '1426957344897761282', '1429
 
 export const data = new SlashCommandBuilder()
     .setName('soling')
-    .setDescription('Procura ou oferece ajuda para solar raids.');
+    .setDescription('Oferece ajuda para solar raids (cria um anúncio de host).');
 
 export function getAvailableRaids() {
     const allRaids = new Map();
@@ -129,13 +130,9 @@ export async function execute(interaction) {
     }
     
     try {
-        const initialButtons = new ActionRowBuilder()
+        // Direto para o fluxo de hosting
+        const hostingButton = new ActionRowBuilder()
             .addComponents(
-                new ButtonBuilder()
-                    .setCustomId('soling_type_help')
-                    .setLabel('Preciso de Ajuda')
-                    .setStyle(ButtonStyle.Primary)
-                    .setEmoji('🙋‍♂️'),
                 new ButtonBuilder()
                     .setCustomId('soling_type_hosting')
                     .setLabel('Vou Solar (Hosting)')
@@ -144,8 +141,8 @@ export async function execute(interaction) {
             );
 
         await interaction.reply({
-            content: 'O que você gostaria de fazer?',
-            components: [initialButtons],
+            content: 'Clique no botão abaixo para criar seu anúncio de host.',
+            components: [hostingButton],
             ephemeral: true
         });
 
