@@ -1,7 +1,6 @@
 // src/services/imageGenerationService.js
 import { createCanvas, loadImage } from 'canvas';
 import { createBirthdayCard } from '../utils/createBirthdayCard.js';
-import { createProfileImage } from '../utils/createProfileImage.js';
 import { createScheduleImage } from '../utils/createScheduleImage.js';
 import { createTableImage } from '../utils/createTableImage.js';
 
@@ -13,10 +12,6 @@ export class ImageGenerationService {
 
     async createBirthdayCard(userName, message) {
         return createBirthdayCard(userName, message, this.assetService);
-    }
-
-    async createProfileImage(userData, discordUser) {
-        return createProfileImage(userData, discordUser, this.assetService);
     }
 
     async createScheduleImage(farms) {
