@@ -72,9 +72,9 @@ export async function loadJobs(container) {
                 run: runJob,
                 stop: () => { if(task.stop) task.stop() },
             });
-            // Execute o job uma vez na inicialização, se for um painel
-            if(jobModule.name.includes('Panel')) {
-                runJob();
+            // Execute o job uma vez na inicialização, se for um painel ou post automático
+            if(jobModule.name.includes('Panel') || jobModule.name.includes('commandPanel')) {
+                setTimeout(runJob, 5000); // Adiciona um pequeno delay para garantir que o cliente está pronto
             }
 
         } catch (err) {

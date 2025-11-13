@@ -20,6 +20,8 @@ async function initializeWebhooks(client) {
         { name: 'Anunciador de Raids', channelId: config.RAID_CHANNEL_ID, docId: 'raidAnnouncer' },
         { name: 'Painel de Status das Raids', channelId: config.RAID_CHANNEL_ID, docId: 'raidPanel' },
         { name: 'Update Log', channelId: config.UPDLOG_CHANNEL_ID, docId: 'updlog' },
+        { name: 'Comandos do Bot', channelId: config.COMMANDS_CHANNEL_ID, docId: 'commandPanel' },
+        { name: 'Gerenciador de Voz', channelId: config.VOICE_PANEL_CHANNEL_ID, docId: 'voiceChannelPanel' },
         { name: 'Códigos Ativos do Jogo', channelId: config.CODES_CHANNEL_ID, docId: 'gameCodes' },
         { name: 'Anunciador de Farms', channelId: config.FARMING_PANEL_CHANNEL_ID, docId: 'farmAnnouncer' },
         { name: 'Painel de Farms', channelId: config.FARMING_PANEL_CHANNEL_ID, docId: 'farmingPanel' },
@@ -34,7 +36,7 @@ async function initializeWebhooks(client) {
         const webhookDocRef = doc(firestore, 'bot_config', webhookConfig.docId);
         
         try {
-            const channel = await client.channels.fetch(webhookConfig.channelId);
+            const channel = await client.channels.fetch(webhookConfig.channelId).catch(() => null);
             if (!channel || (channel.type !== ChannelType.GuildText && channel.type !== ChannelType.GuildAnnouncement)) {
                 logger.error(`[WebhookManager] Canal com ID ${webhookConfig.channelId} para '${webhookConfig.name}' não é um canal de texto ou anúncio válido.`);
                 continue;
