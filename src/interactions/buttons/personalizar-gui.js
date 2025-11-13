@@ -16,7 +16,7 @@ export const SELECT_LANGUAGE_ID = `${customIdPrefix}_select_language`;
 export const SELECT_EMOJI_ID = `${customIdPrefix}_select_emoji`;
 export const TOGGLE_CONTEXT_ID = `${customIdPrefix}_toggle_context`;
 
-async function openAIPanel(interaction) {
+export async function openAIPanel(interaction) {
     const { firestore } = initializeFirebase();
     const userRef = doc(firestore, 'users', interaction.user.id);
     const userSnap = await getDoc(userRef);
