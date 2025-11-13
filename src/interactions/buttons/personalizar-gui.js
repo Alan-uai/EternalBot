@@ -9,47 +9,64 @@ import { emojiStyles } from '../../ai/emoji-styles.js';
 
 export const customIdPrefix = 'personalize';
 
-export const CUSTOMIZE_AI_BUTTON_ID = `${customIdPrefix}_open`;
-export const SELECT_STYLE_ID = `${customIdPrefix}_select_style`;
-export const SELECT_PERSONA_ID = `${customIdPrefix}_select_persona`;
-export const SELECT_LANGUAGE_ID = `${customIdPrefix}_select_language`;
-export const SELECT_EMOJI_ID = `${customIdPrefix}_select_emoji`;
-export const TOGGLE_CONTEXT_ID = `${customIdPrefix}_toggle_context`;
+const SELECT_STYLE_ID = `${customIdPrefix}_select_style`;
+const SELECT_PERSONA_ID = `${customIdPrefix}_select_persona`;
+const SELECT_LANGUAGE_ID = `${customIdPrefix}_select_language`;
+const SELECT_EMOJI_ID = `${customIdPrefix}_select_emoji`;
+const TOGGLE_CONTEXT_ID = `${customIdPrefix}_toggle_context`;
+const SAVE_CHANGES_ID = `${customIdPrefix}_save`;
+const DISCARD_CHANGES_ID = `${customIdPrefix}_discard`;
 
-export async function openAIPanel(interaction) {
+// Helper para obter as preferências (salvas ou temporárias)
+async function getUserPreferences(interaction) {
+    const { client } = interaction;
     const { firestore } = initializeFirebase();
-    const userRef = doc(firestore, 'users', interaction.user.id);
-    const userSnap = await getDoc(userRef);
+    const userId = interaction.user.id;
 
-    let userData = userSnap.exists() ? userSnap.data() : null;
-
-    if (!userSnap.exists()) {
-        const newUserProfile = {
-            id: interaction.user.id,
-            username: interaction.user.username,
-            reputationPoints: 0,
-            credits: 0,
-            createdAt: serverTimestamp(),
-            aiResponsePreference: 'detailed',
-            aiPersonality: 'amigavel',
-            aiLanguage: 'pt_br',
-            aiEmojiPreference: 'moderate',
-            aiUseProfileContext: false,
-        };
-        await setDoc(userRef, newUserProfile);
-        userData = newUserProfile;
+    // 1. Verifica se há alterações pendentes na memória
+    const tempPrefs = client.container.interactions.get(`temp_prefs_${userId}`);
+    if (tempPrefs) {
+        return tempPrefs;
     }
 
-    const currentStyle = userData.aiResponsePreference || 'detailed';
-    const currentPersona = userData.aiPersonality || 'amigavel';
-    const currentLanguage = userData.aiLanguage || 'pt_br';
-    const currentEmoji = userData.aiEmojiPreference || 'moderate';
-    const useContext = userData.aiUseProfileContext || false;
+    // 2. Se não, busca as preferências salvas no Firestore
+    const userRef = doc(firestore, 'users', userId);
+    const userSnap = await getDoc(userRef);
+
+    if (userSnap.exists()) {
+        return userSnap.data();
+    }
+
+    // 3. Se não existe no Firestore, cria um perfil padrão (não salva ainda, só retorna o objeto)
+    return {
+        aiResponsePreference: 'detailed',
+        aiPersonality: 'amigavel',
+        aiLanguage: 'pt_br',
+        aiEmojiPreference: 'moderate',
+        aiUseProfileContext: false,
+    };
+}
+
+
+export async function openAIPanel(interaction, isUpdate = false) {
+    const prefs = await getUserPreferences(interaction);
+    const tempPrefs = interaction.client.container.interactions.get(`temp_prefs_${interaction.user.id}`);
+    const hasPendingChanges = !!tempPrefs;
+
+
+    const currentStyle = prefs.aiResponsePreference || 'detailed';
+    const currentPersona = prefs.aiPersonality || 'amigavel';
+    const currentLanguage = prefs.aiLanguage || 'pt_br';
+    const currentEmoji = prefs.aiEmojiPreference || 'moderate';
+    const useContext = prefs.aiUseProfileContext === true;
 
     const embed = new EmbedBuilder()
-        .setColor(0x5865F2)
+        .setColor(hasPendingChanges ? 0xFFA500 : 0x5865F2) // Laranja se houver mudanças, azul senão
         .setTitle('🤖 Personalização do Assistente Gui')
-        .setDescription('Ajuste como o Gui interage com você. Suas preferências são salvas automaticamente.')
+        .setDescription(hasPendingChanges 
+            ? '**Você tem alterações não salvas!** Use os menus para mudar e clique em "Salvar" para aplicar.'
+            : 'Ajuste como o Gui interage com você. Suas preferências são salvas ao clicar no botão "Salvar".'
+        )
         .addFields(
             { name: 'Estilo da Resposta', value: `Atual: **${responseStyles[currentStyle]?.name || 'Padrão'}**`, inline: true },
             { name: 'Personalidade', value: `Atual: **${personas[currentPersona]?.name || 'Padrão'}**`, inline: true },
@@ -95,75 +112,139 @@ export async function openAIPanel(interaction) {
     const contextButton = new ButtonBuilder()
         .setCustomId(TOGGLE_CONTEXT_ID)
         .setLabel(`Usar dados do perfil: ${useContext ? 'Sim' : 'Não'}`)
-        .setStyle(useContext ? ButtonStyle.Success : ButtonStyle.Danger)
+        .setStyle(useContext ? ButtonStyle.Success : ButtonStyle.Secondary)
         .setEmoji(useContext ? '✅' : '❌');
+        
+    const saveButton = new ButtonBuilder()
+        .setCustomId(SAVE_CHANGES_ID)
+        .setLabel('Salvar Alterações')
+        .setStyle(ButtonStyle.Success)
+        .setEmoji('💾')
+        .setDisabled(!hasPendingChanges); // Desabilita se não houver mudanças
 
-    await interaction.reply({
+    const discardButton = new ButtonBuilder()
+        .setCustomId(DISCARD_CHANGES_ID)
+        .setLabel('Descartar')
+        .setStyle(ButtonStyle.Danger)
+        .setEmoji('✖️')
+        .setDisabled(!hasPendingChanges);
+
+    const replyOptions = {
         embeds: [embed],
         components: [
             new ActionRowBuilder().addComponents(styleMenu),
             new ActionRowBuilder().addComponents(personaMenu),
             new ActionRowBuilder().addComponents(languageMenu),
             new ActionRowBuilder().addComponents(emojiMenu),
-            new ActionRowBuilder().addComponents(contextButton)
+            new ActionRowBuilder().addComponents(contextButton, saveButton, discardButton)
         ],
         ephemeral: true,
-    });
-}
-
-async function handleSelection(interaction, field) {
-    await interaction.deferUpdate();
-    const { firestore } = initializeFirebase();
-    const userRef = doc(firestore, 'users', interaction.user.id);
-    const selectedValue = interaction.values[0];
-
-    try {
-        await updateDoc(userRef, { [field]: selectedValue });
-        await openAIPanel(interaction); // Reabre o painel com os valores atualizados
-    } catch (e) {
-        if (e.code === 5) { // NOT_FOUND error, user doc doesn't exist
-            await openAIPanel(interaction); // Cria o perfil e reabre
-        } else {
-            console.error(`Erro ao atualizar campo ${field}:`, e);
-            await interaction.followUp({ content: 'Ocorreu um erro ao salvar sua preferência.', ephemeral: true });
-        }
+    };
+    
+    if (isUpdate) {
+        await interaction.update(replyOptions);
+    } else {
+        await interaction.reply(replyOptions);
     }
 }
+
+async function handleSelectionChange(interaction, field) {
+    await interaction.deferUpdate();
+    const { client } = interaction;
+    const userId = interaction.user.id;
+    const selectedValue = interaction.values[0];
+
+    // Pega as preferências atuais (salvas ou temporárias)
+    const currentPrefs = await getUserPreferences(interaction);
+    
+    // Atualiza o valor na cópia temporária
+    currentPrefs[field] = selectedValue;
+
+    // Armazena a cópia modificada na memória
+    client.container.interactions.set(`temp_prefs_${userId}`, currentPrefs);
+    
+    // Reabre o painel para refletir a mudança pendente
+    await openAIPanel(interaction, true);
+}
+
 
 async function handleToggleContext(interaction) {
     await interaction.deferUpdate();
-    const { firestore } = initializeFirebase();
-    const userRef = doc(firestore, 'users', interaction.user.id);
-    const userSnap = await getDoc(userRef);
-    const currentStatus = userSnap.exists() ? userSnap.data().aiUseProfileContext || false : false;
+    const { client } = interaction;
+    const userId = interaction.user.id;
 
+    const currentPrefs = await getUserPreferences(interaction);
+    currentPrefs.aiUseProfileContext = !currentPrefs.aiUseProfileContext;
+
+    client.container.interactions.set(`temp_prefs_${userId}`, currentPrefs);
+    
+    await openAIPanel(interaction, true);
+}
+
+
+async function handleSaveChanges(interaction) {
+    await interaction.deferReply({ ephemeral: true });
+    const { client } = interaction;
+    const { firestore } = initializeFirebase();
+    const userId = interaction.user.id;
+
+    const tempPrefs = client.container.interactions.get(`temp_prefs_${userId}`);
+    if (!tempPrefs) {
+        return interaction.editReply({ content: 'Nenhuma alteração para salvar.', components: [] });
+    }
+
+    const userRef = doc(firestore, 'users', userId);
+    
     try {
-        await updateDoc(userRef, { aiUseProfileContext: !currentStatus });
-        await openAIPanel(interaction);
-    } catch (e) {
-         if (e.code === 5) {
-            await openAIPanel(interaction);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists()) {
+            await updateDoc(userRef, tempPrefs);
         } else {
-            console.error(`Erro ao alternar contexto do perfil:`, e);
-            await interaction.followUp({ content: 'Ocorreu um erro ao salvar sua preferência.', ephemeral: true });
+            // Se o usuário não existe, cria o documento com as preferências e campos padrão
+            const newUserProfile = {
+                ...tempPrefs,
+                id: userId,
+                username: interaction.user.username,
+                reputationPoints: 0,
+                credits: 0,
+                createdAt: serverTimestamp(),
+            };
+            await setDoc(userRef, newUserProfile);
         }
+
+        // Limpa as alterações temporárias
+        client.container.interactions.delete(`temp_prefs_${userId}`);
+        
+        await interaction.editReply({ content: '✅ Suas preferências foram salvas com sucesso!' });
+
+    } catch (error) {
+        console.error("Erro ao salvar preferências:", error);
+        await interaction.editReply({ content: 'Ocorreu um erro ao salvar suas preferências.' });
     }
 }
+
+async function handleDiscardChanges(interaction) {
+    interaction.client.container.interactions.delete(`temp_prefs_${interaction.user.id}`);
+    await openAIPanel(interaction, true);
+}
+
 
 export async function handleInteraction(interaction, container) {
     const customId = interaction.customId;
 
-    if (customId === CUSTOMIZE_AI_BUTTON_ID) {
-        await openAIPanel(interaction);
-    } else if (customId === SELECT_STYLE_ID) {
-        await handleSelection(interaction, 'aiResponsePreference');
+    if (customId === SELECT_STYLE_ID) {
+        await handleSelectionChange(interaction, 'aiResponsePreference');
     } else if (customId === SELECT_PERSONA_ID) {
-        await handleSelection(interaction, 'aiPersonality');
+        await handleSelectionChange(interaction, 'aiPersonality');
     } else if (customId === SELECT_LANGUAGE_ID) {
-        await handleSelection(interaction, 'aiLanguage');
+        await handleSelectionChange(interaction, 'aiLanguage');
     } else if (customId === SELECT_EMOJI_ID) {
-        await handleSelection(interaction, 'aiEmojiPreference');
+        await handleSelectionChange(interaction, 'aiEmojiPreference');
     } else if (customId === TOGGLE_CONTEXT_ID) {
         await handleToggleContext(interaction);
+    } else if (customId === SAVE_CHANGES_ID) {
+        await handleSaveChanges(interaction);
+    } else if (customId === DISCARD_CHANGES_ID) {
+        await handleDiscardChanges(interaction);
     }
 }
