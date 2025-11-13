@@ -32,11 +32,27 @@ Para raids como **Titan Defense** e **Progression Raid**, o HP dos inimigos aume
     *   HP Inicial (Sala 1): 57.2 DD (5.72e40)
     *   HP Final (Sala 1000): 12.3 SeV (1.23e82)
 
-**Exemplo de Uso:** Para calcular o DPS necessário para a sala 500 da Titan Defense, a IA primeiro calcularia o HP dessa sala usando a fórmula e depois dividiria o resultado por 30 para obter uma estimativa de DPS para uma luta de 30 segundos.
-
 A **Mundo Raid**, localizada no Lobby 2, é desbloqueada junto com o Mundo 21. Sua mecânica é similar à da Gleam Raid: cada onda completada é uma conquista que concede um nível de um poder exclusivo da raid (do comum ao supremo), além de uma conquista final que recompensa com créditos.`,
   tags: ['raid', 'dungeon', 'energia', 'guia', 'geral', 'solo', 'damage avatar'],
   imageUrl: 'wiki-11',
+  progressionFormulas: {
+      titanDefense: {
+          type: 'exponential',
+          initialHp: 7.62e51,
+          finalHp: 1.63e93,
+          initialWave: 1,
+          finalWave: 1000,
+          description: 'O HP da Titan Defense cresce exponencialmente. Use a fórmula: HP(sala) = HP_inicial * (HP_final / HP_inicial)^((sala - 1) / 999).'
+      },
+      progressionRaid: {
+          type: 'exponential',
+          initialHp: 5.72e40,
+          finalHp: 1.23e82,
+          initialWave: 1,
+          finalWave: 1000,
+          description: 'O HP da Progression Raid cresce exponencialmente. Use a fórmula: HP(sala) = HP_inicial * (HP_final / HP_inicial)^((sala - 1) / 999).'
+      }
+  },
   tables: {
     damageAvatars: {
         headers: ['Origem', 'Stats', 'Obtenção'],
