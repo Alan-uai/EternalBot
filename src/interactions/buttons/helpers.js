@@ -1,9 +1,8 @@
-
 // src/interactions/buttons/helpers.js
 import { ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, WebhookClient, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, AttachmentBuilder, ChannelType, OverwriteType } from 'discord.js';
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, query, where, getDocs, writeBatch, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
-import { getAvailableRaids } from '../../commands/utility/soling.js';
+import { getAvailableRaids } from '../../utils/raid-data.js';
 
 export const customIdPrefix = 'soling';
 
@@ -89,7 +88,8 @@ export async function handleTypeSelection(interaction, type) {
         if (isEphemeral) {
             await interaction.deferReply({ ephemeral: true });
         } else {
-            await interaction.deferUpdate();
+            // Se já foi deferida (provavelmente pelo comando), não fazemos nada aqui
+            // Apenas prosseguimos para editar a resposta.
         }
 
         const categorizedRaids = getAvailableRaids();

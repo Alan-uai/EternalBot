@@ -2,7 +2,7 @@
 import { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, StringSelectMenuBuilder, EmbedBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { doc, updateDoc, getDoc, collection, query, where, getDocs, deleteDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
-import { getAvailableRaids } from '../../commands/utility/soling.js';
+import { getAvailableRaids } from '../../utils/raid-data.js';
 import { execute as executeDungeonConfig } from '../../commands/utility/dungeonconfig.js';
 
 // Adicionando a constante que estava faltando

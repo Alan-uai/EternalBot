@@ -1,4 +1,3 @@
-
 // src/commands/utility/soling.js
 import { SlashCommandBuilder } from 'discord.js';
 import { handleTypeSelection } from '../../interactions/buttons/helpers.js';

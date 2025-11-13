@@ -1,6 +1,6 @@
 // src/interactions/selects/farming.js
 import { ActionRowBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
-import { getAvailableRaids } from '../../commands/utility/soling.js';
+import { getAvailableRaids } from '../../utils/raid-data.js';
 import { collection, addDoc, serverTimestamp, getDoc, doc, updateDoc, arrayUnion, arrayRemove, getDocs, where, query } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
 
