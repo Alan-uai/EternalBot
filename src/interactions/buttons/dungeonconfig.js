@@ -197,7 +197,7 @@ async function openNotificationsPanel(interaction, isUpdate = false) {
             
         components.push(new ActionRowBuilder().addComponents(hostSelect));
     } else {
-        embed.addFields({name: 'Hosts Seguidos', value: 'Você não segue nenhum host. Use o botão "Seguir" no perfil de outros jogadores.'});
+        embed.addFields({name: 'Hosts Seguidos', value: 'Você não segue nenhum host. Use o comando `/seguir` para começar.'});
     }
 
     const replyOptions = { embeds: [embed], components, ephemeral: true };

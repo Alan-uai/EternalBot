@@ -87,9 +87,12 @@ export async function handleTypeSelection(interaction, type) {
         const isEphemeral = !interaction.replied && !interaction.deferred;
         if (isEphemeral) {
             await interaction.deferReply({ ephemeral: true });
+        } else if (interaction.deferred) {
+            // Se já foi adiada, não tentamos adiar novamente.
         } else {
-            // Se já foi deferida (provavelmente pelo comando), não fazemos nada aqui
-            // Apenas prosseguimos para editar a resposta.
+             // Se já foi respondida, tentamos editar, mas se falhar, não é crítico.
+             // O mais importante é enviar a nova mensagem.
+             await interaction.deferUpdate().catch(()=>{});
         }
 
         const categorizedRaids = getAvailableRaids();

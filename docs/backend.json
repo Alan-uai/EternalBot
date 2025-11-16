@@ -188,6 +188,11 @@
             "type": "string",
             "description": "A custom name the user wants the AI to call them."
         },
+        "following": {
+          "type": "array",
+          "description": "A list of user IDs that this user is following.",
+          "items": { "type": "string" }
+        },
         "dungeonSettings": {
             "type": "object",
             "description": "User preferences for dungeon finder messages.",
