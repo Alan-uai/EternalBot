@@ -1,6 +1,7 @@
 // src/interactions/buttons/seguir.js
 import { doc, getDoc, updateDoc, arrayUnion, arrayRemove, setDoc, serverTimestamp } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 
 export const customIdPrefix = 'seguir';
 
@@ -22,40 +23,37 @@ async function getOrCreateUserProfile(userId, username) {
     return userSnap;
 }
 
-
-async function handleToggle(interaction, targetUserId) {
-    await interaction.deferReply({ ephemeral: true });
+async function handleConfirm(interaction, targetUserId) {
+    await interaction.deferUpdate(); // Acknowledges the interaction, allowing for more time to process
 
     const currentUser = interaction.user;
-    
     const { firestore } = initializeFirebase();
     const currentUserRef = doc(firestore, 'users', currentUser.id);
 
     try {
         const currentUserSnap = await getOrCreateUserProfile(currentUser.id, currentUser.username);
+        const targetUser = await interaction.client.users.fetch(targetUserId);
+        
         const followingList = currentUserSnap.data()?.following || [];
-        const isFollowing = followingList.includes(targetUserId);
         
-        let responseMessage;
-
-        if (isFollowing) {
+        if (followingList.includes(targetUserId)) {
+            // Already following, so let's unfollow
             await updateDoc(currentUserRef, { following: arrayRemove(targetUserId) });
-            responseMessage = `Você deixou de seguir este usuário.`;
+            await interaction.editReply({ 
+                content: `Você deixou de seguir **${targetUser.username}**.`,
+                components: []
+            });
         } else {
+            // Not following, so let's follow
             await updateDoc(currentUserRef, { following: arrayUnion(targetUserId) });
-            responseMessage = `Você agora está seguindo este usuário!`;
+            await interaction.editReply({ 
+                content: `Agora você está seguindo **${targetUser.username}**!`,
+                components: []
+            });
         }
-
-        await interaction.editReply({ content: responseMessage });
-        
-        // Atualiza a mensagem original para refletir a mudança no botão (opcional, mas bom UX)
-        const updatedButton = interaction.message.components[0].components[0].setLabel(isFollowing ? 'Seguir Host' : 'Deixar de Seguir').setStyle(isFollowing ? 'Success' : 'Danger');
-        await interaction.message.edit({ components: [new ActionRowBuilder().addComponents(updatedButton)] });
-
-
     } catch (error) {
-        console.error("Erro ao processar o botão de seguir/deixar de seguir:", error);
-        await interaction.editReply({ content: 'Ocorreu um erro.' });
+        console.error("Erro ao processar o comando /seguir:", error);
+        await interaction.editReply({ content: 'Ocorreu um erro ao tentar processar sua solicitação.', components: [] });
     }
 }
 
@@ -64,7 +62,9 @@ export async function handleInteraction(interaction, container) {
     const [prefix, action, targetUserId] = interaction.customId.split('_');
     if (prefix !== customIdPrefix) return;
 
-    if (action === 'toggle') {
-        await handleToggle(interaction, targetUserId);
+    if (interaction.isButton()) {
+        if (action === 'confirm') {
+            await handleConfirm(interaction, targetUserId);
+        }
     }
 }
