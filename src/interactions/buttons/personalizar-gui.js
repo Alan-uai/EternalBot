@@ -26,18 +26,10 @@ const PANELS = {
         title: 'Personalidade',
         default: 'amigavel'
     },
-    language: {
+    language: { // Chave unificada para ambos os menus de idioma
         id: `${customIdPrefix}_language`,
-        data: officialLanguages,
         field: 'aiLanguage',
-        title: 'Idioma Oficial',
-        default: 'pt_br'
-    },
-    fun_language: {
-        id: `${customIdPrefix}_fun_language`,
-        data: funLanguages,
-        field: 'aiLanguage', // Continua salvando no mesmo campo
-        title: 'Idioma Divertido/Fictício',
+        title: 'Idioma',
         default: 'pt_br'
     },
     emoji: {
@@ -90,34 +82,60 @@ export async function openAIPanel(interaction, panelType) {
 
     const currentSelection = userData[panelConfig.field] || panelConfig.default;
     const allLanguages = { ...officialLanguages, ...funLanguages };
-    const dataSouce = panelType.includes('language') ? allLanguages : panelConfig.data;
 
-
-    const selectMenu = new StringSelectMenuBuilder()
-        .setCustomId(panelConfig.id)
-        .setPlaceholder(`Selecione um(a) ${panelConfig.title}...`)
-        .addOptions(Object.keys(panelConfig.data).map(key => ({
-            label: panelConfig.data[key].name,
-            value: key,
-            default: key === currentSelection
-        })));
-        
     const embed = new EmbedBuilder()
         .setColor(0x5865F2)
         .setTitle(`🎨 Personalizar ${panelConfig.title}`)
-        .setDescription(`Sua configuração atual é: **${(dataSouce[currentSelection] || dataSouce[panelConfig.default])?.name}**.\n\nSelecione uma nova opção abaixo. Sua preferência será salva automaticamente.`);
+        .setDescription(`Sua configuração atual é: **${(allLanguages[currentSelection] || panelConfig.data?.[currentSelection])?.name}**.\n\nSelecione uma nova opção abaixo. Sua preferência será salva automaticamente.`);
+        
+    const components = [];
 
+    // Lógica especial para o painel de idiomas unificado
+    if (panelType === 'language') {
+        const officialMenu = new StringSelectMenuBuilder()
+            .setCustomId(PANELS.language.id) // Mesmo ID para ambos usarem o mesmo handler
+            .setPlaceholder('Selecione um idioma oficial...')
+            .addOptions(Object.keys(officialLanguages).map(key => ({
+                label: officialLanguages[key].name,
+                value: key,
+                default: key === currentSelection
+            })));
+        components.push(new ActionRowBuilder().addComponents(officialMenu));
+        
+        const funMenu = new StringSelectMenuBuilder()
+            .setCustomId(PANELS.language.id) // Mesmo ID
+            .setPlaceholder('Ou escolha um idioma divertido/fictício...')
+            .addOptions(Object.keys(funLanguages).map(key => ({
+                label: funLanguages[key].name,
+                value: key,
+                default: key === currentSelection
+            })));
+        components.push(new ActionRowBuilder().addComponents(funMenu));
+
+    } else {
+        // Lógica para todos os outros painéis
+        const selectMenu = new StringSelectMenuBuilder()
+            .setCustomId(panelConfig.id)
+            .setPlaceholder(`Selecione um(a) ${panelConfig.title}...`)
+            .addOptions(Object.keys(panelConfig.data).map(key => ({
+                label: panelConfig.data[key].name,
+                value: key,
+                default: key === currentSelection
+            })));
+        components.push(new ActionRowBuilder().addComponents(selectMenu));
+    }
+        
     // Se a interação é uma resposta a um comando, use reply. Se for uma atualização, use update.
     if (interaction.isCommand()) {
         await interaction.reply({
             embeds: [embed],
-            components: [new ActionRowBuilder().addComponents(selectMenu)],
+            components: components,
             ephemeral: true,
         });
     } else {
          await interaction.update({
             embeds: [embed],
-            components: [new ActionRowBuilder().addComponents(selectMenu)],
+            components: components,
             ephemeral: true,
         });
     }
@@ -144,18 +162,28 @@ async function handleSelectionChange(interaction, panelType) {
         
         const allData = { ...responseStyles, ...personas, ...officialLanguages, ...funLanguages, ...emojiStyles };
         
-        // Recria o menu com a nova opção padrão para refletir a mudança
-        const updatedMenu = StringSelectMenuBuilder.from(interaction.message.components[0].components[0])
-            .setOptions(Object.keys(panelConfig.data).map(key => ({
-                label: panelConfig.data[key].name,
-                value: key,
-                default: key === selectedValue
-            })));
-        
+        // Atualiza o embed
         const embed = EmbedBuilder.from(interaction.message.embeds[0])
             .setDescription(`Sua configuração de ${panelConfig.title.toLowerCase()} atual é: **${allData[selectedValue]?.name}**.\n\nSua preferência foi salva com sucesso!`);
 
-        await interaction.update({ embeds: [embed], components: [new ActionRowBuilder().addComponents(updatedMenu)] });
+        // Recria os menus com a nova seleção default
+        const updatedComponents = [];
+        if(panelType === 'language') {
+             const officialMenu = StringSelectMenuBuilder.from(interaction.message.components[0].components[0])
+                .setOptions(Object.keys(officialLanguages).map(key => ({ label: officialLanguages[key].name, value: key, default: key === selectedValue })));
+             updatedComponents.push(new ActionRowBuilder().addComponents(officialMenu));
+
+             const funMenu = StringSelectMenuBuilder.from(interaction.message.components[1].components[0])
+                .setOptions(Object.keys(funLanguages).map(key => ({ label: funLanguages[key].name, value: key, default: key === selectedValue })));
+             updatedComponents.push(new ActionRowBuilder().addComponents(funMenu));
+
+        } else {
+            const updatedMenu = StringSelectMenuBuilder.from(interaction.message.components[0].components[0])
+                .setOptions(Object.keys(panelConfig.data).map(key => ({ label: panelConfig.data[key].name, value: key, default: key === selectedValue })));
+            updatedComponents.push(new ActionRowBuilder().addComponents(updatedMenu));
+        }
+
+        await interaction.update({ embeds: [embed], components: updatedComponents });
 
     } catch (error) {
         console.error(`Erro ao salvar preferência de ${panelConfig.title}:`, error);
@@ -224,7 +252,6 @@ async function handleProfileUpdateSubmit(interaction) {
         // Para chamar o execute do perfil, precisamos de um objeto `interaction` que se comporte como um comando,
         // mas como estamos em um modal, vamos apenas confirmar o sucesso.
         // A melhor abordagem seria o usuário rodar /perfil novamente.
-        // Ou podemos tentar atualizar a mensagem original se a tivermos.
         
     } catch (error) {
         console.error("Erro ao atualizar perfil:", error);
@@ -263,5 +290,3 @@ export async function handleInteraction(interaction, container) {
         }
     }
 }
-
-    
