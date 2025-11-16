@@ -152,36 +152,34 @@ async function handleSelectionChange(interaction, panelType) {
     const userRef = doc(firestore, 'users', userId);
 
     try {
-        // Garante que o documento existe antes de tentar atualizar
         await getOrCreateUserProfile(userId, interaction.user.username);
         
-        // Atualiza o campo específico
         await updateDoc(userRef, {
             [panelConfig.field]: selectedValue
         });
         
         const allData = { ...responseStyles, ...personas, ...officialLanguages, ...funLanguages, ...emojiStyles };
         
-        // Atualiza o embed
         const embed = EmbedBuilder.from(interaction.message.embeds[0])
             .setDescription(`Sua configuração de ${panelConfig.title.toLowerCase()} atual é: **${allData[selectedValue]?.name}**.\n\nSua preferência foi salva com sucesso!`);
 
-        // Recria os menus com a nova seleção default
-        const updatedComponents = [];
-        if(panelType === 'language') {
-             const officialMenu = StringSelectMenuBuilder.from(interaction.message.components[0].components[0])
-                .setOptions(Object.keys(officialLanguages).map(key => ({ label: officialLanguages[key].name, value: key, default: key === selectedValue })));
-             updatedComponents.push(new ActionRowBuilder().addComponents(officialMenu));
+        const updatedComponents = interaction.message.components.map(row => {
+            const menuComponent = row.components[0];
+            if (menuComponent.type !== 3) return row; // Se não for um menu, retorna a linha como está
 
-             const funMenu = StringSelectMenuBuilder.from(interaction.message.components[1].components[0])
-                .setOptions(Object.keys(funLanguages).map(key => ({ label: funLanguages[key].name, value: key, default: key === selectedValue })));
-             updatedComponents.push(new ActionRowBuilder().addComponents(funMenu));
+            const menuData = panelType === 'language' 
+                ? (menuComponent.placeholder.includes('oficial') ? officialLanguages : funLanguages)
+                : panelConfig.data;
 
-        } else {
-            const updatedMenu = StringSelectMenuBuilder.from(interaction.message.components[0].components[0])
-                .setOptions(Object.keys(panelConfig.data).map(key => ({ label: panelConfig.data[key].name, value: key, default: key === selectedValue })));
-            updatedComponents.push(new ActionRowBuilder().addComponents(updatedMenu));
-        }
+            const updatedMenu = StringSelectMenuBuilder.from(menuComponent)
+                .setOptions(Object.keys(menuData).map(key => ({
+                    label: menuData[key].name,
+                    value: key,
+                    default: key === selectedValue
+                })));
+            
+            return new ActionRowBuilder().addComponents(updatedMenu);
+        });
 
         await interaction.update({ embeds: [embed], components: updatedComponents });
 
@@ -201,10 +199,8 @@ async function handleProfileContextToggle(interaction) {
 
     await updateDoc(userRef, { aiUseProfileContext: newContextState });
     
-    // Atualiza o painel para refletir a mudança
-    // Reexecuta a lógica do comando /perfil para redesenhar o painel
-     const { execute: executePerfil } = await import('../../commands/utility/perfil.js');
-     await executePerfil(interaction);
+    const { execute: executePerfil } = await import('../../commands/utility/perfil.js');
+    await executePerfil(interaction);
 }
 
 
@@ -247,12 +243,6 @@ async function handleProfileUpdateSubmit(interaction) {
         });
         await interaction.editReply('✅ Seu perfil foi atualizado com sucesso!');
         
-        // Re-mostra o painel do perfil atualizado
-        const { execute: executePerfil } = await import('../../commands/utility/perfil.js');
-        // Para chamar o execute do perfil, precisamos de um objeto `interaction` que se comporte como um comando,
-        // mas como estamos em um modal, vamos apenas confirmar o sucesso.
-        // A melhor abordagem seria o usuário rodar /perfil novamente.
-        
     } catch (error) {
         console.error("Erro ao atualizar perfil:", error);
         await interaction.editReply('❌ Ocorreu um erro ao atualizar seu perfil.');
@@ -263,19 +253,16 @@ async function handleProfileUpdateSubmit(interaction) {
 export async function handleInteraction(interaction, container) {
     const customId = interaction.customId;
 
-    // Roteador para os menus de seleção
     if (interaction.isStringSelectMenu()) {
         const panelType = Object.keys(PANELS).find(key => customId === PANELS[key].id);
         if (panelType) {
             await handleSelectionChange(interaction, panelType);
         }
     }
-    // Roteador para os botões
     else if (interaction.isButton()) {
         if (customId === PROFILE_CONTEXT_TOGGLE_ID) {
-            // Em vez de chamar openAIPanel, vamos chamar a lógica do comando /perfil para redesenhar.
              const { execute } = await import('../../commands/utility/perfil.js');
-             interaction.isCommand = () => false; // Simula que não é um novo comando
+             interaction.isCommand = () => false;
              interaction.update = (options) => interaction.editReply(options);
              await handleProfileContextToggle(interaction);
 
@@ -283,7 +270,6 @@ export async function handleInteraction(interaction, container) {
             await openProfileUpdateModal(interaction);
         }
     }
-    // Roteador para os modais
     else if (interaction.isModalSubmit()) {
         if (customId === PROFILE_UPDATE_MODAL_ID) {
             await handleProfileUpdateSubmit(interaction);
