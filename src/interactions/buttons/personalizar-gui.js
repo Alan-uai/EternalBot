@@ -26,8 +26,8 @@ const PANELS = {
         title: 'Personalidade',
         default: 'amigavel'
     },
-    language: { // Chave unificada para ambos os menus de idioma
-        id: `${customIdPrefix}_language`,
+    language: { 
+        id_prefix: `${customIdPrefix}_language`, // Usar um prefixo para IDs únicos
         field: 'aiLanguage',
         title: 'Idioma',
         default: 'pt_br'
@@ -76,7 +76,6 @@ async function getOrCreateUserProfile(userId, username) {
 export async function openAIPanel(interaction, panelType) {
     const userData = await getOrCreateUserProfile(interaction.user.id, interaction.user.username);
     
-    // Lógica para os painéis de personalização da IA
     const panelConfig = PANELS[panelType];
     if (!panelConfig) return;
 
@@ -93,7 +92,7 @@ export async function openAIPanel(interaction, panelType) {
     // Lógica especial para o painel de idiomas unificado
     if (panelType === 'language') {
         const officialMenu = new StringSelectMenuBuilder()
-            .setCustomId(PANELS.language.id) // Mesmo ID para ambos usarem o mesmo handler
+            .setCustomId(`${PANELS.language.id_prefix}_official`) // ID Único
             .setPlaceholder('Selecione um idioma oficial...')
             .addOptions(Object.keys(officialLanguages).map(key => ({
                 label: officialLanguages[key].name,
@@ -103,7 +102,7 @@ export async function openAIPanel(interaction, panelType) {
         components.push(new ActionRowBuilder().addComponents(officialMenu));
         
         const funMenu = new StringSelectMenuBuilder()
-            .setCustomId(PANELS.language.id) // Mesmo ID
+            .setCustomId(`${PANELS.language.id_prefix}_fun`) // ID Único
             .setPlaceholder('Ou escolha um idioma divertido/fictício...')
             .addOptions(Object.keys(funLanguages).map(key => ({
                 label: funLanguages[key].name,
@@ -125,7 +124,6 @@ export async function openAIPanel(interaction, panelType) {
         components.push(new ActionRowBuilder().addComponents(selectMenu));
     }
         
-    // Se a interação é uma resposta a um comando, use reply. Se for uma atualização, use update.
     if (interaction.isCommand()) {
         await interaction.reply({
             embeds: [embed],
@@ -141,12 +139,11 @@ export async function openAIPanel(interaction, panelType) {
     }
 }
 
-async function handleSelectionChange(interaction, panelType) {
+async function handleSelectionChange(interaction, panelConfig) {
     const { firestore } = initializeFirebase();
     const userId = interaction.user.id;
     const selectedValue = interaction.values[0];
     
-    const panelConfig = PANELS[panelType];
     if (!panelConfig) return;
 
     const userRef = doc(firestore, 'users', userId);
@@ -163,13 +160,24 @@ async function handleSelectionChange(interaction, panelType) {
         const embed = EmbedBuilder.from(interaction.message.embeds[0])
             .setDescription(`Sua configuração de ${panelConfig.title.toLowerCase()} atual é: **${allData[selectedValue]?.name}**.\n\nSua preferência foi salva com sucesso!`);
 
+        // Atualiza ambos os menus para refletir a seleção correta
         const updatedComponents = interaction.message.components.map(row => {
             const menuComponent = row.components[0];
-            if (menuComponent.type !== 3) return row; // Se não for um menu, retorna a linha como está
+            if (menuComponent.type !== 3) return row; // Ignora se não for um menu de seleção
 
-            const menuData = panelType === 'language' 
-                ? (menuComponent.placeholder.includes('oficial') ? officialLanguages : funLanguages)
-                : panelConfig.data;
+            // Determina qual conjunto de dados usar para este menu
+            let menuData;
+            if (menuComponent.customId.includes('_official')) {
+                menuData = officialLanguages;
+            } else if (menuComponent.customId.includes('_fun')) {
+                menuData = funLanguages;
+            } else {
+                // Para outros painéis que não são de idioma
+                const otherPanelType = Object.keys(PANELS).find(key => menuComponent.customId === PANELS[key].id);
+                menuData = PANELS[otherPanelType]?.data;
+            }
+            
+            if (!menuData) return row; // Se não encontrar dados, mantém o componente original
 
             const updatedMenu = StringSelectMenuBuilder.from(menuComponent)
                 .setOptions(Object.keys(menuData).map(key => ({
@@ -199,7 +207,10 @@ async function handleProfileContextToggle(interaction) {
 
     await updateDoc(userRef, { aiUseProfileContext: newContextState });
     
+    // Recarrega o painel do perfil para mostrar o estado atualizado
     const { execute: executePerfil } = await import('../../commands/utility/perfil.js');
+    interaction.isCommand = () => false; // Simula que não é um novo comando
+    interaction.update = (options) => interaction.editReply(options);
     await executePerfil(interaction);
 }
 
@@ -254,18 +265,14 @@ export async function handleInteraction(interaction, container) {
     const customId = interaction.customId;
 
     if (interaction.isStringSelectMenu()) {
-        const panelType = Object.keys(PANELS).find(key => customId === PANELS[key].id);
-        if (panelType) {
-            await handleSelectionChange(interaction, panelType);
+        const panelTypeKey = Object.keys(PANELS).find(key => customId.startsWith(PANELS[key].id_prefix || PANELS[key].id));
+        if (panelTypeKey) {
+            await handleSelectionChange(interaction, PANELS[panelTypeKey]);
         }
     }
     else if (interaction.isButton()) {
         if (customId === PROFILE_CONTEXT_TOGGLE_ID) {
-             const { execute } = await import('../../commands/utility/perfil.js');
-             interaction.isCommand = () => false;
-             interaction.update = (options) => interaction.editReply(options);
              await handleProfileContextToggle(interaction);
-
         } else if (customId === PROFILE_UPDATE_BUTTON_ID) {
             await openProfileUpdateModal(interaction);
         }
