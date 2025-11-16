@@ -1,5 +1,5 @@
 // src/interactions/buttons/personalizar-gui.js
-import { ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
+import { ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { doc, getDoc, updateDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
 import { personas } from '../../ai/personas.js';
@@ -9,242 +9,252 @@ import { emojiStyles } from '../../ai/emoji-styles.js';
 
 export const customIdPrefix = 'personalize';
 
-const SELECT_STYLE_ID = `${customIdPrefix}_select_style`;
-const SELECT_PERSONA_ID = `${customIdPrefix}_select_persona`;
-const SELECT_LANGUAGE_ID = `${customIdPrefix}_select_language`;
-const SELECT_EMOJI_ID = `${customIdPrefix}_select_emoji`;
-const TOGGLE_CONTEXT_ID = `${customIdPrefix}_toggle_context`;
-const SAVE_CHANGES_ID = `${customIdPrefix}_save`;
-const DISCARD_CHANGES_ID = `${customIdPrefix}_discard`;
-
-// Helper para obter as preferências (salvas ou temporárias)
-async function getUserPreferences(interaction) {
-    const { client } = interaction;
-    const { firestore } = initializeFirebase();
-    const userId = interaction.user.id;
-
-    // 1. Verifica se há alterações pendentes na memória
-    const tempPrefs = client.container.interactions.get(`temp_prefs_${userId}`);
-    if (tempPrefs) {
-        return tempPrefs;
+// Mapeamentos para os IDs e dados
+const PANELS = {
+    style: {
+        id: `${customIdPrefix}_style`,
+        data: responseStyles,
+        field: 'aiResponsePreference',
+        title: 'Estilo de Resposta',
+        default: 'detailed'
+    },
+    persona: {
+        id: `${customIdPrefix}_persona`,
+        data: personas,
+        field: 'aiPersonality',
+        title: 'Personalidade',
+        default: 'amigavel'
+    },
+    language: {
+        id: `${customIdPrefix}_language`,
+        data: languages,
+        field: 'aiLanguage',
+        title: 'Idioma',
+        default: 'pt_br'
+    },
+    emoji: {
+        id: `${customIdPrefix}_emoji`,
+        data: emojiStyles,
+        field: 'aiEmojiPreference',
+        title: 'Uso de Emojis',
+        default: 'moderate'
     }
+};
 
-    // 2. Se não, busca as preferências salvas no Firestore
+const PROFILE_UPDATE_MODAL_ID = `${customIdPrefix}_profile_modal`;
+const PROFILE_UPDATE_BUTTON_ID = `${customIdPrefix}_profile_update`;
+const PROFILE_CONTEXT_TOGGLE_ID = `${customIdPrefix}_profile_context_toggle`;
+
+
+// Função para buscar ou criar um perfil de usuário
+async function getOrCreateUserProfile(userId, username) {
+    const { firestore } = initializeFirebase();
     const userRef = doc(firestore, 'users', userId);
     const userSnap = await getDoc(userRef);
 
     if (userSnap.exists()) {
         return userSnap.data();
     }
-
-    // 3. Se não existe no Firestore, cria um perfil padrão (não salva ainda, só retorna o objeto)
-    return {
+    
+    // Se não existe, cria um perfil com valores padrão
+    const newUserProfile = {
+        id: userId,
+        username,
+        reputationPoints: 0,
+        credits: 0,
+        createdAt: serverTimestamp(),
         aiResponsePreference: 'detailed',
         aiPersonality: 'amigavel',
         aiLanguage: 'pt_br',
         aiEmojiPreference: 'moderate',
         aiUseProfileContext: false,
     };
+    await setDoc(userRef, newUserProfile);
+    return newUserProfile;
 }
 
+export async function openAIPanel(interaction, panelType) {
+    const userData = await getOrCreateUserProfile(interaction.user.id, interaction.user.username);
+    
+    // Lógica específica para o painel de perfil
+    if (panelType === 'profile') {
+        const useContext = userData.aiUseProfileContext === true;
 
-export async function openAIPanel(interaction, isUpdate = false) {
-    const prefs = await getUserPreferences(interaction);
-    const tempPrefs = interaction.client.container.interactions.get(`temp_prefs_${interaction.user.id}`);
-    const hasPendingChanges = !!tempPrefs;
+        const embed = new EmbedBuilder()
+            .setColor(0x1F8B4C)
+            .setTitle('👤 Seu Perfil e Contexto da IA')
+            .setDescription('Gerencie seus dados de jogo e como a IA os utiliza.')
+            .addFields(
+                { name: 'Seu Rank Atual', value: `\`${userData.rank || 'Não definido'}\``, inline: true },
+                { name: 'Seu Mundo Atual', value: `\`${userData.currentWorld || 'Não definido'}\``, inline: true },
+                { name: 'Seu DPS Atual', value: `\`${userData.dps || 'Não definido'}\``, inline: true },
+                { name: 'Uso de Contexto pela IA', value: `**${useContext ? 'Ativado' : 'Desativado'}**\n> Quando ativado, a IA usará seus dados de perfil para dar respostas mais personalizadas.`, inline: false }
+            )
+            .setFooter({ text: 'Use o botão "Atualizar Perfil" para sincronizar seus dados.' });
 
-
-    const currentStyle = prefs.aiResponsePreference || 'detailed';
-    const currentPersona = prefs.aiPersonality || 'amigavel';
-    const currentLanguage = prefs.aiLanguage || 'pt_br';
-    const currentEmoji = prefs.aiEmojiPreference || 'moderate';
-    const useContext = prefs.aiUseProfileContext === true;
-
-    const embed = new EmbedBuilder()
-        .setColor(hasPendingChanges ? 0xFFA500 : 0x5865F2) // Laranja se houver mudanças, azul senão
-        .setTitle('🤖 Personalização do Assistente Gui')
-        .setDescription(hasPendingChanges 
-            ? '**Você tem alterações não salvas!** Use os menus para mudar e clique em "Salvar" para aplicar.'
-            : 'Ajuste como o Gui interage com você. Suas preferências são salvas ao clicar no botão "Salvar".'
-        )
-        .addFields(
-            { name: 'Estilo da Resposta', value: `Atual: **${responseStyles[currentStyle]?.name || 'Padrão'}**`, inline: true },
-            { name: 'Personalidade', value: `Atual: **${personas[currentPersona]?.name || 'Padrão'}**`, inline: true },
-            { name: 'Idioma', value: `Atual: **${languages[currentLanguage]?.name || 'Padrão'}**`, inline: true }
+        const row = new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+                .setCustomId(PROFILE_UPDATE_BUTTON_ID)
+                .setLabel('Atualizar Perfil')
+                .setStyle(ButtonStyle.Primary)
+                .setEmoji('🔄'),
+            new ButtonBuilder()
+                .setCustomId(PROFILE_CONTEXT_TOGGLE_ID)
+                .setLabel(useContext ? 'Desativar Contexto' : 'Ativar Contexto')
+                .setStyle(useContext ? ButtonStyle.Danger : ButtonStyle.Success)
         );
 
-    const styleMenu = new StringSelectMenuBuilder()
-        .setCustomId(SELECT_STYLE_ID)
-        .setPlaceholder('Mudar Estilo de Resposta')
-        .addOptions(Object.keys(responseStyles).map(key => ({
-            label: responseStyles[key].name,
-            value: key,
-            default: key === currentStyle
-        })));
-
-    const personaMenu = new StringSelectMenuBuilder()
-        .setCustomId(SELECT_PERSONA_ID)
-        .setPlaceholder('Mudar Personalidade')
-        .addOptions(Object.keys(personas).map(key => ({
-            label: personas[key].name,
-            value: key,
-            default: key === currentPersona
-        })));
-
-    const languageMenu = new StringSelectMenuBuilder()
-        .setCustomId(SELECT_LANGUAGE_ID)
-        .setPlaceholder('Mudar Idioma da Resposta')
-        .addOptions(Object.keys(languages).map(key => ({
-            label: languages[key].name,
-            value: key,
-            default: key === currentLanguage
-        })));
-        
-    const emojiMenu = new StringSelectMenuBuilder()
-        .setCustomId(SELECT_EMOJI_ID)
-        .setPlaceholder(`Uso de Emojis: ${emojiStyles[currentEmoji]?.name || 'Padrão'}`)
-        .addOptions(Object.keys(emojiStyles).map(key => ({
-            label: emojiStyles[key].name,
-            value: key,
-            default: key === currentEmoji
-        })));
-
-    const contextButton = new ButtonBuilder()
-        .setCustomId(TOGGLE_CONTEXT_ID)
-        .setLabel(`Usar dados do perfil: ${useContext ? 'Sim' : 'Não'}`)
-        .setStyle(useContext ? ButtonStyle.Success : ButtonStyle.Secondary)
-        .setEmoji(useContext ? '✅' : '❌');
-        
-    const saveButton = new ButtonBuilder()
-        .setCustomId(SAVE_CHANGES_ID)
-        .setLabel('Salvar Alterações')
-        .setStyle(ButtonStyle.Success)
-        .setEmoji('💾')
-        .setDisabled(!hasPendingChanges); // Desabilita se não houver mudanças
-
-    const discardButton = new ButtonBuilder()
-        .setCustomId(DISCARD_CHANGES_ID)
-        .setLabel('Descartar')
-        .setStyle(ButtonStyle.Danger)
-        .setEmoji('✖️')
-        .setDisabled(!hasPendingChanges);
-
-    const replyOptions = {
-        embeds: [embed],
-        components: [
-            new ActionRowBuilder().addComponents(styleMenu),
-            new ActionRowBuilder().addComponents(personaMenu),
-            new ActionRowBuilder().addComponents(languageMenu),
-            new ActionRowBuilder().addComponents(emojiMenu),
-            new ActionRowBuilder().addComponents(contextButton, saveButton, discardButton)
-        ],
-        ephemeral: true,
-    };
-    
-    if (isUpdate) {
-        await interaction.update(replyOptions);
-    } else {
-        await interaction.reply(replyOptions);
+        return interaction.reply({ embeds: [embed], components: [row], ephemeral: true });
     }
+
+    // Lógica para os outros painéis de personalização
+    const panelConfig = PANELS[panelType];
+    if (!panelConfig) return;
+
+    const currentSelection = userData[panelConfig.field] || panelConfig.default;
+
+    const selectMenu = new StringSelectMenuBuilder()
+        .setCustomId(panelConfig.id)
+        .setPlaceholder(`Selecione um(a) ${panelConfig.title}...`)
+        .addOptions(Object.keys(panelConfig.data).map(key => ({
+            label: panelConfig.data[key].name,
+            value: key,
+            default: key === currentSelection
+        })));
+        
+    const embed = new EmbedBuilder()
+        .setColor(0x5865F2)
+        .setTitle(`🎨 Personalizar ${panelConfig.title}`)
+        .setDescription(`Sua configuração atual é: **${panelConfig.data[currentSelection]?.name}**.\n\nSelecione uma nova opção abaixo. Sua preferência será salva automaticamente.`);
+
+    await interaction.reply({
+        embeds: [embed],
+        components: [new ActionRowBuilder().addComponents(selectMenu)],
+        ephemeral: true,
+    });
 }
 
-async function handleSelectionChange(interaction, field) {
-    await interaction.deferUpdate();
-    const { client } = interaction;
-    const userId = interaction.user.id;
-    const selectedValue = interaction.values[0];
-
-    // Pega as preferências atuais (salvas ou temporárias)
-    const currentPrefs = await getUserPreferences(interaction);
-    
-    // Atualiza o valor na cópia temporária
-    currentPrefs[field] = selectedValue;
-
-    // Armazena a cópia modificada na memória
-    client.container.interactions.set(`temp_prefs_${userId}`, currentPrefs);
-    
-    // Reabre o painel para refletir a mudança pendente
-    await openAIPanel(interaction, true);
-}
-
-
-async function handleToggleContext(interaction) {
-    await interaction.deferUpdate();
-    const { client } = interaction;
-    const userId = interaction.user.id;
-
-    const currentPrefs = await getUserPreferences(interaction);
-    currentPrefs.aiUseProfileContext = !currentPrefs.aiUseProfileContext;
-
-    client.container.interactions.set(`temp_prefs_${userId}`, currentPrefs);
-    
-    await openAIPanel(interaction, true);
-}
-
-
-async function handleSaveChanges(interaction) {
-    await interaction.deferReply({ ephemeral: true });
-    const { client } = interaction;
+async function handleSelectionChange(interaction, panelType) {
     const { firestore } = initializeFirebase();
     const userId = interaction.user.id;
-
-    const tempPrefs = client.container.interactions.get(`temp_prefs_${userId}`);
-    if (!tempPrefs) {
-        return interaction.editReply({ content: 'Nenhuma alteração para salvar.', components: [] });
-    }
+    const selectedValue = interaction.values[0];
+    
+    const panelConfig = PANELS[panelType];
+    if (!panelConfig) return;
 
     const userRef = doc(firestore, 'users', userId);
-    
-    try {
-        const userSnap = await getDoc(userRef);
-        if (userSnap.exists()) {
-            await updateDoc(userRef, tempPrefs);
-        } else {
-            // Se o usuário não existe, cria o documento com as preferências e campos padrão
-            const newUserProfile = {
-                ...tempPrefs,
-                id: userId,
-                username: interaction.user.username,
-                reputationPoints: 0,
-                credits: 0,
-                createdAt: serverTimestamp(),
-            };
-            await setDoc(userRef, newUserProfile);
-        }
 
-        // Limpa as alterações temporárias
-        client.container.interactions.delete(`temp_prefs_${userId}`);
+    try {
+        // Garante que o documento existe antes de tentar atualizar
+        await getOrCreateUserProfile(userId, interaction.user.username);
         
-        await interaction.editReply({ content: '✅ Suas preferências foram salvas com sucesso!' });
+        // Atualiza o campo específico
+        await updateDoc(userRef, {
+            [panelConfig.field]: selectedValue
+        });
+
+        // Atualiza a mensagem para confirmar a seleção
+        const embed = EmbedBuilder.from(interaction.message.embeds[0])
+            .setDescription(`Sua configuração atual é: **${panelConfig.data[selectedValue]?.name}**.\n\nSua preferência foi salva com sucesso!`);
+
+        // Recria o menu com a nova opção padrão para refletir a mudança
+        const updatedMenu = StringSelectMenuBuilder.from(interaction.message.components[0].components[0])
+            .setOptions(Object.keys(panelConfig.data).map(key => ({
+                label: panelConfig.data[key].name,
+                value: key,
+                default: key === selectedValue
+            })));
+        
+        await interaction.update({ embeds: [embed], components: [new ActionRowBuilder().addComponents(updatedMenu)] });
 
     } catch (error) {
-        console.error("Erro ao salvar preferências:", error);
-        await interaction.editReply({ content: 'Ocorreu um erro ao salvar suas preferências.' });
+        console.error(`Erro ao salvar preferência de ${panelConfig.title}:`, error);
+        await interaction.followUp({ content: 'Ocorreu um erro ao salvar sua preferência.', ephemeral: true });
     }
 }
 
-async function handleDiscardChanges(interaction) {
-    interaction.client.container.interactions.delete(`temp_prefs_${interaction.user.id}`);
-    await openAIPanel(interaction, true);
+async function handleProfileContextToggle(interaction) {
+    const { firestore } = initializeFirebase();
+    const userId = interaction.user.id;
+    const userRef = doc(firestore, 'users', userId);
+
+    const userData = await getOrCreateUserProfile(userId, interaction.user.username);
+    const newContextState = !userData.aiUseProfileContext;
+
+    await updateDoc(userRef, { aiUseProfileContext: newContextState });
+    
+    // Atualiza o painel para refletir a mudança
+    await openAIPanel(interaction, 'profile');
+}
+
+
+async function openProfileUpdateModal(interaction) {
+    const userData = await getOrCreateUserProfile(interaction.user.id, interaction.user.username);
+    
+    const modal = new ModalBuilder()
+        .setCustomId(PROFILE_UPDATE_MODAL_ID)
+        .setTitle('Atualizar Dados do Perfil');
+
+    modal.addComponents(
+        new ActionRowBuilder().addComponents(
+            new TextInputBuilder().setCustomId('rank').setLabel("Seu Rank Atual no Jogo").setStyle(TextInputStyle.Short).setValue(String(userData.rank || '')).setRequired(false)
+        ),
+        new ActionRowBuilder().addComponents(
+            new TextInputBuilder().setCustomId('currentWorld').setLabel("Seu Mundo Atual no Jogo").setStyle(TextInputStyle.Short).setValue(String(userData.currentWorld || '')).setRequired(false)
+        ),
+        new ActionRowBuilder().addComponents(
+            new TextInputBuilder().setCustomId('dps').setLabel("Seu DPS Atual (ex: 100T, 50qd)").setStyle(TextInputStyle.Short).setValue(userData.dps || '').setRequired(false)
+        )
+    );
+    await interaction.showModal(modal);
+}
+
+async function handleProfileUpdateSubmit(interaction) {
+    await interaction.deferReply({ ephemeral: true });
+    const { firestore } = initializeFirebase();
+    const userId = interaction.user.id;
+    const userRef = doc(firestore, 'users', userId);
+
+    const rank = interaction.fields.getTextInputValue('rank');
+    const currentWorld = interaction.fields.getTextInputValue('currentWorld');
+    const dps = interaction.fields.getTextInputValue('dps');
+
+    try {
+        await updateDoc(userRef, {
+            rank: parseInt(rank, 10) || null,
+            currentWorld: parseInt(currentWorld, 10) || null,
+            dps: dps || null
+        });
+        await interaction.editReply('✅ Seu perfil foi atualizado com sucesso!');
+    } catch (error) {
+        console.error("Erro ao atualizar perfil:", error);
+        await interaction.editReply('❌ Ocorreu um erro ao atualizar seu perfil.');
+    }
 }
 
 
 export async function handleInteraction(interaction, container) {
     const customId = interaction.customId;
 
-    if (customId === SELECT_STYLE_ID) {
-        await handleSelectionChange(interaction, 'aiResponsePreference');
-    } else if (customId === SELECT_PERSONA_ID) {
-        await handleSelectionChange(interaction, 'aiPersonality');
-    } else if (customId === SELECT_LANGUAGE_ID) {
-        await handleSelectionChange(interaction, 'aiLanguage');
-    } else if (customId === SELECT_EMOJI_ID) {
-        await handleSelectionChange(interaction, 'aiEmojiPreference');
-    } else if (customId === TOGGLE_CONTEXT_ID) {
-        await handleToggleContext(interaction);
-    } else if (customId === SAVE_CHANGES_ID) {
-        await handleSaveChanges(interaction);
-    } else if (customId === DISCARD_CHANGES_ID) {
-        await handleDiscardChanges(interaction);
+    // Roteador para os menus de seleção
+    if (interaction.isStringSelectMenu()) {
+        const panelType = Object.keys(PANELS).find(key => customId === PANELS[key].id);
+        if (panelType) {
+            await handleSelectionChange(interaction, panelType);
+        }
+    }
+    // Roteador para os botões
+    else if (interaction.isButton()) {
+        if (customId === PROFILE_CONTEXT_TOGGLE_ID) {
+            await handleProfileContextToggle(interaction);
+        } else if (customId === PROFILE_UPDATE_BUTTON_ID) {
+            await openProfileUpdateModal(interaction);
+        }
+    }
+    // Roteador para os modais
+    else if (interaction.isModalSubmit()) {
+        if (customId === PROFILE_UPDATE_MODAL_ID) {
+            await handleProfileUpdateSubmit(interaction);
+        }
     }
 }

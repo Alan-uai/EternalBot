@@ -4,7 +4,7 @@ import { lobbyDungeonsArticle } from '../data/wiki-articles/lobby-dungeons.js';
 const DEFAULT_PORTAL_OPEN_DURATION_SECONDS = 2 * 60; // 2 minutos
 
 const RAID_EMOJIS = {
-    'Easy': '🟢', 'Medium': '🟡', 'Hard': '🔴', 'Insane': '⚔️', 
+    'Easy': ':easyemoji:', 'Medium': '🟡', 'Hard': '🔴', 'Insane': '⚔️', 
     'Crazy': '🔥', 'Nightmare': '💀', 'Leaf Raid': '🌿'
 };
 
