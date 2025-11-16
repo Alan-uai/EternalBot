@@ -7,7 +7,8 @@ import { doc, getDoc } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
 import { personas } from '../../ai/personas.js';
 import { responseStyles } from '../../ai/response-styles.js';
-import { languages } from '../../ai/languages.js';
+import { officialLanguages } from '../../ai/official-languages.js';
+import { funLanguages } from '../../ai/fun-languages.js';
 import { emojiStyles } from '../../ai/emoji-styles.js';
 
 
@@ -153,6 +154,8 @@ export async function execute(message) {
     const userSnap = await getDoc(userRef);
     const userData = userSnap.exists() ? userSnap.data() : {};
     
+    const allLanguages = { ...officialLanguages, ...funLanguages };
+
     const responseStyleKey = userData.aiResponsePreference || 'detailed';
     const personaKey = userData.aiPersonality || 'amigavel';
     const languageKey = userData.aiLanguage || 'pt_br';
@@ -164,7 +167,7 @@ export async function execute(message) {
 
     const responseStyleInstruction = responseStyles[responseStyleKey]?.instruction || '';
     const personaInstruction = personas[personaKey]?.instruction || '';
-    const languageInstruction = languages[languageKey]?.instruction || '';
+    const languageInstruction = allLanguages[languageKey]?.instruction || '';
     const emojiInstruction = emojiStyles[emojiKey]?.instruction || '';
     
     let userProfileContext = undefined;
@@ -260,3 +263,5 @@ export async function execute(message) {
         await message.reply('Ocorreu um erro inesperado ao processar sua pergunta. Um especialista foi notificado.').catch(() => {});
     }
 }
+
+    

@@ -2,6 +2,14 @@
 import { ai } from '../genkit.js';
 import { z } from 'zod';
 import { getGameData, getUpdateLog } from '../../firebase/firestore/data.js';
+import { officialLanguages } from '../official-languages.js';
+import { funLanguages } from '../fun-languages.js';
+import { personas } from '../personas.js';
+import { responseStyles } from '../response-styles.js';
+import { emojiStyles } from '../emoji-styles.js';
+
+// Unifica os idiomas em um único objeto para facilitar a busca
+const allLanguages = { ...officialLanguages, ...funLanguages };
 
 const getGameDataTool = ai.defineTool(
   {
@@ -217,10 +225,10 @@ const generateSolutionFlow = ai.defineFlow(
 
     try {
       // Adiciona uma saudação padrão se o nome não for fornecido
-      const personaInstructionWithFallback = input.personaInstruction || 'Você é o Gui, um assistente especialista, amigável e prestativo. Use um tom encorajador e positivo.';
-      const responseStyleWithFallback = input.responseStyleInstruction || '';
-      const languageWithFallback = input.languageInstruction || '**ATENÇÃO: A RESPOSTA FINAL DEVE SER GERADA EM PORTUGUÊS-BR.**';
-      const emojiWithFallback = input.emojiInstruction || '';
+      const personaInstructionWithFallback = input.personaInstruction || personas.amigavel.instruction;
+      const responseStyleWithFallback = input.responseStyleInstruction || responseStyles.detailed.instruction;
+      const languageWithFallback = input.languageInstruction || allLanguages.pt_br.instruction;
+      const emojiWithFallback = input.emojiInstruction || emojiStyles.moderate.instruction;
       
       const promptInput = { 
           ...input, 
@@ -242,3 +250,5 @@ const generateSolutionFlow = ai.defineFlow(
     }
   }
 );
+
+    

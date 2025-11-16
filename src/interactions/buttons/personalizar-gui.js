@@ -84,42 +84,14 @@ async function getOrCreateUserProfile(userId, username) {
 export async function openAIPanel(interaction, panelType) {
     const userData = await getOrCreateUserProfile(interaction.user.id, interaction.user.username);
     
-    // Lógica específica para o painel de perfil
-    if (panelType === 'profile') {
-        const useContext = userData.aiUseProfileContext === true;
-
-        const embed = new EmbedBuilder()
-            .setColor(0x1F8B4C)
-            .setTitle('👤 Seu Perfil e Contexto da IA')
-            .setDescription('Gerencie seus dados de jogo e como a IA os utiliza.')
-            .addFields(
-                { name: 'Seu Rank Atual', value: `\`${userData.rank || 'Não definido'}\``, inline: true },
-                { name: 'Seu Mundo Atual', value: `\`${userData.currentWorld || 'Não definido'}\``, inline: true },
-                { name: 'Seu DPS Atual', value: `\`${userData.dps || 'Não definido'}\``, inline: true },
-                { name: 'Uso de Contexto pela IA', value: `**${useContext ? 'Ativado' : 'Desativado'}**\n> Quando ativado, a IA usará seus dados de perfil para dar respostas mais personalizadas.`, inline: false }
-            )
-            .setFooter({ text: 'Use o botão "Atualizar Perfil" para sincronizar seus dados.' });
-
-        const row = new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-                .setCustomId(PROFILE_UPDATE_BUTTON_ID)
-                .setLabel('Atualizar Perfil')
-                .setStyle(ButtonStyle.Primary)
-                .setEmoji('🔄'),
-            new ButtonBuilder()
-                .setCustomId(PROFILE_CONTEXT_TOGGLE_ID)
-                .setLabel(useContext ? 'Desativar Contexto' : 'Ativar Contexto')
-                .setStyle(useContext ? ButtonStyle.Danger : ButtonStyle.Success)
-        );
-
-        return interaction.reply({ embeds: [embed], components: [row], ephemeral: true });
-    }
-
-    // Lógica para os outros painéis de personalização
+    // Lógica para os painéis de personalização da IA
     const panelConfig = PANELS[panelType];
     if (!panelConfig) return;
 
     const currentSelection = userData[panelConfig.field] || panelConfig.default;
+    const allLanguages = { ...officialLanguages, ...funLanguages };
+    const dataSouce = panelType.includes('language') ? allLanguages : panelConfig.data;
+
 
     const selectMenu = new StringSelectMenuBuilder()
         .setCustomId(panelConfig.id)
@@ -133,13 +105,22 @@ export async function openAIPanel(interaction, panelType) {
     const embed = new EmbedBuilder()
         .setColor(0x5865F2)
         .setTitle(`🎨 Personalizar ${panelConfig.title}`)
-        .setDescription(`Sua configuração atual é: **${(panelConfig.data[currentSelection] || panelConfig.data[panelConfig.default])?.name}**.\n\nSelecione uma nova opção abaixo. Sua preferência será salva automaticamente.`);
+        .setDescription(`Sua configuração atual é: **${(dataSouce[currentSelection] || dataSouce[panelConfig.default])?.name}**.\n\nSelecione uma nova opção abaixo. Sua preferência será salva automaticamente.`);
 
-    await interaction.reply({
-        embeds: [embed],
-        components: [new ActionRowBuilder().addComponents(selectMenu)],
-        ephemeral: true,
-    });
+    // Se a interação é uma resposta a um comando, use reply. Se for uma atualização, use update.
+    if (interaction.isCommand()) {
+        await interaction.reply({
+            embeds: [embed],
+            components: [new ActionRowBuilder().addComponents(selectMenu)],
+            ephemeral: true,
+        });
+    } else {
+         await interaction.update({
+            embeds: [embed],
+            components: [new ActionRowBuilder().addComponents(selectMenu)],
+            ephemeral: true,
+        });
+    }
 }
 
 async function handleSelectionChange(interaction, panelType) {
@@ -161,12 +142,8 @@ async function handleSelectionChange(interaction, panelType) {
             [panelConfig.field]: selectedValue
         });
         
-        const allLanguages = {...officialLanguages, ...funLanguages};
-
-        // Atualiza a mensagem para confirmar a seleção
-        const embed = EmbedBuilder.from(interaction.message.embeds[0])
-            .setDescription(`Sua configuração de idioma atual é: **${allLanguages[selectedValue]?.name}**.\n\nSua preferência foi salva com sucesso!`);
-
+        const allData = { ...responseStyles, ...personas, ...officialLanguages, ...funLanguages, ...emojiStyles };
+        
         // Recria o menu com a nova opção padrão para refletir a mudança
         const updatedMenu = StringSelectMenuBuilder.from(interaction.message.components[0].components[0])
             .setOptions(Object.keys(panelConfig.data).map(key => ({
@@ -175,6 +152,9 @@ async function handleSelectionChange(interaction, panelType) {
                 default: key === selectedValue
             })));
         
+        const embed = EmbedBuilder.from(interaction.message.embeds[0])
+            .setDescription(`Sua configuração de ${panelConfig.title.toLowerCase()} atual é: **${allData[selectedValue]?.name}**.\n\nSua preferência foi salva com sucesso!`);
+
         await interaction.update({ embeds: [embed], components: [new ActionRowBuilder().addComponents(updatedMenu)] });
 
     } catch (error) {
@@ -189,12 +169,14 @@ async function handleProfileContextToggle(interaction) {
     const userRef = doc(firestore, 'users', userId);
 
     const userData = await getOrCreateUserProfile(userId, interaction.user.username);
-    const newContextState = !userData.aiUseProfileContext;
+    const newContextState = !(userData.aiUseProfileContext === true);
 
     await updateDoc(userRef, { aiUseProfileContext: newContextState });
     
     // Atualiza o painel para refletir a mudança
-    await openAIPanel(interaction, 'profile');
+    // Reexecuta a lógica do comando /perfil para redesenhar o painel
+     const { execute: executePerfil } = await import('../../commands/utility/perfil.js');
+     await executePerfil(interaction);
 }
 
 
@@ -236,6 +218,14 @@ async function handleProfileUpdateSubmit(interaction) {
             dps: dps || null
         });
         await interaction.editReply('✅ Seu perfil foi atualizado com sucesso!');
+        
+        // Re-mostra o painel do perfil atualizado
+        const { execute: executePerfil } = await import('../../commands/utility/perfil.js');
+        // Para chamar o execute do perfil, precisamos de um objeto `interaction` que se comporte como um comando,
+        // mas como estamos em um modal, vamos apenas confirmar o sucesso.
+        // A melhor abordagem seria o usuário rodar /perfil novamente.
+        // Ou podemos tentar atualizar a mensagem original se a tivermos.
+        
     } catch (error) {
         console.error("Erro ao atualizar perfil:", error);
         await interaction.editReply('❌ Ocorreu um erro ao atualizar seu perfil.');
@@ -256,7 +246,12 @@ export async function handleInteraction(interaction, container) {
     // Roteador para os botões
     else if (interaction.isButton()) {
         if (customId === PROFILE_CONTEXT_TOGGLE_ID) {
-            await handleProfileContextToggle(interaction);
+            // Em vez de chamar openAIPanel, vamos chamar a lógica do comando /perfil para redesenhar.
+             const { execute } = await import('../../commands/utility/perfil.js');
+             interaction.isCommand = () => false; // Simula que não é um novo comando
+             interaction.update = (options) => interaction.editReply(options);
+             await handleProfileContextToggle(interaction);
+
         } else if (customId === PROFILE_UPDATE_BUTTON_ID) {
             await openProfileUpdateModal(interaction);
         }
@@ -268,3 +263,5 @@ export async function handleInteraction(interaction, container) {
         }
     }
 }
+
+    
