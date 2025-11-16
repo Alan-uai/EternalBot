@@ -42,7 +42,15 @@ export function getAvailableRaids() {
     }));
 
     const worldRaids = getDungeonsFromWorlds();
-    const allRaids = [...lobbyRaids, ...worldRaids];
+    
+    const newLobby2Raids = [
+        { label: 'Hollow Raid', value: 'hollow_raid', category: 'w20plus' },
+        { label: 'Adventure Raid', value: 'adventure_raid', category: 'w20plus' },
+        { label: 'Torment Raid', value: 'torment_raid', category: 'w20plus' },
+        { label: 'Mazel Raid', value: 'mazel_raid', category: 'w20plus' },
+    ];
+    
+    const allRaids = [...lobbyRaids, ...worldRaids, ...newLobby2Raids];
     
     // Categorize
     const categorizedRaids = {

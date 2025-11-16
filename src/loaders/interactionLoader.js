@@ -25,34 +25,37 @@ async function loadHandlersFromDirectory(directoryPath, container) {
     
     if (!fs.existsSync(directoryPath)) return;
     
-    const interactionFiles = fs.readdirSync(directoryPath).filter(file => file.endsWith('.js'));
+    const items = fs.readdirSync(directoryPath, { withFileTypes: true });
     
-    for (const file of interactionFiles) {
-        const filePath = path.join(directoryPath, file);
-        try {
-            const handlerModule = await import(`file://${filePath}?t=${Date.now()}`);
-            
-            if (Object.keys(handlerModule).length === 0) continue;
-
-            const validationError = validateInteraction(handlerModule, file);
-            if (validationError) {
-                logger.warn(validationError);
-                continue;
-            }
-
-            // Garante que estamos sempre trabalhando com um array de prefixos
-            const prefixes = Array.isArray(handlerModule.customIdPrefix) ? handlerModule.customIdPrefix : [handlerModule.customIdPrefix];
-
-            for (const prefix of prefixes) {
-                if(interactions.has(prefix)) {
-                    logger.warn(`Prefixo de interação duplicado detectado: '${prefix}' no arquivo ${file}. Isso pode levar a comportamento inesperado.`);
-                }
-                interactions.set(prefix, handlerModule.handleInteraction);
-                logger.info(`Manipulador de interação carregado para o prefixo: ${prefix}`);
-            }
+    for (const item of items) {
+        const fullPath = path.join(directoryPath, item.name);
+        if (item.isDirectory()) {
+            await loadHandlersFromDirectory(fullPath, container); // Recursão para subpastas
+        } else if (item.isFile() && item.name.endsWith('.js')) {
+            try {
+                const handlerModule = await import(`file://${fullPath}?t=${Date.now()}`);
                 
-        } catch (err) {
-            logger.error(`Falha ao carregar o manipulador de interação ${file}:`, err);
+                if (Object.keys(handlerModule).length === 0) continue;
+
+                const validationError = validateInteraction(handlerModule, item.name);
+                if (validationError) {
+                    logger.warn(validationError);
+                    continue;
+                }
+
+                const prefixes = Array.isArray(handlerModule.customIdPrefix) ? handlerModule.customIdPrefix : [handlerModule.customIdPrefix];
+
+                for (const prefix of prefixes) {
+                    if(interactions.has(prefix)) {
+                        logger.warn(`Prefixo de interação duplicado detectado: '${prefix}' no arquivo ${item.name}. Isso pode levar a comportamento inesperado.`);
+                    }
+                    interactions.set(prefix, handlerModule.handleInteraction);
+                    logger.info(`Manipulador de interação carregado para o prefixo: ${prefix}`);
+                }
+                    
+            } catch (err) {
+                logger.error(`Falha ao carregar o manipulador de interação ${item.name}:`, err);
+            }
         }
     }
 }
@@ -66,17 +69,6 @@ export async function loadInteractions(container) {
         logger.warn(`Diretório de interações não encontrado em ${INTERACTIONS_PATH}`);
         return;
     }
-
-    // Carrega arquivos da raiz de 'interactions'
-    await loadHandlersFromDirectory(INTERACTIONS_PATH, container);
-
-    // Carrega arquivos das subpastas
-    const interactionFolders = fs.readdirSync(INTERACTIONS_PATH).filter(item => 
-        fs.statSync(path.join(INTERACTIONS_PATH, item)).isDirectory()
-    );
     
-    for (const folder of interactionFolders) {
-        const folderPath = path.join(INTERACTIONS_PATH, folder);
-        await loadHandlersFromDirectory(folderPath, container);
-    }
+    await loadHandlersFromDirectory(INTERACTIONS_PATH, container);
 }
