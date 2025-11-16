@@ -1,4 +1,3 @@
-
 // src/commands/utility/helpers.js
 import { SlashCommandBuilder } from 'discord.js';
 import { handleTypeSelection } from '../../interactions/buttons/helpers.js';

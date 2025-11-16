@@ -148,8 +148,9 @@ async function openNotificationsPanel(interaction, isUpdate = false) {
             .setStyle(dmEnabled ? ButtonStyle.Success : ButtonStyle.Danger)
     );
 
-    const availableRaids = getAvailableRaids();
-    const raidOptions = Object.values(availableRaids).flat().map(raid => ({
+    const categorizedRaids = getAvailableRaids();
+    const allRaidsFlat = Object.values(categorizedRaids).flat();
+    const raidOptions = allRaidsFlat.map(raid => ({
         label: raid.label,
         value: raid.value,
     })).slice(0, 25);
