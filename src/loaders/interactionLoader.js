@@ -67,12 +67,16 @@ export async function loadInteractions(container) {
         return;
     }
 
-    const interactionFolders = fs.readdirSync(INTERACTIONS_PATH);
+    // Carrega arquivos da raiz de 'interactions'
+    await loadHandlersFromDirectory(INTERACTIONS_PATH, container);
+
+    // Carrega arquivos das subpastas
+    const interactionFolders = fs.readdirSync(INTERACTIONS_PATH).filter(item => 
+        fs.statSync(path.join(INTERACTIONS_PATH, item)).isDirectory()
+    );
     
     for (const folder of interactionFolders) {
         const folderPath = path.join(INTERACTIONS_PATH, folder);
-        if (fs.statSync(folderPath).isDirectory()) {
-            await loadHandlersFromDirectory(folderPath, container);
-        }
+        await loadHandlersFromDirectory(folderPath, container);
     }
 }
