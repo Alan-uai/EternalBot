@@ -4,7 +4,8 @@ import { doc, getDoc, updateDoc, setDoc, serverTimestamp } from 'firebase/firest
 import { initializeFirebase } from '../../firebase/index.js';
 import { personas } from '../../ai/personas.js';
 import { responseStyles } from '../../ai/response-styles.js';
-import { languages } from '../../ai/languages.js';
+import { officialLanguages } from '../../ai/official-languages.js';
+import { funLanguages } from '../../ai/fun-languages.js';
 import { emojiStyles } from '../../ai/emoji-styles.js';
 
 export const customIdPrefix = 'personalize';
@@ -27,9 +28,16 @@ const PANELS = {
     },
     language: {
         id: `${customIdPrefix}_language`,
-        data: languages,
+        data: officialLanguages,
         field: 'aiLanguage',
-        title: 'Idioma',
+        title: 'Idioma Oficial',
+        default: 'pt_br'
+    },
+    fun_language: {
+        id: `${customIdPrefix}_fun_language`,
+        data: funLanguages,
+        field: 'aiLanguage', // Continua salvando no mesmo campo
+        title: 'Idioma Divertido/Fictício',
         default: 'pt_br'
     },
     emoji: {
@@ -125,7 +133,7 @@ export async function openAIPanel(interaction, panelType) {
     const embed = new EmbedBuilder()
         .setColor(0x5865F2)
         .setTitle(`🎨 Personalizar ${panelConfig.title}`)
-        .setDescription(`Sua configuração atual é: **${panelConfig.data[currentSelection]?.name}**.\n\nSelecione uma nova opção abaixo. Sua preferência será salva automaticamente.`);
+        .setDescription(`Sua configuração atual é: **${(panelConfig.data[currentSelection] || panelConfig.data[panelConfig.default])?.name}**.\n\nSelecione uma nova opção abaixo. Sua preferência será salva automaticamente.`);
 
     await interaction.reply({
         embeds: [embed],
@@ -152,10 +160,12 @@ async function handleSelectionChange(interaction, panelType) {
         await updateDoc(userRef, {
             [panelConfig.field]: selectedValue
         });
+        
+        const allLanguages = {...officialLanguages, ...funLanguages};
 
         // Atualiza a mensagem para confirmar a seleção
         const embed = EmbedBuilder.from(interaction.message.embeds[0])
-            .setDescription(`Sua configuração atual é: **${panelConfig.data[selectedValue]?.name}**.\n\nSua preferência foi salva com sucesso!`);
+            .setDescription(`Sua configuração de idioma atual é: **${allLanguages[selectedValue]?.name}**.\n\nSua preferência foi salva com sucesso!`);
 
         // Recria o menu com a nova opção padrão para refletir a mudança
         const updatedMenu = StringSelectMenuBuilder.from(interaction.message.components[0].components[0])
