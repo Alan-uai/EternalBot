@@ -11,7 +11,8 @@ const partnerServers = [
 const helperServers = [
     { name: 'Servidor VIP do TheSaw', url: 'https://www.roblox.com/share?code=eb40821f59cf2a40b5af63c27730170e&type=Server' },
     { name: 'Servidor VIP do Duart', url: 'https://www.roblox.com/share?code=77afe38b2a3af341972b61348b37de2e&type=Server' },
-    { name: 'Servidor VIP do Kenpachi', url: 'https://www.roblox.com/share?code=12cf422a7b83e745b1826304b40c61fd&type=Server' }
+    { name: 'Servidor VIP do Kenpachi', url: 'https://www.roblox.com/share?code=12cf422a7b83e745b1826304b40c61fd&type=Server' },
+    { name: 'Servidor VIP Adicional', url: 'https://www.roblox.com/share?code=d38a9bbdadcc1b4a9aa0ff398ec4b9c6&type=Server' }
 ];
 
 export const data = new SlashCommandBuilder()

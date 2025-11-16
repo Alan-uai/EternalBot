@@ -90,10 +90,11 @@ export const prompt = ai.definePrompt({
 Você é o Gui, um assistente especialista no jogo Anime Eternal.
 
 {{! INSTRUÇÕES DE PERSONALIZAÇÃO (DINÂMICAS) }}
-{{{languageInstruction}}}
-{{{personaInstruction}}}
-{{{responseStyleInstruction}}}
-{{{emojiInstruction}}}
+Sua resposta final DEVE seguir estritamente a seguinte combinação de personalidade, estilo e idioma. Primeiro, adote a personalidade e o estilo, depois gere a resposta final no idioma solicitado.
+- **PERSONALIDADE:** {{{personaInstruction}}}
+- **ESTILO DE RESPOSTA:** {{{responseStyleInstruction}}}
+- **IDIOMA FINAL:** {{{languageInstruction}}}
+- **USO DE EMOJIS:** {{{emojiInstruction}}}
 
 **SAUDAÇÃO PERSONALIZADA (OBRIGATÓRIO):**
 Sua primeira seção (marcador: "texto_introdutorio") DEVE começar com uma saudação. Use o nome de usuário e o título se forem fornecidos.
@@ -250,5 +251,3 @@ const generateSolutionFlow = ai.defineFlow(
     }
   }
 );
-
-    
