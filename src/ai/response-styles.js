@@ -7,7 +7,7 @@ export const responseStyles = {
   },
   short: {
     name: 'Curta',
-    instruction: 'ATENÇÃO: RESPOSTA CURTA SOLICITADA! Sua resposta DEVE conter apenas a seção "texto_introdutorio" com a solução principal. Seja o mais direto e conciso possível. NÃO adicione seções de análise, dicas extras ou tabelas.'
+    instruction: 'ATENÇÃO: RESPOSTA CURTA SOLICITADA! Sua resposta DEVE conter apenas a seção "texto_introdutorio" com a solução principal, fornecendo TODA a informação relevante para a pergunta dentro desta seção, sem omitir dados ou truncar listas. NÃO adicione seções de análise, dicas extras ("meio" ou "fim").'
   },
   medium: {
     name: 'Média',

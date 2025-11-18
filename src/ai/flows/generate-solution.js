@@ -120,13 +120,13 @@ Sua resposta DEVE ser um objeto JSON contendo a chave "structuredResponse", que 
 
 **REGRAS DE ESTRUTURAÇÃO DO JSON (CRÍTICO):**
 1.  **SEMPRE** comece com um objeto com \`marcador: "texto_introdutorio"\`. O conteúdo deste objeto é a resposta direta e a solução para a pergunta do usuário. O título pode ser "Solução Direta".
-2.  **REGRA DE LINKS (CRÍTICA):** Se a fonte de dados for uma tabela onde uma coluna contém links (URLs), como o guia da 'Hero License Quest', você **NÃO DEVE** gerar um objeto \`table\`. Em vez disso, no campo \`conteudo\` da mesma seção, formate os dados como uma lista em Markdown, tornando os links clicáveis.
+2.  **REGRA DE LINKS (CRÍTICA):** Se a fonte de dados for uma tabela onde uma coluna contém links (URLs), como o guia da 'Hero License Quest' ou 'Punch Machine Quest', você **NÃO DEVE** gerar um objeto \`table\`. Em vez disso, no campo \`conteudo\` da mesma seção, formate os dados como uma lista de tópicos (bullet points) em Markdown, tornando os links clicáveis. **Liste todos os itens sem truncar a lista.**
     **Exemplo CORRETO (para listas com links):**
     \`\`\`json
     {
       "marcador": "meio",
       "titulo": "Localização da Hero License Quest",
-      "conteudo": "Aqui estão as localizações:\\n- **Classe F (Mundo 1):** [Assistir Vídeo](https://...)\\n- **Classe E (Mundo 6):** [Assistir Vídeo](https://...)"
+      "conteudo": "Aqui estão as localizações:\\n- **Mundo 1:** [Assistir Vídeo](https://...)\\n- **Mundo 6:** [Assistir Vídeo](https://...)\\n- **Mundo 10:** [Assistir Vídeo](https://...)"
     }
     \`\`\`
     **Exemplo ERRADO (NUNCA FAÇA ISSO):**
@@ -135,10 +135,9 @@ Sua resposta DEVE ser um objeto JSON contendo a chave "structuredResponse", que 
       "marcador": "meio",
       "titulo": "Localização da Hero License Quest",
       "conteudo": "Veja a tabela abaixo.",
-      "table": { "headers": ["Classe", "Link"], "rows": [{"Classe": "F", "Link": "https://..."}] }
+      "table": { "headers": ["Mundo", "Link"], "rows": [{"Mundo": "1", "Link": "https://..."}] }
     }
     \`\`\`
-    Isso se aplica a qualquer tabela que seja primariamente uma lista de links.
 3.  **SE** a resposta direta for simples (como fornecer o status de um item), use as seções de \`marcador: "meio"\` para agregar valor estratégico. Em vez de repetir a informação, ofereça comparações ("A Aura X é boa, mas a Aura Y do próximo mundo é 50% mais forte"), sugestões de sinergia ("Combine esta aura com a gamepass 'Double Aura' para um bônus massivo") ou dicas de como obter o item.
 4.  **SE** a pergunta exigir uma explicação complexa, um cálculo ou um passo a passo, use as seções de \`marcador: "meio"\` para detalhar a justificativa e a análise.
 5.  Se aplicável, termine com um ou mais objetos com \`marcador: "fim"\` para dicas extras.
