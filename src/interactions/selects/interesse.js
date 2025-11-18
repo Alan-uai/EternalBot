@@ -1,6 +1,6 @@
 // src/interactions/selects/interesse.js
 import { ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp, collection, writeBatch, query, where, getDocs } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
 import { getAvailableRaids } from '../../utils/raid-data.js';
 
@@ -12,6 +12,7 @@ const CATEGORY_NAMES = {
     'event': 'Raids de Evento'
 };
 
+// Handle initial purpose selection (Farm or Soling)
 async function handlePurposeSelect(interaction, purpose) {
     interaction.client.container.interactions.set(`interesse_flow_${interaction.user.id}`, { purpose });
 
@@ -23,25 +24,31 @@ async function handlePurposeSelect(interaction, purpose) {
             const menu = new StringSelectMenuBuilder()
                 .setCustomId(`interesse_raid_${category}`)
                 .setPlaceholder(CATEGORY_NAMES[category])
+                .setMinValues(1)
+                .setMaxValues(Math.min(raids.length, 25)) // Allow multi-select
                 .addOptions(raids.slice(0, 25));
             components.push(new ActionRowBuilder().addComponents(menu));
         }
     });
 
     await interaction.update({
-        content: `Você selecionou **${purpose === 'farm' ? 'Grupo de Farm' : 'Ajuda para Solar'}**. Agora, escolha a raid de interesse:`,
+        content: `Você selecionou **${purpose === 'farm' ? 'Grupo de Farm' : 'Ajuda para Solar'}**. Agora, escolha a(s) raid(s) de interesse (você pode selecionar mais de uma):`,
         components,
     });
 }
 
+// Handle raid selection (now potentially multiple)
 async function handleRaidSelect(interaction) {
-    const selectedRaidValue = interaction.values[0];
+    const selectedRaidValues = interaction.values;
     const categorizedRaids = getAvailableRaids();
     const allRaidsFlat = Object.values(categorizedRaids).flat();
-    const selectedRaidLabel = allRaidsFlat.find(r => r.value === selectedRaidValue)?.label || selectedRaidValue;
+    
+    const selectedRaidLabels = selectedRaidValues.map(value => {
+        return allRaidsFlat.find(r => r.value === value)?.label || value;
+    });
     
     const flowData = interaction.client.container.interactions.get(`interesse_flow_${interaction.user.id}`);
-    flowData.raidName = selectedRaidLabel;
+    flowData.raidNames = selectedRaidLabels; // Store array of names
     interaction.client.container.interactions.set(`interesse_flow_${interaction.user.id}`, flowData);
 
     const row = new ActionRowBuilder()
@@ -57,34 +64,42 @@ async function handleRaidSelect(interaction) {
         );
 
     await interaction.update({
-        content: `Raid selecionada: **${selectedRaidLabel}**. \nOnde você quer registrar seu interesse?\n\n- **Geral:** Aparecerá em um painel público para todos verem.\n- **Host Específico:** Notificará um host que você segue.`,
+        content: `Raids selecionadas: **${selectedRaidLabels.join(', ')}**. \nOnde você quer registrar seu interesse?\n\n- **Geral:** Aparecerá em um painel público para todos verem.\n- **Host Específico:** Notificará um host que você segue.`,
         components: [row],
     });
 }
 
+// Handle target selection (Geral or Host)
 async function handleTargetSelect(interaction, target) {
     const flowData = interaction.client.container.interactions.get(`interesse_flow_${interaction.user.id}`);
     if (!flowData) return interaction.update({ content: 'Sua sessão expirou.', components: [] });
 
+    const { firestore } = initializeFirebase();
+
     if (target === 'geral') {
-        const { firestore } = initializeFirebase();
-        const interestRef = doc(collection(firestore, 'raid_interests'));
+        const batch = writeBatch(firestore);
         
-        await setDoc(interestRef, {
-            ...flowData,
-            userId: interaction.user.id,
-            username: interaction.user.username,
-            createdAt: serverTimestamp(),
+        // Create a separate interest document for each selected raid
+        flowData.raidNames.forEach(raidName => {
+            const interestRef = doc(collection(firestore, 'raid_interests'));
+            batch.set(interestRef, {
+                purpose: flowData.purpose,
+                raidName: raidName, // Save one raid name per document
+                userId: interaction.user.id,
+                username: interaction.user.username,
+                createdAt: serverTimestamp(),
+            });
         });
+        
+        await batch.commit();
 
         await interaction.update({
-            content: `✅ Seu interesse em **${flowData.raidName}** para **${flowData.purpose}** foi registrado no painel público!`,
+            content: `✅ Seu interesse em **${flowData.raidNames.join(', ')}** para **${flowData.purpose}** foi registrado no painel público!`,
             components: [],
         });
         interaction.client.container.interactions.delete(`interesse_flow_${interaction.user.id}`);
+    
     } else if (target === 'host') {
-        // Lógica para selecionar um host
-        const { firestore } = initializeFirebase();
         const userRef = doc(firestore, 'users', interaction.user.id);
         const userSnap = await getDoc(userRef);
         const following = userSnap.exists() ? userSnap.data().following || [] : [];
@@ -113,27 +128,35 @@ async function handleTargetSelect(interaction, target) {
     }
 }
 
+// Handle specific host selection
 async function handleHostSelect(interaction) {
     const selectedHostId = interaction.values[0];
     const flowData = interaction.client.container.interactions.get(`interesse_flow_${interaction.user.id}`);
     if (!flowData) return interaction.update({ content: 'Sua sessão expirou.', components: [] });
 
     const { firestore } = initializeFirebase();
-    const hostNotificationRef = doc(collection(firestore, 'host_notifications'));
+    const batch = writeBatch(firestore);
 
-    await setDoc(hostNotificationRef, {
-        ...flowData,
-        requesterId: interaction.user.id,
-        requesterUsername: interaction.user.username,
-        hostId: selectedHostId,
-        status: 'pending',
-        createdAt: serverTimestamp(),
+    // Create a notification for each selected raid
+    flowData.raidNames.forEach(raidName => {
+        const hostNotificationRef = doc(collection(firestore, 'host_notifications'));
+        batch.set(hostNotificationRef, {
+            purpose: flowData.purpose,
+            raidName: raidName,
+            requesterId: interaction.user.id,
+            requesterUsername: interaction.user.username,
+            hostId: selectedHostId,
+            status: 'pending',
+            createdAt: serverTimestamp(),
+        });
     });
+
+    await batch.commit();
 
     const hostUser = await interaction.client.users.fetch(selectedHostId).catch(()=>null);
     if (hostUser) {
         try {
-            await hostUser.send(`🔔 **${interaction.user.username}** registrou interesse em seu grupo de **${flowData.purpose}** para a raid **${flowData.raidName}**!`);
+            await hostUser.send(`🔔 **${interaction.user.username}** registrou interesse em seu grupo de **${flowData.purpose}** para a(s) raid(s): **${flowData.raidNames.join(', ')}**!`);
         } catch (e) {
             console.warn(`Não foi possível notificar o host ${hostUser.tag} por DM.`);
         }

@@ -1,5 +1,5 @@
 // src/jobs/formingSolingPanel.js
-import { EmbedBuilder, WebhookClient } from 'discord.js';
+import { EmbedBuilder, WebhookClient, ActionRowBuilder, StringSelectMenuBuilder } from 'discord.js';
 import { doc, getDoc, setDoc, collection, query, where, getDocs, writeBatch } from 'firebase/firestore';
 
 const PANEL_DOC_ID = 'formingSolingPanel';
@@ -26,18 +26,16 @@ async function getInterestData(firestore) {
         }
 
         if (!interests[data.raidName]) {
-            interests[data.raidName] = 0;
+            interests[data.raidName] = [];
         }
-        interests[data.raidName]++;
+        interests[data.raidName].push({ userId: data.userId, username: data.username });
     });
 
     if (hasDeletions) {
         await batch.commit();
     }
 
-    return Object.entries(interests)
-                 .sort(([, a], [, b]) => b - a)
-                 .reduce((r, [k, v]) => ({ ...r, [k]: v }), {});
+    return interests;
 }
 
 export const name = 'formingSolingPanel';
@@ -65,23 +63,42 @@ export async function run(container) {
         const embed = new EmbedBuilder()
             .setColor(0x3498DB)
             .setTitle('🆘 Formando Grupos para Ajudar a Solar')
-            .setDescription('Esta é a demanda atual por ajuda para solar raids. Hosts, usem `/soling` para ajudar!\nJogadores, usem `/interesse` para adicionar seu nome à lista!')
+            .setDescription('Esta é a demanda por ajuda. Hosts, usem o menu "Quero ser o Host" para ajudar a comunidade!')
             .setTimestamp();
         
         if (Object.keys(interestData).length === 0) {
             embed.addFields({ name: 'Ninguém precisando de ajuda no momento', value: 'Use `/interesse` se precisar de ajuda para solar uma raid.' });
         } else {
-             let description = '';
-            for (const [raidName, count] of Object.entries(interestData)) {
-                description += `**${raidName}**: \`${count}\` jogador(es) precisando de ajuda\n`;
+             let description = 'Use o menu "Quero ser o Host" para escolher um grupo para ajudar.\n\n';
+            for (const [raidName, users] of Object.entries(interestData)) {
+                description += `**${raidName}**: \`${users.length}\` jogador(es) precisando de ajuda\n`;
             }
             embed.setDescription(description);
+        }
+
+        const components = [];
+        const interestOptions = Object.entries(interestData).map(([raidName, users]) => ({
+            label: raidName,
+            description: `${users.length} jogador(es) precisando de ajuda`,
+            value: raidName.toLowerCase().replace(/ /g, '_'),
+        }));
+
+        if (interestOptions.length > 0) {
+            components.push(
+                new ActionRowBuilder().addComponents(
+                    new StringSelectMenuBuilder()
+                        .setCustomId('formingsoling_host')
+                        .setPlaceholder('Quero ser o Host de um grupo de Soling...')
+                        .addOptions(interestOptions)
+                )
+            );
         }
 
         const payload = {
             username: PERSISTENT_WEBHOOK_NAME,
             avatarURL: client.user.displayAvatarURL(),
-            embeds: [embed]
+            embeds: [embed],
+            components
         };
 
         if (messageId) {
