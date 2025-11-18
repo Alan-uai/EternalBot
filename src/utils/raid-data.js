@@ -1,65 +1,95 @@
 // src/utils/raid-data.js
-import { lobbyDungeonsArticle } from '../data/wiki-articles/lobby-dungeons.js';
-import { raidRequirementsArticle } from '../data/wiki-articles/raid-requirements.js';
+import { allWikiArticles } from '../data/wiki-data.js';
 
-// Mapeamento de nomes de raids para suas categorias, se precisarem de uma específica.
-const RAID_CATEGORY_MAP = {
-    'Gleam Raid': 'w1-19',
-    'Raid Sins': 'w1-19',
-    'Mundo Raid': 'w20plus',
-    'Halloween Raid': 'event',
-    'Graveyard Defense': 'event',
-    // Adicione outros mapeamentos se necessário.
-};
+// Lista de raids que são estritamente solo e não devem aparecer em LFG
+const SOLO_RAID_VALUES = [
+    'gleam_raid',
+    'raid_sins',
+    'mundo_raid',
+    'halloween_raid', // A raid de 1000 waves
+    'tournament_raid', // A dungeon de 550 salas do Mundo 1
+];
 
-// Heurística para determinar categoria com base no nome da raid, se não estiver no mapa.
-function getCategoryForRaid(raidName) {
-    if (raidName.toLowerCase().includes('hollow') || raidName.toLowerCase().includes('torment')) {
+function getCategoryForWorld(worldId) {
+    if (worldId === 'halloween') {
+        return 'event';
+    }
+    const worldNum = parseInt(worldId, 10);
+    if (worldNum >= 20) {
         return 'w20plus';
     }
-    return 'w1-19'; // Categoria padrão
+    return 'w1-19';
 }
 
-
 export function getAvailableRaids() {
-    // 1. Raids do Lobby Principal
-    const lobbyRaids = lobbyDungeonsArticle.tables.lobbySchedule.rows.map(raid => ({
-        label: raid.Dificuldade,
-        value: raid.Dificuldade.toLowerCase().replace(/ /g, '_'),
-        category: 'w1-19'
-    }));
+    const allRaidsMap = new Map();
 
-    // 2. Raids do artigo de requisitos
-    const requirementRaids = raidRequirementsArticle.tables.requirements.headers
-        .filter(header => header !== 'Wave') // Exclui a coluna 'Wave'
-        .map(raidName => ({
-            label: raidName,
-            value: raidName.toLowerCase().replace(/ /g, '_'),
-            category: RAID_CATEGORY_MAP[raidName] || getCategoryForRaid(raidName)
-        }));
+    // Itera sobre todos os arquivos de dados (mundos e artigos)
+    for (const article of allWikiArticles) {
+        // Verifica se o artigo tem uma seção 'dungeons' ou 'raids'
+        const dungeons = article.dungeons || article.raids;
+        if (Array.isArray(dungeons)) {
+            dungeons.forEach(dungeon => {
+                const raidValue = dungeon.name.toLowerCase().replace(/ /g, '_');
 
-    // 3. Novas Raids do Lobby 2 (como solicitado)
-    const newLobby2Raids = [
+                // Pula se for uma raid solo
+                if (SOLO_RAID_VALUES.includes(raidValue)) {
+                    return;
+                }
+
+                // Adiciona ao mapa se não existir, evitando duplicatas
+                if (!allRaidsMap.has(raidValue)) {
+                    allRaidsMap.set(raidValue, {
+                        label: dungeon.name,
+                        value: raidValue,
+                        category: getCategoryForWorld(article.id.replace('world-', '')),
+                    });
+                }
+            });
+        }
+    }
+    
+    // Adiciona raids que podem não estar nos arquivos de mundo (ex: lobby)
+    const lobbyRaids = [
+        { label: 'Easy', value: 'easy', category: 'w1-19' },
+        { label: 'Medium', value: 'medium', category: 'w1-19' },
+        { label: 'Hard', value: 'hard', category: 'w1-19' },
+        { label: 'Insane', value: 'insane', category: 'w1-19' },
+        { label: 'Crazy', value: 'crazy', category: 'w1-19' },
+        { label: 'Nightmare', value: 'nightmare', category: 'w1-19' },
+        { label: 'Leaf Raid', value: 'leaf_raid', category: 'w1-19' },
+        { label: 'Restaurant Raid', value: 'restaurant_raid', category: 'w1-19' },
+        { label: 'Cursed Raid', value: 'cursed_raid', category: 'w1-19' },
+        { label: 'Progression Raid', value: 'progression_raid', category: 'w1-19' },
+        { label: 'Progression 2', value: 'progression_2', category: 'w20plus' },
+        { label: 'Ghoul Raid', value: 'ghoul_raid', category: 'w1-19' },
+        { label: 'Green Planet Raid', value: 'green_planet_raid', category: 'w20plus' },
+        { label: 'Hollow Raid', value: 'hollow_raid', category: 'w20plus' },
+        { label: 'Tomb Raid', value: 'tomb_raid', category: 'w20plus' },
         { label: 'Adventure Raid', value: 'adventure_raid', category: 'w20plus' },
         { label: 'Mazel Raid', value: 'mazel_raid', category: 'w20plus' },
     ];
     
-    // Combina todas as fontes e remove duplicatas
-    const allRaidsMap = new Map();
-    [...lobbyRaids, ...requirementRaids, ...newLobby2Raids].forEach(raid => {
-        if (!allRaidsMap.has(raid.value)) { // Evita duplicatas pelo 'value'
+    lobbyRaids.forEach(raid => {
+         if (!SOLO_RAID_VALUES.includes(raid.value) && !allRaidsMap.has(raid.value)) {
             allRaidsMap.set(raid.value, raid);
         }
     });
 
+
     const allRaids = Array.from(allRaidsMap.values());
-    
+
     // Categoriza a lista final
     const categorizedRaids = {
         'w1-19': allRaids.filter(r => r.category === 'w1-19'),
         'w20plus': allRaids.filter(r => r.category === 'w20plus'),
-        'event': allRaids.filter(r => r.category === 'event')
+        'event': allRaids.filter(r => r.category === 'event'),
     };
+    
+    // Ordena as raids dentro de cada categoria alfabeticamente
+    for (const category in categorizedRaids) {
+        categorizedRaids[category].sort((a, b) => a.label.localeCompare(b.label));
+    }
 
     return categorizedRaids;
 }
