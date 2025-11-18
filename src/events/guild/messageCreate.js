@@ -244,16 +244,34 @@ export async function execute(message) {
                 }
             }
 
-            // Garante que a mensagem não exceda o limite do Discord
-            if (finalContent.length > 2000) {
-                finalContent = finalContent.substring(0, 1997) + '...';
+            const messageLimit = 2000;
+            let replyMessage;
+
+            if (finalContent.length > messageLimit) {
+                const chunks = [];
+                let currentChunk = finalContent;
+                while (currentChunk.length > 0) {
+                    let cutIndex = currentChunk.lastIndexOf('\n\n', messageLimit);
+                    if (cutIndex === -1) cutIndex = currentChunk.lastIndexOf('\n', messageLimit);
+                    if (cutIndex === -1) cutIndex = messageLimit;
+                    chunks.push(currentChunk.substring(0, cutIndex));
+                    currentChunk = currentChunk.substring(cutIndex);
+                }
+
+                // Envia o primeiro chunk como resposta
+                replyMessage = await sendConsolidatedReply(message, chunks[0], finalAttachments);
+                // Envia os chunks restantes como mensagens normais no canal
+                for (let i = 1; i < chunks.length; i++) {
+                    await message.channel.send(chunks[i]);
+                }
+            } else {
+                // Se a mensagem for curta, envia normalmente
+                replyMessage = await sendConsolidatedReply(message, finalContent, finalAttachments);
             }
-            
-            const replyMessage = await sendConsolidatedReply(message, finalContent, finalAttachments);
             
             // Armazena dados para o sistema de feedback
             client.container.interactions.set(`question_${message.id}`, question);
-            client.container.interactions.set(`answer_${message.id}`, finalContent || 'Resposta em imagem.');
+            client.container.interactions.set(`answer_${message.id}`, finalContent);
             client.container.interactions.set(`history_${message.id}`, history);
             client.container.interactions.set(`replyMessageId_${message.id}`, replyMessage.id);
         }
@@ -263,5 +281,3 @@ export async function execute(message) {
         await message.reply('Ocorreu um erro inesperado ao processar sua pergunta. Um especialista foi notificado.').catch(() => {});
     }
 }
-
-    
