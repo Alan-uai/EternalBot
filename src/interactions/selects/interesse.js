@@ -74,9 +74,8 @@ async function handleTargetSelect(interaction, target) {
     const flowData = interaction.client.container.interactions.get(`interesse_flow_${interaction.user.id}`);
     if (!flowData) return interaction.update({ content: 'Sua sessão expirou.', components: [] });
 
-    const { firestore } = initializeFirebase();
-
     if (target === 'geral') {
+        const { firestore } = initializeFirebase();
         const batch = writeBatch(firestore);
         
         // Create a separate interest document for each selected raid
@@ -100,36 +99,48 @@ async function handleTargetSelect(interaction, target) {
         interaction.client.container.interactions.delete(`interesse_flow_${interaction.user.id}`);
     
     } else if (target === 'host') {
-        const userRef = doc(firestore, 'users', interaction.user.id);
-        const userSnap = await getDoc(userRef);
-        const following = userSnap.exists() ? userSnap.data().following || [] : [];
-        
-        if (following.length === 0) {
-            return interaction.update({ content: 'Você não segue nenhum host. Use o comando `/perfil` no perfil de alguém para seguir.', components: [] });
-        }
-
-        const hostOptions = await Promise.all(following.map(async (hostId) => {
-            const hostUser = await interaction.client.users.fetch(hostId).catch(() => null);
-            return {
-                label: hostUser ? hostUser.username : `Usuário (ID: ${hostId})`,
-                value: hostId,
-            };
-        }));
-        
-        const hostMenu = new StringSelectMenuBuilder()
-            .setCustomId('interesse_select_host')
-            .setPlaceholder('Selecione o host para notificar...')
-            .addOptions(hostOptions.slice(0, 25));
-            
-        await interaction.update({
-            content: 'Selecione qual host você quer notificar sobre seu interesse.',
-            components: [new ActionRowBuilder().addComponents(hostMenu)],
-        });
+        // A interação será atualizada pela função handleHostSelect
+        await handleHostSelect(interaction, true);
     }
 }
 
 // Handle specific host selection
-async function handleHostSelect(interaction) {
+async function handleHostSelect(interaction, isInitialCall = false) {
+    const { firestore } = initializeFirebase();
+    const userRef = doc(firestore, 'users', interaction.user.id);
+    const userSnap = await getDoc(userRef);
+    const following = userSnap.exists() ? userSnap.data().following || [] : [];
+    
+    if (following.length === 0) {
+        const responseOptions = { content: 'Você não segue nenhum host. Use o comando `/perfil` no perfil de alguém para seguir.', components: [] };
+        // Se for a chamada inicial do botão, atualiza. Se for do menu, responde.
+        return isInitialCall ? interaction.update(responseOptions) : interaction.reply(responseOptions);
+    }
+
+    const hostOptions = await Promise.all(following.map(async (hostId) => {
+        const hostUser = await interaction.client.users.fetch(hostId).catch(() => null);
+        return {
+            label: hostUser ? hostUser.username : `Usuário (ID: ${hostId})`,
+            value: hostId,
+        };
+    }));
+    
+    const hostMenu = new StringSelectMenuBuilder()
+        .setCustomId('interesse_select_host')
+        .setPlaceholder('Selecione o host para notificar...')
+        .addOptions(hostOptions.slice(0, 25));
+        
+    const responseOptions = {
+        content: 'Selecione qual host você quer notificar sobre seu interesse.',
+        components: [new ActionRowBuilder().addComponents(hostMenu)],
+    };
+
+    // Apenas atualiza a interação. A resposta final virá do handler do menu.
+    await interaction.update(responseOptions);
+}
+
+
+async function handleHostNotification(interaction) {
     const selectedHostId = interaction.values[0];
     const flowData = interaction.client.container.interactions.get(`interesse_flow_${interaction.user.id}`);
     if (!flowData) return interaction.update({ content: 'Sua sessão expirou.', components: [] });
@@ -184,7 +195,7 @@ export async function handleInteraction(interaction, container) {
         if (action === 'raid') {
             await handleRaidSelect(interaction);
         } else if (action === 'select' && param === 'host') {
-            await handleHostSelect(interaction);
+            await handleHostNotification(interaction);
         }
     }
 }

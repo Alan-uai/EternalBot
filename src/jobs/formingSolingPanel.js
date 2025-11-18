@@ -63,32 +63,35 @@ export async function run(container) {
         const embed = new EmbedBuilder()
             .setColor(0x3498DB)
             .setTitle('🆘 Formando Grupos para Ajudar a Solar')
-            .setDescription('Esta é a demanda por ajuda. Hosts, usem o menu "Quero ser o Host" para ajudar a comunidade!')
             .setTimestamp();
         
+        const components = [];
+        const interestOptions = Object.keys(interestData).map(raidName => ({
+            label: raidName,
+            description: `${interestData[raidName].length} jogador(es) precisando de ajuda`,
+            value: raidName.toLowerCase().replace(/ /g, '_'),
+        }));
+        
         if (Object.keys(interestData).length === 0) {
-            embed.addFields({ name: 'Ninguém precisando de ajuda no momento', value: 'Use `/interesse` se precisar de ajuda para solar uma raid.' });
+            embed.setDescription('Ninguém precisando de ajuda no momento. Use `/interesse` se precisar de ajuda para solar uma raid.');
         } else {
-             let description = 'Use o menu "Quero ser o Host" para escolher um grupo para ajudar.\n\n';
+            let description = 'Use os menus abaixo para se juntar a um grupo ou para se tornar o host de um.\n\n';
             for (const [raidName, users] of Object.entries(interestData)) {
                 description += `**${raidName}**: \`${users.length}\` jogador(es) precisando de ajuda\n`;
             }
             embed.setDescription(description);
-        }
 
-        const components = [];
-        const interestOptions = Object.entries(interestData).map(([raidName, users]) => ({
-            label: raidName,
-            description: `${users.length} jogador(es) precisando de ajuda`,
-            value: raidName.toLowerCase().replace(/ /g, '_'),
-        }));
-
-        if (interestOptions.length > 0) {
             components.push(
                 new ActionRowBuilder().addComponents(
                     new StringSelectMenuBuilder()
+                        .setCustomId('formingsoling_participate')
+                        .setPlaceholder('Quero Participar (preciso de ajuda)...')
+                        .addOptions(interestOptions)
+                ),
+                new ActionRowBuilder().addComponents(
+                    new StringSelectMenuBuilder()
                         .setCustomId('formingsoling_host')
-                        .setPlaceholder('Quero ser o Host de um grupo de Soling...')
+                        .setPlaceholder('Quero ser o Host (ajudar um grupo)...')
                         .addOptions(interestOptions)
                 )
             );
