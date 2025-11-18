@@ -81,15 +81,7 @@ export async function execute(message) {
     const { firestore } = firebase;
 
     if (message.author.bot) return;
-
-    // --- Impede que o bot responda a si mesmo ou a outras respostas no fio ---
-    if (message.reference && message.mentions.has(client.user.id)) {
-        // Ignora se for uma resposta a uma mensagem do próprio bot, exceto se for uma menção direta
-    } else if (message.reference) {
-         return;
-    }
-
-
+    
     // --- Processamento de Respostas da Comunidade ---
     if (message.channel.id === config.COMMUNITY_HELP_CHANNEL_ID && message.reference) {
         try {
@@ -138,6 +130,14 @@ export async function execute(message) {
     // --- Processamento de Menções ao Bot (Comando de Chat) ---
     if (message.channel.id !== config.CHAT_CHANNEL_ID || !message.mentions.has(client.user.id) || message.mentions.everyone) {
         return;
+    }
+
+    // Se for uma resposta ao próprio bot, ignora para não criar loops, a menos que seja uma menção explícita
+    if (message.reference) {
+        const repliedToMessage = await message.channel.messages.fetch(message.reference.messageId).catch(() => null);
+        if (repliedToMessage && repliedToMessage.author.id === client.user.id && !message.mentions.has(client.user.id)) {
+            return;
+        }
     }
 
     const question = message.content.replace(/<@!?(\d+)>/g, '').trim();
