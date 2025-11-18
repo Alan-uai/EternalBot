@@ -4,7 +4,8 @@ import { doc, getDoc, updateDoc, collection, query, where, getDocs, deleteDoc } 
 
 const ANNOUNCER_DOC_ID = 'farmAnnouncer';
 const FARM_ROLE_PREFIX = 'Farm: ';
-const ANNOUNCEMENT_LIFETIME_MS = 60 * 60 * 1000; // 1 hora
+const ANNOUNCEMENT_LIFETIME_MS = 30 * 60 * 1000; // 30 minutos
+const ROLE_LIFETIME_MS = 1 * 60 * 1000; // 1 minuto
 
 async function handleAnnouncements(container, farms) {
     const { client, config, logger, services } = container;
@@ -26,7 +27,6 @@ async function handleAnnouncements(container, farms) {
     });
     if (!guild) return;
 
-    // Use a date object configured for Brazil's timezone (UTC-3)
     const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
     const fiveMinutesFromNow = new Date(now.getTime() + 5 * 60 * 1000);
 
@@ -82,7 +82,6 @@ async function handleAnnouncements(container, farms) {
             const customMessage = farm.customMessage || 'O farm começou! Boa sorte!';
             const customTag = farm.customTag || `${FARM_ROLE_PREFIX}${farm.raidName}`;
             
-            // Criar o cargo temporário
             let tempRole = null;
             try {
                 const roleName = customTag.substring(0, 100);
@@ -131,13 +130,38 @@ async function handleAnnouncements(container, farms) {
 
             const openAnnouncement = await webhookClient.send(messagePayload);
 
-            await updateDoc(doc(firestore, 'scheduled_farms', farm.id), { 
-                announcedOpen: true,
-                announcementId: openAnnouncement.id,
-                tempRoleId: tempRole ? tempRole.id : null,
-                expiresAt: new Date(Date.now() + ANNOUNCEMENT_LIFETIME_MS)
-            });
-            logger.info(`[farmAnnouncer] Anúncio de ABERTURA enviado para a raid ${farm.raidName}.`);
+            // AGORA DELETA O FARM DO BANCO DE DADOS
+            await deleteDoc(doc(firestore, 'scheduled_farms', farm.id));
+            logger.info(`[farmAnnouncer] Anúncio de ABERTURA enviado para a raid ${farm.raidName}. Registro do farm removido do Firestore.`);
+            
+            // AGENDAMENTO PARA DELETAR O CARGO E A MENSAGEM
+            if (tempRole) {
+                setTimeout(async () => {
+                    try {
+                        const roleToDelete = await guild.roles.fetch(tempRole.id).catch(() => null);
+                        if (roleToDelete) {
+                            await roleToDelete.delete('Limpeza de cargo de farm temporário.');
+                            logger.info(`[farmAnnouncer] Cargo temporário '${tempRole.name}' deletado após 1 minuto.`);
+                        }
+                    } catch (roleDeleteError) {
+                        logger.error(`[farmAnnouncer] Falha ao deletar cargo temporário ${tempRole.id}:`, roleDeleteError);
+                    }
+                }, ROLE_LIFETIME_MS);
+            }
+            
+            if (openAnnouncement) {
+                 setTimeout(async () => {
+                    try {
+                        await webhookClient.deleteMessage(openAnnouncement.id);
+                        logger.info(`[farmAnnouncer] Anúncio de farm '${openAnnouncement.id}' deletado após 30 minutos.`);
+                    } catch (msgDeleteError) {
+                        if (msgDeleteError.code !== 10008) { // Ignore 'Unknown Message'
+                           logger.error(`[farmAnnouncer] Falha ao deletar anúncio de farm ${openAnnouncement.id}:`, msgDeleteError);
+                        }
+                    }
+                }, ANNOUNCEMENT_LIFETIME_MS);
+            }
+
 
             // Notificar seguidores
             const farmRaidValue = farm.raidName.toLowerCase().replace(/ /g, '_');
@@ -165,7 +189,6 @@ async function handleAnnouncements(container, farms) {
 
             interestedUsersSnap.forEach(async (doc) => {
                 const interestedUserId = doc.id;
-                // Evita notificar o host e quem já é seguidor (para não duplicar)
                 if (interestedUserId === farm.hostId || followersSnapshot.docs.some(d => d.id === interestedUserId)) return;
                 
                 const prefs = doc.data().notificationPrefs || {};
@@ -184,8 +207,6 @@ async function handleAnnouncements(container, farms) {
     }
 }
 
-// ... (cleanupOldFarms function remains the same)
-
 export const name = 'farmAnnouncer';
 export const schedule = '*/20 * * * * *'; // A cada 20 segundos
 
@@ -202,7 +223,6 @@ export async function run(container) {
         const farmsToday = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
         await handleAnnouncements(container, farmsToday);
-        // await cleanupExpiredAnnouncements(container); -> A limpeza será feita no job do painel para evitar concorrência
 
     } catch (error) {
         logger.error('[farmAnnouncer] Erro ao executar o job de anúncios de farm:', error);
