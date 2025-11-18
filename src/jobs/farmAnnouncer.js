@@ -80,7 +80,10 @@ async function handleAnnouncements(container, farms) {
             const userSnap = await getDoc(doc(firestore, 'users', farm.hostId));
             const serverLink = userSnap.exists() ? userSnap.data()?.dungeonSettings?.serverLink : null;
             const customMessage = farm.customMessage || 'O farm começou! Boa sorte!';
-            const customTag = farm.customTag || `${FARM_ROLE_PREFIX}${farm.raidName}`;
+            
+            // Lógica de fallback para a tag
+            const hostTag = userSnap.exists() ? userSnap.data()?.hostTag : null;
+            const customTag = farm.customTag || hostTag || `${FARM_ROLE_PREFIX}${farm.raidName}`;
             
             let tempRole = null;
             try {
