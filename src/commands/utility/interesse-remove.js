@@ -1,6 +1,6 @@
 // src/commands/utility/interesse-remove.js
 import { SlashCommandBuilder } from 'discord.js';
-import { execute as executeRemoveInterest } from '../../interactions/buttons/dungeonconfig.js';
+import { executeRemoveInterest } from '../../interactions/buttons/dungeonconfig.js';
 
 
 export const data = new SlashCommandBuilder()

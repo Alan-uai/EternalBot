@@ -3,9 +3,6 @@ import { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, Strin
 import { doc, updateDoc, getDoc, collection, query, where, getDocs, deleteDoc, arrayUnion, arrayRemove, writeBatch } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
 import { getAvailableRaids } from '../../utils/raid-data.js';
-// O comando /dungeonconfig depende desta função, então a exportamos
-export { execute as executeDungeonConfig } from '../../commands/utility/dungeonconfig.js';
-
 
 // Adicionando a constante que estava faltando
 const DUNGEON_CONFIG_PREFIX = 'dungeonconfig';
@@ -415,14 +412,25 @@ async function handleFarmEditModalSubmit(interaction, farmId) {
 
 // Nova função para abrir o painel de remoção de interesses
 export async function executeRemoveInterest(interaction) {
-    await interaction.deferReply({ ephemeral: true });
+    const replyOrFollowUp = async (options) => {
+        if (interaction.replied || interaction.deferred) {
+            await interaction.editReply({ ...options, ephemeral: true }).catch(() => interaction.followUp({ ...options, ephemeral: true }));
+        } else {
+            await interaction.reply({ ...options, ephemeral: true });
+        }
+    };
+    
+    if (!interaction.deferred) {
+        await interaction.deferReply({ ephemeral: true });
+    }
+
     const { firestore } = initializeFirebase();
     const interestsRef = collection(firestore, 'raid_interests');
     const q = query(interestsRef, where("userId", "==", interaction.user.id));
     const querySnapshot = await getDocs(q);
 
     if (querySnapshot.empty) {
-        return interaction.editReply({ content: 'Você não tem nenhum interesse registrado para remover.', components: [] });
+        return replyOrFollowUp({ content: 'Você não tem nenhum interesse registrado para remover.', components: [] });
     }
 
     const options = querySnapshot.docs.map(doc => {
@@ -442,7 +450,7 @@ export async function executeRemoveInterest(interaction) {
         .setMaxValues(options.length)
         .addOptions(options);
 
-    await interaction.editReply({
+    await replyOrFollowUp({
         content: 'Selecione um ou mais interesses que você deseja remover da lista.',
         components: [new ActionRowBuilder().addComponents(selectMenu)],
     });
@@ -472,13 +480,6 @@ async function handleRemoveInterestSelect(interaction) {
 
 export async function handleInteraction(interaction, container) {
      const [prefix, action, ...params] = interaction.customId.split('_');
-    
-    // Delega para o handler do comando dungeonconfig se o ID for o nome do comando
-    if (interaction.customId === 'dungeonconfig') {
-        // Esta função é exportada do comando e está sendo chamada aqui.
-        // O `execute` original do comando lida com a resposta inicial.
-        return executeDungeonConfig(interaction);
-    }
     
     if (prefix !== 'dungeonconfig') return;
 
