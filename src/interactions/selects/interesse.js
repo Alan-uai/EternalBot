@@ -1,5 +1,5 @@
 // src/interactions/selects/interesse.js
-import { ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
 import { doc, getDoc, setDoc, serverTimestamp, collection, writeBatch, query, where, getDocs } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
 import { getAvailableRaids } from '../../utils/raid-data.js';
@@ -146,7 +146,11 @@ async function handleHostNotification(interaction) {
     if (!flowData) return interaction.update({ content: 'Sua sessão expirou.', components: [] });
 
     const { firestore } = initializeFirebase();
+    const { logger } = interaction.client.container;
     const batch = writeBatch(firestore);
+    
+    const requesterMember = await interaction.guild.members.fetch(interaction.user.id).catch(() => null);
+    const requesterDisplayName = requesterMember ? requesterMember.displayName : interaction.user.username;
 
     // Create a notification for each selected raid
     flowData.raidNames.forEach(raidName => {
@@ -155,7 +159,7 @@ async function handleHostNotification(interaction) {
             purpose: flowData.purpose,
             raidName: raidName,
             requesterId: interaction.user.id,
-            requesterUsername: interaction.user.username,
+            requesterUsername: requesterDisplayName, // Usando displayName
             hostId: selectedHostId,
             status: 'pending',
             createdAt: serverTimestamp(),
@@ -167,9 +171,27 @@ async function handleHostNotification(interaction) {
     const hostUser = await interaction.client.users.fetch(selectedHostId).catch(()=>null);
     if (hostUser) {
         try {
-            await hostUser.send(`🔔 **${interaction.user.username}** registrou interesse em seu grupo de **${flowData.purpose}** para a(s) raid(s): **${flowData.raidNames.join(', ')}**!`);
+            const embed = new EmbedBuilder()
+                .setColor(0xFFA500)
+                .setTitle('🔔 Novo Interesse Registrado!')
+                .setDescription(`**${requesterDisplayName}** registrou interesse em seu grupo de **${flowData.purpose}** para a(s) raid(s): **${flowData.raidNames.join(', ')}**!`)
+                .setTimestamp();
+            
+            const actionRow = new ActionRowBuilder()
+                .addComponents(
+                    new ButtonBuilder()
+                        .setCustomId(`hostaction_start_${flowData.purpose}_${flowData.raidNames.join(',')}_${interaction.user.id}`)
+                        .setLabel('🚀 Iniciar Grupo Agora')
+                        .setStyle(ButtonStyle.Success),
+                    new ButtonBuilder()
+                        .setCustomId(`hostaction_view_${flowData.purpose}_${flowData.raidNames.join(',')}`)
+                        .setLabel('👀 Ver Interessados')
+                        .setStyle(ButtonStyle.Secondary)
+                );
+
+            await hostUser.send({ embeds: [embed], components: [actionRow] });
         } catch (e) {
-            console.warn(`Não foi possível notificar o host ${hostUser.tag} por DM.`);
+            logger.warn(`Não foi possível notificar o host ${hostUser.tag} por DM.`);
         }
     }
 
