@@ -75,7 +75,7 @@ export async function run(container) {
         if (Object.keys(interestData).length === 0) {
             embed.setDescription('Ninguém precisando de ajuda no momento. Use `/interesse` se precisar de ajuda para solar uma raid.');
         } else {
-            let description = 'Use os menus abaixo para se juntar a um grupo ou para se tornar o host de um.\n\n';
+            let description = 'Use os menus abaixo para registrar seu interesse ou para se voluntariar como host.\n\n';
             for (const [raidName, users] of Object.entries(interestData)) {
                 description += `**${raidName}**: \`${users.length}\` jogador(es) precisando de ajuda\n`;
             }

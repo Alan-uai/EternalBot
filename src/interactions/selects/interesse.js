@@ -1,6 +1,6 @@
 // src/interactions/selects/interesse.js
 import { ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
-import { doc, getDoc, setDoc, serverTimestamp, collection, writeBatch, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp, collection, writeBatch } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
 import { getAvailableRaids } from '../../utils/raid-data.js';
 
@@ -69,42 +69,6 @@ async function handleRaidSelect(interaction) {
     });
 }
 
-// Handle target selection (Geral or Host)
-async function handleTargetSelect(interaction, target) {
-    const flowData = interaction.client.container.interactions.get(`interesse_flow_${interaction.user.id}`);
-    if (!flowData) return interaction.update({ content: 'Sua sessão expirou.', components: [] });
-
-    if (target === 'geral') {
-        const { firestore } = initializeFirebase();
-        const batch = writeBatch(firestore);
-        
-        // Create a separate interest document for each selected raid
-        flowData.raidNames.forEach(raidName => {
-            const interestRef = doc(collection(firestore, 'raid_interests'));
-            batch.set(interestRef, {
-                purpose: flowData.purpose,
-                raidName: raidName, // Save one raid name per document
-                userId: interaction.user.id,
-                username: interaction.user.username,
-                createdAt: serverTimestamp(),
-            });
-        });
-        
-        await batch.commit();
-
-        await interaction.update({
-            content: `✅ Seu interesse em **${flowData.raidNames.join(', ')}** para **${flowData.purpose}** foi registrado no painel público!`,
-            components: [],
-        });
-        interaction.client.container.interactions.delete(`interesse_flow_${interaction.user.id}`);
-    
-    } else if (target === 'host') {
-        // Chama a função para mostrar o menu de hosts, mas não responde à interação aqui.
-        // A resposta virá do handler do menu de seleção de host.
-        await showHostSelectionMenu(interaction);
-    }
-}
-
 // Shows the host selection menu
 async function showHostSelectionMenu(interaction) {
     const { firestore } = initializeFirebase();
@@ -113,8 +77,7 @@ async function showHostSelectionMenu(interaction) {
     const following = userSnap.exists() ? userSnap.data().following || [] : [];
     
     if (following.length === 0) {
-        await interaction.update({ content: 'Você não segue nenhum host. Use o comando `/perfil` no perfil de alguém para seguir.', components: [] });
-        return;
+        return { content: 'Você não segue nenhum host. Use o comando `/perfil` no perfil de alguém para seguir.', components: [] };
     }
 
     const hostOptions = await Promise.all(following.map(async (hostId) => {
@@ -130,26 +93,61 @@ async function showHostSelectionMenu(interaction) {
         .setPlaceholder('Selecione o host para notificar...')
         .addOptions(hostOptions.slice(0, 25));
         
-    await interaction.update({
+    return {
         content: 'Selecione qual host você quer notificar sobre seu interesse.',
         components: [new ActionRowBuilder().addComponents(hostMenu)],
-    });
+    };
 }
 
 
-async function handleHostNotification(interaction) {
-    const selectedHostId = interaction.values[0];
+async function handleTargetSelect(interaction, target) {
     const flowData = interaction.client.container.interactions.get(`interesse_flow_${interaction.user.id}`);
     if (!flowData) return interaction.update({ content: 'Sua sessão expirou.', components: [] });
+
+    if (target === 'geral') {
+        const { firestore } = initializeFirebase();
+        const batch = writeBatch(firestore);
+        
+        flowData.raidNames.forEach(raidName => {
+            const interestRef = doc(collection(firestore, 'raid_interests'));
+            batch.set(interestRef, {
+                purpose: flowData.purpose,
+                raidName: raidName,
+                userId: interaction.user.id,
+                username: interaction.user.username,
+                createdAt: serverTimestamp(),
+            });
+        });
+        
+        await batch.commit();
+
+        await interaction.update({
+            content: `✅ Seu interesse em **${flowData.raidNames.join(', ')}** para **${flowData.purpose}** foi registrado no painel público!`,
+            components: [],
+        });
+        interaction.client.container.interactions.delete(`interesse_flow_${interaction.user.id}`);
+    
+    } else if (target === 'host') {
+        const hostMenuPayload = await showHostSelectionMenu(interaction);
+        await interaction.update(hostMenuPayload);
+    }
+}
+
+
+async function handleHostSelect(interaction) {
+    const selectedHostId = interaction.values[0];
+    const flowData = interaction.client.container.interactions.get(`interesse_flow_${interaction.user.id}`);
+    if (!flowData) {
+        return interaction.update({ content: 'Sua sessão expirou.', components: [] });
+    }
 
     const { firestore } = initializeFirebase();
     const { logger } = interaction.client.container;
     const batch = writeBatch(firestore);
-    
+
     const requesterMember = await interaction.guild.members.fetch(interaction.user.id).catch(() => null);
     const requesterDisplayName = requesterMember ? requesterMember.displayName : interaction.user.username;
 
-    // Create a notification for each selected raid
     const notificationIds = [];
     flowData.raidNames.forEach(raidName => {
         const hostNotificationRef = doc(collection(firestore, 'host_notifications'));
@@ -167,33 +165,23 @@ async function handleHostNotification(interaction) {
 
     await batch.commit();
 
-    const hostUser = await interaction.client.users.fetch(selectedHostId).catch(()=>null);
+    const hostUser = await interaction.client.users.fetch(selectedHostId).catch(() => null);
     if (hostUser) {
         try {
             const embed = new EmbedBuilder()
                 .setColor(0xFFA500)
                 .setTitle('🔔 Novo Interesse Registrado!')
                 .setDescription(`**${requesterDisplayName}** registrou interesse em seu grupo de **${flowData.purpose}** para a(s) raid(s): **${flowData.raidNames.join(', ')}**!`)
-                .setFooter({text: 'Você pode gerenciar esta e outras demandas com o comando /demandas.'})
+                .setFooter({ text: 'Você pode gerenciar esta e outras demandas com o comando /demandas.' })
                 .setTimestamp();
             
-            // Usamos o primeiro ID de notificação como referência, já que todos se referem ao mesmo evento.
             const representativeNotificationId = notificationIds[0];
 
             const actionRow = new ActionRowBuilder()
                 .addComponents(
-                    new ButtonBuilder()
-                        .setCustomId(`hostaction_start_${representativeNotificationId}`)
-                        .setLabel('🚀 Iniciar Grupo')
-                        .setStyle(ButtonStyle.Success),
-                    new ButtonBuilder()
-                        .setCustomId(`hostaction_view_${representativeNotificationId}`)
-                        .setLabel('👀 Ver Interessados')
-                        .setStyle(ButtonStyle.Secondary),
-                    new ButtonBuilder()
-                        .setCustomId(`hostaction_reject_${representativeNotificationId}`)
-                        .setLabel('Rejeitar')
-                        .setStyle(ButtonStyle.Danger)
+                    new ButtonBuilder().setCustomId(`hostaction_start_${representativeNotificationId}`).setLabel('🚀 Iniciar Grupo').setStyle(ButtonStyle.Success),
+                    new ButtonBuilder().setCustomId(`hostaction_view_${representativeNotificationId}`).setLabel('👀 Ver Interessados').setStyle(ButtonStyle.Secondary),
+                    new ButtonBuilder().setCustomId(`hostaction_reject_${representativeNotificationId}`).setLabel('Rejeitar').setStyle(ButtonStyle.Danger)
                 );
 
             await hostUser.send({ embeds: [embed], components: [actionRow] });
@@ -224,7 +212,7 @@ export async function handleInteraction(interaction, container) {
         if (action === 'raid') {
             await handleRaidSelect(interaction);
         } else if (action === 'select' && param === 'host') {
-            await handleHostNotification(interaction);
+            await handleHostSelect(interaction);
         }
     }
 }
