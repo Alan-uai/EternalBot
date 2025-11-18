@@ -80,9 +80,10 @@ export async function execute(message) {
     const { wikiContext, firebase } = services;
     const { firestore } = firebase;
 
+    // 1. Ignorar todas as mensagens de bots
     if (message.author.bot) return;
-    
-    // --- Processamento de Respostas da Comunidade ---
+
+    // 2. Processar Respostas da Comunidade (Apenas no canal de ajuda)
     if (message.channel.id === config.COMMUNITY_HELP_CHANNEL_ID && message.reference) {
         try {
             const repliedToMessage = await message.channel.messages.fetch(message.reference.messageId);
@@ -124,152 +125,155 @@ export async function execute(message) {
         } catch (error) {
             logger.error("Erro ao processar resposta da comunidade:", error);
         }
-        return; 
-    }
-    
-    // --- Processamento de Menções ao Bot (Comando de Chat) ---
-    if (message.channel.id !== config.CHAT_CHANNEL_ID || !message.mentions.has(client.user.id) || message.mentions.everyone) {
+        // Se for uma resposta da comunidade, não fazer mais nada
         return;
     }
 
-    const question = message.content.replace(/<@!?(\d+)>/g, '').trim();
-    const imageAttachment = message.attachments.find(att => att.contentType?.startsWith('image/'));
+    // 3. Processar Menções ao Bot (Apenas no canal de chat)
+    if (message.channel.id === config.CHAT_CHANNEL_ID && message.mentions.has(client.user.id) && !message.mentions.everyone) {
+        const question = message.content.replace(/<@!?(\d+)>/g, '').trim();
+        const imageAttachment = message.attachments.find(att => att.contentType?.startsWith('image/'));
 
-    if (!question && !imageAttachment) {
-        await message.reply(`Olá! Meu nome é Gui. Em que posso ajudar sobre o Anime Eternal?`);
-        return;
-    }
+        if (!question && !imageAttachment) {
+            await message.reply(`Olá! Meu nome é Gui. Em que posso ajudar sobre o Anime Eternal?`);
+            return;
+        }
 
-    await message.channel.sendTyping();
-    
-    const userRef = doc(firestore, 'users', message.author.id);
-    const userSnap = await getDoc(userRef);
-    const userData = userSnap.exists() ? userSnap.data() : {};
-    
-    const allLanguages = { ...officialLanguages, ...funLanguages };
+        await message.channel.sendTyping();
+        
+        const userRef = doc(firestore, 'users', message.author.id);
+        const userSnap = await getDoc(userRef);
+        const userData = userSnap.exists() ? userSnap.data() : {};
+        
+        const allLanguages = { ...officialLanguages, ...funLanguages };
 
-    const responseStyleKey = userData.aiResponsePreference || 'detailed';
-    const personaKey = userData.aiPersonality || 'amigavel';
-    const languageKey = userData.aiLanguage || 'pt_br';
-    const emojiKey = userData.aiEmojiPreference || 'moderate';
-    const useProfileContext = userData.aiUseProfileContext || false;
+        const responseStyleKey = userData.aiResponsePreference || 'detailed';
+        const personaKey = userData.aiPersonality || 'amigavel';
+        const languageKey = userData.aiLanguage || 'pt_br';
+        const emojiKey = userData.aiEmojiPreference || 'moderate';
+        const useProfileContext = userData.aiUseProfileContext || false;
 
-    const userTitle = userData.userTitle || undefined;
-    const userName = userData.customName || message.author.username;
+        const userTitle = userData.userTitle || undefined;
+        const userName = userData.customName || message.author.username;
 
-    const responseStyleInstruction = responseStyles[responseStyleKey]?.instruction || '';
-    const personaInstruction = personas[personaKey]?.instruction || '';
-    const languageInstruction = allLanguages[languageKey]?.instruction || '';
-    const emojiInstruction = emojiStyles[emojiKey]?.instruction || '';
-    
-    let userProfileContext = undefined;
-    if (useProfileContext && userSnap.exists()) {
-        const { currentWorld, rank, dps } = userData;
-        userProfileContext = `Mundo Atual: ${currentWorld || 'N/D'}, Rank: ${rank || 'N/D'}, DPS: ${dps || 'N/D'}`;
-    }
+        const responseStyleInstruction = responseStyles[responseStyleKey]?.instruction || '';
+        const personaInstruction = personas[personaKey]?.instruction || '';
+        const languageInstruction = allLanguages[languageKey]?.instruction || '';
+        const emojiInstruction = emojiStyles[emojiKey]?.instruction || '';
+        
+        let userProfileContext = undefined;
+        if (useProfileContext && userSnap.exists()) {
+            const { currentWorld, rank, dps } = userData;
+            userProfileContext = `Mundo Atual: ${currentWorld || 'N/D'}, Rank: ${rank || 'N/D'}, DPS: ${dps || 'N/D'}`;
+        }
 
-    const userGoals = userData.goals || [];
-    const userGoalsContext = userGoals.length > 0 ? `Metas do Usuário: ${userGoals.join(', ')}` : undefined;
+        const userGoals = userData.goals || [];
+        const userGoalsContext = userGoals.length > 0 ? `Metas do Usuário: ${userGoals.join(', ')}` : undefined;
 
-    let imageDataUri = null;
-    if (imageAttachment) {
+        let imageDataUri = null;
+        if (imageAttachment) {
+            try {
+                const response = await axios.get(imageAttachment.url, { responseType: 'arraybuffer' });
+                const base64 = Buffer.from(response.data, 'binary').toString('base64');
+                imageDataUri = `data:${imageAttachment.contentType};base64,${base64}`;
+            } catch (error) {
+                logger.error("Erro ao processar a imagem anexada:", error);
+            }
+        }
+
+        const history = [];
+        let currentMessage = message;
+        const historyLimit = 10;
         try {
-            const response = await axios.get(imageAttachment.url, { responseType: 'arraybuffer' });
-            const base64 = Buffer.from(response.data, 'binary').toString('base64');
-            imageDataUri = `data:${imageAttachment.contentType};base64,${base64}`;
+            while (currentMessage.reference && history.length < historyLimit) {
+                const repliedToMessage = await currentMessage.channel.messages.fetch(currentMessage.reference.messageId);
+                const role = repliedToMessage.author.id === client.user.id ? 'assistant' : 'user';
+                const content = repliedToMessage.content.replace(/<@!?(\d+)>/g, '').trim();
+                history.unshift({ role, content });
+                currentMessage = repliedToMessage;
+            }
         } catch (error) {
-            logger.error("Erro ao processar a imagem anexada:", error);
+            logger.warn("Não foi possível buscar o histórico completo da conversa:", error);
         }
-    }
 
-    const history = [];
-    let currentMessage = message;
-    const historyLimit = 10;
-    try {
-        while (currentMessage.reference && history.length < historyLimit) {
-            const repliedToMessage = await currentMessage.channel.messages.fetch(currentMessage.reference.messageId);
-            const role = repliedToMessage.author.id === client.user.id ? 'assistant' : 'user';
-            const content = repliedToMessage.content.replace(/<@!?(\d+)>/g, '').trim();
-            history.unshift({ role, content });
-            currentMessage = repliedToMessage;
-        }
-    } catch (error) {
-        logger.warn("Não foi possível buscar o histórico completo da conversa:", error);
-    }
+        try {
+            const result = await generateSolution({
+                problemDescription: question,
+                imageDataUri: imageDataUri || undefined,
+                wikiContext: wikiContext.getContext(),
+                userProfileContext,
+                userGoalsContext,
+                history: history.length > 0 ? history : undefined,
+                responseStyleInstruction,
+                personaInstruction,
+                languageInstruction,
+                emojiInstruction,
+                userName,
+                userTitle,
+            });
 
-    try {
-        const result = await generateSolution({
-            problemDescription: question,
-            imageDataUri: imageDataUri || undefined,
-            wikiContext: wikiContext.getContext(),
-            userProfileContext,
-            userGoalsContext,
-            history: history.length > 0 ? history : undefined,
-            responseStyleInstruction,
-            personaInstruction,
-            languageInstruction,
-            emojiInstruction,
-            userName,
-            userTitle,
-        });
+            if (result?.structuredResponse?.[0]?.titulo === 'Resposta não encontrada') {
+                await handleUnansweredQuestion(message, question, imageAttachment);
+                await message.reply(result.structuredResponse[0].conteudo);
+            } else {
+                let finalContent = '';
+                const finalAttachments = [];
 
-        if (result?.structuredResponse?.[0]?.titulo === 'Resposta não encontrada') {
-            await handleUnansweredQuestion(message, question, imageAttachment);
-            await message.reply(result.structuredResponse[0].conteudo);
-        } else {
-            let finalContent = '';
-            const finalAttachments = [];
+                for (const section of result.structuredResponse) {
+                    if (section.titulo) finalContent += `**${section.titulo}**\n`;
+                    if (section.conteudo) finalContent += `${section.conteudo}\n\n`;
 
-            for (const section of result.structuredResponse) {
-                if (section.titulo) finalContent += `**${section.titulo}**\n`;
-                if (section.conteudo) finalContent += `${section.conteudo}\n\n`;
-
-                if (section.table && section.table.rows && section.table.rows.length > 0) {
-                    try {
-                        const tableImage = await createTableImage(section.table.headers, section.table.rows);
-                        const attachment = new AttachmentBuilder(tableImage, { name: `table-${section.titulo?.toLowerCase().replace(/\s/g, '-') || 'data'}.png` });
-                        finalAttachments.push(attachment);
-                    } catch (tableError) {
-                        logger.error("Erro ao gerar imagem da tabela:", tableError);
-                        finalContent += `*(Erro ao renderizar a tabela "${section.titulo}" como imagem.)*\n\n`;
+                    if (section.table && section.table.rows && section.table.rows.length > 0) {
+                        try {
+                            const tableImage = await createTableImage(section.table.headers, section.table.rows);
+                            const attachment = new AttachmentBuilder(tableImage, { name: `table-${section.titulo?.toLowerCase().replace(/\s/g, '-') || 'data'}.png` });
+                            finalAttachments.push(attachment);
+                        } catch (tableError) {
+                            logger.error("Erro ao gerar imagem da tabela:", tableError);
+                            finalContent += `*(Erro ao renderizar a tabela "${section.titulo}" como imagem.)*\n\n`;
+                        }
                     }
                 }
-            }
 
-            const messageLimit = 2000;
-            let replyMessage;
+                const messageLimit = 2000;
+                let replyMessage;
 
-            if (finalContent.length > messageLimit) {
-                const chunks = [];
-                let currentChunk = finalContent;
-                while (currentChunk.length > 0) {
-                    let cutIndex = currentChunk.lastIndexOf('\n\n', messageLimit);
-                    if (cutIndex === -1) cutIndex = currentChunk.lastIndexOf('\n', messageLimit);
-                    if (cutIndex === -1) cutIndex = messageLimit;
-                    chunks.push(currentChunk.substring(0, cutIndex));
-                    currentChunk = currentChunk.substring(cutIndex);
+                if (finalContent.length > messageLimit) {
+                    const chunks = [];
+                    let currentChunk = finalContent;
+                    while (currentChunk.length > 0) {
+                        let cutIndex = currentChunk.lastIndexOf('\n\n', messageLimit);
+                        if (cutIndex === -1) cutIndex = currentChunk.lastIndexOf('\n', messageLimit);
+                        if (cutIndex === -1) cutIndex = messageLimit;
+                        chunks.push(currentChunk.substring(0, cutIndex));
+                        currentChunk = currentChunk.substring(cutIndex);
+                    }
+
+                    // Envia o primeiro chunk como resposta
+                    replyMessage = await sendConsolidatedReply(message, chunks[0], finalAttachments);
+                    // Envia os chunks restantes como mensagens normais no canal
+                    for (let i = 1; i < chunks.length; i++) {
+                        await message.channel.send(chunks[i]);
+                    }
+                } else {
+                    // Se a mensagem for curta, envia normalmente
+                    replyMessage = await sendConsolidatedReply(message, finalContent, finalAttachments);
                 }
-
-                // Envia o primeiro chunk como resposta
-                replyMessage = await sendConsolidatedReply(message, chunks[0], finalAttachments);
-                // Envia os chunks restantes como mensagens normais no canal
-                for (let i = 1; i < chunks.length; i++) {
-                    await message.channel.send(chunks[i]);
-                }
-            } else {
-                // Se a mensagem for curta, envia normalmente
-                replyMessage = await sendConsolidatedReply(message, finalContent, finalAttachments);
+                
+                // Armazena dados para o sistema de feedback
+                client.container.interactions.set(`question_${message.id}`, question);
+                client.container.interactions.set(`answer_${message.id}`, finalContent);
+                client.container.interactions.set(`history_${message.id}`, history);
+                client.container.interactions.set(`replyMessageId_${message.id}`, replyMessage.id);
             }
-            
-            // Armazena dados para o sistema de feedback
-            client.container.interactions.set(`question_${message.id}`, question);
-            client.container.interactions.set(`answer_${message.id}`, finalContent);
-            client.container.interactions.set(`history_${message.id}`, history);
-            client.container.interactions.set(`replyMessageId_${message.id}`, replyMessage.id);
+        } catch (error) {
+            logger.error('Erro na execução do evento messageCreate:', error);
+            await handleUnansweredQuestion(message, question, imageAttachment);
+            await message.reply('Ocorreu um erro inesperado ao processar sua pergunta. Um especialista foi notificado.').catch(() => {});
         }
-    } catch (error) {
-        logger.error('Erro na execução do evento messageCreate:', error);
-        await handleUnansweredQuestion(message, question, imageAttachment);
-        await message.reply('Ocorreu um erro inesperado ao processar sua pergunta. Um especialista foi notificado.').catch(() => {});
+        // Se for uma pergunta para a IA, não fazer mais nada
+        return;
     }
+
+    // 4. Se não for nenhuma das condições acima, a mensagem é ignorada.
 }
