@@ -1,9 +1,11 @@
 // src/interactions/buttons/dungeonconfig.js
 import { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, StringSelectMenuBuilder, EmbedBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
-import { doc, updateDoc, getDoc, collection, query, where, getDocs, deleteDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { doc, updateDoc, getDoc, collection, query, where, getDocs, deleteDoc, arrayUnion, arrayRemove, writeBatch } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
 import { getAvailableRaids } from '../../utils/raid-data.js';
-import { execute as executeDungeonConfig } from '../../commands/utility/dungeonconfig.js';
+// O comando /dungeonconfig depende desta função, então a exportamos
+export { execute as executeDungeonConfig } from '../../commands/utility/dungeonconfig.js';
+
 
 // Adicionando a constante que estava faltando
 const DUNGEON_CONFIG_PREFIX = 'dungeonconfig';
@@ -14,6 +16,7 @@ export const SOLING_CONFIG_BUTTON_ID = `${customIdPrefix}_soling_open`;
 export const FARMING_CONFIG_BUTTON_ID = `${customIdPrefix}_farming_open`;
 export const TAG_CONFIG_BUTTON_ID = `${customIdPrefix}_tag_open`;
 export const NOTIFICATIONS_CONFIG_BUTTON_ID = `${customIdPrefix}_notifications_open`;
+export const REMOVE_INTEREST_BUTTON_ID = `${customIdPrefix}_remove_interest_open`;
 
 const SOLING_MODAL_ID = `${customIdPrefix}_soling_modal`;
 const TAG_MODAL_ID = `${customIdPrefix}_tag_modal`;
@@ -31,7 +34,10 @@ const NOTIFICATIONS_BACK_TO_MAIN_ID = `${customIdPrefix}_notify_back_main`;
 const FARM_MANAGE_SELECT_ID = `${customIdPrefix}_farm_manage_select`;
 const FARM_DELETE_BTN_ID = `${customIdPrefix}_farm_delete`;
 const FARM_EDIT_BTN_ID = `${customIdPrefix}_farm_edit`;
-const FARM_EDIT_MODAL_ID = `${customIdPrefix}_farm_edit_modal`; // Novo ID para o modal de edição
+const FARM_EDIT_MODAL_ID = `${customIdPrefix}_farm_edit_modal`;
+
+// IDs for Remove Interest
+const REMOVE_INTEREST_SELECT_ID = `${customIdPrefix}_remove_interest_select`;
 
 
 const WEEKDAYS_PT = {
@@ -407,11 +413,70 @@ async function handleFarmEditModalSubmit(interaction, farmId) {
 }
 
 
+// Nova função para abrir o painel de remoção de interesses
+export async function executeRemoveInterest(interaction) {
+    await interaction.deferReply({ ephemeral: true });
+    const { firestore } = initializeFirebase();
+    const interestsRef = collection(firestore, 'raid_interests');
+    const q = query(interestsRef, where("userId", "==", interaction.user.id));
+    const querySnapshot = await getDocs(q);
+
+    if (querySnapshot.empty) {
+        return interaction.editReply({ content: 'Você não tem nenhum interesse registrado para remover.', components: [] });
+    }
+
+    const options = querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        const purposeLabel = data.purpose === 'farm' ? 'Farm' : 'Soling';
+        return {
+            label: `${purposeLabel}: ${data.raidName}`,
+            description: `Registrado em: ${data.createdAt.toDate().toLocaleDateString()}`,
+            value: doc.id, // O ID do documento de interesse
+        };
+    });
+
+    const selectMenu = new StringSelectMenuBuilder()
+        .setCustomId(REMOVE_INTEREST_SELECT_ID)
+        .setPlaceholder('Selecione os interesses para remover...')
+        .setMinValues(1)
+        .setMaxValues(options.length)
+        .addOptions(options);
+
+    await interaction.editReply({
+        content: 'Selecione um ou mais interesses que você deseja remover da lista.',
+        components: [new ActionRowBuilder().addComponents(selectMenu)],
+    });
+}
+
+async function handleRemoveInterestSelect(interaction) {
+    await interaction.deferUpdate();
+    const { firestore } = initializeFirebase();
+    const batch = writeBatch(firestore);
+
+    const docIdsToRemove = interaction.values;
+    
+    docIdsToRemove.forEach(docId => {
+        const docRef = doc(firestore, 'raid_interests', docId);
+        batch.delete(docRef);
+    });
+
+    try {
+        await batch.commit();
+        await interaction.editReply({ content: `✅ ${docIdsToRemove.length} interesse(s) foram removido(s) com sucesso!`, components: [] });
+    } catch (error) {
+        console.error("Erro ao remover interesses:", error);
+        await interaction.editReply({ content: 'Ocorreu um erro ao tentar remover seus interesses.', components: [] });
+    }
+}
+
+
 export async function handleInteraction(interaction, container) {
      const [prefix, action, ...params] = interaction.customId.split('_');
     
     // Delega para o handler do comando dungeonconfig se o ID for o nome do comando
     if (interaction.customId === 'dungeonconfig') {
+        // Esta função é exportada do comando e está sendo chamada aqui.
+        // O `execute` original do comando lida com a resposta inicial.
         return executeDungeonConfig(interaction);
     }
     
@@ -426,6 +491,8 @@ export async function handleInteraction(interaction, container) {
             await openTagModal(interaction);
         } else if (interaction.customId === NOTIFICATIONS_CONFIG_BUTTON_ID) {
             await openNotificationsPanel(interaction, false);
+        } else if (interaction.customId === REMOVE_INTEREST_BUTTON_ID) {
+            await executeRemoveInterest(interaction);
         } else if (interaction.customId === NOTIFICATIONS_DM_TOGGLE_ID) {
             await handleDmToggle(interaction);
         } else if (interaction.customId === NOTIFICATIONS_BACK_TO_MAIN_ID) {
@@ -461,6 +528,8 @@ export async function handleInteraction(interaction, container) {
              }
         } else if (action === 'farm' && params[0] === 'manage') {
             await handleFarmSelectForManagement(interaction);
+        } else if (interaction.customId === REMOVE_INTEREST_SELECT_ID) {
+            await handleRemoveInterestSelect(interaction);
         }
     }
 }

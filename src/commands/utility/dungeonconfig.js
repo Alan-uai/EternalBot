@@ -7,6 +7,7 @@ export const SOLING_CONFIG_BUTTON_ID = `${CUSTOM_ID_PREFIX}_soling_open`;
 export const FARMING_CONFIG_BUTTON_ID = `${CUSTOM_ID_PREFIX}_farming_open`;
 export const TAG_CONFIG_BUTTON_ID = `${CUSTOM_ID_PREFIX}_tag_open`;
 export const NOTIFICATIONS_CONFIG_BUTTON_ID = `${CUSTOM_ID_PREFIX}_notifications_open`;
+export const REMOVE_INTEREST_BUTTON_ID = `${CUSTOM_ID_PREFIX}_remove_interest_open`;
 
 
 export const data = new SlashCommandBuilder()
@@ -35,7 +36,12 @@ export async function execute(interaction) {
                 .setCustomId(NOTIFICATIONS_CONFIG_BUTTON_ID)
                 .setLabel('Preferências de Notificação')
                 .setStyle(ButtonStyle.Secondary)
-                .setEmoji('🔔')
+                .setEmoji('🔔'),
+            new ButtonBuilder()
+                .setCustomId(REMOVE_INTEREST_BUTTON_ID)
+                .setLabel('Remover Interesses')
+                .setStyle(ButtonStyle.Danger)
+                .setEmoji('🗑️')
         );
 
     await interaction.reply({
