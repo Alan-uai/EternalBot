@@ -26,6 +26,9 @@ async function initializeWebhooks(client) {
         { name: 'Anunciador de Farms', channelId: config.FARMING_PANEL_CHANNEL_ID, docId: 'farmAnnouncer' },
         { name: 'Painel de Farms', channelId: config.FARMING_PANEL_CHANNEL_ID, docId: 'farmingPanel' },
         { name: 'Suporte | Denúncias | Formulários', channelId: config.SUPPORT_PANEL_CHANNEL_ID, docId: 'supportPanel' },
+        // Novos painéis de demanda
+        { name: 'Formando Grupos de Farm', channelId: config.FARMING_PANEL_CHANNEL_ID, docId: 'formingFarmsPanel' },
+        { name: 'Formando Grupos de Soling', channelId: config.SOLING_POST_CHANNEL_ID, docId: 'formingSolingPanel' },
         // Adiciona webhooks de feriados
         ...config.HOLIDAYS.map(h => ({ name: h.webhookName, channelId: config.COMMUNITY_HELP_CHANNEL_ID, docId: h.docId })),
         // Adiciona webhook de Ano Novo
