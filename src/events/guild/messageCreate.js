@@ -138,36 +138,9 @@ export async function execute(message) {
             return;
         }
 
-        await message.channel.sendTyping();
-        
-        const userRef = doc(firestore, 'users', message.author.id);
-        const userSnap = await getDoc(userRef);
-        const userData = userSnap.exists() ? userSnap.data() : {};
-        
-        const allLanguages = { ...officialLanguages, ...funLanguages };
-
-        const responseStyleKey = userData.aiResponsePreference || 'detailed';
-        const personaKey = userData.aiPersonality || 'amigavel';
-        const languageKey = userData.aiLanguage || 'pt_br';
-        const emojiKey = userData.aiEmojiPreference || 'moderate';
-        const useProfileContext = userData.aiUseProfileContext || false;
-
-        const userTitle = userData.userTitle || undefined;
-        const userName = userData.customName || message.author.username;
-
-        const responseStyleInstruction = responseStyles[responseStyleKey]?.instruction || '';
-        const personaInstruction = personas[personaKey]?.instruction || '';
-        const languageInstruction = allLanguages[languageKey]?.instruction || '';
-        const emojiInstruction = emojiStyles[emojiKey]?.instruction || '';
-        
-        let userProfileContext = undefined;
-        if (useProfileContext && userSnap.exists()) {
-            const { currentWorld, rank, dps } = userData;
-            userProfileContext = `Mundo Atual: ${currentWorld || 'N/D'}, Rank: ${rank || 'N/D'}, DPS: ${dps || 'N/D'}`;
-        }
-
-        const userGoals = userData.goals || [];
-        const userGoalsContext = userGoals.length > 0 ? `Metas do Usuário: ${userGoals.join(', ')}` : undefined;
+        const typingInterval = setInterval(() => {
+            message.channel.sendTyping();
+        }, 9000); // Envia o sinal de "digitando" a cada 9 segundos
 
         let imageDataUri = null;
         if (imageAttachment) {
@@ -180,22 +153,51 @@ export async function execute(message) {
             }
         }
 
-        const history = [];
-        let currentMessage = message;
-        const historyLimit = 10;
         try {
-            while (currentMessage.reference && history.length < historyLimit) {
-                const repliedToMessage = await currentMessage.channel.messages.fetch(currentMessage.reference.messageId);
-                const role = repliedToMessage.author.id === client.user.id ? 'assistant' : 'user';
-                const content = repliedToMessage.content.replace(/<@!?(\d+)>/g, '').trim();
-                history.unshift({ role, content });
-                currentMessage = repliedToMessage;
-            }
-        } catch (error) {
-            logger.warn("Não foi possível buscar o histórico completo da conversa:", error);
-        }
+            const userRef = doc(firestore, 'users', message.author.id);
+            const userSnap = await getDoc(userRef);
+            const userData = userSnap.exists() ? userSnap.data() : {};
+            
+            const allLanguages = { ...officialLanguages, ...funLanguages };
 
-        try {
+            const responseStyleKey = userData.aiResponsePreference || 'detailed';
+            const personaKey = userData.aiPersonality || 'amigavel';
+            const languageKey = userData.aiLanguage || 'pt_br';
+            const emojiKey = userData.aiEmojiPreference || 'moderate';
+            const useProfileContext = userData.aiUseProfileContext || false;
+
+            const userTitle = userData.userTitle || undefined;
+            const userName = userData.customName || message.author.username;
+
+            const responseStyleInstruction = responseStyles[responseStyleKey]?.instruction || '';
+            const personaInstruction = personas[personaKey]?.instruction || '';
+            const languageInstruction = allLanguages[languageKey]?.instruction || '';
+            const emojiInstruction = emojiStyles[emojiKey]?.instruction || '';
+            
+            let userProfileContext = undefined;
+            if (useProfileContext && userSnap.exists()) {
+                const { currentWorld, rank, dps } = userData;
+                userProfileContext = `Mundo Atual: ${currentWorld || 'N/A'}, Rank: ${rank || 'N/D'}, DPS: ${dps || 'N/D'}`;
+            }
+
+            const userGoals = userData.goals || [];
+            const userGoalsContext = userGoals.length > 0 ? `Metas do Usuário: ${userGoals.join(', ')}` : undefined;
+
+            const history = [];
+            let currentMessage = message;
+            const historyLimit = 10;
+            try {
+                while (currentMessage.reference && history.length < historyLimit) {
+                    const repliedToMessage = await currentMessage.channel.messages.fetch(currentMessage.reference.messageId);
+                    const role = repliedToMessage.author.id === client.user.id ? 'assistant' : 'user';
+                    const content = repliedToMessage.content.replace(/<@!?(\d+)>/g, '').trim();
+                    history.unshift({ role, content });
+                    currentMessage = repliedToMessage;
+                }
+            } catch (error) {
+                logger.warn("Não foi possível buscar o histórico completo da conversa:", error);
+            }
+
             const result = await generateSolution({
                 problemDescription: question,
                 imageDataUri: imageDataUri || undefined,
@@ -210,6 +212,8 @@ export async function execute(message) {
                 userName,
                 userTitle,
             });
+
+            clearInterval(typingInterval); // Para o indicador de "digitando"
 
             if (result?.structuredResponse?.[0]?.titulo === 'Resposta não encontrada') {
                 await handleUnansweredQuestion(message, question, imageAttachment);
@@ -266,11 +270,12 @@ export async function execute(message) {
                 client.container.interactions.set(`replyMessageId_${message.id}`, replyMessage.id);
             }
         } catch (error) {
+            clearInterval(typingInterval); // Garante que o intervalo seja limpo em caso de erro
             logger.error('Erro na execução do evento messageCreate:', error);
             await handleUnansweredQuestion(message, question, imageAttachment);
             await message.reply('Ocorreu um erro inesperado ao processar sua pergunta. Um especialista foi notificado.').catch(() => {});
         }
-        return;
+        return; // Garante que o fluxo para menções termine aqui
     }
 
     // 4. Se não for nenhuma das condições acima, a mensagem é ignorada.
