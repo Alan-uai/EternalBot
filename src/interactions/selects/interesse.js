@@ -99,22 +99,22 @@ async function handleTargetSelect(interaction, target) {
         interaction.client.container.interactions.delete(`interesse_flow_${interaction.user.id}`);
     
     } else if (target === 'host') {
-        // A interação será atualizada pela função handleHostSelect
-        await handleHostSelect(interaction, true);
+        // Chama a função para mostrar o menu de hosts, mas não responde à interação aqui.
+        // A resposta virá do handler do menu de seleção de host.
+        await showHostSelectionMenu(interaction);
     }
 }
 
-// Handle specific host selection
-async function handleHostSelect(interaction, isInitialCall = false) {
+// Shows the host selection menu
+async function showHostSelectionMenu(interaction) {
     const { firestore } = initializeFirebase();
     const userRef = doc(firestore, 'users', interaction.user.id);
     const userSnap = await getDoc(userRef);
     const following = userSnap.exists() ? userSnap.data().following || [] : [];
     
     if (following.length === 0) {
-        const responseOptions = { content: 'Você não segue nenhum host. Use o comando `/perfil` no perfil de alguém para seguir.', components: [] };
-        // Se for a chamada inicial do botão, atualiza. Se for do menu, responde.
-        return isInitialCall ? interaction.update(responseOptions) : interaction.reply(responseOptions);
+        await interaction.update({ content: 'Você não segue nenhum host. Use o comando `/perfil` no perfil de alguém para seguir.', components: [] });
+        return;
     }
 
     const hostOptions = await Promise.all(following.map(async (hostId) => {
@@ -130,13 +130,10 @@ async function handleHostSelect(interaction, isInitialCall = false) {
         .setPlaceholder('Selecione o host para notificar...')
         .addOptions(hostOptions.slice(0, 25));
         
-    const responseOptions = {
+    await interaction.update({
         content: 'Selecione qual host você quer notificar sobre seu interesse.',
         components: [new ActionRowBuilder().addComponents(hostMenu)],
-    };
-
-    // Apenas atualiza a interação. A resposta final virá do handler do menu.
-    await interaction.update(responseOptions);
+    });
 }
 
 
@@ -153,13 +150,15 @@ async function handleHostNotification(interaction) {
     const requesterDisplayName = requesterMember ? requesterMember.displayName : interaction.user.username;
 
     // Create a notification for each selected raid
+    const notificationIds = [];
     flowData.raidNames.forEach(raidName => {
         const hostNotificationRef = doc(collection(firestore, 'host_notifications'));
+        notificationIds.push(hostNotificationRef.id);
         batch.set(hostNotificationRef, {
             purpose: flowData.purpose,
             raidName: raidName,
             requesterId: interaction.user.id,
-            requesterUsername: requesterDisplayName, // Usando displayName
+            requesterUsername: requesterDisplayName,
             hostId: selectedHostId,
             status: 'pending',
             createdAt: serverTimestamp(),
@@ -175,18 +174,26 @@ async function handleHostNotification(interaction) {
                 .setColor(0xFFA500)
                 .setTitle('🔔 Novo Interesse Registrado!')
                 .setDescription(`**${requesterDisplayName}** registrou interesse em seu grupo de **${flowData.purpose}** para a(s) raid(s): **${flowData.raidNames.join(', ')}**!`)
+                .setFooter({text: 'Você pode gerenciar esta e outras demandas com o comando /demandas.'})
                 .setTimestamp();
             
+            // Usamos o primeiro ID de notificação como referência, já que todos se referem ao mesmo evento.
+            const representativeNotificationId = notificationIds[0];
+
             const actionRow = new ActionRowBuilder()
                 .addComponents(
                     new ButtonBuilder()
-                        .setCustomId(`hostaction_start_${flowData.purpose}_${flowData.raidNames.join(',')}_${interaction.user.id}`)
-                        .setLabel('🚀 Iniciar Grupo Agora')
+                        .setCustomId(`hostaction_start_${representativeNotificationId}`)
+                        .setLabel('🚀 Iniciar Grupo')
                         .setStyle(ButtonStyle.Success),
                     new ButtonBuilder()
-                        .setCustomId(`hostaction_view_${flowData.purpose}_${flowData.raidNames.join(',')}`)
+                        .setCustomId(`hostaction_view_${representativeNotificationId}`)
                         .setLabel('👀 Ver Interessados')
-                        .setStyle(ButtonStyle.Secondary)
+                        .setStyle(ButtonStyle.Secondary),
+                    new ButtonBuilder()
+                        .setCustomId(`hostaction_reject_${representativeNotificationId}`)
+                        .setLabel('Rejeitar')
+                        .setStyle(ButtonStyle.Danger)
                 );
 
             await hostUser.send({ embeds: [embed], components: [actionRow] });
