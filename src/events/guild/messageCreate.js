@@ -125,7 +125,6 @@ export async function execute(message) {
         } catch (error) {
             logger.error("Erro ao processar resposta da comunidade:", error);
         }
-        // Se for uma resposta da comunidade, não fazer mais nada
         return;
     }
 
@@ -271,7 +270,6 @@ export async function execute(message) {
             await handleUnansweredQuestion(message, question, imageAttachment);
             await message.reply('Ocorreu um erro inesperado ao processar sua pergunta. Um especialista foi notificado.').catch(() => {});
         }
-        // Se for uma pergunta para a IA, não fazer mais nada
         return;
     }
 
