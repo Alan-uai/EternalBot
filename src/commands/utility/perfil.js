@@ -1,5 +1,5 @@
 // src/commands/utility/perfil.js
-import { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder } from 'discord.js';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { initializeFirebase } from '../../firebase/index.js';
 
@@ -20,7 +20,7 @@ async function getOrCreateUserProfile(userId, username) {
         await setDoc(userRef, newUserProfile);
         userSnap = await getDoc(userRef);
     }
-    return userSnap.data();
+    return userSnap;
 }
 
 export const data = new SlashCommandBuilder()
@@ -31,62 +31,67 @@ export const data = new SlashCommandBuilder()
             .setDescription('Veja o perfil de outro usuário (opcional).')
             .setRequired(false));
 
-export async function execute(interaction) {
+export async function execute(interaction, container) {
     await interaction.deferReply({ ephemeral: true });
 
     const targetUser = interaction.options.getUser('usuario') || interaction.user;
     const isSelf = targetUser.id === interaction.user.id;
+    const { imageGenerator } = container.services;
 
-    const userData = await getOrCreateUserProfile(targetUser.id, targetUser.username);
+    const userSnap = await getOrCreateUserProfile(targetUser.id, targetUser.username);
+    const userData = userSnap.data();
 
-    const embed = new EmbedBuilder()
-        .setColor(0x1F8B4C)
-        .setTitle(`👤 Perfil de ${targetUser.username}`)
-        .setThumbnail(targetUser.displayAvatarURL())
-        .addFields(
-            { name: 'Rank', value: `\`${userData.rank || 'Não definido'}\``, inline: true },
-            { name: 'Mundo', value: `\`${userData.currentWorld || 'Não definido'}\``, inline: true },
-            { name: 'DPS', value: `\`${userData.dps || 'Não definido'}\``, inline: true },
-            { name: 'Pontos de Reputação', value: `\`${userData.reputationPoints || 0}\``, inline: true },
-            { name: 'Créditos', value: `\`${userData.credits || 0}\``, inline: true }
-        );
+    // Gerar imagem do perfil
+    try {
+        const profileImageBuffer = await imageGenerator.createProfileImage(targetUser, userData);
+        const attachment = new AttachmentBuilder(profileImageBuffer, { name: `perfil-${targetUser.username}.png` });
 
-    const followingList = userData.following || [];
-    if (followingList.length > 0) {
-        const followingMentions = followingList.map(id => `<@${id}>`).join(', ');
-        embed.addFields({ name: 'Hosts Seguidos', value: followingMentions });
-    } else if (isSelf) {
-        embed.addFields({ name: 'Hosts Seguidos', value: 'Você não segue ninguém. Use `/seguir` para seguir um host.' });
+        const components = [];
+        if (isSelf) {
+            const useContext = userData.aiUseProfileContext === true;
+            const row = new ActionRowBuilder().addComponents(
+                new ButtonBuilder()
+                    .setCustomId('personalize_profile_update')
+                    .setLabel('Atualizar Dados')
+                    .setStyle(ButtonStyle.Primary)
+                    .setEmoji('🔄'),
+                new ButtonBuilder()
+                    .setCustomId('personalize_profile_context_toggle')
+                    .setLabel(useContext ? 'Desativar Contexto' : 'Ativar Contexto')
+                    .setStyle(useContext ? ButtonStyle.Danger : ButtonStyle.Success)
+            );
+            components.push(row);
+        } else {
+             const row = new ActionRowBuilder();
+             const selfSnap = await getOrCreateUserProfile(interaction.user.id, interaction.user.username);
+             const isFollowing = (selfSnap.data().following || []).includes(targetUser.id);
+             
+             row.addComponents(
+                new ButtonBuilder()
+                    .setCustomId(`seguir_toggle_${targetUser.id}`)
+                    .setLabel(isFollowing ? 'Deixar de Seguir' : 'Seguir Host')
+                    .setStyle(isFollowing ? ButtonStyle.Danger : ButtonStyle.Success)
+                    .setEmoji('🔔')
+             );
+
+             // Adiciona botão do perfil Roblox se o ID existir
+             if (userData.robloxId) {
+                row.addComponents(
+                    new ButtonBuilder()
+                        .setLabel('Perfil Roblox')
+                        .setStyle(ButtonStyle.Link)
+                        .setURL(`https://www.roblox.com/users/${userData.robloxId}/profile`)
+                        .setEmoji('🔗')
+                );
+             }
+
+             components.push(row);
+        }
+
+        await interaction.editReply({ files: [attachment], components, ephemeral: true });
+
+    } catch (error) {
+        container.logger.error("Erro ao gerar ou enviar imagem do perfil:", error);
+        await interaction.editReply({ content: 'Ocorreu um erro ao tentar exibir o perfil.', ephemeral: true });
     }
-
-    const components = [];
-    if (isSelf) {
-        const useContext = userData.aiUseProfileContext === true;
-        embed.addFields({ name: 'Uso de Contexto pela IA', value: `**${useContext ? 'Ativado' : 'Desativado'}**`, inline: true });
-        
-        const row = new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-                .setCustomId('personalize_profile_update')
-                .setLabel('Atualizar Dados')
-                .setStyle(ButtonStyle.Primary)
-                .setEmoji('🔄'),
-            new ButtonBuilder()
-                .setCustomId('personalize_profile_context_toggle')
-                .setLabel(useContext ? 'Desativar Contexto' : 'Ativar Contexto')
-                .setStyle(useContext ? ButtonStyle.Danger : ButtonStyle.Success)
-        );
-        components.push(row);
-    } else {
-        const selfData = await getOrCreateUserProfile(interaction.user.id, interaction.user.username);
-        const isFollowing = (selfData.following || []).includes(targetUser.id);
-        const followButton = new ButtonBuilder()
-            .setCustomId(`seguir_toggle_${targetUser.id}`)
-            .setLabel(isFollowing ? 'Deixar de Seguir' : 'Seguir Host')
-            .setStyle(isFollowing ? ButtonStyle.Danger : ButtonStyle.Success)
-            .setEmoji('🔔');
-        components.push(new ActionRowBuilder().addComponents(followButton));
-    }
-
-
-    await interaction.editReply({ embeds: [embed], components, ephemeral: true });
 }
