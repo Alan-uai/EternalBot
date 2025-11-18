@@ -132,14 +132,6 @@ export async function execute(message) {
         return;
     }
 
-    // Se for uma resposta ao próprio bot, ignora para não criar loops, a menos que seja uma menção explícita
-    if (message.reference) {
-        const repliedToMessage = await message.channel.messages.fetch(message.reference.messageId).catch(() => null);
-        if (repliedToMessage && repliedToMessage.author.id === client.user.id && !message.mentions.has(client.user.id)) {
-            return;
-        }
-    }
-
     const question = message.content.replace(/<@!?(\d+)>/g, '').trim();
     const imageAttachment = message.attachments.find(att => att.contentType?.startsWith('image/'));
 
