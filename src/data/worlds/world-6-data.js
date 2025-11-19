@@ -160,7 +160,13 @@ export const world6Data = {
       name: 'Hero License Quest',
       type: 'progression',
       statType: 'mixed',
-      description: "Missão de Licença de Herói (Rank E), com tarefas que se estendem pelos mundos 6 a 9."
+      description: "Missão de Licença de Herói (Rank E), com tarefas que se estendem pelos mundos 6 a 9.",
+      missions: [
+        { name: 'E Class Quest #1', world: 6, requirement: 'Derrotar 100 White Tiger', rewards: [{name: 'Soul Potion', amount: 1}, {name: 'Energy Potion', amount: 1}] },
+        { name: 'E Class Quest #2', world: 7, requirement: 'Coletar 1000 Grimoire Token', rewards: [{name: 'Attack Range Potion I', amount: 1}, {name: 'Coins Potion', amount: 1}] },
+        { name: 'E Class Quest #3', world: 8, requirement: 'Derrotar 75 Statue of God', rewards: [{name: 'Exp Potion', amount: 1}, {name: 'Damage Potion', amount: 1}] },
+        { name: 'E Class Quest #4', world: 9, requirement: 'Coletar 2500 Eye Token', rewards: [{name: 'Soul Potion', amount: 1}, {name: 'Exp Potion', amount: 1}] },
+      ]
     }
   ]
 };
