@@ -473,13 +473,14 @@
     "Dungeon": {
         "title": "Dungeon",
         "type": "object",
-        "description": "Represents a dungeon within a world.",
+        "description": "Represents a dungeon, raid, or defense within a world.",
         "properties": {
             "name": { "type": "string" },
             "boss": { "type": "string" },
+            "type": { "type": "string", "enum": ["dungeon", "raid", "defense"] },
             "description": { "type": "string" }
         },
-        "required": ["name"]
+        "required": ["name", "type"]
     },
     "Accessory": {
       "title": "Accessory",

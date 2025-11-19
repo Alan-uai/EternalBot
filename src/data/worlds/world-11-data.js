@@ -2,7 +2,7 @@
 export const world11Data = {
   id: 'world-11',
   title: 'Mundo 11 - Ilha dos Titãs',
-  summary: 'Introduz os Titãs, um novo tipo de lutador focado em causar dano.',
+  summary: 'Introduz os Titãs, um novo tipo de lutador focado em causar dano, e a Titan Defense.',
   npcs: [
     { name: 'Titã Anormal', rank: 'E', exp: 350000000, hp: '1TVg' },
     { name: 'Titã Blindado', rank: 'D', exp: 500000000, hp: '10TVg' },
@@ -16,6 +16,14 @@ export const world11Data = {
     { name: 'Soldado de Paradis', rank: 'Comum', rarity: 'Comum', energy_bonus: '0.11x' },
     { name: 'Soldado de Marley', rank: 'Incomum', rarity: 'Incomum', energy_bonus: '0.22x' },
     { name: 'Fundador Ymir', rank: 'Raro', rarity: 'Raro', energy_bonus: '0.33x' },
+  ],
+  dungeons: [
+      {
+          name: 'Titan Defense',
+          type: 'defense',
+          boss: 'Desconhecido',
+          description: 'Uma dungeon de defesa de ponto, onde o objetivo é impedir que os titãs cheguem ao outro lado.'
+      }
   ],
   powers: [
     {
@@ -135,5 +143,3 @@ export const world11Data = {
     }
   ],
 };
-
-  
