@@ -30,6 +30,15 @@ As tabelas abaixo detalham os bônus para cada tier de Runa em suas respectivas 
         { Runa: 'Coin II', Common: '0.2x', Uncommon: '0.3x', Rare: '0.4x', Epic: '0.5x', Legendary: '0.6x', Mythic: '0.7x', Phantom: '1x', Supreme: '1.5x' },
         { Runa: 'Luck II', Common: '0.02x', Uncommon: '0.03x', Rare: '0.04x', Epic: '0.05x', Legendary: '0.06x', Mythic: '0.07x', Phantom: '0.1x', Supreme: '0.15x' },
       ]
+    },
+    rune3Bonuses: {
+      headers: ['Runa', 'Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', 'Mythic', 'Phantom', 'Supreme'],
+      rows: [
+        { Runa: 'Energy III', Common: '0.75x', Uncommon: '1.125x', Rare: '2x', Epic: '1.875x', Legendary: '2.25x', Mythic: '2.625x', Phantom: '3.75x', Supreme: '5.625x' },
+        { Runa: 'Damage III', Common: '0.75x', Uncommon: '1.125x', Rare: '2x', Epic: '1.875x', Legendary: '2.25x', Mythic: '2.625x', Phantom: '3.75x', Supreme: '5.625x' },
+        { Runa: 'Coin III', Common: '0.3x', Uncommon: '0.45x', Rare: '0.6x', Epic: '0.75x', Legendary: '0.9x', Mythic: '1.05x', Phantom: '1.5x', Supreme: '2.25x' },
+        { Runa: 'Luck III', Common: '0.03x', Uncommon: '0.045x', Rare: '0.06x', Epic: '0.075x', Legendary: '0.09x', Mythic: '0.105x', Phantom: '0.15x', Supreme: '0.225x' },
+      ]
     }
   }
 };
