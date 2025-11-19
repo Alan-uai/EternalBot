@@ -145,42 +145,6 @@ export const world22Data = {
           ]
         }
       ] 
-    },
-    {
-      id: 'queen-boots',
-      name: 'Queen Boots',
-      slot: 'Leg',
-      world: '22',
-      npc: 'Blood Queen',
-      rank: 'SS-Rank',
-      bonuses: [
-        {
-          type: 'energy',
-          valuesByRarity: [
-            { rarity: 'Common', value: '0.5x' },
-            { rarity: 'Uncommon', value: '0.75x' },
-            { rarity: 'Rare', value: '1.x' },
-            { rarity: 'Epic', value: '1.25x' },
-            { rarity: 'Legendary', value: '1.5x' },
-            { rarity: 'Mythic', value: '1.75x' },
-            { rarity: 'Phantom', value: '2.5x' },
-            { rarity: 'Supreme', value: '3.75x' }
-          ]
-        },
-        {
-          type: 'movespeed',
-          valuesByRarity: [
-            { rarity: 'Common', value: '13.3%' },
-            { rarity: 'Uncommon', value: '20%' },
-            { rarity: 'Rare', value: '26.6%' },
-            { rarity: 'Epic', value: '33.3%' },
-            { rarity: 'Legendary', value: '40%' },
-            { rarity: 'Mythic', value: '46.6%' },
-            { rarity: 'Phantom', value: '66.5%' },
-            { rarity: 'Supreme', value: '100%' }
-          ]
-        }
-      ]
     }
   ],
   missions: [
