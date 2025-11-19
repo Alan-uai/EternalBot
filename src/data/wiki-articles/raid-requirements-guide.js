@@ -88,7 +88,7 @@ Para raids como **Titan Defense** e **Progression Raid**, o HP dos inimigos aume
     },
     kaijuDungeon: {
       title: "Kaiju Dungeon",
-      world: "Desconhecido",
+      world: "Mundo 13",
       maxWave: 50,
       playerLimit: 99,
       headers: ['Wave', 'HP'],
@@ -166,7 +166,7 @@ Para raids como **Titan Defense** e **Progression Raid**, o HP dos inimigos aume
     },
     progressionRaid: {
       title: "Progression Raid",
-      world: "Lobby",
+      world: "Mundo 11",
       maxWave: 1000,
       playerLimit: 4,
       headers: ['Wave', 'Requisito'],
@@ -182,7 +182,7 @@ Para raids como **Titan Defense** e **Progression Raid**, o HP dos inimigos aume
     },
     progression2: {
       title: "Progression 2",
-      world: "Lobby 2",
+      world: "Mundo 16",
       maxWave: 1000,
       playerLimit: 4,
       headers: ['Wave', 'Requisito'],
@@ -257,3 +257,5 @@ Para raids como **Titan Defense** e **Progression Raid**, o HP dos inimigos aume
     }
   }
 };
+
+    
