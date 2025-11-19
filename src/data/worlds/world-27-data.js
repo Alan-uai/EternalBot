@@ -7,8 +7,8 @@ export const world27Data = {
   tags: ['mundo 27', 'guia', 'demonio'],
   npcs: [
     { name: 'Demônio Inferior', rank: 'E', exp: 0, hp: '6.69T' },
-    { name: 'Demônio Comum', rank: 'D', exp: 0, hp: '13.3T' },
-    { name: 'Demônio Superior', rank: 'C', exp: 0, hp: '20T' },
+    { name: 'Demônio Comum', rank: 'D', exp: 0, hp: '13.3T', drops: { aura: { name: 'Pink Oni Aura', probability: 0.05 } } },
+    { name: 'Demônio Superior', rank: 'C', exp: 0, hp: '20T', drops: { aura: { name: 'Blue Oni Aura', probability: 0.05 } } },
     { name: 'Arquidemônio', rank: 'B', exp: 0, hp: '26.7T' },
     { name: 'Lorde Demônio', rank: 'A', exp: 0, hp: '33.4T' },
     { name: 'Rei Demônio', rank: 'S', exp: 0, hp: '44.6T' },

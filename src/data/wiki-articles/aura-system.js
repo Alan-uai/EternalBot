@@ -30,7 +30,9 @@ Estas auras são dropadas por chefes (Rank SS ou SSS) em mundos específicos.
 *   **Mundo 17 (Arama):** Ghoul Aura (1x Damage)
 *   **Mundo 19 (Leonardo):** Fire Captain Aura (1.5x Damage)
 *   **Mundo 22 (Shadow):** Bloody Aura (2x Damage)
-*   **Mundo 23 (Galaxy Hunter):** Galaxy Autta (2.5x Energy)`,
+*   **Mundo 23 (Galaxy Hunter):** Galaxy Autta (2.5x Energy)
+*   **Mundo 27 (Demônio Comum):** Pink Oni Aura (2.5x Damage)
+*   **Mundo 27 (Demônio Superior):** Blue Oni Aura (3x Energy)`,
     tags: ['aura', 'poder', 'habilidades', 'buffs', 'drop de chefe', 'sistema', 'geral', 'halloween'],
     imageUrl: 'wiki-2',
 };
