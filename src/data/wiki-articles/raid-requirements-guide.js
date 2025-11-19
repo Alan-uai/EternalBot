@@ -1,39 +1,24 @@
 
 export const raidRequirementsArticle = {
   id: 'raid-requirements',
-  title: 'Requisitos de Energia para Raids',
-  summary: 'Um guia completo com os requisitos de energia para passar por diferentes ondas em várias raids e dungeons do jogo.',
-  content: `Este guia consolida a energia necessária para progredir nas principais raids e dungeons do Anime Eternal. É importante notar que as raids podem ser solo ou em grupo.
+  title: 'Guia de Requisitos para Raids e Dungeons',
+  summary: 'Um guia completo com os requisitos de HP e DPS, mundo, limite de jogadores e waves para as principais raids e dungeons do jogo.',
+  content: `Este guia consolida a energia e o dano necessários para progredir nas principais raids e dungeons do Anime Eternal. Compreender os limites e requisitos de cada uma é essencial para uma progressão eficiente.
 
-**Raids Solo (1 Jogador):**
-*   **Gleam Raid (Mundo 15):** Uma raid de desafio individual.
-*   **Raid Sins (Mundo 12):** Outra raid projetada para um único jogador.
-*   **Mundo Raid (Lobby 2):** Uma raid de desafio individual, desbloqueada com o Mundo 21.
+### Tipos de Raids
+As raids podem ser divididas em algumas categorias principais com base no número de jogadores permitidos:
 
-**Raids em Grupo (até 4 Jogadores):**
-*   Todas as outras raids não mencionadas como "solo" permitem a participação de até 4 jogadores.
+- **Raids Solo (1 Jogador):** Gleam Raid, Raid Sins, Mundo Raid, Halloween Raid e Tournament Raid.
+- **Raids de Esquadrão (Até 4 Jogadores):** A maioria das raids de evento e de mundo, como Restaurant, Cursed e Ghoul Raid.
+- **Raids Massivas (Até 99 Jogadores):** Desafios especiais como a Suffering, Torment, Kaiju e Adventure Dungeons.
 
-Abaixo estão as tabelas com os requisitos de HP e DPS para as novas raids, e a tabela consolidada para as raids mais antigas.
-
-### Novos Avatares de Dano (Damage Avatars)
+### Novos Avatares de Dano
 Recentemente, as raids Gleam e Mundo foram estendidas e agora recompensam os jogadores com **avatares de dano exclusivos**, os únicos do tipo no jogo.
 
 ### Cálculo de HP Exponencial para Raids
-
-Para raids como **Titan Defense** e **Progression Raid**, o HP dos inimigos aumenta exponencialmente a cada sala. Em vez de uma tabela gigante, use a seguinte fórmula para estimar o HP:
-
-**Fórmula:** \`HP(sala) = HP_inicial * (HP_final / HP_inicial)^((sala - 1) / 999)\`
-
-**Valores Base:**
-*   **Titan Defense:**
-    *   HP Inicial (Sala 1): 7.62 sxD (7.62e51)
-    *   HP Final (Sala 1000): 1.63 TGN (1.63e93)
-*   **Progression Raid:**
-    *   HP Inicial (Sala 1): 57.2 DD (5.72e40)
-    *   HP Final (Sala 1000): 12.3 SeV (1.23e82)
-
-A **Mundo Raid**, localizada no Lobby 2, é desbloqueada junto com o Mundo 21. Sua mecânica é similar à da Gleam Raid: cada onda completada é uma conquista que concede um nível de um poder exclusivo da raid (do comum ao supremo), além de uma conquista final que recompensa com créditos.`,
-  tags: ['raid', 'dungeon', 'energia', 'guia', 'geral', 'solo', 'damage avatar', 'kaiju', 'suffering'],
+Para raids como **Titan Defense** e **Progression Raid**, o HP dos inimigos aumenta exponencialmente a cada sala. Use a seguinte fórmula para estimar o HP: \`HP(sala) = HP_inicial * (HP_final / HP_inicial)^((sala - 1) / 999)\`.
+`,
+  tags: ['raid', 'dungeon', 'energia', 'dps', 'hp', 'guia', 'geral', 'solo', 'esquadrão', 'massiva', 'requisitos', 'mundo', 'limite'],
   imageUrl: 'wiki-11',
   progressionFormulas: {
       titanDefense: {
@@ -55,6 +40,7 @@ A **Mundo Raid**, localizada no Lobby 2, é desbloqueada junto com o Mundo 21. S
   },
   tables: {
     damageAvatars: {
+        title: "Avatares de Dano Exclusivos",
         headers: ['Origem', 'Stats', 'Obtenção'],
         rows: [
             { 'Origem': 'Gleam Raid', 'Stats': '5x', 'Obtenção': 'Alcançar a Wave 25' },
@@ -62,7 +48,11 @@ A **Mundo Raid**, localizada no Lobby 2, é desbloqueada junto com o Mundo 21. S
             { 'Origem': 'Chefe Mundo 26 (Tagamura)', 'Stats': '15x', 'Obtenção': 'Drop do boss Tagamura / Takemoto (SSS-Rank)' }
         ]
     },
-    gleamRaidWorld15: {
+    gleamRaid: {
+      title: "Gleam Raid (Mundo 15)",
+      world: "Mundo 15",
+      maxWave: 10,
+      playerLimit: 1,
       headers: ['Wave', 'HP', 'DPS'],
       rows: [
         { 'Wave': 1, 'HP': '12.00 - QnV', 'DPS': '500 - QtV' },
@@ -77,7 +67,11 @@ A **Mundo Raid**, localizada no Lobby 2, é desbloqueada junto com o Mundo 21. S
         { 'Wave': 10, 'HP': '6.14 - NvG', 'DPS': '230 - OvG' }
       ]
     },
-    mundoRaidWorld21: {
+    mundoRaid: {
+      title: "Mundo Raid (Lobby 2)",
+      world: "Lobby 2 (desbloqueada no Mundo 21)",
+      maxWave: 10,
+      playerLimit: 1,
       headers: ['Wave', 'HP', 'DPS'],
       rows: [
         { 'Wave': 1, 'HP': '81 - NoTG', 'DPS': '8.1 - NoTG' },
@@ -93,81 +87,172 @@ A **Mundo Raid**, localizada no Lobby 2, é desbloqueada junto com o Mundo 21. S
       ]
     },
     kaijuDungeon: {
+      title: "Kaiju Dungeon",
+      world: "Desconhecido",
+      maxWave: 50,
+      playerLimit: 99,
       headers: ['Wave', 'HP'],
       rows: [
         { Wave: '50', HP: '500-UvG' }
       ]
     },
     sufferingDungeon: {
+      title: "Suffering Dungeon",
+      world: "Mundo 20",
+      maxWave: 50,
+      playerLimit: 99,
       headers: ['Wave', 'HP'],
       rows: [
         { Wave: 1, HP: '1-OcTG' },
-        { Wave: 2, HP: '2-OcTG' },
-        { Wave: 3, HP: '5-OcTG' },
-        { Wave: 4, HP: '10-OcTG' },
-        { Wave: 5, HP: '1.5-NoTG' },
-        { Wave: 6, HP: '15-OcTG' },
-        { Wave: 7, HP: '40-OcTG' },
-        { Wave: 8, HP: '150-OcTG' },
-        { Wave: 9, HP: '250-OcTG' },
         { Wave: 10, HP: '6-NoTG' },
-        { Wave: 11, HP: '1.72-NoTG' },
-        { Wave: 12, HP: '2.28-NoTG' },
-        { Wave: 13, HP: '4.76-NoTG' },
-        { Wave: 14, HP: '9.46-NoTG' },
-        { Wave: 15, HP: '1.96-QdDR' },
-        { Wave: 16, HP: '1.33-NoTG' },
-        { Wave: 17, HP: '76.8-NoTG' },
-        { Wave: 18, HP: '151-NoTG' },
-        { Wave: 19, HP: '284-NoTG' },
         { Wave: 20, HP: '4.8-QdDR' },
-        { Wave: 21, HP: '13.4-NoTG' },
-        { Wave: 22, HP: '2.33-QdDR' },
-        { Wave: 23, HP: '4.92-QdDR' },
-        { Wave: 24, HP: '9.69-QdDR' },
-        { Wave: 25, HP: '1.4-uQDR' },
-        { Wave: 26, HP: '140-NoTG' },
-        { Wave: 27, HP: '75.6-QdDR' },
-        { Wave: 28, HP: '159-QdDR' },
-        { Wave: 29, HP: '318-QdDR' },
         { Wave: 30, HP: '6.2-uQDR' },
-        { Wave: 31, HP: '1.54-QdDR' },
-        { Wave: 32, HP: '2.55-uQDR' },
-        { Wave: 33, HP: '7.28-uQDR' },
-        { Wave: 34, HP: '10-uQDR' },
-        { Wave: 35, HP: '1.54-dQDR' },
-        { Wave: 36, HP: '15.7-QdDR' },
-        { Wave: 37, HP: '77.3-uQDR' },
-        { Wave: 38, HP: '151-uQDR' },
-        { Wave: 39, HP: '325-uQDR' },
         { Wave: 40, HP: '5.1-dQDR' },
-        { Wave: 41, HP: '164-QdDR' },
-        { Wave: 42, HP: '2.59-dQDR' },
-        { Wave: 43, HP: '5.16-dQDR' },
-        { Wave: 44, HP: '10-dQDR' },
-        { Wave: 45, HP: '1.56-TqDR' },
-        { Wave: 46, HP: '1.8-uQDR' },
-        { Wave: 47, HP: '82.3-dQDR' },
-        { Wave: 48, HP: '163-dQDR' },
-        { Wave: 49, HP: '325-dQDR' },
         { Wave: 50, HP: '587-TqDR' },
       ]
     },
-    requirements: {
-      headers: ['Wave', 'Restaurant Raid', 'Cursed Raid', 'Leaf Raid', 'Progression Raid', 'Progression 2', 'Ghoul Raid', 'Green Planet Raid', 'Hollow Raid', 'Tomb Raid'],
+    restaurantRaid: {
+      title: "Restaurant Raid",
+      world: "Mundo 2",
+      maxWave: 1000,
+      playerLimit: 4,
+      headers: ['Wave', 'Requisito'],
       rows: [
-        { 'Wave': 50, 'Restaurant Raid': '750 - T', 'Cursed Raid': '500 - QN', 'Leaf Raid': '500 - UD', 'Progression Raid': '500 - DD', 'Progression 2': '200 - QNV', 'Ghoul Raid': '600 - SPG', 'Green Planet Raid': 'N/A', 'Hollow Raid': '100 - uTG', 'Tomb Raid': '50 - QqDDR' },
-        { 'Wave': 100, 'Restaurant Raid': '140 - QD', 'Cursed Raid': '63 - SX', 'Leaf Raid': '5 - DD', 'Progression Raid': '62 - TDD', 'Progression 2': '24 - SEV', 'Ghoul Raid': '70 - OVG', 'Green Planet Raid': '21.4 - ssTG', 'Hollow Raid': '10 - SpTG', 'Tomb Raid': '5 - NqQDR' },
-        { 'Wave': 200, 'Restaurant Raid': '2 - SX', 'Cursed Raid': '860 - SP', 'Leaf Raid': '75 - TDD', 'Progression Raid': '900 - QDD', 'Progression 2': '333 - SPG', 'Ghoul Raid': '1 - TGN', 'Green Planet Raid': '35.9 - OcTG', 'Hollow Raid': '542 - OcTG', 'Tomb Raid': '10 - QnQGNT' },
-        { 'Wave': 300, 'Restaurant Raid': '27,5 SP', 'Cursed Raid': '12 - N', 'Leaf Raid': '1 - QND', 'Progression Raid': '12 - SXD', 'Progression 2': '5 - NVG', 'Ghoul Raid': '13 - UTG', 'Green Planet Raid': 'N/A', 'Hollow Raid': '4.9 - QdDR', 'Tomb Raid': '150 - uQGNT' },
-        { 'Wave': 500, 'Restaurant Raid': '5 - DE', 'Cursed Raid': '2,25 - DD', 'Leaf Raid': '200 - SPD', 'Progression Raid': '2,25 NVD', 'Progression 2': '900 - UTG', 'Ghoul Raid': '2,5 - QTTG', 'Green Planet Raid': 'N/A', 'Hollow Raid': '870 - dQDR', 'Tomb Raid': '50 - QxQGNT' },
-        { 'Wave': 750, 'Restaurant Raid': '110 - TDD', 'Cursed Raid': '50 - QND', 'Leaf Raid': '4,5 - UVG', 'Progression Raid': '50 - DVG', 'Progression 2': '20 - QNTG', 'Ghoul Raid': '55 - SPTG', 'Green Planet Raid': 'N/A', 'Hollow Raid': '5 - SsQDR', 'Tomb Raid': '500 - SpQvGT' },
-        { 'Wave': 1000, 'Restaurant Raid': '2,5 - SPD', 'Cursed Raid': '1,1 - NVD', 'Leaf Raid': '95 - QTV', 'Progression Raid': '1 - SEV', 'Progression 2': '430 - OCTG', 'Ghoul Raid': '1,25 - UQDR', 'Green Planet Raid': 'N/A', 'Hollow Raid': '80 - NqDDR', 'Tomb Raid': '20 - UssQGNTL' },
-        { 'Wave': 1200, 'Restaurant Raid': 'N/A', 'Cursed Raid': 'N/A', 'Leaf Raid': '18 - SPG', 'Progression Raid': 'N/A', 'Progression 2': 'N/A', 'Ghoul Raid': 'N/A', 'Green Planet Raid': 'N/A', 'Hollow Raid': 'N/A', 'Tomb Raid': 'N/A' },
-        { 'Wave': 1400, 'Restaurant Raid': 'N/A', 'Cursed Raid': 'N/A', 'Leaf Raid': '3,5 - TGN', 'Progression Raid': 'N/A', 'Progression 2': 'N/A', 'Ghoul Raid': 'N/A', 'Green Planet Raid': 'N/A', 'Hollow Raid': 'N/A', 'Tomb Raid': 'N/A' },
-        { 'Wave': 1600, 'Restaurant Raid': 'N/A', 'Cursed Raid': 'N/A', 'Leaf Raid': '650 - DTG', 'Progression Raid': 'N/A', 'Progression 2': 'N/A', 'Ghoul Raid': 'N/A', 'Green Planet Raid': 'N/A', 'Hollow Raid': 'N/A', 'Tomb Raid': 'N/A' },
-        { 'Wave': 1800, 'Restaurant Raid': 'N/A', 'Cursed Raid': 'N/A', 'Leaf Raid': '125 - QNTG', 'Progression Raid': 'N/A', 'Progression 2': 'N/A', 'Ghoul Raid': 'N/A', 'Green Planet Raid': 'N/A', 'Hollow Raid': 'N/A', 'Tomb Raid': 'N/A' },
-        { 'Wave': 2000, 'Restaurant Raid': 'N/A', 'Cursed Raid': 'N/A', 'Leaf Raid': '50 - OCTG', 'Progression Raid': 'N/A', 'Progression 2': 'N/A', 'Ghoul Raid': 'N/A', 'Green Planet Raid': 'N/A', 'Hollow Raid': 'N/A', 'Tomb Raid': 'N/A' }
+        { 'Wave': 50, 'Requisito': '750 - T' },
+        { 'Wave': 100, 'Requisito': '140 - QD' },
+        { 'Wave': 200, 'Requisito': '2 - SX' },
+        { 'Wave': 300, 'Requisito': '27,5 SP' },
+        { 'Wave': 500, 'Requisito': '5 - DE' },
+        { 'Wave': 750, 'Requisito': '110 - TDD' },
+        { 'Wave': 1000, 'Requisito': '2,5 - SPD' },
+      ]
+    },
+    cursedRaid: {
+      title: "Cursed Raid",
+      world: "Mundo 4",
+      maxWave: 1000,
+      playerLimit: 4,
+      headers: ['Wave', 'Requisito'],
+      rows: [
+        { 'Wave': 50, 'Requisito': '500 - QN' },
+        { 'Wave': 100, 'Requisito': '63 - SX' },
+        { 'Wave': 200, 'Requisito': '860 - SP' },
+        { 'Wave': 300, 'Requisito': '12 - N' },
+        { 'Wave': 500, 'Requisito': '2,25 - DD' },
+        { 'Wave': 750, 'Requisito': '50 - QND' },
+        { 'Wave': 1000, 'Requisito': '1,1 - NVD' },
+      ]
+    },
+    leafRaid: {
+      title: "Leaf Raid",
+      world: "Lobby",
+      maxWave: 2000,
+      playerLimit: 4,
+      headers: ['Wave', 'Requisito'],
+      rows: [
+        { 'Wave': 50, 'Requisito': '500 - UD' },
+        { 'Wave': 100, 'Requisito': '5 - DD' },
+        { 'Wave': 200, 'Requisito': '75 - TDD' },
+        { 'Wave': 300, 'Requisito': '1 - QND' },
+        { 'Wave': 500, 'Requisito': '200 - SPD' },
+        { 'Wave': 750, 'Requisito': '4,5 - UVG' },
+        { 'Wave': 1000, 'Requisito': '95 - QTV' },
+        { 'Wave': 1200, 'Requisito': '18 - SPG' },
+        { 'Wave': 1400, 'Requisito': '3,5 - TGN' },
+        { 'Wave': 1600, 'Requisito': '650 - DTG' },
+        { 'Wave': 1800, 'Requisito': '125 - QNTG' },
+        { 'Wave': 2000, 'Requisito': '50 - OCTG' },
+      ]
+    },
+    progressionRaid: {
+      title: "Progression Raid",
+      world: "Lobby",
+      maxWave: 1000,
+      playerLimit: 4,
+      headers: ['Wave', 'Requisito'],
+      rows: [
+        { 'Wave': 50, 'Requisito': '500 - DD' },
+        { 'Wave': 100, 'Requisito': '62 - TDD' },
+        { 'Wave': 200, 'Requisito': '900 - QDD' },
+        { 'Wave': 300, 'Requisito': '12 - SXD' },
+        { 'Wave': 500, 'Requisito': '2,25 NVD' },
+        { 'Wave': 750, 'Requisito': '50 - DVG' },
+        { 'Wave': 1000, 'Requisito': '1 - SEV' },
+      ]
+    },
+    progression2: {
+      title: "Progression 2",
+      world: "Lobby 2",
+      maxWave: 1000,
+      playerLimit: 4,
+      headers: ['Wave', 'Requisito'],
+      rows: [
+        { 'Wave': 50, 'Requisito': '200 - QNV' },
+        { 'Wave': 100, 'Requisito': '24 - SEV' },
+        { 'Wave': 200, 'Requisito': '333 - SPG' },
+        { 'Wave': 300, 'Requisito': '5 - NVG' },
+        { 'Wave': 500, 'Requisito': '900 - UTG' },
+        { 'Wave': 750, 'Requisito': '20 - QNTG' },
+        { 'Wave': 1000, 'Requisito': '430 - OCTG' },
+      ]
+    },
+    ghoulRaid: {
+      title: "Ghoul Raid",
+      world: "Mundo 17",
+      maxWave: 1000,
+      playerLimit: 4,
+      headers: ['Wave', 'Requisito'],
+      rows: [
+        { 'Wave': 50, 'Requisito': '600 - SPG' },
+        { 'Wave': 100, 'Requisito': '70 - OVG' },
+        { 'Wave': 200, 'Requisito': '1 - TGN' },
+        { 'Wave': 300, 'Requisito': '13 - UTG' },
+        { 'Wave': 500, 'Requisito': '2,5 - QTTG' },
+        { 'Wave': 750, 'Requisito': '55 - SPTG' },
+        { 'Wave': 1000, 'Requisito': '1,25 - UQDR' },
+      ]
+    },
+    greenPlanetRaid: {
+      title: "Green Planet Raid",
+      world: "Mundo 20",
+      maxWave: 200,
+      playerLimit: 4,
+      headers: ['Wave', 'Requisito'],
+      rows: [
+        { 'Wave': 100, 'Requisito': '21.4 - ssTG' },
+        { 'Wave': 200, 'Requisito': '35.9 - OcTG' },
+      ]
+    },
+    hollowRaid: {
+      title: "Hollow Raid",
+      world: "Lobby 2",
+      maxWave: 1000,
+      playerLimit: 4,
+      headers: ['Wave', 'Requisito'],
+      rows: [
+        { 'Wave': 50, 'Requisito': '100 - uTG' },
+        { 'Wave': 100, 'Requisito': '10 - SpTG' },
+        { 'Wave': 200, 'Requisito': '542 - OcTG' },
+        { 'Wave': 300, 'Requisito': '4.9 - QdDR' },
+        { 'Wave': 500, 'Requisito': '870 - dQDR' },
+        { 'Wave': 750, 'Requisito': '5 - SsQDR' },
+        { 'Wave': 1000, 'Requisito': '80 - NqDDR' },
+      ]
+    },
+    tombRaid: {
+      title: "Tomb Raid",
+      world: "Mundo 24",
+      maxWave: 1000,
+      playerLimit: 4,
+      headers: ['Wave', 'Requisito'],
+      rows: [
+        { 'Wave': 50, 'Requisito': '50 - QqDDR' },
+        { 'Wave': 100, 'Requisito': '5 - NqQDR' },
+        { 'Wave': 200, 'Requisito': '10 - QnQGNT' },
+        { 'Wave': 300, 'Requisito': '150 - uQGNT' },
+        { 'Wave': 500, 'Requisito': '50 - QxQGNT' },
+        { 'Wave': 750, 'Requisito': '500 - SpQvGT' },
+        { 'Wave': 1000, 'Requisito': '20 - UssQGNTL' },
       ]
     }
   }
