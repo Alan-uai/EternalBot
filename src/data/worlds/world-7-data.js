@@ -2,14 +2,14 @@
 export const world7Data = {
   id: 'world-7',
   title: 'Mundo 7 - Ilha dos Viajantes',
-  summary: 'Focado em energia e moedas, este mundo tem o chefe Novi Chroni.',
+  summary: 'Mundo temático de Black Clover, com foco em energia e moedas. O chefe final é Novi Chroni.',
   npcs: [
-    { name: 'Viajante do Tempo', rank: 'E', exp: 550000, hp: '1QnD' },
-    { name: 'Guardião do Tempo', rank: 'D', exp: 800000, hp: '10QnD' },
-    { name: 'Paradoxo Temporal', rank: 'C', exp: 1200000, hp: '100QnD' },
-    { name: 'Mestre do Tempo', rank: 'B', exp: 1800000, hp: '1sxD' },
-    { name: 'Senhor do Tempo', rank: 'A', exp: 2500000, hp: '10sxD' },
-    { name: 'Chronomancer', rank: 'S', exp: 3500000, hp: '50.5tD' },
+    { name: 'Noalle', rank: 'E', exp: 400000, hp: '1sxD' },
+    { name: 'Megna', rank: 'D', exp: 600000, hp: '10sxD' },
+    { name: 'Finrel', rank: 'C', exp: 900000, hp: '100sxD' },
+    { name: 'Aste', rank: 'B', exp: 1300000, hp: '1SpD' },
+    { name: 'Yune', rank: 'A', exp: 1900000, hp: '10SpD' },
+    { name: 'Yemi', rank: 'S', exp: 2800000, hp: '50.5tdD' },
     { name: 'Novi Chroni', rank: 'SS', exp: 7000000, hp: '101tdD', videoUrl: 'https://cdn.discordapp.com/attachments/1430337273794265250/1430338227725664287/ScreenRecording_10-21-2025_10-35-22_1.mov?ex=68fa1287&is=68f8c107&hm=6ce1e4abfb80c01df86b05dc364cc1e0f45515182d53142c7d75fe9ffad47f3b&', drops: {} },
   ],
   powers: [
@@ -49,6 +49,14 @@ export const world7Data = {
         unlockCost: '150B',
     },
   ],
+  missions: [
+    {
+      name: 'Hero License Quest',
+      type: 'progression',
+      statType: 'mixed',
+      description: "Missão de Licença de Herói (Rank E), com tarefas neste mundo."
+    }
+  ]
 };
 
   
