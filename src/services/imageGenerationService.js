@@ -3,7 +3,8 @@ import { createCanvas, loadImage } from 'canvas';
 import { createBirthdayCard } from '../utils/createBirthdayCard.js';
 import { createScheduleImage } from '../utils/createScheduleImage.js';
 import { createTableImage } from '../utils/createTableImage.js';
-import { createProfileImage } from '../utils/createProfileImage.js';
+import { createProfileImage, createAnimatedProfileImage } from '../utils/createProfileImage.js';
+import axios from 'axios';
 
 export class ImageGenerationService {
     constructor(assetService, logger) {
@@ -24,7 +25,22 @@ export class ImageGenerationService {
     }
 
     async createProfileImage(user, userData) {
-        // Passando o assetService diretamente para a função utilitária
-        return createProfileImage(user, userData, this.assetService);
+        const bgAssetUrl = await this.assetService.getAsset('ProfileBackground');
+        
+        if (bgAssetUrl && bgAssetUrl.endsWith('.gif')) {
+            try {
+                // Se for um GIF, usa a nova função para perfil animado
+                const response = await axios.get(bgAssetUrl, { responseType: 'arraybuffer' });
+                const gifBuffer = Buffer.from(response.data, 'binary');
+                return await createAnimatedProfileImage(user, userData, this.assetService, gifBuffer);
+            } catch (error) {
+                this.logger.error('Falha ao criar perfil animado, recorrendo ao estático:', error);
+                // Fallback para imagem estática se a animada falhar
+                return await createProfileImage(user, userData, this.assetService);
+            }
+        } else {
+            // Se for PNG/JPG ou não existir, usa a função original para perfil estático
+            return await createProfileImage(user, userData, this.assetService);
+        }
     }
 }
