@@ -13,7 +13,7 @@ As raids podem ser divididas em algumas categorias principais com base no númer
 - **Raids Massivas (Até 99 Jogadores):** Desafios especiais como a Suffering, Torment, Kaiju e Adventure Dungeons.
 
 ### Novos Avatares de Dano
-Recentemente, as raids Gleam e Mundo foram estendidas e agora recompensam os jogadores com **avatares de dano exclusivos**, os únicos do tipo no jogo.
+Recentemente, as raids Gleam e Mundo foram estendidas e agora recompensam os jogadores com **avataares de dano exclusivos**, os únicos do tipo no jogo.
 
 ### Cálculo de HP Exponencial para Raids
 Para raids como **Titan Defense** e **Progression Raid**, o HP dos inimigos aumenta exponencialmente a cada sala. Use a seguinte fórmula para estimar o HP: \`HP(sala) = HP_inicial * (HP_final / HP_inicial)^((sala - 1) / 999)\`.
@@ -303,6 +303,7 @@ Para raids como **Titan Defense** e **Progression Raid**, o HP dos inimigos aume
       playerLimit: 4,
       headers: ['Wave', 'Requisito'],
       rows: [
+        { 'Wave': 50, 'Requisito': '49.4 - qnTG' },
         { 'Wave': 100, 'Requisito': '21.4 - ssTG' },
         { 'Wave': 200, 'Requisito': '35.9 - OcTG' },
       ]
@@ -314,12 +315,12 @@ Para raids como **Titan Defense** e **Progression Raid**, o HP dos inimigos aume
       playerLimit: 4,
       headers: ['Wave', 'Requisito'],
       rows: [
-        { 'Wave': 50, 'Requisito': '100 - uTG' },
+        { 'Wave': 50, 'Requisito': '100 - ssTG' },
         { 'Wave': 100, 'Requisito': '10 - SpTG' },
-        { 'Wave': 200, 'Requisito': '542 - OcTG' },
+        { 'Wave': 200, 'Requisito': '342 - OcTG' },
         { 'Wave': 300, 'Requisito': '4.9 - QdDR' },
         { 'Wave': 500, 'Requisito': '870 - dQDR' },
-        { 'Wave': 750, 'Requisito': '5 - SsQDR' },
+        { 'Wave': 750, 'Requisito': '5 - SxQDR' },
         { 'Wave': 1000, 'Requisito': '80 - NqDDR' },
       ]
     },
@@ -330,16 +331,14 @@ Para raids como **Titan Defense** e **Progression Raid**, o HP dos inimigos aume
       playerLimit: 4,
       headers: ['Wave', 'Requisito'],
       rows: [
-        { 'Wave': 50, 'Requisito': '50 - QqDDR' },
-        { 'Wave': 100, 'Requisito': '5 - NqQDR' },
-        { 'Wave': 200, 'Requisito': '10 - QnQGNT' },
+        { 'Wave': 50, 'Requisito': '50 - OqDDR' },
+        { 'Wave': 100, 'Requisito': '5 - NqDDR' },
+        { 'Wave': 200, 'Requisito': '10 - QqGNT' },
         { 'Wave': 300, 'Requisito': '150 - uQGNT' },
-        { 'Wave': 500, 'Requisito': '50 - QxQGNT' },
-        { 'Wave': 750, 'Requisito': '500 - SpQvGT' },
-        { 'Wave': 1000, 'Requisito': '20 - UssQGNTL' },
+        { 'Wave': 500, 'Requisito': '50 - QqQGNT' },
+        { 'Wave': 750, 'Requisito': '500 - SpQnGT' },
+        { 'Wave': 1000, 'Requisito': '20 - UsxGNTL' },
       ]
     }
   }
 };
-
-    
