@@ -36,14 +36,14 @@ export async function execute(interaction, container) {
 
     const targetUser = interaction.options.getUser('usuario') || interaction.user;
     const isSelf = targetUser.id === interaction.user.id;
-    const { imageGenerator } = container.services;
+    const { imageGenerator, assetService } = container.services;
 
     const userSnap = await getOrCreateUserProfile(targetUser.id, targetUser.username);
     const userData = userSnap.data();
 
     // Gerar imagem do perfil
     try {
-        const profileImageBuffer = await imageGenerator.createProfileImage(targetUser, userData);
+        const profileImageBuffer = await imageGenerator.createProfileImage(targetUser, userData, assetService);
         const attachment = new AttachmentBuilder(profileImageBuffer, { name: `perfil-${targetUser.username}.png` });
 
         const components = [];
