@@ -93,9 +93,12 @@ export const world17Data = {
   ],
   dungeons: [
     { 
-      name: 'Ghoul Raid', 
+      name: 'Ghoul Raid',
+      type: 'raid', 
       boss: 'Desconhecido', 
       description: 'Uma raid no Mundo 17 onde se pode obter o acessório Ghoul Mask e Flesh Tokens.'
     }
   ]
 };
+
+    

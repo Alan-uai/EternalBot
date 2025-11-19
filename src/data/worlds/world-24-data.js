@@ -47,7 +47,7 @@ export const world24Data = {
     }
   ],
   dungeons: [
-    { name: 'Tomb Arena Raid', boss: 'Jalbathar', description: 'Uma raid desafiadora em uma arena antiga.'}
+    { name: 'Tomb Arena Raid', type: 'dungeon', boss: 'Jalbathar', description: 'Uma raid desafiadora em uma arena antiga.'}
   ],
   accessories: [
       { 
@@ -196,3 +196,5 @@ export const world24Data = {
       }
   ],
 };
+
+    

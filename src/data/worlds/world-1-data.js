@@ -73,7 +73,7 @@ export const world1Data = {
   dungeons: [
       { 
         name: 'Tournament Raid',
-        type: 'dungeon', 
+        type: 'raid', 
         boss: 'Desconhecido', 
         description: 'Uma dungeon de progressão no Mundo 1 que vai até a sala 550.',
         achievements: {
@@ -283,3 +283,5 @@ export const world1Data = {
     }
   ]
 };
+
+    

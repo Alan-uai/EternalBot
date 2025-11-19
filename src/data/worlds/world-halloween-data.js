@@ -8,6 +8,7 @@ export const worldHalloweenData = {
   dungeons: [
     { 
       name: 'Halloween Raid', 
+      type: 'raid',
       boss: 'Pumpkin King', 
       description: 'Uma raid de evento com temática de Halloween. Contém o Halloween Crafting para criar Spooky Portions (2.5x de bônus) e o sistema de evolução da Halloween Bag.',
       achievements: {
@@ -38,8 +39,11 @@ export const worldHalloweenData = {
     },
     {
       name: 'Graveyard Defense',
+      type: 'defense',
       boss: 'Necromancer',
       description: 'Uma raid de evento em sua própria ilha, focada em defender contra hordas de mortos-vivos.'
     }
   ]
 };
+
+    

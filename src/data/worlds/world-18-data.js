@@ -61,7 +61,7 @@ export const world18Data = {
     },
   ],
   dungeons: [
-      { name: 'Chainsaw Defense', boss: 'Gun Devil', description: 'Uma raid de defesa contra hordas de demônios.'}
+      { name: 'Chainsaw Defense', type: 'defense', boss: 'Gun Devil', description: 'Uma raid de defesa contra hordas de demônios.'}
   ],
   accessories: [
     { 
@@ -112,3 +112,5 @@ export const world18Data = {
 };
 
   
+
+    

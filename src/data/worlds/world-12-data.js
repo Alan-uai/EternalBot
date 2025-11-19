@@ -44,8 +44,10 @@ export const world12Data = {
     },
   ],
   dungeons: [
-      { name: 'Raid Sins', boss: 'Demon King', description: 'Uma raid de desafio individual onde se obtém tokens para os Sin Upgrades.'}
+      { name: 'Raid Sins', type: 'raid', boss: 'Demon King', description: 'Uma raid de desafio individual onde se obtém tokens para os Sin Upgrades.'}
   ]
 };
 
   
+
+    

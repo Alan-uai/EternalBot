@@ -20,8 +20,8 @@ export const world20Data = {
     { name: 'Super Shenlong Mini', rank: 'Épico', rarity: 'Épico', energy_bonus: '0.80x' },
   ],
   dungeons: [
-    { name: 'Green Planet Raid', boss: 'Broly', description: 'Uma raid em um planeta verde instável.'},
-    { name: 'Suffering Raid', boss: 'Jiren', description: 'Uma raid de resistência extrema.'}
+    { name: 'Green Planet Raid', type: 'raid', boss: 'Broly', description: 'Uma raid em um planeta verde instável.'},
+    { name: 'Suffering Raid', type: 'raid', boss: 'Jiren', description: 'Uma raid de resistência extrema.'}
   ],
   powers: [
     {
@@ -113,3 +113,5 @@ export const world20Data = {
     }
   ],
 };
+
+    

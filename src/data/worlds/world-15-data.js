@@ -50,7 +50,7 @@ export const world15Data = {
     },
   ],
   dungeons: [
-      { name: 'Gleam Raid', boss: 'The Gleam Eyes', description: 'Uma raid de desafio individual com 10 ondas.'}
+      { name: 'Gleam Raid', type: 'raid', boss: 'The Gleam Eyes', description: 'Uma raid de desafio individual com 10 ondas.'}
   ],
   missions: [
     {
@@ -63,3 +63,5 @@ export const world15Data = {
 };
 
   
+
+    

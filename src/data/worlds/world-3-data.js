@@ -65,7 +65,7 @@ export const world3Data = {
       { id: 'sandalia-shinigami', name: 'Sandália Shinigami', world: 'Mundo 3', boss: 'Eizen', rarity: 'Raro', movespeed_bonus: '10%' }
   ],
   dungeons: [
-      { name: 'Las Noches', boss: 'Ulquiorra', description: 'O palácio dos Arrancars em Hueco Mundo.'}
+      { name: 'Las Noches', type: 'raid', boss: 'Ulquiorra', description: 'O palácio dos Arrancars em Hueco Mundo.'}
   ],
   obelisks: [
     {
@@ -152,3 +152,5 @@ export const world3Data = {
 };
 
   
+
+    
