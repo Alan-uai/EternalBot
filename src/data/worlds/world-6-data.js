@@ -166,6 +166,9 @@ export const world6Data = {
         { name: 'E Class Quest #2', world: 7, requirement: 'Coletar 1000 Grimoire Token', rewards: [{name: 'Attack Range Potion I', amount: 1}, {name: 'Coins Potion', amount: 1}] },
         { name: 'E Class Quest #3', world: 8, requirement: 'Derrotar 75 Statue of God', rewards: [{name: 'Exp Potion', amount: 1}, {name: 'Damage Potion', amount: 1}] },
         { name: 'E Class Quest #4', world: 9, requirement: 'Coletar 2500 Eye Token', rewards: [{name: 'Soul Potion', amount: 1}, {name: 'Exp Potion', amount: 1}] },
+        { name: 'E Class Quest #5', world: 8, requirement: 'Derrotar 50 Madera', rewards: [{name: 'Damage Potion', amount: 1}, {name: 'Energy Potion', amount: 1}] },
+        { name: 'E Class Quest #6', world: 'Dungeon Lobby 1', requirement: 'Alcançar a Dungeon Medium 50 vezes e coletar 3000 Granny Token', rewards: [{name: 'Drop Potion', amount: 1}, {name: 'Damage Potion', amount: 1}, {name: 'Energy Potion', amount: 1}] },
+        { name: 'E Class Quest #7', world: 'Dungeon Lobby 1', requirement: 'Alcançar a Dungeon Hard 50 vezes e derrotar Ken Turbo 25 vezes', rewards: [{name: 'E Class License', amount: 1}, {name: 'Credits', amount: 10}, {name: 'Drop Potion', amount: 1}] }
       ]
     }
   ]
