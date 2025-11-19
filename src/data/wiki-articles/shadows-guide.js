@@ -2,7 +2,7 @@
 export const shadowsGuideArticle = {
   id: 'shadows-guide',
   title: 'Guia de Bônus de Shadows (Dano e Energia)',
-  summary: 'Um guia completo com todos os bônus de dano e energia das Shadows, por mundo e por raridade, tanto no nível base quanto no nível 100.',
+  summary: 'Um guia completo com todos os bônus de dano e energia das Shadows, por mundo e por raridade, tanto no nível base quanto no nível 100, e os encantamentos de velocidade.',
   content: `Shadows são lutadores poderosos que fornecem um bônus percentual ao seu dano ou energia. Este guia detalha os bônus para cada tipo, raridade e mundo disponível.
 
 ### Leveling de Shadows (Mundo 6)
@@ -10,9 +10,27 @@ No **Mundo 6**, você pode aumentar o nível de suas Shadows.
 - **Custo:** 10 Shadow Souls por nível.
 - **Taxa de Sucesso:** 100% (garantido).
 - **Nível Máximo:** 100.
-Levar uma Shadow ao nível 100 aumenta significativamente seu bônus de status, como mostrado nas tabelas abaixo.`,
-  tags: ['shadows', 'energia', 'dano', 'guia', 'bônus', 'nível 100', 'leveling'],
+Levar uma Shadow ao nível 100 aumenta significativamente seu bônus de status, como mostrado nas tabelas abaixo.
+
+### Encantamentos de Velocidade (Apenas para Shadows de Dano)
+No Mundo 6, é possível roletar encantamentos para as **Shadows de Dano**, que aumentam sua velocidade de ataque.
+- **Custo:** 10 Shadow Souls por tentativa.
+- **Como Funciona:** Apenas as Shadows do tipo "Dano" podem receber este upgrade. O encantamento recebido é baseado em sorte, com diferentes raridades e bônus.`,
+  tags: ['shadows', 'energia', 'dano', 'guia', 'bônus', 'nível 100', 'leveling', 'enchantment', 'encantamento', 'attack speed'],
   tables: {
+    enchantments: {
+      headers: ['Encantamento', 'Bônus de Velocidade', 'Chance'],
+      rows: [
+        { Encantamento: 'Shadeborn', 'Bônus de Velocidade': '+2.5%', Chance: '40.45%' },
+        { Encantamento: 'Umbraling', 'Bônus de Velocidade': '+5%', Chance: '33%' },
+        { Encantamento: 'Wraithguard', 'Bônus de Velocidade': '+10%', Chance: '19.9%' },
+        { Encantamento: 'Graveknight', 'Bônus de Velocidade': '+15%', Chance: '5%' },
+        { Encantamento: 'Dreadlord', 'Bônus de Velocidade': '+20%', Chance: '1%' },
+        { Encantamento: 'Abyssal General', 'Bônus de Velocidade': '+30%', Chance: '0.5%' },
+        { Encantamento: 'Death Sovereign', 'Bônus de Velocidade': '+40%', Chance: '0.1%' },
+        { Encantamento: 'Eternal Shadow', 'Bônus de Velocidade': '+50%', Chance: '0.05%' }
+      ]
+    },
     damageShadows: {
       headers: ['World', 'Level', 'Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', 'Mythic', 'Phantom', 'Supreme'],
       rows: [
@@ -56,7 +74,7 @@ Levar uma Shadow ao nível 100 aumenta significativamente seu bônus de status, 
         { World: 17, Level: 'Base', Common: '19%', Uncommon: '19.95%', Rare: '20.9%', Epic: '21.85%', Legendary: '23.75%', Mythic: '24.7%', Phantom: '26.6%', Supreme: '28.5%' },
         { World: 17, Level: 100, Common: '57%', Uncommon: '59.85%', Rare: '62.7%', Epic: '65.55%', Legendary: '71.25%', Mythic: '74.1%', Phantom: '79.8%', Supreme: '85.5%' },
         { World: 19, Level: 'Base', Common: '22%', Uncommon: '23.1%', Rare: '24.2%', Epic: '25.3%', Legendary: '27.5%', Mythic: '28.6%', Phantom: '30.8%', Supreme: '33%' },
-        { World: 19, Level: 100, Common: '66%', Uncommon: '69.3%', Rare: '72.6%', Epic: '75.9%', Legendary: '82.5%', Mythic: '85.8%', Phantom: '92.4%', Supreme: '99%' },
+        { World: 19, Level: 100, Common: '66%', uncommon: '69.3%', Rare: '72.6%', Epic: '75.9%', Legendary: '82.5%', Mythic: '85.8%', Phantom: '92.4%', Supreme: '99%' },
         { World: 21, Level: 'Base', Common: '25%', Uncommon: '26.25%', Rare: '27.5%', Epic: '28.75%', Legendary: '31.25%', Mythic: '32.5%', Phantom: '35%', Supreme: '37.5%' },
         { World: 21, Level: 100, Common: '75%', Uncommon: '78.75%', Rare: '82.5%', Epic: '86.25%', Legendary: '93.75%', Mythic: '97.5%', Phantom: '105%', Supreme: '112.5%' },
         { World: 23, Level: 'Base', Common: '28%', Uncommon: '29.4%', Rare: '30.8%', Epic: '32.2%', Legendary: '35%', Mythic: '36.4%', Phantom: '39.2%', Supreme: '42%' },
