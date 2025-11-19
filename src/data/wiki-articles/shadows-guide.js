@@ -19,16 +19,16 @@ No Mundo 6, é possível roletar encantamentos para as **Shadows de Dano**, que 
   tags: ['shadows', 'energia', 'dano', 'guia', 'bônus', 'nível 100', 'leveling', 'enchantment', 'encantamento', 'attack speed'],
   tables: {
     enchantments: {
-      headers: ['Encantamento', 'Bônus de Velocidade', 'Chance'],
+      headers: ['Encantamento', 'Raridade', 'Bônus de Velocidade', 'Chance'],
       rows: [
-        { Encantamento: 'Shadeborn', 'Bônus de Velocidade': '+2.5%', Chance: '40.45%' },
-        { Encantamento: 'Umbraling', 'Bônus de Velocidade': '+5%', Chance: '33%' },
-        { Encantamento: 'Wraithguard', 'Bônus de Velocidade': '+10%', Chance: '19.9%' },
-        { Encantamento: 'Graveknight', 'Bônus de Velocidade': '+15%', Chance: '5%' },
-        { Encantamento: 'Dreadlord', 'Bônus de Velocidade': '+20%', Chance: '1%' },
-        { Encantamento: 'Abyssal General', 'Bônus de Velocidade': '+30%', Chance: '0.5%' },
-        { Encantamento: 'Death Sovereign', 'Bônus de Velocidade': '+40%', Chance: '0.1%' },
-        { Encantamento: 'Eternal Shadow', 'Bônus de Velocidade': '+50%', Chance: '0.05%' }
+        { Encantamento: 'Shadeborn', Raridade: 'Comum', 'Bônus de Velocidade': '+2.5%', Chance: '40.45%' },
+        { Encantamento: 'Umbraling', Raridade: 'Incomum', 'Bônus de Velocidade': '+5%', Chance: '33%' },
+        { Encantamento: 'Wraithguard', Raridade: 'Raro', 'Bônus de Velocidade': '+10%', Chance: '19.9%' },
+        { Encantamento: 'Graveknight', Raridade: 'Épico', 'Bônus de Velocidade': '+15%', Chance: '5%' },
+        { Encantamento: 'Dreadlord', Raridade: 'Lendário', 'Bônus de Velocidade': '+20%', Chance: '1%' },
+        { Encantamento: 'Abyssal General', Raridade: 'Mítico', 'Bônus de Velocidade': '+30%', Chance: '0.5%' },
+        { Encantamento: 'Death Sovereign', Raridade: 'Phantom', 'Bônus de Velocidade': '+40%', Chance: '0.1%' },
+        { Encantamento: 'Eternal Shadow', Raridade: 'Supremo', 'Bônus de Velocidade': '+50%', Chance: '0.05%' }
       ]
     },
     damageShadows: {
