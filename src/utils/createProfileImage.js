@@ -2,7 +2,9 @@
 import { createCanvas, loadImage } from 'canvas';
 import GIFEncoder from 'gif-encoder-2';
 import { Readable } from 'stream';
-import { parse } from 'gifuct-js';
+import gifuct from 'gifuct-js';
+const parse = gifuct.parse;
+import axios from 'axios';
 
 
 // Helper para a imagem estática
@@ -18,8 +20,9 @@ function formatNumber(num) {
 // Helper para a imagem estática
 async function drawTextWithIcon(ctx, iconPath, text, x, y, iconSize, spacing, assetService) {
     try {
-        const icon = await loadImage(await assetService.getAsset(iconPath) || Buffer.from(''));
-        if (icon) {
+        const iconAsset = await assetService.getAsset(iconPath);
+        if (iconAsset) {
+            const icon = await loadImage(iconAsset);
             ctx.drawImage(icon, x, y - iconSize / 2 - 2, iconSize, iconSize);
         }
     } catch (e) {
