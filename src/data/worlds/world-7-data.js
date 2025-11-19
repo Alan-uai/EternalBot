@@ -49,14 +49,6 @@ export const world7Data = {
         unlockCost: '150B',
     },
   ],
-  missions: [
-    {
-      name: 'Hero License Quest',
-      type: 'progression',
-      statType: 'mixed',
-      description: "Missão de Licença de Herói (Rank E), com tarefas neste mundo."
-    }
-  ],
   obelisks: [
     {
       id: 'clover-obelisk',
@@ -80,4 +72,76 @@ export const world7Data = {
       ]
     }
   ],
+  missions: [
+    {
+        name: 'Missão #1',
+        requirement: 'Derrotar 30 Noalle',
+        rewards: [
+            { name: 'Exp Potion', amount: 1 },
+            { name: 'Coin Percent', value: '5%' },
+            { name: 'World Key', amount: 1 },
+            { name: 'Exp', amount: '7.2k' }
+        ]
+    },
+    {
+        name: 'Missão #2',
+        requirement: 'Derrotar 25 Megna',
+        rewards: [
+            { name: 'Energy Potion', amount: 1 },
+            { name: 'Coin Percent', value: '5%' },
+            { name: 'World Key', amount: 1 },
+            { name: 'Exp', amount: '13.2k' }
+        ]
+    },
+    {
+        name: 'Missão #3',
+        requirement: 'Derrotar 20 Finrel',
+        rewards: [
+            { name: 'Damage Potion', amount: 1 },
+            { name: 'Damage Percent', value: '5%' },
+            { name: 'Water Spirit Token', amount: 10 },
+            { name: 'World Key', amount: 1 },
+            { name: 'Exp', amount: '17.4k' }
+        ]
+    },
+    {
+        name: 'Missão #4',
+        requirement: 'Derrotar 15 Aste',
+        rewards: [
+            { name: 'Drop Potion', amount: 1 },
+            { name: 'Energy Percent', value: '5%' },
+            { name: 'Wind Spirit Token', amount: 10 },
+            { name: 'World Key', amount: 1 },
+            { name: 'Exp', amount: '23.9k' }
+        ]
+    },
+    {
+        name: 'Missão #5',
+        requirement: 'Derrotar 10 Yune',
+        rewards: [
+            { name: 'Avatar Soul', amount: 250 },
+            { name: 'Damage Percent', value: '5%' },
+            { name: 'Fire Spirit Token', amount: 10 },
+            { name: 'World Key', amount: 1 },
+            { name: 'Exp', amount: '35.1k' }
+        ]
+    },
+    {
+        name: 'Missão #6',
+        requirement: 'Derrotar 5 Yemi',
+        rewards: [
+            { name: 'Stats Reset', amount: 1 },
+            { name: 'Energy Percent', value: '5%' },
+            { name: 'Grimoire Token', amount: 10 },
+            { name: 'World Key', amount: 1 },
+            { name: 'Exp', amount: '38.6k' }
+        ]
+    },
+    {
+      name: 'Hero License Quest',
+      type: 'progression',
+      statType: 'mixed',
+      description: "Missão de Licença de Herói (Rank E), com tarefas que se estendem pelos mundos 6 a 9."
+    }
+  ]
 };
