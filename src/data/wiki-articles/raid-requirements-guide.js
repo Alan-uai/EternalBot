@@ -33,7 +33,7 @@ Para raids como **Titan Defense** e **Progression Raid**, o HP dos inimigos aume
     *   HP Final (Sala 1000): 12.3 SeV (1.23e82)
 
 A **Mundo Raid**, localizada no Lobby 2, é desbloqueada junto com o Mundo 21. Sua mecânica é similar à da Gleam Raid: cada onda completada é uma conquista que concede um nível de um poder exclusivo da raid (do comum ao supremo), além de uma conquista final que recompensa com créditos.`,
-  tags: ['raid', 'dungeon', 'energia', 'guia', 'geral', 'solo', 'damage avatar'],
+  tags: ['raid', 'dungeon', 'energia', 'guia', 'geral', 'solo', 'damage avatar', 'kaiju', 'suffering'],
   imageUrl: 'wiki-11',
   progressionFormulas: {
       titanDefense: {
@@ -90,6 +90,67 @@ A **Mundo Raid**, localizada no Lobby 2, é desbloqueada junto com o Mundo 21. S
         { 'Wave': 8, 'HP': '186 - dQDR', 'DPS': '18.6 - dQDR' },
         { 'Wave': 9, 'HP': '3.73 - tQDR', 'DPS': '373 - dQDR' },
         { 'Wave': 10, 'HP': '74.5 - tQDR', 'DPS': '7.45 - tQDR' }
+      ]
+    },
+    kaijuDungeon: {
+      headers: ['Wave', 'HP'],
+      rows: [
+        { Wave: '50', HP: '500-UvG' }
+      ]
+    },
+    sufferingDungeon: {
+      headers: ['Wave', 'HP'],
+      rows: [
+        { Wave: 1, HP: '1-OcTG' },
+        { Wave: 2, HP: '2-OcTG' },
+        { Wave: 3, HP: '5-OcTG' },
+        { Wave: 4, HP: '10-OcTG' },
+        { Wave: 5, HP: '1.5-NoTG' },
+        { Wave: 6, HP: '15-OcTG' },
+        { Wave: 7, HP: '40-OcTG' },
+        { Wave: 8, HP: '150-OcTG' },
+        { Wave: 9, HP: '250-OcTG' },
+        { Wave: 10, HP: '6-NoTG' },
+        { Wave: 11, HP: '1.72-NoTG' },
+        { Wave: 12, HP: '2.28-NoTG' },
+        { Wave: 13, HP: '4.76-NoTG' },
+        { Wave: 14, HP: '9.46-NoTG' },
+        { Wave: 15, HP: '1.96-QdDR' },
+        { Wave: 16, HP: '1.33-NoTG' },
+        { Wave: 17, HP: '76.8-NoTG' },
+        { Wave: 18, HP: '151-NoTG' },
+        { Wave: 19, HP: '284-NoTG' },
+        { Wave: 20, HP: '4.8-QdDR' },
+        { Wave: 21, HP: '13.4-NoTG' },
+        { Wave: 22, HP: '2.33-QdDR' },
+        { Wave: 23, HP: '4.92-QdDR' },
+        { Wave: 24, HP: '9.69-QdDR' },
+        { Wave: 25, HP: '1.4-uQDR' },
+        { Wave: 26, HP: '140-NoTG' },
+        { Wave: 27, HP: '75.6-QdDR' },
+        { Wave: 28, HP: '159-QdDR' },
+        { Wave: 29, HP: '318-QdDR' },
+        { Wave: 30, HP: '6.2-uQDR' },
+        { Wave: 31, HP: '1.54-QdDR' },
+        { Wave: 32, HP: '2.55-uQDR' },
+        { Wave: 33, HP: '7.28-uQDR' },
+        { Wave: 34, HP: '10-uQDR' },
+        { Wave: 35, HP: '1.54-dQDR' },
+        { Wave: 36, HP: '15.7-QdDR' },
+        { Wave: 37, HP: '77.3-uQDR' },
+        { Wave: 38, HP: '151-uQDR' },
+        { Wave: 39, HP: '325-uQDR' },
+        { Wave: 40, HP: '5.1-dQDR' },
+        { Wave: 41, HP: '164-QdDR' },
+        { Wave: 42, HP: '2.59-dQDR' },
+        { Wave: 43, HP: '5.16-dQDR' },
+        { Wave: 44, HP: '10-dQDR' },
+        { Wave: 45, HP: '1.56-TqDR' },
+        { Wave: 46, HP: '1.8-uQDR' },
+        { Wave: 47, HP: '82.3-dQDR' },
+        { Wave: 48, HP: '163-dQDR' },
+        { Wave: 49, HP: '325-dQDR' },
+        { Wave: 50, HP: '587-TqDR' },
       ]
     },
     requirements: {
