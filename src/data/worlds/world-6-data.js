@@ -59,6 +59,18 @@ export const world6Data = {
       ]
     },
   ],
+  foodExchanger: {
+    description: "No Mundo 6, os jogadores podem trocar 2 comidas por 1 Macaron correspondente, que oferece um bônus de status superior.",
+    items: [
+        { from: 'Chocolate Bar (x2)', to: 'Energy Macaron (x1)' },
+        { from: 'Cheese Pizza Slice (x2)', to: 'Coin Macaron (x1)' },
+        { from: 'Milk (x2)', to: 'Damage Macaron (x1)' },
+        { from: 'Green Gummy Bear (x2)', to: 'Luck Macaron (x1)' }
+    ]
+  },
+  shadowLeveling: {
+    description: "O leveling de Shadows também acontece no Mundo 6. Custa 10 Shadow Souls para cada nível e a taxa de sucesso é sempre 100%. O nível máximo é 100."
+  },
   missions: [
     {
       name: 'Hero License Quest',

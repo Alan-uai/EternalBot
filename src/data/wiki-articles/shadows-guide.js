@@ -3,8 +3,15 @@ export const shadowsGuideArticle = {
   id: 'shadows-guide',
   title: 'Guia de Bônus de Shadows (Dano e Energia)',
   summary: 'Um guia completo com todos os bônus de dano e energia das Shadows, por mundo e por raridade, tanto no nível base quanto no nível 100.',
-  content: 'Shadows são lutadores poderosos que fornecem um bônus percentual ao seu dano ou energia. Este guia detalha os bônus para cada tipo, raridade e mundo disponível.',
-  tags: ['shadows', 'energia', 'dano', 'guia', 'bônus', 'nível 100'],
+  content: `Shadows são lutadores poderosos que fornecem um bônus percentual ao seu dano ou energia. Este guia detalha os bônus para cada tipo, raridade e mundo disponível.
+
+### Leveling de Shadows (Mundo 6)
+No **Mundo 6**, você pode aumentar o nível de suas Shadows.
+- **Custo:** 10 Shadow Souls por nível.
+- **Taxa de Sucesso:** 100% (garantido).
+- **Nível Máximo:** 100.
+Levar uma Shadow ao nível 100 aumenta significativamente seu bônus de status, como mostrado nas tabelas abaixo.`,
+  tags: ['shadows', 'energia', 'dano', 'guia', 'bônus', 'nível 100', 'leveling'],
   tables: {
     damageShadows: {
       headers: ['World', 'Level', 'Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', 'Mythic', 'Phantom', 'Supreme'],
@@ -60,5 +67,3 @@ export const shadowsGuideArticle = {
     },
   },
 };
-
-    
