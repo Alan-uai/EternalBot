@@ -14,17 +14,6 @@ export const world6Data = {
   ],
   powers: [
     {
-      name: 'Earth Power',
-      type: 'progression',
-      statType: 'mixed',
-      maxLevel: 25,
-      unlockCost: '500k',
-      boosts: [
-          { type: 'damage', value: '15% Damage' },
-          { type: 'energy', value: '10% Energy' }
-      ]
-    },
-    {
       name: 'Solo Hunter Rank',
       type: 'gacha',
       statType: 'energy',
@@ -80,6 +69,29 @@ export const world6Data = {
       { name: "x2 Shadow Soul", description: "Dobra a quantidade de Shadow Souls recebidas.", maxLevel: 1, costType: "Gamepass", cost: "700 Credits" }
     ]
   },
+  obelisks: [
+    {
+      id: 'solo-obelisk',
+      name: 'Solo Obelisk',
+      description: 'Um obelisco que fornece bônus permanentes após completar uma missão.',
+      mission: {
+        name: 'Missão #1',
+        requirement: 'Derrotar Statue of God 10 vezes.',
+        rewards: [
+          { name: 'Obelisk Part', amount: 1 },
+          { name: 'Energy Percent', value: '5%' },
+          { name: 'Exp', amount: '48k' },
+          { name: 'Avatar Soul', amount: 100 },
+          { name: 'Energy Potion', amount: 1 }
+        ]
+      },
+      boosts: [
+        { type: 'Energy Multiply', value: '0.15x' },
+        { type: 'Damage Multiply', value: '0.25x' },
+        { type: 'Exp Percent', value: '3.5%' }
+      ]
+    }
+  ],
   missions: [
     {
         name: 'Missão #1',
