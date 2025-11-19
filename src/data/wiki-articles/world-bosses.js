@@ -4,7 +4,7 @@ export const worldBossesArticle = {
   title: 'Guia de Chefes de Mundo',
   summary: 'Um guia completo para todos os chefes de mundo, seus status e o HP/DPS necessário para derrotá-los.',
   content: `Este guia fornece uma lista de chefes de Rank-SS e SSS, detalhando o HP necessário para um "one-hit kill" e o DPS médio para derrotá-los em 30 segundos.`,
-  tags: ['chefes', 'guia', 'dps', 'hp', 'recompensas', 'geral', '1', '2', '3', '4', '5', '6', '7', '8', '10', '11', '13', '15', '16', '17', '19', '20', '21', '22', '23', '24'],
+  tags: ['chefes', 'guia', 'dps', 'hp', 'recompensas', 'geral', '1', '2', '3', '4', '5', '6', '7', '8', '10', '11', '13', '15', '16', '17', '19', '20', '21', '22', '23', '24', '27', '28'],
   imageUrl: 'wiki-7',
   tables: {
     ssBosses: {
@@ -35,6 +35,7 @@ export const worldBossesArticle = {
         { 'Mundo': 22, 'Chefe (Rank SS)': 'Blood Queen', 'HP para Hit Kill': '30.5qdQDR', 'DPS (30s)': '1.02qdQDR' },
         { 'Mundo': 23, 'Chefe (Rank SS)': 'Lord Boro', 'HP para Hit Kill': '733SpQDR', 'DPS (30s)': '24.43SpQDR' },
         { 'Mundo': 24, 'Chefe (Rank SS)': 'Albedis', 'HP para Hit Kill': '414qQGNT', 'DPS (30s)': '13.8qQGNT' },
+        { 'Mundo': 28, 'Chefe (Rank SS)': 'Zero', 'HP para Hit Kill': '288DSXGNTL', 'DPS (30s)': '9.6DSXGNTL' },
       ]
     },
     sssBosses: {
@@ -47,6 +48,8 @@ export const worldBossesArticle = {
             { 'Mundo': 22, 'Chefe (Rank SSS)': 'Shadow', 'HP para Hit Kill': '305QnQDR', 'DPS (30s)': '10.17QnQDR' },
             { 'Mundo': 23, 'Chefe (Rank SSS)': 'Galaxy Hunter', 'HP para Hit Kill': '871NQQDR', 'DPS (30s)': '29.03NQQDR' },
             { 'Mundo': 24, 'Chefe (Rank SSS)': 'Anz Ool Gawn', 'HP para Hit Kill': '4.14dQGNT', 'DPS (30s)': '138uQGNT' },
+            { 'Mundo': 27, 'Chefe (Rank SSS)': 'Roswald', 'HP para Hit Kill': '6.68USXGNTL', 'DPS (30s)': '222.6SXGNTL' },
+            { 'Mundo': 28, 'Chefe (Rank SSS)': 'Emperor Relouch', 'HP para Hit Kill': '2.88QTSXGNTL', 'DPS (30s)': '96TSXGNTL' },
         ]
     }
   }
