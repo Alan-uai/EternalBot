@@ -36,14 +36,19 @@ export async function execute(interaction, container) {
 
     const targetUser = interaction.options.getUser('usuario') || interaction.user;
     const isSelf = targetUser.id === interaction.user.id;
-    const { imageGenerator, assetService } = container.services;
+    const { imageGenerator, assetService, logger } = container.services;
+
+    if (!imageGenerator) {
+        logger.error('Serviço ImageGenerationService não encontrado no container.');
+        return interaction.editReply({ content: 'Ocorreu um erro interno (serviço de imagem indisponível).', ephemeral: true });
+    }
 
     const userSnap = await getOrCreateUserProfile(targetUser.id, targetUser.username);
     const userData = userSnap.data();
 
     // Gerar imagem do perfil
     try {
-        const profileImageBuffer = await imageGenerator.createProfileImage(targetUser, userData, assetService);
+        const profileImageBuffer = await imageGenerator.createProfileImage(targetUser, userData);
         const attachment = new AttachmentBuilder(profileImageBuffer, { name: `perfil-${targetUser.username}.png` });
 
         const components = [];

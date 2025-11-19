@@ -24,6 +24,7 @@ export class ImageGenerationService {
     }
 
     async createProfileImage(user, userData) {
+        // Passando o assetService diretamente para a função utilitária
         return createProfileImage(user, userData, this.assetService);
     }
 }
