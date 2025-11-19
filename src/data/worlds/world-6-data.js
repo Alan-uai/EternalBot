@@ -82,6 +82,69 @@ export const world6Data = {
   },
   missions: [
     {
+        name: 'Missão #1',
+        requirement: 'Derrotar 30 Weak Sung',
+        rewards: [
+            { name: 'Exp Potion', amount: 1 },
+            { name: 'Coin Percent', value: '5%' },
+            { name: 'World Key', amount: 1 },
+            { name: 'Exp', amount: '3.57k' }
+        ]
+    },
+    {
+        name: 'Missão #2',
+        requirement: 'Derrotar 25 Green Goblin',
+        rewards: [
+            { name: 'Energy Potion', amount: 1 },
+            { name: 'Coin Percent', value: '5%' },
+            { name: 'World Key', amount: 1 },
+            { name: 'Exp', amount: '6.55k' }
+        ]
+    },
+    {
+        name: 'Missão #3',
+        requirement: 'Derrotar 20 White Tiger',
+        rewards: [
+            { name: 'Damage Potion', amount: 1 },
+            { name: 'Damage Percent', value: '5%' },
+            { name: 'World Key', amount: 1 },
+            { name: 'Exp', amount: '8.64k' }
+        ]
+    },
+    {
+        name: 'Missão #4',
+        requirement: 'Derrotar 15 Cha',
+        rewards: [
+            { name: 'Drop Potion', amount: 1 },
+            { name: 'Energy Percent', value: '5%' },
+            { name: 'Hunter Rank Token', amount: 10 },
+            { name: 'World Key', amount: 1 },
+            { name: 'Exp', amount: '11.9k' }
+        ]
+    },
+    {
+        name: 'Missão #5',
+        requirement: 'Derrotar 10 Choi',
+        rewards: [
+            { name: 'Avatar Soul', amount: 100 },
+            { name: 'Damage Percent', value: '5%' },
+            { name: 'ReAwakening Token', amount: 10 },
+            { name: 'World Key', amount: 1 },
+            { name: 'Exp', amount: '17.4k' }
+        ]
+    },
+    {
+        name: 'Missão #6',
+        requirement: 'Derrotar 5 Solo Sung',
+        rewards: [
+            { name: 'Avatar Soul', amount: 250 },
+            { name: 'Energy Percent', value: '5%' },
+            { name: 'Monarch Token', amount: 10 },
+            { name: 'World Key', amount: 1 },
+            { name: 'Exp', amount: '19.2k' }
+        ]
+    },
+    {
       name: 'Hero License Quest',
       type: 'progression',
       statType: 'mixed',
