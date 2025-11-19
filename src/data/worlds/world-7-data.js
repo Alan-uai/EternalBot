@@ -56,7 +56,28 @@ export const world7Data = {
       statType: 'mixed',
       description: "Missão de Licença de Herói (Rank E), com tarefas neste mundo."
     }
-  ]
+  ],
+  obelisks: [
+    {
+      id: 'clover-obelisk',
+      name: 'Clover Obelisk',
+      description: 'Um obelisco que concede bônus permanentes ao ser ativado.',
+      mission: {
+        name: 'Missão do Obelisco de Clover',
+        requirement: 'Derrotar Novi Chroni 10 vezes.',
+        rewards: [
+          { name: 'Obelisk Part', amount: 1 },
+          { name: 'Energy Percent', value: '5%' },
+          { name: 'Exp', amount: '96k' },
+          { name: 'Avatar Soul', amount: 100 },
+          { name: 'Energy Potion', amount: 1 }
+        ]
+      },
+      boosts: [
+        { type: 'Energy Multiply', value: '0.15x' },
+        { type: 'Damage Multiply', value: '0.25x' },
+        { type: 'Exp Percent', value: '3.5%' }
+      ]
+    }
+  ],
 };
-
-  
