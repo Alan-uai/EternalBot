@@ -72,11 +72,12 @@ export async function createProfileImage(user, userData, assetService) {
     ctx.fillText(user.username, avatarX, avatarY + avatarRadius + 40);
 
     // Carregar ícones
-    const rankIcon = await loadImage(await assetService.getAsset('RankIcon') || '');
-    const worldIcon = await loadImage(await assetService.getAsset('WorldIcon') || '');
-    const dpsIcon = await loadImage(await assetService.getAsset('DpsIcon') || '');
-    const repIcon = await loadImage(await assetService.getAsset('RepIcon') || '');
-    const creditIcon = await loadImage(await assetService.getAsset('CreditIcon') || '');
+    const rankIcon = await loadImage(await assetService.getAsset('RankIcon') || Buffer.from(''));
+    const worldIcon = await loadImage(await assetService.getAsset('WorldIcon') || Buffer.from(''));
+    const dpsIcon = await loadImage(await assetService.getAsset('DpsIcon') || Buffer.from(''));
+    const repIcon = await loadImage(await assetService.getAsset('RepIcon') || Buffer.from(''));
+    const creditIcon = await loadImage(await assetService.getAsset('CreditIcon') || Buffer.from(''));
+
 
     // Estatísticas Principais (à direita do avatar)
     const statsX = 400;
