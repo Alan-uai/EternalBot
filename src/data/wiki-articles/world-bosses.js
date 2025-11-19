@@ -35,6 +35,9 @@ export const worldBossesArticle = {
         { 'Mundo': 22, 'Chefe (Rank SS)': 'Blood Queen', 'HP para Hit Kill': '30.5qdQDR', 'DPS (30s)': '1.02qdQDR' },
         { 'Mundo': 23, 'Chefe (Rank SS)': 'Lord Boro', 'HP para Hit Kill': '733SpQDR', 'DPS (30s)': '24.43SpQDR' },
         { 'Mundo': 24, 'Chefe (Rank SS)': 'Albedis', 'HP para Hit Kill': '414qQGNT', 'DPS (30s)': '13.8qQGNT' },
+        { 'Mundo': 25, 'Chefe (Rank SS)': 'Riuma', 'HP para Hit Kill': '387tQGNT', 'DPS (30s)': '12.9tQGNT' },
+        { 'Mundo': 26, 'Chefe (Rank SS)': 'Hayo', 'HP para Hit Kill': '625sxQGNT', 'DPS (30s)': '20.8sxQGNT' },
+        { 'Mundo': 27, 'Chefe (Rank SS)': 'Bellatrice', 'HP para Hit Kill': '668NQQGNT', 'DPS (30s)': '22.2NQQGNT' },
         { 'Mundo': 28, 'Chefe (Rank SS)': 'Zero', 'HP para Hit Kill': '288DSXGNTL', 'DPS (30s)': '9.6DSXGNTL' },
       ]
     },
@@ -46,8 +49,10 @@ export const worldBossesArticle = {
             { 'Mundo': 20, 'Chefe (Rank SSS)': 'Frezi Final Form', 'HP para Hit Kill': '15.2QdDR', 'DPS (30s)': '506.67tQDR' },
             { 'Mundo': 21, 'Chefe (Rank SSS)': 'Vasto Ichige', 'HP para Hit Kill': '872dQDR', 'DPS (30s)': '29.07dQDR' },
             { 'Mundo': 22, 'Chefe (Rank SSS)': 'Shadow', 'HP para Hit Kill': '305QnQDR', 'DPS (30s)': '10.17QnQDR' },
-            { 'Mundo': 23, 'Chefe (Rank SSS)': 'Galaxy Hunter', 'HP para Hit Kill': '871NQQDR', 'DPS (30s)': '29.03NQQDR' },
-            { 'Mundo': 24, 'Chefe (Rank SSS)': 'Anz Ool Gawn', 'HP para Hit Kill': '4.14dQGNT', 'DPS (30s)': '138uQGNT' },
+            { 'Mundo': 23, 'Chefe (Rank SSS)': 'Galaxy Hunter', 'HP para Hit Kill': '7.33NQDDr', 'DPS (30s)': '244.33OQDDr' },
+            { 'Mundo': 24, 'Chefe (Rank SSS)': 'Anz Ool Gawn', 'HP para Hit Kill': '4.14dGNT', 'DPS (30s)': '138uQGNT' },
+            { 'Mundo': 25, 'Chefe (Rank SSS)': 'Gekar Morra', 'HP para Hit Kill': '3.87QnQGNT', 'DPS (30s)': '129qdQGNT' },
+            { 'Mundo': 26, 'Chefe (Rank SSS)': 'Tagamura / Takemoto', 'HP para Hit Kill': '62.5OQQGNT', 'DPS (30s)': '2.08OQQGNT' },
             { 'Mundo': 27, 'Chefe (Rank SSS)': 'Roswald', 'HP para Hit Kill': '6.68USXGNTL', 'DPS (30s)': '222.6SXGNTL' },
             { 'Mundo': 28, 'Chefe (Rank SSS)': 'Emperor Relouch', 'HP para Hit Kill': '2.88QTSXGNTL', 'DPS (30s)': '96TSXGNTL' },
         ]
