@@ -2,7 +2,7 @@
 export const world16Data = {
   id: 'world-16',
   title: 'Mundo 16 - Ilha Bizarra',
-  summary: 'Introduz os Stands, um novo tipo de lutador focado em bônus de energia.',
+  summary: 'Introduz os Stands, um novo tipo de lutador focado em bônus de energia, e os Shadow Upgrades.',
   npcs: [
     { name: 'Usuário de Stand', rank: 'E', exp: 1.2e12, hp: '1tsTG' },
     { name: 'Vampiro', rank: 'D', exp: 1.8e12, hp: '10tsTG' },
@@ -109,6 +109,13 @@ export const world16Data = {
       ]
     }
   ],
+  shadowUpgrades: {
+    description: "No Mundo 16, os jogadores podem comprar upgrades permanentes para suas Shadows, incluindo bônus de status, slots de inventário e gamepasses.",
+    upgrades: [
+      { name: "Shadow Soul", description: "Aumenta o bônus de status de todas as Shadows equipadas.", maxLevel: 16, bonusPerLevel: "+0.05x", cost: "1.5k Exchange Tokens" },
+      { name: "Shadow Extra Equip", description: "Permite equipar uma Shadow adicional.", maxLevel: 1, bonusPerLevel: "+1", costType: "Gamepass" },
+      { name: "Shadows Inventory Slots", description: "Aumenta o espaço do inventário para Shadows.", maxLevel: 10, cost: "1k Exchange Tokens por slot" },
+      { name: "x2 Shadow Soul", description: "Dobra a quantidade de Shadow Souls recebidas.", maxLevel: 1, costType: "Gamepass", cost: "700 Credits" }
+    ]
+  }
 };
-
-  
