@@ -26,21 +26,37 @@ export const world6Data = {
     },
     {
       name: 'Solo Hunter Rank',
-      type: 'progression',
-      statType: 'mixed',
+      type: 'gacha',
+      statType: 'energy',
       unlockCost: '1B',
+      stats: [
+        { name: 'E-Rank', multiplier: '2x', rarity: 'Comum' },
+        { name: 'D-Rank', multiplier: '3x', rarity: 'Incomum' },
+        { name: 'C-Rank', multiplier: '4x', rarity: 'Raro' },
+        { name: 'B-Rank', multiplier: '5x', rarity: 'Épico' },
+        { name: 'A-Rank', multiplier: '8x', rarity: 'Lendário' },
+        { name: 'S-Rank', multiplier: '10x', rarity: 'Mítico' },
+        { name: 'National Level Hunter', multiplier: '12x', rarity: 'Phantom' }
+      ]
     },
     {
       name: 'ReAwakening Progression',
       type: 'progression',
-      statType: 'mixed',
+      statType: 'energy',
+      maxLevel: 210,
+      maxBoost: '2.10x Energy',
       unlockCost: '1.25B',
     },
     {
       name: 'Monarch Progression',
       type: 'progression',
       statType: 'mixed',
+      maxLevel: 200,
       unlockCost: '2.5B',
+      boosts: [
+        { type: 'damage', value: '2.00x Damage' },
+        { type: 'crit_damage', value: '50% Crit Damage' }
+      ]
     },
   ],
   missions: [
@@ -52,5 +68,3 @@ export const world6Data = {
     }
   ]
 };
-
-  
