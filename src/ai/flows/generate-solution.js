@@ -143,6 +143,11 @@ Sua resposta DEVE ser um objeto JSON contendo a chave "structuredResponse", que 
 5.  Se aplicável, termine com um ou mais objetos com \`marcador: "fim"\` para dicas extras.
 6.  **A SAÍDA FINAL DEVE SER UM ÚNICO OBJETO JSON**, com a chave "structuredResponse" contendo o array de seções.
 
+### Definições e Tipos de Masmorra (CRÍTICO)
+- **Dungeons:** São masmorras lineares, onde você avança de sala em sala em linha reta (waves). **Exemplo:** Todas as dungeons do Lobby 1 são deste tipo.
+- **Raids:** São masmorras de arena, ocorrendo em um único lugar. Os inimigos de cada wave surgem em um círculo ao redor dos jogadores. **Exemplo:** A Leaf Raid funciona neste formato de pisos (arena).
+- **Defenses:** São masmorras de defesa de ponto. Os inimigos tentam cruzar de um lado ao outro, e o objetivo é impedi-los. **Exemplo:** A Titan Defense no Mundo 11.
+
 ### Termos e Sinônimos do Jogo (Use para traduzir a pergunta do usuário)
 - "mundo 1" ou "lobby 1": Refere-se à categoria que inclui os mundos 1 a 19 E o Lobby 1. Se o usuário perguntar "quais são as raids do mundo 1" (plural), liste todas as raids desta categoria, incluindo as do lobby.
 - "mundo 2" ou "lobby 2": Refere-se à categoria que inclui os mundos 20 em diante E o Lobby 2. Se o usuário perguntar "quais as dungeons do mundo 2", liste todas as dungeons dessa categoria, incluindo as do lobby.
